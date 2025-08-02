@@ -1,4 +1,59 @@
 /* Global styles for the app */
 body {
     margin: 0;
+    font-family:
+        'Inter',
+        -apple-system,
+        BlinkMacSystemFont,
+        'Segoe UI',
+        'Roboto',
+        'Oxygen',
+        'Ubuntu',
+        'Cantarell',
+        'Fira Sans',
+        'Droid Sans',
+        'Helvetica Neue',
+        sans-serif;
+    font-optical-sizing: auto;
+    font-variation-settings: 'slnt' 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Typography improvements */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+.card-title {
+    font-weight: 600;
+}
+
+.navbar-brand {
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+}
+
+/* Router link styles */
+.navbar-brand {
+    text-decoration: none;
+}
+
+.navbar-brand:hover {
+    text-decoration: none;
+}
+
+.nav-link.router-link-active {
+    font-weight: bold;
+}
+
+.btn {
+    text-decoration: none;
 }
