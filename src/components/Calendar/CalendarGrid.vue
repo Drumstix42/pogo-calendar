@@ -11,18 +11,16 @@
 
             <!-- Calendar Days -->
             <div class="calendar-days">
-                <div
+                <CalendarDay
                     v-for="day in calendarDays"
                     :key="`${day.month}-${day.date}`"
-                    class="calendar-day"
-                    :class="{
-                        'other-month': !day.isCurrentMonth,
-                        today: day.isToday,
-                    }"
-                >
-                    <div class="day-number">{{ day.date }}</div>
-                    <!-- Events will go here later -->
-                </div>
+                    :date="day.date"
+                    :month="day.month"
+                    :year="day.year"
+                    :is-current-month="day.isCurrentMonth"
+                    :is-today="day.isToday"
+                    :dayjs="day.dayjs"
+                />
             </div>
         </div>
     </div>
@@ -34,6 +32,8 @@ import { computed } from 'vue';
 
 import { useUrlSync } from '@/composables/useUrlSync';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
+
+import CalendarDay from './CalendarDay.vue';
 
 const { urlMonth, urlYear } = useUrlSync();
 const calendarSettings = useCalendarSettingsStore();
@@ -108,51 +108,5 @@ const calendarDays = computed(() => {
 .calendar-days {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-}
-
-.calendar-day {
-    min-height: 120px;
-    border-right: 1px solid #e9ecef;
-    border-bottom: 1px solid #e9ecef;
-    padding: 0.5rem;
-    background: white;
-}
-
-.calendar-day:nth-child(7n) {
-    border-right: none;
-}
-
-.calendar-day.other-month {
-    background-color: #f8f9fa;
-    color: #6c757d;
-}
-
-.calendar-day.today {
-    background-color: #e3f2fd;
-}
-
-.calendar-day.today .day-number {
-    background-color: #2196f3;
-    color: white;
-    font-weight: 600;
-}
-
-.day-number {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    font-size: 0.875rem;
-    margin-bottom: 0.5rem;
-}
-
-.calendar-day:hover {
-    background-color: #f8f9fa;
-}
-
-.calendar-day.other-month:hover {
-    background-color: #e9ecef;
 }
 </style>
