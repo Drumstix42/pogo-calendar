@@ -2,7 +2,7 @@ export default {
     arrowParens: 'avoid',
     bracketSpacing: true,
     endOfLine: 'auto',
-    printWidth: 80,
+    printWidth: 150,
     semi: true,
     singleQuote: true,
     tabWidth: 4,

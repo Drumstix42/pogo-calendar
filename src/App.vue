@@ -1,8 +1,6 @@
 <template>
     <div id="app">
-        <nav
-            class="navbar navbar-expand-lg navbar-light bg-white border-bottom"
-        >
+        <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
             <div class="container">
                 <a class="navbar-brand text-dark" href="#">
                     <CalendarDays :size="24" class="me-2" />

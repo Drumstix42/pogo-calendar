@@ -5,13 +5,7 @@ import utc from 'dayjs/plugin/utc';
 import { defineStore } from 'pinia';
 
 import { DATE_FORMAT } from '../utils/dateFormat';
-import {
-    type EventTypeInfo,
-    type PogoEvent,
-    getEventTypeInfo,
-    getEventsForDate,
-    sortEventsByPriority,
-} from '../utils/eventTypes';
+import { type EventTypeInfo, type PogoEvent, getEventTypeInfo, getEventsForDate, sortEventsByPriority } from '../utils/eventTypes';
 
 // Day.js plugins - extend adds functionality to the core library
 dayjs.extend(utc); // Adds UTC timezone support for parsing/converting dates
@@ -31,8 +25,7 @@ interface EventWithTypeInfo extends PogoEvent {
     typeInfo: EventTypeInfo;
 }
 
-const SCRAPED_EVENTS_URL =
-    'https://raw.githubusercontent.com/bigfoott/ScrapedDuck/data/events.min.json';
+const SCRAPED_EVENTS_URL = 'https://raw.githubusercontent.com/bigfoott/ScrapedDuck/data/events.min.json';
 
 export const useEventsStore = defineStore('events', {
     state: (): EventsState => ({
@@ -46,14 +39,8 @@ export const useEventsStore = defineStore('events', {
 
     getters: {
         currentMonthEvents: (state): PogoEvent[] => {
-            const startOfMonth = dayjs()
-                .year(state.currentYear)
-                .month(state.currentMonth)
-                .startOf('month');
-            const endOfMonth = dayjs()
-                .year(state.currentYear)
-                .month(state.currentMonth)
-                .endOf('month');
+            const startOfMonth = dayjs().year(state.currentYear).month(state.currentMonth).startOf('month');
+            const endOfMonth = dayjs().year(state.currentYear).month(state.currentMonth).endOf('month');
 
             return state.events.filter(event => {
                 if (!event.start || !event.end) return false;
@@ -61,10 +48,7 @@ export const useEventsStore = defineStore('events', {
                 const eventStart = dayjs.utc(event.start).local();
                 const eventEnd = dayjs.utc(event.end).local();
 
-                return (
-                    eventStart.isSameOrBefore(endOfMonth) &&
-                    eventEnd.isSameOrAfter(startOfMonth)
-                );
+                return eventStart.isSameOrBefore(endOfMonth) && eventEnd.isSameOrAfter(startOfMonth);
             });
         },
 
@@ -76,21 +60,11 @@ export const useEventsStore = defineStore('events', {
 
         eventsByDate: (state): Record<string, EventWithTypeInfo[]> => {
             const grouped: Record<string, EventWithTypeInfo[]> = {};
-            const startOfMonth = dayjs()
-                .year(state.currentYear)
-                .month(state.currentMonth)
-                .startOf('month');
-            const endOfMonth = dayjs()
-                .year(state.currentYear)
-                .month(state.currentMonth)
-                .endOf('month');
+            const startOfMonth = dayjs().year(state.currentYear).month(state.currentMonth).startOf('month');
+            const endOfMonth = dayjs().year(state.currentYear).month(state.currentMonth).endOf('month');
 
             // Initialize all dates in month
-            for (
-                let d = startOfMonth;
-                d.isSameOrBefore(endOfMonth);
-                d = d.add(1, 'day')
-            ) {
+            for (let d = startOfMonth; d.isSameOrBefore(endOfMonth); d = d.add(1, 'day')) {
                 const dateKey = d.format(DATE_FORMAT.CALENDAR_DATE);
                 grouped[dateKey] = [];
             }
@@ -103,18 +77,10 @@ export const useEventsStore = defineStore('events', {
                 const eventEnd = dayjs.utc(event.end).local();
 
                 // Add event to each date it spans within the current month
-                const spanStart = eventStart.isAfter(startOfMonth)
-                    ? eventStart
-                    : startOfMonth;
-                const spanEnd = eventEnd.isBefore(endOfMonth)
-                    ? eventEnd
-                    : endOfMonth;
+                const spanStart = eventStart.isAfter(startOfMonth) ? eventStart : startOfMonth;
+                const spanEnd = eventEnd.isBefore(endOfMonth) ? eventEnd : endOfMonth;
 
-                for (
-                    let d = spanStart.startOf('day');
-                    d.isSameOrBefore(spanEnd.startOf('day'));
-                    d = d.add(1, 'day')
-                ) {
+                for (let d = spanStart.startOf('day'); d.isSameOrBefore(spanEnd.startOf('day')); d = d.add(1, 'day')) {
                     const dateKey = d.format(DATE_FORMAT.CALENDAR_DATE);
                     if (grouped[dateKey]) {
                         grouped[dateKey].push({
@@ -127,9 +93,7 @@ export const useEventsStore = defineStore('events', {
 
             // Sort events by priority within each date
             Object.keys(grouped).forEach(date => {
-                grouped[date] = sortEventsByPriority(
-                    grouped[date],
-                ) as EventWithTypeInfo[];
+                grouped[date] = sortEventsByPriority(grouped[date]) as EventWithTypeInfo[];
             });
 
             return grouped;
@@ -143,10 +107,7 @@ export const useEventsStore = defineStore('events', {
         },
 
         currentMonthName: (state): string => {
-            return dayjs()
-                .year(state.currentYear)
-                .month(state.currentMonth)
-                .format(DATE_FORMAT.MONTH_YEAR);
+            return dayjs().year(state.currentYear).month(state.currentMonth).format(DATE_FORMAT.MONTH_YEAR);
         },
     },
 
@@ -164,9 +125,7 @@ export const useEventsStore = defineStore('events', {
                 const response = await fetch(SCRAPED_EVENTS_URL);
 
                 if (!response.ok) {
-                    throw new Error(
-                        `Failed to fetch events: ${response.status} ${response.statusText}`,
-                    );
+                    throw new Error(`Failed to fetch events: ${response.status} ${response.statusText}`);
                 }
 
                 const events: PogoEvent[] = await response.json();
@@ -185,27 +144,16 @@ export const useEventsStore = defineStore('events', {
                         type: sampleEvent.eventType,
                         start: sampleEvent.start,
                         end: sampleEvent.end,
-                        startParsed: dayjs
-                            .utc(sampleEvent.start)
-                            .local()
-                            .format(DATE_FORMAT.DATE_TIME),
-                        endParsed: dayjs
-                            .utc(sampleEvent.end)
-                            .local()
-                            .format(DATE_FORMAT.DATE_TIME),
+                        startParsed: dayjs.utc(sampleEvent.start).local().format(DATE_FORMAT.DATE_TIME),
+                        endParsed: dayjs.utc(sampleEvent.end).local().format(DATE_FORMAT.DATE_TIME),
                     });
 
                     const currentMonthCount = this.currentMonthEvents.length;
-                    console.log(
-                        `Events for current month (${dayjs().format(DATE_FORMAT.MONTH_YEAR)}): ${currentMonthCount}`,
-                    );
+                    console.log(`Events for current month (${dayjs().format(DATE_FORMAT.MONTH_YEAR)}): ${currentMonthCount}`);
                 }
             } catch (error) {
                 console.error('Error fetching events:', error);
-                this.error =
-                    error instanceof Error
-                        ? error.message
-                        : 'Unknown error occurred';
+                this.error = error instanceof Error ? error.message : 'Unknown error occurred';
             } finally {
                 this.loading = false;
             }

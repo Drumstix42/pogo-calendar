@@ -34,228 +34,229 @@ export const EVENT_TYPES: Record<string, EventTypeInfo> = {
     // Community & Social Events
     'community-day': {
         name: 'Community Day',
-        color: '#4CAF50', // Green
-        bgColor: '#E8F5E8',
+        color: '#1660a9', // blue
+        bgColor: '#e3f2fd',
         priority: 10,
     },
     'pokemon-spotlight-hour': {
         name: 'Spotlight Hour',
-        color: '#FF9800', // Orange
-        bgColor: '#FFF3E0',
+        color: '#e58e26', // orange
+        bgColor: '#fff3e0',
         priority: 7,
     },
 
     // Raid Events
     'raid-hour': {
         name: 'Raid Hour',
-        color: '#F44336', // Red
-        bgColor: '#FFEBEE',
+        color: '#c0392b', // red
+        bgColor: '#ffebee',
         priority: 8,
     },
     'raid-day': {
         name: 'Raid Day',
-        color: '#E91E63', // Pink
-        bgColor: '#FCE4EC',
+        color: '#e74c3c', // bright red
+        bgColor: '#ffebee',
         priority: 9,
     },
     'raid-weekend': {
         name: 'Raid Weekend',
-        color: '#E91E63',
-        bgColor: '#FCE4EC',
+        color: '#6f1e51', // purple-red
+        bgColor: '#fce4ec',
         priority: 9,
     },
     'raid-battles': {
         name: 'Raid Battles',
-        color: '#D32F2F', // Dark Red
-        bgColor: '#FFEBEE',
+        color: '#c0392b', // red
+        bgColor: '#ffebee',
         priority: 6,
     },
     'elite-raids': {
         name: 'Elite Raids',
-        color: '#B71C1C', // Very Dark Red
-        bgColor: '#FFEBEE',
+        color: '#a21416', // dark red
+        bgColor: '#ffebee',
         priority: 10,
     },
 
     // Max Battles (New system)
     'max-battles': {
         name: 'Max Battles',
-        color: '#673AB7', // Deep Purple
-        bgColor: '#F3E5F5',
+        color: '#811356', // purple
+        bgColor: '#f3e5f5',
         priority: 8,
     },
     'max-mondays': {
         name: 'Max Monday',
-        color: '#9C27B0', // Purple
-        bgColor: '#F3E5F5',
+        color: '#690342', // darker purple
+        bgColor: '#f3e5f5',
         priority: 7,
     },
 
     // Research Events
     research: {
         name: 'Research',
-        color: '#2196F3', // Blue
-        bgColor: '#E3F2FD',
+        color: '#1abc9c', // teal
+        bgColor: '#e0f2f1',
         priority: 5,
     },
     'research-day': {
         name: 'Research Day',
-        color: '#1976D2', // Dark Blue
-        bgColor: '#E3F2FD',
+        color: '#159e83', // darker teal
+        bgColor: '#e0f2f1',
         priority: 8,
     },
     'timed-research': {
         name: 'Timed Research',
-        color: '#1565C0',
-        bgColor: '#E3F2FD',
+        color: '#1abc9c', // teal
+        bgColor: '#e0f2f1',
         priority: 6,
     },
     'limited-research': {
         name: 'Limited Research',
-        color: '#0D47A1',
-        bgColor: '#E3F2FD',
+        color: '#159e83', // darker teal
+        bgColor: '#e0f2f1',
         priority: 6,
     },
     'special-research': {
         name: 'Special Research',
-        color: '#0277BD',
-        bgColor: '#E3F2FD',
+        color: '#13a185', // blue-teal
+        bgColor: '#e0f2f1',
         priority: 7,
     },
     'research-breakthrough': {
         name: 'Research Breakthrough',
-        color: '#0288D1',
-        bgColor: '#E3F2FD',
+        color: '#795548', // brown
+        bgColor: '#efebe9',
         priority: 5,
     },
 
     // Major Events
     'pokemon-go-fest': {
         name: 'Pokemon GO Fest',
-        color: '#FF5722', // Deep Orange
-        bgColor: '#FBE9E7',
+        color: '#153d94', // dark blue
+        bgColor: '#e3f2fd',
         priority: 10,
     },
     'pokemon-go-tour': {
         name: 'Pokemon GO Tour',
-        color: '#FF6F00', // Amber
-        bgColor: '#FFF8E1',
+        color: '#1d3a74', // darker blue
+        bgColor: '#e3f2fd',
         priority: 10,
     },
     'safari-zone': {
         name: 'Safari Zone',
-        color: '#8BC34A', // Light Green
-        bgColor: '#F1F8E9',
+        color: '#3d7141', // green
+        bgColor: '#e8f5e8',
         priority: 9,
     },
     'ticketed-event': {
         name: 'Ticketed Event',
-        color: '#FFC107', // Amber
-        bgColor: '#FFFDE7',
+        color: '#de3e9b', // pink
+        bgColor: '#fce4ec',
         priority: 8,
     },
 
     // Regular Events
     event: {
         name: 'Event',
-        color: '#607D8B', // Blue Grey
-        bgColor: '#ECEFF1',
+        color: '#27ae60', // green
+        bgColor: '#e8f5e8',
         priority: 5,
     },
     'live-event': {
         name: 'Live Event',
-        color: '#795548', // Brown
-        bgColor: '#EFEBE9',
+        color: '#d63031', // red
+        bgColor: '#ffebee',
         priority: 7,
     },
     'location-specific': {
         name: 'Location Specific',
-        color: '#9E9E9E', // Grey
-        bgColor: '#F5F5F5',
+        color: '#284b92', // blue
+        bgColor: '#e3f2fd',
         priority: 4,
     },
     'bonus-hour': {
         name: 'Bonus Hour',
-        color: '#CDDC39', // Lime
-        bgColor: '#F9FBE7',
+        color: '#40407a', // purple-blue
+        bgColor: '#e8eaf6',
         priority: 6,
     },
 
     // Battle Events
     'go-battle-league': {
         name: 'GO Battle League',
-        color: '#3F51B5', // Indigo
-        bgColor: '#E8EAF6',
+        color: '#8e44ad', // purple
+        bgColor: '#f3e5f5',
         priority: 5,
     },
 
     // Team Rocket
     'go-rocket-takeover': {
         name: 'Team GO Rocket Takeover',
-        color: '#424242', // Dark Grey
-        bgColor: '#FAFAFA',
+        color: '#1e1e1e', // dark
+        bgColor: '#fafafa',
         priority: 8,
     },
     'team-go-rocket': {
         name: 'Team GO Rocket',
-        color: '#616161',
-        bgColor: '#FAFAFA',
+        color: '#1e1e1e', // dark
+        bgColor: '#fafafa',
         priority: 6,
     },
     'giovanni-special-research': {
         name: 'Giovanni Special Research',
-        color: '#212121', // Very Dark Grey
-        bgColor: '#FAFAFA',
+        color: '#1e272e', // very dark
+        bgColor: '#fafafa',
         priority: 7,
     },
 
     // Showcases & Competitions
     'pokestop-showcase': {
         name: 'PokéStop Showcase',
-        color: '#00BCD4', // Cyan
-        bgColor: '#E0F2F1',
+        color: '#3ca392', // teal-green
+        bgColor: '#e0f2f1',
         priority: 5,
     },
     'global-challenge': {
         name: 'Global Challenge',
-        color: '#009688', // Teal
-        bgColor: '#E0F2F1',
+        color: '#0a64b5', // blue
+        bgColor: '#e3f2fd',
         priority: 8,
     },
 
     // System/Meta
     season: {
         name: 'Season',
-        color: '#4CAF50', // Green
-        bgColor: '#E8F5E8',
+        color: '#38ada9', // teal
+        bgColor: '#e0f2f1',
         priority: 3,
     },
     update: {
         name: 'Update',
-        color: '#9E9E9E', // Grey
-        bgColor: '#F5F5F5',
+        color: '#2980b9', // blue
+        bgColor: '#e3f2fd',
         priority: 2,
     },
     'potential-ultra-unlock': {
         name: 'Potential Ultra Unlock',
-        color: '#FF9800', // Orange
-        bgColor: '#FFF3E0',
+        color: '#2c3e50', // dark blue-grey
+        bgColor: '#eceff1',
         priority: 6,
     },
     'go-pass': {
         name: 'GO Pass',
-        color: '#FFEB3B', // Yellow
-        bgColor: '#FFFDE7',
+        color: '#ddb22f', // yellow
+        bgColor: '#fffde7',
         priority: 4,
     },
 };
 
+// Type for valid event type keys
+export type EventTypeKey = keyof typeof EVENT_TYPES;
+
 export const getEventTypeInfo = (eventType: string): EventTypeInfo => {
     return (
         EVENT_TYPES[eventType] || {
-            name: eventType
-                .replace(/-/g, ' ')
-                .replace(/\b\w/g, (l: string) => l.toUpperCase()),
+            name: eventType.replace(/-/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()),
             color: '#757575', // Default grey
             bgColor: '#F5F5F5',
             priority: 5,
@@ -272,10 +273,7 @@ export const sortEventsByPriority = (events: PogoEvent[]): PogoEvent[] => {
     });
 };
 
-export const getEventsForDate = (
-    events: PogoEvent[],
-    date: Date | string | dayjs.Dayjs,
-): PogoEvent[] => {
+export const getEventsForDate = (events: PogoEvent[], date: Date | string | dayjs.Dayjs): PogoEvent[] => {
     const targetDate = dayjs(date);
     const targetDateStr = targetDate.format(DATE_FORMAT.CALENDAR_DATE);
 

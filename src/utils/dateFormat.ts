@@ -23,10 +23,7 @@ export const DATE_FORMAT = {
 export type DateFormat = (typeof DATE_FORMAT)[keyof typeof DATE_FORMAT];
 
 // Event date/time formatting utilities
-export const formatEventDateRange = (
-    startDate: string,
-    endDate: string,
-): string => {
+export const formatEventDateRange = (startDate: string, endDate: string): string => {
     const start = dayjs.utc(startDate).local();
     const end = dayjs.utc(endDate).local();
 
