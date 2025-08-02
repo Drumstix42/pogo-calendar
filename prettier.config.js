@@ -12,8 +12,9 @@ export default {
 
     // Import sorting configuration
     importOrder: [
-        '^[./](?!.*\\.vue$)', // Local non-component imports (relative paths excluding .vue)
-        '\\.vue$', // Local component imports (.vue files)
+        // `<THIRD_PARTY_MODULES>` is implicity and first by default
+        '^(@/|[./])(?!.*\\.vue$)', // Local non-component imports (@ alias or relative paths excluding .vue)
+        '(@/.*|.*)\\.vue$', // Local component imports (.vue files with @ alias or relative paths)
     ],
     importOrderSeparation: true,
     importOrderSortSpecifiers: true,

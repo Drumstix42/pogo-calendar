@@ -1,7 +1,25 @@
 <template>
     <div class="calendar">
         <div class="container mt-4">
+            <!-- Month Navigation Header -->
+            <CalendarHeader />
+
+            <!-- Calendar Options -->
             <div class="row">
+                <div class="col-12">
+                    <CalendarOptions />
+                </div>
+            </div>
+
+            <!-- Calendar Grid Component -->
+            <div class="row">
+                <div class="col-12">
+                    <CalendarGrid />
+                </div>
+            </div>
+
+            <!-- Testing/Debug Section -->
+            <div class="row mt-4">
                 <div class="col-12">
                     <div class="card">
                         <div class="card-header d-flex justify-content-between align-items-center">
@@ -64,11 +82,14 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 
-import { useEventsStore } from '../stores/events';
-import { formatEventDateRange } from '../utils/dateFormat';
-import type { PogoEvent } from '../utils/eventTypes';
+import { useEventsStore } from '@/stores/events';
+import { formatEventDateRange } from '@/utils/dateFormat';
+import type { PogoEvent } from '@/utils/eventTypes';
 
-import EventTypeFilter from '../components/EventTypeFilter.vue';
+import CalendarGrid from '@/components/Calendar/CalendarGrid.vue';
+import CalendarHeader from '@/components/Calendar/CalendarHeader.vue';
+import CalendarOptions from '@/components/CalendarOptions/CalendarOptions.vue';
+import EventTypeFilter from '@/components/EventTypeFilter.vue';
 
 const eventsStore = useEventsStore();
 

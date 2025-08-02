@@ -11,4 +11,5 @@ export const createStorageKey = (key: string): string => `${STORAGE_PREFIX}-${ke
 // Predefined storage keys
 export const STORAGE_KEYS = {
     DISABLED_FILTERS: createStorageKey('disabled-filters'),
+    FIRST_DAY_OF_WEEK: createStorageKey('first-day-of-week'),
 } as const;

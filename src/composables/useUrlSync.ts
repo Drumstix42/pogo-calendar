@@ -24,7 +24,8 @@ export const useUrlSync = () => {
         transform: (value: string | null): number => {
             if (value !== null) {
                 const parsed = parseInt(value, 10);
-                if (parsed >= 2020 && parsed <= 2030) {
+                const currentYear = dayjs().year();
+                if (parsed >= 2016 && parsed <= currentYear + 1) {
                     return parsed;
                 }
             }
