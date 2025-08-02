@@ -140,6 +140,13 @@ export const useEventsStore = defineStore('events', {
             const oneHour = 60 * 60 * 1000;
             return Date.now() - state.lastFetched < oneHour;
         },
+
+        currentMonthName: (state): string => {
+            return dayjs()
+                .year(state.currentYear)
+                .month(state.currentMonth)
+                .format(DATE_FORMAT.MONTH_YEAR);
+        },
     },
 
     actions: {

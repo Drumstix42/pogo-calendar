@@ -36,7 +36,7 @@
                             >
                                 <strong>Success!</strong> Loaded
                                 {{ eventsStore.events.length }} events. Current
-                                month ({{ currentMonthName }}) has
+                                month ({{ eventsStore.currentMonthName }}) has
                                 {{ eventsStore.currentMonthEvents.length }}
                                 events.
                             </div>
@@ -48,7 +48,8 @@
 
                             <div v-if="sampleEvents.length > 0" class="mt-3">
                                 <h5>
-                                    Sample Events for {{ currentMonthName }}:
+                                    Sample Events for
+                                    {{ eventsStore.currentMonthName }}:
                                 </h5>
                                 <div class="row">
                                     <div
@@ -82,19 +83,11 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import dayjs from 'dayjs';
 import { useEventsStore } from '../stores/events';
-import { DATE_FORMAT, formatEventDateRange } from '../utils/dateFormat';
+import { formatEventDateRange } from '../utils/dateFormat';
 import type { PogoEvent } from '../utils/eventTypes';
 
 const eventsStore = useEventsStore();
-
-const currentMonthName = computed(() => {
-    return dayjs()
-        .year(eventsStore.currentYear)
-        .month(eventsStore.currentMonth)
-        .format(DATE_FORMAT.MONTH_YEAR);
-});
 
 const sampleEvents = computed((): PogoEvent[] => {
     return eventsStore.currentMonthEvents.slice(0, 6);
