@@ -9,4 +9,14 @@ export default {
     trailingComma: 'all',
     useTabs: false,
     vueIndentScriptAndStyle: false,
-}
+
+    // Import sorting configuration
+    importOrder: [
+        '^[./](?!.*\\.vue$)', // Local non-component imports (relative paths excluding .vue)
+        '\\.vue$', // Local component imports (.vue files)
+    ],
+    importOrderSeparation: true,
+    importOrderSortSpecifiers: true,
+
+    plugins: ['@trivago/prettier-plugin-sort-imports'],
+};

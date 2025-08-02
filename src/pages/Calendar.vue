@@ -83,6 +83,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
+
 import { useEventsStore } from '../stores/events';
 import { formatEventDateRange } from '../utils/dateFormat';
 import type { PogoEvent } from '../utils/eventTypes';

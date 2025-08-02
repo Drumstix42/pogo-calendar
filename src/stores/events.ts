@@ -1,16 +1,17 @@
-import { defineStore } from 'pinia';
 import dayjs from 'dayjs';
-import utc from 'dayjs/plugin/utc';
-import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
+import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
+import utc from 'dayjs/plugin/utc';
+import { defineStore } from 'pinia';
+
+import { DATE_FORMAT } from '../utils/dateFormat';
 import {
+    type EventTypeInfo,
+    type PogoEvent,
     getEventTypeInfo,
     getEventsForDate,
     sortEventsByPriority,
-    type PogoEvent,
-    type EventTypeInfo,
 } from '../utils/eventTypes';
-import { DATE_FORMAT } from '../utils/dateFormat';
 
 // Day.js plugins - extend adds functionality to the core library
 dayjs.extend(utc); // Adds UTC timezone support for parsing/converting dates
