@@ -1,0 +1,35 @@
+{
+    "name": "pogo-calendar",
+    "private": true,
+    "version": "0.1.0",
+    "type": "module",
+    "description": "A web-based calendar for Pokemon GO events",
+    "scripts": {
+        "dev": "vite",
+        "build": "vite build",
+        "preview": "vite preview",
+        "lint": "eslint . --ext .vue,.js,.ts",
+        "lint:fix": "eslint . --ext .vue,.js,.ts --fix",
+        "format": "prettier --write .",
+        "format:check": "prettier --check .",
+        "type-check": "vue-tsc --noEmit"
+    },
+    "dependencies": {
+        "bootstrap": "~5.3.7",
+        "vue": "~3.5.18"
+    },
+    "devDependencies": {
+        "@types/node": "~24.1.0",
+        "@typescript-eslint/eslint-plugin": "~8.38.0",
+        "@typescript-eslint/parser": "~8.38.0",
+        "@vitejs/plugin-vue": "~6.0.1",
+        "@vue/eslint-config-typescript": "~14.6.0",
+        "eslint": "~9.32.0",
+        "eslint-plugin-vue": "~10.4.0",
+        "prettier": "~3.6.2",
+        "typescript": "~5.8.3",
+        "vite": "~7.0.6",
+        "vue-eslint-parser": "~10.2.0",
+        "vue-tsc": "~3.0.5"
+    }
+}
