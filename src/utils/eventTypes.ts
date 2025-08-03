@@ -8,7 +8,6 @@ dayjs.extend(utc);
 export interface EventTypeInfo {
     name: string;
     color: string;
-    bgColor: string;
     priority: number;
 }
 
@@ -35,218 +34,185 @@ export const EVENT_TYPES: Record<string, EventTypeInfo> = {
     'community-day': {
         name: 'Community Day',
         color: '#1660a9', // blue
-        bgColor: '#e3f2fd',
-        priority: 10,
+        priority: 88,
     },
     'pokemon-spotlight-hour': {
         name: 'Spotlight Hour',
-        color: '#e58e26', // orange
-        bgColor: '#fff3e0',
-        priority: 7,
+        color: '#ae6318', // orange
+        priority: 63,
     },
 
     // Raid Events
     'raid-hour': {
         name: 'Raid Hour',
         color: '#c0392b', // red
-        bgColor: '#ffebee',
-        priority: 8,
+        priority: 68,
     },
     'raid-day': {
         name: 'Raid Day',
-        color: '#e74c3c', // bright red
-        bgColor: '#ffebee',
-        priority: 9,
+        color: '#cf4435', // red
+        priority: 78,
     },
     'raid-weekend': {
         name: 'Raid Weekend',
         color: '#6f1e51', // purple-red
-        bgColor: '#fce4ec',
-        priority: 9,
+        priority: 77,
     },
     'raid-battles': {
         name: 'Raid Battles',
         color: '#c0392b', // red
-        bgColor: '#ffebee',
-        priority: 6,
+        priority: 54,
     },
     'elite-raids': {
         name: 'Elite Raids',
         color: '#a21416', // dark red
-        bgColor: '#ffebee',
-        priority: 10,
+        priority: 86,
     },
 
     // Max Battles (New system)
     'max-battles': {
         name: 'Max Battles',
         color: '#811356', // purple
-        bgColor: '#f3e5f5',
-        priority: 8,
+        priority: 67,
     },
     'max-mondays': {
         name: 'Max Monday',
         color: '#690342', // darker purple
-        bgColor: '#f3e5f5',
-        priority: 7,
+        priority: 65,
     },
 
     // Research Events
     research: {
         name: 'Research',
-        color: '#1abc9c', // teal
-        bgColor: '#e0f2f1',
-        priority: 5,
+        color: '#12836d', // teal
+        priority: 51,
     },
     'research-day': {
         name: 'Research Day',
-        color: '#159e83', // darker teal
-        bgColor: '#e0f2f1',
-        priority: 8,
+        color: '#11866f', // teal
+        priority: 76,
     },
     'timed-research': {
         name: 'Timed Research',
-        color: '#1abc9c', // teal
-        bgColor: '#e0f2f1',
-        priority: 6,
+        color: '#12836d', // teal
+        priority: 50,
     },
     'limited-research': {
         name: 'Limited Research',
-        color: '#159e83', // darker teal
-        bgColor: '#e0f2f1',
-        priority: 6,
+        color: '#11866f', // teal
+        priority: 49,
     },
     'special-research': {
         name: 'Special Research',
-        color: '#13a185', // blue-teal
-        bgColor: '#e0f2f1',
-        priority: 7,
+        color: '#0f806a', // blue-teal
+        priority: 72,
     },
     'research-breakthrough': {
         name: 'Research Breakthrough',
         color: '#795548', // brown
-        bgColor: '#efebe9',
-        priority: 5,
+        priority: 48,
     },
 
     // Major Events
     'pokemon-go-fest': {
         name: 'Pokemon GO Fest',
         color: '#153d94', // dark blue
-        bgColor: '#e3f2fd',
-        priority: 10,
+        priority: 94,
     },
     'pokemon-go-tour': {
         name: 'Pokemon GO Tour',
         color: '#1d3a74', // darker blue
-        bgColor: '#e3f2fd',
-        priority: 10,
+        priority: 93,
     },
     'safari-zone': {
         name: 'Safari Zone',
         color: '#3d7141', // green
-        bgColor: '#e8f5e8',
-        priority: 9,
+        priority: 87,
     },
     'ticketed-event': {
         name: 'Ticketed Event',
-        color: '#de3e9b', // pink
-        bgColor: '#fce4ec',
-        priority: 8,
+        color: '#c7378b', // pink
+        priority: 90,
     },
 
     // Regular Events
     event: {
         name: 'Event',
-        color: '#27ae60', // green
-        bgColor: '#e8f5e8',
-        priority: 5,
+        color: '#1d8247', // green
+        priority: 58,
     },
     'live-event': {
         name: 'Live Event',
         color: '#d63031', // red
-        bgColor: '#ffebee',
-        priority: 7,
+        priority: 75,
     },
     'location-specific': {
         name: 'Location Specific',
         color: '#284b92', // blue
-        bgColor: '#e3f2fd',
-        priority: 4,
+        priority: 45,
     },
     'bonus-hour': {
         name: 'Bonus Hour',
         color: '#40407a', // purple-blue
-        bgColor: '#e8eaf6',
-        priority: 6,
+        priority: 62,
     },
 
     // Battle Events
     'go-battle-league': {
         name: 'GO Battle League',
         color: '#8e44ad', // purple
-        bgColor: '#f3e5f5',
-        priority: 5,
+        priority: 56,
     },
 
     // Team Rocket
     'go-rocket-takeover': {
         name: 'Team GO Rocket Takeover',
         color: '#1e1e1e', // dark
-        bgColor: '#fafafa',
-        priority: 8,
+        priority: 84,
     },
     'team-go-rocket': {
         name: 'Team GO Rocket',
         color: '#1e1e1e', // dark
-        bgColor: '#fafafa',
-        priority: 6,
+        priority: 55,
     },
     'giovanni-special-research': {
         name: 'Giovanni Special Research',
         color: '#1e272e', // very dark
-        bgColor: '#fafafa',
-        priority: 7,
+        priority: 71,
     },
 
     // Showcases & Competitions
     'pokestop-showcase': {
         name: 'PokéStop Showcase',
-        color: '#3ca392', // teal-green
-        bgColor: '#e0f2f1',
-        priority: 5,
+        color: '#2f8274', // teal-green
+        priority: 52,
     },
     'global-challenge': {
         name: 'Global Challenge',
         color: '#0a64b5', // blue
-        bgColor: '#e3f2fd',
-        priority: 8,
+        priority: 82,
     },
 
     // System/Meta
     season: {
         name: 'Season',
-        color: '#38ada9', // teal
-        bgColor: '#e0f2f1',
-        priority: 3,
+        color: '#29817e', // teal
+        priority: 100,
     },
     update: {
         name: 'Update',
-        color: '#2980b9', // blue
-        bgColor: '#e3f2fd',
-        priority: 2,
+        color: '#2679af', // blue
+        priority: 10,
     },
     'potential-ultra-unlock': {
         name: 'Potential Ultra Unlock',
         color: '#2c3e50', // dark blue-grey
-        bgColor: '#eceff1',
-        priority: 6,
+        priority: 42,
     },
     'go-pass': {
         name: 'GO Pass',
-        color: '#ddb22f', // yellow
-        bgColor: '#fffde7',
-        priority: 4,
+        color: '#896e17', // yellow/gold
+        priority: 95,
     },
 };
 
@@ -258,7 +224,6 @@ export const getEventTypeInfo = (eventType: string): EventTypeInfo => {
         EVENT_TYPES[eventType] || {
             name: eventType.replace(/-/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()),
             color: '#757575', // Default grey
-            bgColor: '#F5F5F5',
             priority: 5,
         }
     );
@@ -273,6 +238,199 @@ export const sortEventsByPriority = (events: PogoEvent[]): PogoEvent[] => {
     });
 };
 
+// Event display types
+export interface EventGroup {
+    eventType: string;
+    events: PogoEvent[];
+    displayName: string;
+    color: string;
+    isMultiDay: boolean;
+    startDate: dayjs.Dayjs;
+    endDate: dayjs.Dayjs;
+}
+
+export interface CalendarEventDisplay {
+    singleDayEvents: PogoEvent[];
+    multiDayEvents: PogoEvent[];
+    eventGroups: EventGroup[];
+}
+
+// Event classification utilities
+export const isMultiDayEvent = (event: PogoEvent): boolean => {
+    const startDate = parseEventDate(event.start).startOf('day');
+    const endDate = parseEventDate(event.end).startOf('day');
+    return !startDate.isSame(endDate, 'day');
+};
+
+export const isSameDayEvent = (event: PogoEvent): boolean => {
+    return !isMultiDayEvent(event);
+};
+
+// Event grouping for events that occur at the same time
+export const shouldGroupEvents = (events: PogoEvent[]): boolean => {
+    // Only group if there are 2 or more events
+    if (events.length < 2) return false;
+
+    // For single-day events, only group if they have identical start AND end times
+    const firstEvent = events[0];
+    if (isSameDayEvent(firstEvent)) {
+        const firstStartTime = parseEventDate(firstEvent.start);
+        const firstEndTime = parseEventDate(firstEvent.end);
+        return events.every(event => {
+            const eventStartTime = parseEventDate(event.start);
+            const eventEndTime = parseEventDate(event.end);
+            return isSameDayEvent(event) && firstStartTime.isSame(eventStartTime, 'minute') && firstEndTime.isSame(eventEndTime, 'minute');
+        });
+    }
+
+    // For multi-day events, group if they have identical start AND end times
+    const firstEventType = firstEvent.eventType;
+    const firstStartTime = parseEventDate(firstEvent.start);
+    const firstEndTime = parseEventDate(firstEvent.end);
+    return events.every(event => {
+        const eventStartTime = parseEventDate(event.start);
+        const eventEndTime = parseEventDate(event.end);
+        return (
+            event.eventType === firstEventType &&
+            isMultiDayEvent(event) &&
+            firstStartTime.isSame(eventStartTime, 'minute') &&
+            firstEndTime.isSame(eventEndTime, 'minute')
+        );
+    });
+};
+
+export const groupEventsByType = (events: PogoEvent[]): EventGroup[] => {
+    const groups = new Map<string, PogoEvent[]>();
+
+    // First, group by event type
+    events.forEach(event => {
+        if (!groups.has(event.eventType)) {
+            groups.set(event.eventType, []);
+        }
+        groups.get(event.eventType)!.push(event);
+    });
+
+    const result: EventGroup[] = [];
+
+    // Then, within each type, group by timing
+    groups.forEach((typeEvents, eventType) => {
+        if (typeEvents.length === 1) {
+            // Single event, no grouping needed
+            const event = typeEvents[0];
+            result.push({
+                eventType,
+                events: [event],
+                displayName: event.name, // Use actual event name for single events
+                color: getEventTypeInfo(eventType).color,
+                isMultiDay: isMultiDayEvent(event),
+                startDate: parseEventDate(event.start),
+                endDate: parseEventDate(event.end),
+            });
+        } else {
+            // Multiple events of same type - group by timing
+            const sortedEvents = typeEvents.sort((a, b) => dayjs(a.start).valueOf() - dayjs(b.start).valueOf());
+
+            // For single-day events, group by exact start AND end time
+            if (isSameDayEvent(sortedEvents[0])) {
+                const timeGroups = new Map<string, PogoEvent[]>();
+
+                sortedEvents.forEach(event => {
+                    const startTime = parseEventDate(event.start).format('YYYY-MM-DD HH:mm');
+                    const endTime = parseEventDate(event.end).format('YYYY-MM-DD HH:mm');
+                    const timeKey = `${startTime}_${endTime}`;
+                    if (!timeGroups.has(timeKey)) {
+                        timeGroups.set(timeKey, []);
+                    }
+                    timeGroups.get(timeKey)!.push(event);
+                });
+
+                timeGroups.forEach(timeEvents => {
+                    if (timeEvents.length === 1) {
+                        // Single event at this time
+                        const event = timeEvents[0];
+                        result.push({
+                            eventType,
+                            events: [event],
+                            displayName: event.name,
+                            color: getEventTypeInfo(eventType).color,
+                            isMultiDay: false,
+                            startDate: parseEventDate(event.start),
+                            endDate: parseEventDate(event.end),
+                        });
+                    } else {
+                        // Multiple events at same time - group them
+                        result.push({
+                            eventType,
+                            events: timeEvents,
+                            displayName: getEventTypeInfo(eventType).name, // Use type name for grouped events
+                            color: getEventTypeInfo(eventType).color,
+                            isMultiDay: false,
+                            startDate: parseEventDate(timeEvents[0].start),
+                            endDate: parseEventDate(timeEvents[timeEvents.length - 1].end),
+                        });
+                    }
+                });
+            } else {
+                // For multi-day events, group by exact start AND end time (same as single-day)
+                const timeGroups = new Map<string, PogoEvent[]>();
+
+                sortedEvents.forEach(event => {
+                    const startTime = parseEventDate(event.start).format('YYYY-MM-DD HH:mm');
+                    const endTime = parseEventDate(event.end).format('YYYY-MM-DD HH:mm');
+                    const timeKey = `${startTime}_${endTime}`;
+                    if (!timeGroups.has(timeKey)) {
+                        timeGroups.set(timeKey, []);
+                    }
+                    timeGroups.get(timeKey)!.push(event);
+                });
+
+                timeGroups.forEach(timeEvents => {
+                    if (timeEvents.length === 1) {
+                        // Single event at this time
+                        const event = timeEvents[0];
+                        result.push({
+                            eventType,
+                            events: [event],
+                            displayName: event.name,
+                            color: getEventTypeInfo(eventType).color,
+                            isMultiDay: true,
+                            startDate: parseEventDate(event.start),
+                            endDate: parseEventDate(event.end),
+                        });
+                    } else {
+                        // Multiple events at same time - group them
+                        result.push({
+                            eventType,
+                            events: timeEvents,
+                            displayName: getEventTypeInfo(eventType).name, // Use type name for grouped events
+                            color: getEventTypeInfo(eventType).color,
+                            isMultiDay: true,
+                            startDate: parseEventDate(timeEvents[0].start),
+                            endDate: parseEventDate(timeEvents[timeEvents.length - 1].end),
+                        });
+                    }
+                });
+            }
+        }
+    });
+
+    return result;
+};
+
+// Helper function to parse dates consistently
+export const parseEventDate = (dateStr: string): dayjs.Dayjs => {
+    // Check if the date string is in UTC format (ends with Z)
+    if (dateStr.endsWith('Z')) {
+        return dayjs.utc(dateStr).local();
+    }
+    // If not UTC, treat as local time
+    return dayjs(dateStr);
+};
+
+export const formatEventTime = (dateStr: string): string => {
+    return parseEventDate(dateStr).format('ha');
+};
+
 export const getEventsForDate = (events: PogoEvent[], date: Date | string | dayjs.Dayjs): PogoEvent[] => {
     const targetDate = dayjs(date);
     const targetDateStr = targetDate.format(DATE_FORMAT.CALENDAR_DATE);
@@ -280,12 +438,46 @@ export const getEventsForDate = (events: PogoEvent[], date: Date | string | dayj
     return events.filter((event: PogoEvent) => {
         if (!event.start || !event.end) return false;
 
-        const startDate = dayjs.utc(event.start).local();
-        const endDate = dayjs.utc(event.end).local();
+        const startDate = parseEventDate(event.start);
+        const endDate = parseEventDate(event.end);
 
         const startDateStr = startDate.format(DATE_FORMAT.CALENDAR_DATE);
         const endDateStr = endDate.format(DATE_FORMAT.CALENDAR_DATE);
 
         return targetDateStr >= startDateStr && targetDateStr <= endDateStr;
     });
+};
+
+// Get events organized for calendar display
+export const getCalendarEventsForDate = (events: PogoEvent[], date: Date | string | dayjs.Dayjs): CalendarEventDisplay => {
+    const eventsForDate = getEventsForDate(events, date);
+
+    // Group all events by type first, then apply intelligent grouping
+    const eventGroups = groupEventsByType(eventsForDate);
+
+    // Separate individual events from grouped events
+    const singleDayEvents: PogoEvent[] = [];
+    const multiDayEvents: PogoEvent[] = [];
+    const groupedEvents: EventGroup[] = [];
+
+    eventGroups.forEach(group => {
+        if (group.events.length === 1) {
+            // Single event - add to appropriate category
+            const event = group.events[0];
+            if (isSameDayEvent(event)) {
+                singleDayEvents.push(event);
+            } else {
+                multiDayEvents.push(event);
+            }
+        } else {
+            // Multiple events - this is a true group
+            groupedEvents.push(group);
+        }
+    });
+
+    return {
+        singleDayEvents: sortEventsByPriority(singleDayEvents),
+        multiDayEvents: sortEventsByPriority(multiDayEvents),
+        eventGroups: groupedEvents,
+    };
 };

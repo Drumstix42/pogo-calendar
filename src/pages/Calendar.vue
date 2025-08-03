@@ -80,7 +80,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, onMounted } from 'vue';
 
 import { useEventsStore } from '@/stores/events';
 import { formatEventDateRange } from '@/utils/dateFormat';
@@ -92,6 +92,14 @@ import CalendarOptions from '@/components/CalendarOptions/CalendarOptions.vue';
 import EventTypeFilter from '@/components/EventTypeFilter.vue';
 
 const eventsStore = useEventsStore();
+
+// Auto-load events when the page mounts
+onMounted(async () => {
+    // Only fetch if we don't have fresh data
+    if (!eventsStore.hasFreshData) {
+        await eventsStore.fetchEvents();
+    }
+});
 
 const sampleEvents = computed((): PogoEvent[] => {
     return eventsStore.currentMonthEvents.slice(0, 6);

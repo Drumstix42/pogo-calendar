@@ -57,3 +57,8 @@ h6 {
 .btn {
     text-decoration: none;
 }
+
+/* Floating Vue */
+.v-popper--theme-tooltip .v-popper__inner {
+    background-color: rgba(0, 0, 0, 0.9);
+}
