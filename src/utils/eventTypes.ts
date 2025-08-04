@@ -9,6 +9,7 @@ export interface EventTypeInfo {
     name: string;
     color: string;
     priority: number;
+    category: 'community-and-raids' | 'research' | 'seasonal-premium' | 'misc-and-events';
 }
 
 export interface PogoEvent {
@@ -35,11 +36,13 @@ export const EVENT_TYPES: Record<string, EventTypeInfo> = {
         name: 'Community Day',
         color: '#1660a9', // blue
         priority: 88,
+        category: 'community-and-raids',
     },
     'pokemon-spotlight-hour': {
         name: 'Spotlight Hour',
         color: '#ae6318', // orange
         priority: 63,
+        category: 'community-and-raids',
     },
 
     // Raid Events
@@ -47,26 +50,31 @@ export const EVENT_TYPES: Record<string, EventTypeInfo> = {
         name: 'Raid Hour',
         color: '#c0392b', // red
         priority: 68,
+        category: 'community-and-raids',
     },
     'raid-day': {
         name: 'Raid Day',
         color: '#cf4435', // red
         priority: 78,
+        category: 'community-and-raids',
     },
     'raid-weekend': {
         name: 'Raid Weekend',
         color: '#6f1e51', // purple-red
         priority: 77,
+        category: 'community-and-raids',
     },
     'raid-battles': {
         name: 'Raid Battles',
         color: '#c0392b', // red
         priority: 54,
+        category: 'community-and-raids',
     },
     'elite-raids': {
         name: 'Elite Raids',
         color: '#a21416', // dark red
         priority: 86,
+        category: 'community-and-raids',
     },
 
     // Max Battles (New system)
@@ -74,11 +82,13 @@ export const EVENT_TYPES: Record<string, EventTypeInfo> = {
         name: 'Max Battles',
         color: '#811356', // purple
         priority: 67,
+        category: 'community-and-raids',
     },
     'max-mondays': {
         name: 'Max Monday',
         color: '#690342', // darker purple
         priority: 65,
+        category: 'community-and-raids',
     },
 
     // Research Events
@@ -86,31 +96,37 @@ export const EVENT_TYPES: Record<string, EventTypeInfo> = {
         name: 'Research',
         color: '#12836d', // teal
         priority: 51,
+        category: 'research',
     },
     'research-day': {
         name: 'Research Day',
         color: '#11866f', // teal
         priority: 76,
+        category: 'research',
     },
     'timed-research': {
         name: 'Timed Research',
         color: '#12836d', // teal
         priority: 50,
+        category: 'research',
     },
     'limited-research': {
         name: 'Limited Research',
         color: '#11866f', // teal
         priority: 49,
+        category: 'research',
     },
     'special-research': {
         name: 'Special Research',
         color: '#0f806a', // blue-teal
         priority: 72,
+        category: 'research',
     },
     'research-breakthrough': {
         name: 'Research Breakthrough',
         color: '#795548', // brown
         priority: 48,
+        category: 'research',
     },
 
     // Major Events
@@ -118,21 +134,25 @@ export const EVENT_TYPES: Record<string, EventTypeInfo> = {
         name: 'Pokemon GO Fest',
         color: '#153d94', // dark blue
         priority: 94,
+        category: 'seasonal-premium',
     },
     'pokemon-go-tour': {
         name: 'Pokemon GO Tour',
         color: '#1d3a74', // darker blue
         priority: 93,
+        category: 'seasonal-premium',
     },
     'safari-zone': {
         name: 'Safari Zone',
         color: '#3d7141', // green
         priority: 87,
+        category: 'seasonal-premium',
     },
     'ticketed-event': {
         name: 'Ticketed Event',
         color: '#c7378b', // pink
         priority: 90,
+        category: 'seasonal-premium',
     },
 
     // Regular Events
@@ -140,21 +160,25 @@ export const EVENT_TYPES: Record<string, EventTypeInfo> = {
         name: 'Event',
         color: '#1d8247', // green
         priority: 58,
+        category: 'misc-and-events',
     },
     'live-event': {
         name: 'Live Event',
         color: '#d63031', // red
         priority: 75,
+        category: 'misc-and-events',
     },
     'location-specific': {
         name: 'Location Specific',
         color: '#284b92', // blue
         priority: 45,
+        category: 'misc-and-events',
     },
     'bonus-hour': {
         name: 'Bonus Hour',
         color: '#40407a', // purple-blue
         priority: 62,
+        category: 'misc-and-events',
     },
 
     // Battle Events
@@ -162,6 +186,7 @@ export const EVENT_TYPES: Record<string, EventTypeInfo> = {
         name: 'GO Battle League',
         color: '#8e44ad', // purple
         priority: 56,
+        category: 'community-and-raids',
     },
 
     // Team Rocket
@@ -169,16 +194,19 @@ export const EVENT_TYPES: Record<string, EventTypeInfo> = {
         name: 'Team GO Rocket Takeover',
         color: '#1e1e1e', // dark
         priority: 84,
+        category: 'misc-and-events',
     },
     'team-go-rocket': {
         name: 'Team GO Rocket',
         color: '#1e1e1e', // dark
         priority: 55,
+        category: 'misc-and-events',
     },
     'giovanni-special-research': {
         name: 'Giovanni Special Research',
         color: '#1e272e', // very dark
         priority: 71,
+        category: 'research',
     },
 
     // Showcases & Competitions
@@ -186,11 +214,13 @@ export const EVENT_TYPES: Record<string, EventTypeInfo> = {
         name: 'PokéStop Showcase',
         color: '#2f8274', // teal-green
         priority: 52,
+        category: 'misc-and-events',
     },
     'global-challenge': {
         name: 'Global Challenge',
         color: '#0a64b5', // blue
         priority: 82,
+        category: 'seasonal-premium',
     },
 
     // System/Meta
@@ -198,21 +228,25 @@ export const EVENT_TYPES: Record<string, EventTypeInfo> = {
         name: 'Season',
         color: '#29817e', // teal
         priority: 100,
+        category: 'seasonal-premium',
     },
     update: {
         name: 'Update',
         color: '#2679af', // blue
         priority: 10,
+        category: 'misc-and-events',
     },
     'potential-ultra-unlock': {
         name: 'Potential Ultra Unlock',
         color: '#2c3e50', // dark blue-grey
         priority: 42,
+        category: 'misc-and-events',
     },
     'go-pass': {
         name: 'GO Pass',
         color: '#896e17', // yellow/gold
         priority: 95,
+        category: 'seasonal-premium',
     },
 };
 

@@ -23,13 +23,6 @@ export const useEventFilterStore = defineStore('eventFilter', () => {
                 }
             },
             write: (value: EventTypeKey[]) => {
-                // If no event types are disabled, remove from localStorage
-                if (value.length === 0) {
-                    localStorage.removeItem(STORAGE_KEYS.DISABLED_FILTERS);
-                    return '';
-                }
-
-                // Otherwise, save the disabled event types
                 return JSON.stringify(value);
             },
         },

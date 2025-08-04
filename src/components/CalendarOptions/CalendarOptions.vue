@@ -15,18 +15,16 @@
             </div>
         </div>
 
-        <div class="collapse" :class="{ show: isExpanded }">
-            <div class="options-content mt-3">
-                <div class="row g-3">
-                    <div class="col-md-3">
-                        <FirstDaySelector />
-                    </div>
-                    <div class="col-md-3">
-                        <EventGroupingToggle />
-                    </div>
-                    <div class="col-md-6">
-                        <EventFilterOptions />
-                    </div>
+        <div v-if="isExpanded" class="options-content mt-3">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <FirstDaySelector />
+                </div>
+                <div class="col-md-3">
+                    <EventGroupingToggle />
+                </div>
+                <div class="col-md-6">
+                    <EventFilterOptions />
                 </div>
             </div>
         </div>
@@ -56,10 +54,12 @@ const isExpanded = ref(false);
     padding: 1rem 1rem 0.75rem 1rem;
     cursor: pointer;
     transition: background-color 0.2s ease;
+    border-radius: 0.375rem;
 }
 
 .options-header.expanded {
     border-bottom: 1px solid #e9ecef;
+    border-radius: 0.375rem 0.375rem 0 0;
 }
 
 .options-header:hover {
@@ -68,10 +68,6 @@ const isExpanded = ref(false);
 
 .options-content {
     padding: 0.75rem 1rem 1rem 1rem;
-}
-
-.collapse {
-    transition: all 0.2s ease-in-out;
 }
 
 .rotate-180 {
