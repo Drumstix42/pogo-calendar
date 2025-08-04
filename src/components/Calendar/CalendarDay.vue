@@ -9,12 +9,7 @@
         <div class="day-number">{{ date }}</div>
 
         <!-- Multi-day events (rendered first, as background bars) -->
-        <div
-            v-if="weekCompactSlots.size > 0"
-            class="multi-day-events"
-            :xclass="{ 'no-single-day-events': !singleDayEvents.length }"
-            :style="{ height: `${multiDayEventsHeight}px` }"
-        >
+        <div v-if="weekCompactSlots.size > 0" class="multi-day-events" :style="{ height: `${multiDayEventsHeight}px` }">
             <template v-for="event in multiDayEvents" :key="`multi-${getEventKey(event)}`">
                 <div
                     class="multi-day-event-slot"
@@ -67,11 +62,10 @@
                 <div class="single-day-event">
                     <div class="event-dot" :style="{ backgroundColor: getEventColor(event) }"></div>
                     <div class="event-content">
-                        <div v-if="getEventTime(event)" class="event-time">{{ getEventTime(event) }}</div>
                         <div class="event-name-container">
                             <div class="event-name">{{ getEventDisplayName(event) }}</div>
-                            <span v-if="shouldShowBadge(event)" class="event-badge">{{ getEventCount(event) }}</span>
                         </div>
+                        <div v-if="getEventTime(event)" class="event-time">{{ getEventTime(event) }}</div>
                     </div>
                 </div>
 
@@ -127,15 +121,15 @@ const calendarSettings = useCalendarSettingsStore();
 // Helper function to calculate week boundaries based on configured first day
 const getWeekBoundaries = (referenceDay: Dayjs) => {
     const firstDayIndex = calendarSettings.firstDayIndex;
-    
+
     // Find the start of the week for this day
     let weekStart = referenceDay.clone();
     while (weekStart.day() !== firstDayIndex) {
         weekStart = weekStart.subtract(1, 'day');
     }
-    
+
     const weekEnd = weekStart.add(6, 'day');
-    
+
     return { weekStart, weekEnd };
 };
 
@@ -433,7 +427,7 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
 
 <style scoped>
 .calendar-day {
-    min-height: 120px;
+    min-height: 140px;
     border-right: 1px solid #e9ecef;
     border-bottom: 1px solid #e9ecef;
     background: white;
@@ -470,7 +464,7 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     height: 24px;
     border-radius: 50%;
     font-size: 0.875rem;
-    margin: 0.5rem 0 0.5rem 0.5rem; /* Add margin to replace the removed padding */
+    margin: 0.4rem 0 0.4rem 0.4rem;
 }
 
 /* Multi-day events (background layer) */
@@ -482,10 +476,6 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     z-index: 1;
     overflow: visible;
     pointer-events: none; /* Allow events to pass through the container */
-}
-
-.multi-day-events.no-single-day-events {
-    margin-bottom: 1rem; /* Add spacing if no single-day events */
 }
 
 .multi-day-event-bar {
@@ -599,7 +589,6 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
 .composite-event-container {
     height: 20px; /* Match multi-day-event-bar height */
     margin-bottom: 1px;
-    /* No flexbox needed - segments are absolutely positioned */
 }
 
 .composite-segment {
@@ -700,7 +689,7 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     flex-direction: column;
     min-height: 28px; /* leave empty space below multi-day events, for better perceived margin before next visible week */
     gap: 3px;
-    margin: 0.25rem 0.5rem 0.5rem 0.5rem; /* Add margin to replace padding */
+    margin: 0.25rem 0.1rem 0.5rem 0.1rem; /* Add margin to replace padding */
     position: relative;
 }
 
@@ -736,25 +725,26 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     overflow: hidden;
 }
 
-.single-day-event .event-time {
-    font-weight: 600;
-    font-size: 0.68rem;
-    color: #444;
-    line-height: 1.1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
 .single-day-event .event-name {
-    font-size: 0.68rem;
-    color: #666;
-    line-height: 1.1;
+    font-size: 0.7rem;
+    font-weight: 400;
+    color: #333;
+    line-height: 1;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
     margin-top: 1px;
     flex: 1;
+}
+
+.single-day-event .event-time {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #444;
+    line-height: 1rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .event-name-container {
