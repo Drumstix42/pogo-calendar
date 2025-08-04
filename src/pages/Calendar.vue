@@ -1,6 +1,6 @@
 <template>
     <div class="calendar">
-        <div class="container mt-4">
+        <div class="container mt-2 mb-4">
             <!-- Month Navigation Header -->
             <CalendarHeader />
 

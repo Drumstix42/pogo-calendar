@@ -12,6 +12,38 @@ export interface EventTypeInfo {
     category: 'community-and-raids' | 'research' | 'seasonal-premium' | 'misc-and-events';
 }
 
+export interface PokemonBoss {
+    name: string;
+    image: string;
+    canBeShiny: boolean;
+}
+
+export interface RaidBattlesData {
+    bosses: PokemonBoss[];
+    shinies?: PokemonBoss[];
+}
+
+export interface SpotlightData {
+    name: string;
+    image?: string;
+    canBeShiny: boolean;
+    bonus?: string;
+    list?: PokemonBoss[];
+}
+
+export interface CommunityDayData {
+    spawns?: PokemonBoss[];
+    featured?: PokemonBoss | PokemonBoss[];
+    bonuses?: any[];
+    shinies?: PokemonBoss[];
+    specialresearch?: any[];
+    bonusDisclaimers?: string[];
+}
+
+export interface MaxBattlesData {
+    featured: PokemonBoss | PokemonBoss[];
+}
+
 export interface PogoEvent {
     eventID: string;
     name: string;
@@ -26,6 +58,10 @@ export interface PogoEvent {
             hasSpawns: boolean;
             hasFieldResearchTasks: boolean;
         };
+        raidbattles?: RaidBattlesData;
+        spotlight?: SpotlightData;
+        communityday?: CommunityDayData;
+        maxbattles?: MaxBattlesData;
         [key: string]: any;
     };
 }
@@ -61,7 +97,7 @@ export const EVENT_TYPES: Record<string, EventTypeInfo> = {
     'raid-weekend': {
         name: 'Raid Weekend',
         color: '#6f1e51', // purple-red
-        priority: 77,
+        priority: 37,
         category: 'community-and-raids',
     },
     'raid-battles': {
@@ -133,19 +169,19 @@ export const EVENT_TYPES: Record<string, EventTypeInfo> = {
     'pokemon-go-fest': {
         name: 'Pokemon GO Fest',
         color: '#153d94', // dark blue
-        priority: 94,
+        priority: 20,
         category: 'seasonal-premium',
     },
     'pokemon-go-tour': {
         name: 'Pokemon GO Tour',
         color: '#1d3a74', // darker blue
-        priority: 93,
+        priority: 21,
         category: 'seasonal-premium',
     },
     'safari-zone': {
         name: 'Safari Zone',
         color: '#3d7141', // green
-        priority: 87,
+        priority: 22,
         category: 'seasonal-premium',
     },
     'ticketed-event': {

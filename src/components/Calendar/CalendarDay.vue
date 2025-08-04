@@ -66,6 +66,24 @@
                             <div class="event-name">{{ getEventDisplayName(event) }}</div>
                         </div>
                         <div v-if="getEventTime(event)" class="event-time">{{ getEventTime(event) }}</div>
+                        <div v-if="shouldShowPokemonImage(event)" class="event-pokemon-image">
+                            <div
+                                v-for="(imageUrl, index) in getEventPokemonImageUrls(event)"
+                                :key="`pokemon-${index}`"
+                                class="pokemon-container"
+                                :class="{ 'has-dynamax-overlay': isMaxMondaysEvent(event) }"
+                            >
+                                <div v-if="isMaxMondaysEvent(event)" class="dynamax-overlay">
+                                    <img src="/images/overlay/dynamax-clouds.png" alt="Dynamax effect" class="dynamax-clouds" />
+                                </div>
+                                <img
+                                    :src="imageUrl"
+                                    :alt="`${getEventDisplayName(event)} Pokemon ${index + 1}`"
+                                    class="pokemon-icon"
+                                    @error="handleImageError"
+                                />
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -84,6 +102,7 @@ import { computed } from 'vue';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { useEventFilterStore } from '@/stores/eventFilter';
 import { useEventsStore } from '@/stores/events';
+import { getEventPokemonImages, hasEventPokemonImage } from '@/utils/eventPokemon';
 import {
     type PogoEvent,
     formatEventTime,
@@ -278,6 +297,26 @@ const getEventTime = (event: PogoEvent): string => {
     return formatEventTime(event.start);
 };
 
+// Pokémon image helpers
+const getEventPokemonImageUrls = (event: PogoEvent): string[] => {
+    return getEventPokemonImages(event);
+};
+
+const shouldShowPokemonImage = (event: PogoEvent): boolean => {
+    return hasEventPokemonImage(event);
+};
+
+const isMaxMondaysEvent = (event: PogoEvent): boolean => {
+    return event.eventType === 'max-mondays';
+};
+
+const handleImageError = (event: Event): void => {
+    const target = event.target as HTMLImageElement;
+    if (target) {
+        target.style.display = 'none';
+    }
+};
+
 // Multi-day event bar state helpers
 const getMultiDayEventBarClass = (event: PogoEvent, currentDay: Dayjs): string => {
     const slotData = getEventSlotData(event);
@@ -442,8 +481,9 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
 }
 
 .calendar-day.other-month {
-    background-color: #f8f9fa;
-    color: #6c757d;
+    background-color: #f3f4f5;
+    color: #8c949b;
+    border-color: #dee2e6;
 }
 
 .calendar-day.today {
@@ -715,6 +755,44 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     border-radius: 50%;
     flex-shrink: 0;
     margin-top: 2px; /* Align with first line of text */
+}
+
+.event-pokemon-image {
+    flex-shrink: 0;
+    margin-top: 2px;
+    display: flex;
+    justify-content: flex-start;
+    gap: 2px;
+    flex-wrap: wrap;
+}
+
+.pokemon-container {
+    position: relative;
+    display: inline-block;
+}
+
+.dynamax-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: -1;
+}
+
+.dynamax-clouds {
+    width: 100%;
+    /* height: 100%; */
+    object-fit: contain;
+}
+
+.pokemon-icon {
+    max-width: 100%;
+    height: 50px;
+    object-fit: contain;
+    border-radius: 2px;
+    position: relative;
+    z-index: 2;
 }
 
 .event-content {

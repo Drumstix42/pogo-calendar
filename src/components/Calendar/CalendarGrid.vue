@@ -395,7 +395,12 @@ const hasConflictInSlot = (event: PogoEvent, slotIndex: number, existingSlots: E
     font-weight: 600;
     font-size: 0.875rem;
     color: #495057;
+    /* border-right: 1px solid #dee2e6; */
 }
+
+/* .calendar-day-header:nth-child(7n) {
+    border-right: none;
+} */
 
 .calendar-days {
     display: grid;
