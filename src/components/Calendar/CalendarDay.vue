@@ -456,14 +456,6 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     margin: 0.5rem 0 0.5rem 0.5rem; /* Add margin to replace the removed padding */
 }
 
-.calendar-day:hover {
-    background-color: #f8f9fa;
-}
-
-.calendar-day.other-month:hover {
-    background-color: #e9ecef;
-}
-
 /* Multi-day events (background layer) */
 .multi-day-events {
     display: flex;
@@ -542,7 +534,7 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     border-radius: 8px;
     font-size: 0.65rem;
     font-weight: 500;
-    line-height: 1;
+    line-height: 16px;
     margin-left: 4px;
     flex-shrink: 0;
     backdrop-filter: blur(2px);
