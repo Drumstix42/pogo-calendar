@@ -5,11 +5,13 @@
             <CalendarHeader ref="calendarHeaderRef" />
 
             <!-- Calendar Options -->
-            <div v-if="isOptionsExpanded" class="row">
-                <div class="col-12">
-                    <CalendarOptions />
+            <Transition name="slide-down">
+                <div v-if="isOptionsExpanded" class="row">
+                    <div class="col-12">
+                        <CalendarOptions />
+                    </div>
                 </div>
-            </div>
+            </Transition>
 
             <!-- Calendar Grid Component -->
             <div class="row">
@@ -46,3 +48,36 @@ onMounted(async () => {
     }
 });
 </script>
+
+<style scoped>
+/* Slide down transition for Calendar Options */
+.slide-down-enter-active,
+.slide-down-leave-active {
+    transition: all 0.15s ease-in-out;
+    overflow: hidden;
+}
+
+.slide-down-enter-from {
+    opacity: 0;
+    max-height: 0;
+    transform: translateY(-10px);
+}
+
+.slide-down-enter-to {
+    opacity: 1;
+    max-height: 800px; /* Generous height to accommodate all options */
+    transform: translateY(0);
+}
+
+.slide-down-leave-from {
+    opacity: 1;
+    max-height: 800px;
+    transform: translateY(0);
+}
+
+.slide-down-leave-to {
+    opacity: 0;
+    max-height: 0;
+    transform: translateY(-10px);
+}
+</style>

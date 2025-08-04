@@ -22,10 +22,7 @@
             <span class="month-label">{{ currentMonthDisplay }}</span>
         </div>
 
-        <button
-            class="btn btn-outline-secondary btn-sm d-flex align-items-center"
-            @click="toggleOptions"
-        >
+        <button class="btn btn-outline-secondary btn-sm d-flex align-items-center" @click="toggleOptions">
             <Settings :size="16" class="me-2" />
             <span class="me-2">{{ isOptionsExpanded ? 'Hide' : 'Show' }} Options</span>
             <ChevronDown :size="14" :class="{ 'rotate-180': isOptionsExpanded }" />
@@ -108,7 +105,7 @@ const goToCurrentMonth = () => {
 }
 
 .month-label {
-    font-size: 1rem;
+    font-size: 1.2rem;
     font-weight: 500;
 }
 
