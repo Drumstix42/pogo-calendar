@@ -124,6 +124,21 @@ const eventFilter = useEventFilterStore();
 const eventsStore = useEventsStore();
 const calendarSettings = useCalendarSettingsStore();
 
+// Helper function to calculate week boundaries based on configured first day
+const getWeekBoundaries = (referenceDay: Dayjs) => {
+    const firstDayIndex = calendarSettings.firstDayIndex;
+    
+    // Find the start of the week for this day
+    let weekStart = referenceDay.clone();
+    while (weekStart.day() !== firstDayIndex) {
+        weekStart = weekStart.subtract(1, 'day');
+    }
+    
+    const weekEnd = weekStart.add(6, 'day');
+    
+    return { weekStart, weekEnd };
+};
+
 // Get events for this specific day using the new grouping logic
 const calendarEvents = computed(() => {
     if (calendarSettings.groupSimilarEvents) {
@@ -180,8 +195,8 @@ const multiDayEvents = computed(() => {
 
 // Compact slot assignments for this specific week to remove gaps
 const weekCompactSlots = computed(() => {
-    const weekStart = props.dayjs.startOf('week').day(calendarSettings.firstDayIndex);
-    const weekEnd = weekStart.add(6, 'day');
+    // Calculate week start properly based on configured first day
+    const { weekStart, weekEnd } = getWeekBoundaries(props.dayjs);
 
     // Find all events that actually render on at least one day in this week
     const eventsRenderingInThisWeek = props.eventSlots.filter(slot => {
@@ -275,8 +290,8 @@ const getMultiDayEventBarClass = (event: PogoEvent, currentDay: Dayjs): string =
     if (!slotData || !slotData.shouldRenderOnDay(currentDay)) return '';
 
     const today = currentDay.startOf('day');
-    const weekStart = props.dayjs.startOf('week').day(calendarSettings.firstDayIndex);
-    const weekEnd = weekStart.add(6, 'day').endOf('day');
+    const { weekEnd } = getWeekBoundaries(props.dayjs);
+    const weekEndDay = weekEnd.endOf('day');
 
     // Use the actual event's dates, not the composite slot's extended dates
     const eventStartDay = parseEventDate(event.start).startOf('day');
@@ -287,7 +302,7 @@ const getMultiDayEventBarClass = (event: PogoEvent, currentDay: Dayjs): string =
     const isFirstDayOfWeek = today.day() === calendarSettings.firstDayIndex;
 
     // End positioning (1 condition)
-    const eventEndsThisWeek = eventEndDay.isSameOrBefore(weekEnd, 'day');
+    const eventEndsThisWeek = eventEndDay.isSameOrBefore(weekEndDay, 'day');
 
     // Special case: single day span
     if (isStartDay && eventEndsThisWeek && today.isSame(eventEndDay, 'day')) {
@@ -352,15 +367,16 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     if (eventEnd.startOf('day').isAfter(eventStart.startOf('day'))) {
         // Multi-day event - calculate span from current rendering day to event end
         // Use consistent week boundaries based on the calendar row
-        const weekEnd = props.dayjs.startOf('week').day(calendarSettings.firstDayIndex).add(6, 'day').endOf('day');
+        const { weekEnd } = getWeekBoundaries(props.dayjs);
+        const weekEndDay = weekEnd.endOf('day');
         const eventEndDay = eventEnd.startOf('day');
-        const actualEndDay = eventEndDay.isBefore(weekEnd) ? eventEndDay : weekEnd;
+        const actualEndDay = eventEndDay.isBefore(weekEndDay) ? eventEndDay : weekEndDay;
 
         // Calculate how many days to span from today to the end
         spanDays = actualEndDay.diff(today, 'day') + 1;
 
         // If the event ends on the last day we're spanning to, check if it ends at a specific time
-        if (eventEndDay.isSame(actualEndDay, 'day') && eventEndDay.isSameOrBefore(weekEnd, 'day')) {
+        if (eventEndDay.isSame(actualEndDay, 'day') && eventEndDay.isSameOrBefore(weekEndDay, 'day')) {
             // Event ends on the final day - calculate partial day width
             const finalDayStart = actualEndDay.clone();
             const finalDayEnd = finalDayStart.clone().add(1, 'day');
@@ -387,7 +403,8 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     // Check if this event is followed by another event in the same slot
     let gapAdjustment = '';
     if (slotData) {
-        const weekEnd = props.dayjs.startOf('week').day(calendarSettings.firstDayIndex).add(6, 'day').endOf('day');
+        const { weekEnd } = getWeekBoundaries(props.dayjs);
+        const weekEndDay = weekEnd.endOf('day');
 
         // Find other events in the same slot that start after this one ends
         const hasFollowingEvent = props.eventSlots.some(slot => {
@@ -399,7 +416,7 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
 
             // Check if other event starts at or shortly after this one ends (within 2 hours)
             // AND starts within this same week
-            return otherStart.isSameOrAfter(eventEnd) && otherStart.diff(eventEnd, 'hour') <= 2 && otherStart.isSameOrBefore(weekEnd);
+            return otherStart.isSameOrAfter(eventEnd) && otherStart.diff(eventEnd, 'hour') <= 2 && otherStart.isSameOrBefore(weekEndDay);
         });
 
         if (hasFollowingEvent) {

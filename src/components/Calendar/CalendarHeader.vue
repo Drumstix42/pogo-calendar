@@ -28,13 +28,11 @@
 import dayjs from 'dayjs';
 import { ChevronLeft, ChevronRight } from 'lucide-vue-next';
 import { computed } from 'vue';
-import { useRouter } from 'vue-router';
 
 import { useUrlSync } from '@/composables/useUrlSync';
 import { DATE_FORMAT } from '@/utils/dateFormat';
 
 const { urlMonth, urlYear } = useUrlSync();
-const router = useRouter();
 
 // Current month display
 const currentMonthDisplay = computed(() => {
@@ -66,33 +64,20 @@ const isNextDisabled = computed(() => {
 // Navigation methods
 const goToPreviousMonth = () => {
     const prev = dayjs().year(urlYear.value).month(urlMonth.value).subtract(1, 'month');
-    const now = dayjs();
-
-    // If navigating to current month, clear query params for clean URL
-    if (prev.month() === now.month() && prev.year() === now.year()) {
-        router.push({ query: {} });
-    } else {
-        urlMonth.value = prev.month();
-        urlYear.value = prev.year();
-    }
+    urlMonth.value = prev.month();
+    urlYear.value = prev.year();
 };
 
 const goToNextMonth = () => {
     const next = dayjs().year(urlYear.value).month(urlMonth.value).add(1, 'month');
-    const now = dayjs();
-
-    // If navigating to current month, clear query params for clean URL
-    if (next.month() === now.month() && next.year() === now.year()) {
-        router.push({ query: {} });
-    } else {
-        urlMonth.value = next.month();
-        urlYear.value = next.year();
-    }
+    urlMonth.value = next.month();
+    urlYear.value = next.year();
 };
 
 const goToCurrentMonth = () => {
-    // Clear query params to show current month with clean URL
-    router.push({ query: {} });
+    const now = dayjs();
+    urlMonth.value = now.month();
+    urlYear.value = now.year();
 };
 </script>
 

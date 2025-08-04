@@ -141,10 +141,24 @@ const eventSlots = computed((): EventSlot[] => {
                 return group[0]; // Single event
             } else {
                 // Multiple identical events - create grouped representative
-                const representative = { ...group[0] };
+                // Sort the group to ensure consistent representative selection
+                const sortedGroup = group.sort((a, b) => {
+                    // First by event type priority
+                    const aPriority = getEventTypeInfo(a.eventType).priority;
+                    const bPriority = getEventTypeInfo(b.eventType).priority;
+                    if (aPriority !== bPriority) {
+                        return bPriority - aPriority; // Higher priority first
+                    }
+
+                    // Then by event name for consistency
+                    return a.name.localeCompare(b.name);
+                });
+
+                const representative = { ...sortedGroup[0] };
                 (representative as any)._isGrouped = true;
                 (representative as any)._groupedEvents = group;
-                (representative as any)._displayName = getEventTypeInfo(group[0].eventType).name;
+                (representative as any)._displayName = getEventTypeInfo(sortedGroup[0].eventType).name;
+
                 return representative;
             }
         });
@@ -265,13 +279,27 @@ const getRaidSubTypePriority = (event: PogoEvent): number => {
 
 // Helper function to check if two events should be grouped in the same slot
 const shouldShareSlot = (eventA: PogoEvent, eventB: PogoEvent): boolean => {
-    // Must be same event type
+    // Check if either event is a grouped event
+    const aIsGrouped = (eventA as any)._isGrouped;
+    const bIsGrouped = (eventB as any)._isGrouped;
+
+    // If both are grouped events of the same base type, they can share slots
+    if (aIsGrouped && bIsGrouped && eventA.eventType === eventB.eventType) {
+        return true;
+    }
+
+    // If one is grouped and matches the other's type, they can share
+    if ((aIsGrouped || bIsGrouped) && eventA.eventType === eventB.eventType) {
+        return true;
+    }
+
+    // Must be same event type for non-grouped logic
     if (eventA.eventType !== eventB.eventType) {
         return false;
     }
 
-    // For raid-battles, also check sub-type compatibility
-    if (eventA.eventType === 'raid-battles') {
+    // For raid-battles, also check sub-type compatibility (only for non-grouped events)
+    if (eventA.eventType === 'raid-battles' && !aIsGrouped && !bIsGrouped) {
         const subTypeA = getRaidSubType(eventA);
         const subTypeB = getRaidSubType(eventB);
         return subTypeA === subTypeB;

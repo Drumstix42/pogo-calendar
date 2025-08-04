@@ -95,7 +95,7 @@ export const EVENT_TYPES: Record<string, EventTypeInfo> = {
     research: {
         name: 'Research',
         color: '#12836d', // teal
-        priority: 51,
+        priority: 99,
         category: 'research',
     },
     'research-day': {
