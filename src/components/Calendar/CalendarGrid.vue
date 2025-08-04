@@ -169,7 +169,16 @@ const eventSlots = computed((): EventSlot[] => {
             return aIsGrouped ? -1 : 1;
         }
 
-        // 3. Then sort by start date (earlier events first)
+        // 3. For raid-battles, sort by sub-type priority (regular > mega > shadow)
+        if (a.eventType === 'raid-battles' && b.eventType === 'raid-battles') {
+            const aSubPriority = getRaidSubTypePriority(a);
+            const bSubPriority = getRaidSubTypePriority(b);
+            if (aSubPriority !== bSubPriority) {
+                return bSubPriority - aSubPriority; // Higher sub-priority first
+            }
+        }
+
+        // 4. Then sort by start date (earlier events first)
         const aStart = parseEventDate(a.start);
         const bStart = parseEventDate(b.start);
         if (!aStart.isSame(bStart)) {
@@ -218,6 +227,60 @@ const eventSlots = computed((): EventSlot[] => {
     return slots;
 });
 
+// Helper function to extract raid sub-type from event name
+const getRaidSubType = (event: PogoEvent): string => {
+    if (event.eventType !== 'raid-battles') {
+        return ''; // Not applicable for non-raid events
+    }
+
+    const eventName = event.name.toLowerCase();
+
+    if (eventName.includes('shadow')) {
+        return 'shadow-raids';
+    } else if (eventName.includes('mega')) {
+        return 'mega-raids';
+    } else {
+        return 'raid-battles';
+    }
+};
+
+// Helper function to get raid sub-type priority (higher number = higher priority)
+const getRaidSubTypePriority = (event: PogoEvent): number => {
+    if (event.eventType !== 'raid-battles') {
+        return 0; // Not applicable for non-raid events
+    }
+
+    const subType = getRaidSubType(event);
+    switch (subType) {
+        case 'shadow-raids':
+            return 3;
+        case 'raid-battles':
+            return 2;
+        case 'mega-raids':
+            return 1;
+        default:
+            return 0;
+    }
+};
+
+// Helper function to check if two events should be grouped in the same slot
+const shouldShareSlot = (eventA: PogoEvent, eventB: PogoEvent): boolean => {
+    // Must be same event type
+    if (eventA.eventType !== eventB.eventType) {
+        return false;
+    }
+
+    // For raid-battles, also check sub-type compatibility
+    if (eventA.eventType === 'raid-battles') {
+        const subTypeA = getRaidSubType(eventA);
+        const subTypeB = getRaidSubType(eventB);
+        return subTypeA === subTypeB;
+    }
+
+    // For other event types, same type is sufficient
+    return true;
+};
+
 // Helper function to find an available slot for the same event type
 const findAvailableSlotForEventType = (event: PogoEvent, existingSlots: EventSlot[]): number => {
     // Group existing slots by slot index
@@ -229,12 +292,12 @@ const findAvailableSlotForEventType = (event: PogoEvent, existingSlots: EventSlo
         slotsByIndex.get(slot.slotIndex)!.push(slot);
     });
 
-    // Check each slot index to find one with same event type and no conflicts
+    // Check each slot index to find one with compatible event types and no conflicts
     for (const [slotIndex, slotsInIndex] of slotsByIndex) {
-        // Check if this slot contains only the same event type
-        const allSameType = slotsInIndex.every(slot => slot.event.eventType === event.eventType);
+        // Check if this slot contains only compatible event types (considering sub-types for raids)
+        const allCompatible = slotsInIndex.every(slot => shouldShareSlot(event, slot.event));
 
-        if (allSameType && !hasConflictInSlot(event, slotIndex, existingSlots)) {
+        if (allCompatible && !hasConflictInSlot(event, slotIndex, existingSlots)) {
             return slotIndex;
         }
     }
@@ -247,11 +310,11 @@ const findNextAvailableSlot = (event: PogoEvent, existingSlots: EventSlot[]): nu
     let slotIndex = 0;
     while (true) {
         if (!hasConflictInSlot(event, slotIndex, existingSlots)) {
-            // Also check that this slot doesn't have different event types
+            // Also check that this slot doesn't have incompatible event types
             const slotsInThisIndex = existingSlots.filter(slot => slot.slotIndex === slotIndex);
-            const hasDifferentTypes = slotsInThisIndex.some(slot => slot.event.eventType !== event.eventType);
+            const hasIncompatibleTypes = slotsInThisIndex.some(slot => !shouldShareSlot(event, slot.event));
 
-            if (!hasDifferentTypes) {
+            if (!hasIncompatibleTypes) {
                 return slotIndex;
             }
         }
@@ -272,12 +335,12 @@ const hasConflictInSlot = (event: PogoEvent, slotIndex: number, existingSlots: E
         // Check for actual time overlap
         const hasTimeOverlap = eventStart.isBefore(slotEnd) && eventEnd.isAfter(slotStart);
 
-        // Same-type events can share slots if they don't overlap in time
-        if (event.eventType === slot.event.eventType && !hasTimeOverlap) {
-            return false; // No conflict - same type, no time overlap
+        // Compatible events (same type and sub-type) can share slots if they don't overlap in time
+        if (shouldShareSlot(event, slot.event) && !hasTimeOverlap) {
+            return false; // No conflict - compatible types, no time overlap
         }
 
-        // Different types or time overlap = conflict
+        // Incompatible types or time overlap = conflict
         return hasTimeOverlap;
     });
 };
