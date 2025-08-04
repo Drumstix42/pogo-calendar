@@ -1,0 +1,143 @@
+<template>
+    <div class="event-tooltip">
+        <div class="event-tooltip-type">{{ getEventTypeName(event) }}</div>
+
+        <!-- Show individual events if grouped -->
+        <div v-if="(event as any)._isGrouped" class="grouped-events">
+            <div class="event-separator"></div>
+            <div
+                v-for="groupedEvent in getGroupedEvents(event)"
+                :key="groupedEvent.eventID"
+                class="grouped-event-item"
+                :style="{
+                    backgroundColor: getEventColor(groupedEvent),
+                    borderLeftColor: `color-mix(in srgb, ${getEventColor(groupedEvent)} 70%, black)`,
+                }"
+            >
+                <div class="grouped-event-name">{{ groupedEvent.name }}</div>
+                <div class="grouped-event-time">{{ formatEventDuration(groupedEvent) }}</div>
+            </div>
+        </div>
+
+        <!-- Show time for single events -->
+        <div v-else>
+            <div class="event-separator"></div>
+            <div
+                class="event-time-info"
+                :style="{
+                    backgroundColor: getEventColor(event),
+                    borderLeftColor: `color-mix(in srgb, ${getEventColor(event)} 70%, black)`,
+                }"
+            >
+                <div class="grouped-event-name">{{ event.name }}</div>
+                <div :class="isSingleDay ? 'single-event-time' : 'grouped-event-time'">{{ formatEventDuration(event) }}</div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script setup lang="ts">
+import dayjs from 'dayjs';
+
+import { type PogoEvent, formatEventTime, getEventTypeInfo, isSameDayEvent, parseEventDate } from '@/utils/eventTypes';
+
+interface Props {
+    event: PogoEvent;
+    isSingleDay?: boolean;
+}
+
+withDefaults(defineProps<Props>(), {
+    isSingleDay: false,
+});
+
+const getEventColor = (event: PogoEvent): string => {
+    return getEventTypeInfo(event.eventType).color;
+};
+
+const getEventTypeName = (event: PogoEvent): string => {
+    return getEventTypeInfo(event.eventType).name;
+};
+
+// Helper function to format event duration for tooltips
+const formatEventDuration = (event: PogoEvent): string => {
+    const startTime = formatEventTime(event.start);
+    const endTime = formatEventTime(event.end);
+
+    if (isSameDayEvent(event)) {
+        return `${startTime} - ${endTime}`;
+    } else {
+        // For multi-day events, show date and time range
+        const startDate = parseEventDate(event.start).format('MMM D');
+        const endDate = parseEventDate(event.end).format('MMM D');
+        const totalDays = dayjs(event.end).diff(dayjs(event.start), 'day') + 1;
+        return `${startDate}, ${startTime} - ${endDate}, ${endTime} (${totalDays} day${totalDays > 1 ? 's' : ''})`;
+    }
+};
+
+// Helper function to get grouped events for tooltip
+const getGroupedEvents = (event: PogoEvent): PogoEvent[] => {
+    return (event as any)._groupedEvents || [event];
+};
+</script>
+
+<style scoped>
+.event-tooltip {
+    max-width: 280px;
+    padding: 0.5rem;
+    color: #ffffff !important;
+}
+
+.event-tooltip-type {
+    font-size: 0.8rem;
+    color: #cccccc;
+    margin-bottom: 0.25rem;
+}
+
+.event-time-info {
+    margin-bottom: 0.4rem;
+    padding: 0.4rem 0.6rem;
+    border-radius: 4px;
+    border-left: 3px solid;
+}
+
+.event-separator {
+    height: 1px;
+    background-color: rgba(255, 255, 255, 0.2);
+    margin: 0.6rem 0;
+}
+
+.grouped-events {
+    margin-top: 0.6rem;
+}
+
+.grouped-event-item {
+    margin-bottom: 0.4rem;
+    padding: 0.4rem 0.6rem;
+    border-radius: 4px;
+    border-left: 3px solid;
+}
+
+.grouped-event-item:last-child {
+    margin-bottom: 0;
+}
+
+.grouped-event-name {
+    font-size: 0.75rem;
+    font-weight: 500;
+    line-height: 1.3;
+    color: #ffffff;
+    margin-bottom: 0.15rem;
+}
+
+.grouped-event-time {
+    font-size: 0.7rem;
+    color: #e0e0e0;
+    font-weight: 400;
+}
+
+.single-event-time {
+    font-size: 0.85rem;
+    color: #e0e0e0;
+    font-weight: 500;
+}
+</style>

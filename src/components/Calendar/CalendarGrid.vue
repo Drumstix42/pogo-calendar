@@ -1,7 +1,7 @@
 <template>
     <div class="calendar-grid">
         <!-- Calendar Grid -->
-        <div class="calendar-grid-container">
+        <div class="calendar-grid-container" ref="calendarGridRef">
             <!-- Day Headers -->
             <div class="calendar-day-headers">
                 <div v-for="day in dayHeaders" :key="day" class="calendar-day-header">
@@ -20,6 +20,7 @@
                     :is-current-month="day.isCurrentMonth"
                     :is-today="day.isToday"
                     :dayjs="day.dayjs"
+                    :event-slots="eventSlots"
                 />
             </div>
         </div>
@@ -32,11 +33,25 @@ import { computed } from 'vue';
 
 import { useUrlSync } from '@/composables/useUrlSync';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
+import { useEventFilterStore } from '@/stores/eventFilter';
+import { useEventsStore } from '@/stores/events';
+import { type PogoEvent, getEventTypeInfo, isSameDayEvent, parseEventDate } from '@/utils/eventTypes';
 
 import CalendarDay from './CalendarDay.vue';
 
 const { urlMonth, urlYear } = useUrlSync();
 const calendarSettings = useCalendarSettingsStore();
+const eventFilter = useEventFilterStore();
+const eventsStore = useEventsStore();
+
+// Types for slot-based layout
+interface EventSlot {
+    event: PogoEvent;
+    slotIndex: number;
+    startDay: dayjs.Dayjs;
+    endDay: dayjs.Dayjs;
+    shouldRenderOnDay: (day: dayjs.Dayjs) => boolean;
+}
 
 // Day headers from settings store
 const dayHeaders = computed(() => calendarSettings.dayHeaders);
@@ -80,6 +95,184 @@ const calendarDays = computed(() => {
 
     return days;
 });
+
+// Get all multi-day events for the calendar view
+const multiDayEventsForCalendar = computed(() => {
+    return eventsStore.events.filter(event => {
+        // Filter by enabled event types and multi-day events only
+        if (!eventFilter.isEventTypeEnabled(event.eventType) || isSameDayEvent(event)) {
+            return false;
+        }
+
+        const eventStart = parseEventDate(event.start).startOf('day');
+        const eventEnd = parseEventDate(event.end).startOf('day');
+        const calendarStart = calendarDays.value[0]?.dayjs.startOf('day');
+        const calendarEnd = calendarDays.value[calendarDays.value.length - 1]?.dayjs.startOf('day');
+
+        // Include event if it overlaps with the calendar view
+        return (
+            eventEnd.isAfter(calendarStart) || (eventEnd.isSame(calendarStart) && eventStart.isBefore(calendarEnd)) || eventStart.isSame(calendarEnd)
+        );
+    });
+});
+
+// Assign slots to multi-day events
+const eventSlots = computed((): EventSlot[] => {
+    const events = multiDayEventsForCalendar.value;
+    if (events.length === 0) return [];
+
+    // First, group events with identical start/end times
+    const eventGroups = new Map<string, PogoEvent[]>();
+    events.forEach(event => {
+        const timeKey = `${event.eventType}:${event.start}:${event.end}`;
+        if (!eventGroups.has(timeKey)) {
+            eventGroups.set(timeKey, []);
+        }
+        eventGroups.get(timeKey)!.push(event);
+    });
+
+    // Convert groups to representative events
+    const representativeEvents = Array.from(eventGroups.values()).map(group => {
+        if (group.length === 1) {
+            return group[0]; // Single event
+        } else {
+            // Multiple identical events - create grouped representative
+            const representative = { ...group[0] };
+            (representative as any)._isGrouped = true;
+            (representative as any)._groupedEvents = group;
+            (representative as any)._displayName = getEventTypeInfo(group[0].eventType).name;
+            return representative;
+        }
+    });
+
+    // Sort by event type priority (from eventTypes.ts), then grouped vs individual, then by start date
+    const sortedEvents = representativeEvents.sort((a, b) => {
+        // 1. Sort by event type priority (higher priority = higher in layout)
+        const aPriority = getEventTypeInfo(a.eventType).priority;
+        const bPriority = getEventTypeInfo(b.eventType).priority;
+        if (aPriority !== bPriority) {
+            return bPriority - aPriority; // Higher priority first
+        }
+
+        // 2. Within same priority, grouped events come before individual events
+        const aIsGrouped = (a as any)._isGrouped;
+        const bIsGrouped = (b as any)._isGrouped;
+        if (aIsGrouped !== bIsGrouped) {
+            return aIsGrouped ? -1 : 1;
+        }
+
+        // 3. Then sort by start date (earlier events first)
+        const aStart = parseEventDate(a.start);
+        const bStart = parseEventDate(b.start);
+        if (!aStart.isSame(bStart)) {
+            return aStart.isBefore(bStart) ? -1 : 1;
+        }
+
+        return 0;
+    });
+
+    const slots: EventSlot[] = [];
+
+    for (const event of sortedEvents) {
+        const eventStart = parseEventDate(event.start).startOf('day');
+        const eventEnd = parseEventDate(event.end).startOf('day');
+
+        // Try to find a slot where this event can fit without conflicts and with same event type
+        let slotIndex = 0;
+        if (slots.length > 0) {
+            // First, try to find a slot with the same event type that has no conflicts
+            const sameTypeSlot = findAvailableSlotForEventType(event, slots);
+            if (sameTypeSlot !== -1) {
+                slotIndex = sameTypeSlot;
+            } else {
+                // Find the first completely available slot
+                slotIndex = findNextAvailableSlot(event, slots);
+            }
+        }
+
+        const newSlot = {
+            event,
+            slotIndex,
+            startDay: eventStart,
+            endDay: eventEnd,
+            shouldRenderOnDay: (day: dayjs.Dayjs) => {
+                const dayStart = day.startOf('day');
+                const isStartDay = dayStart.isSame(eventStart, 'day');
+                const isFirstDayOfWeek = dayStart.day() === calendarSettings.firstDayIndex;
+                const eventIsOngoing = dayStart.isAfter(eventStart) && dayStart.isBefore(eventEnd.add(1, 'day'));
+
+                return isStartDay || (isFirstDayOfWeek && eventIsOngoing);
+            },
+        };
+        slots.push(newSlot);
+    }
+
+    return slots;
+});
+
+// Helper function to find an available slot for the same event type
+const findAvailableSlotForEventType = (event: PogoEvent, existingSlots: EventSlot[]): number => {
+    // Group existing slots by slot index
+    const slotsByIndex = new Map<number, EventSlot[]>();
+    existingSlots.forEach(slot => {
+        if (!slotsByIndex.has(slot.slotIndex)) {
+            slotsByIndex.set(slot.slotIndex, []);
+        }
+        slotsByIndex.get(slot.slotIndex)!.push(slot);
+    });
+
+    // Check each slot index to find one with same event type and no conflicts
+    for (const [slotIndex, slotsInIndex] of slotsByIndex) {
+        // Check if this slot contains only the same event type
+        const allSameType = slotsInIndex.every(slot => slot.event.eventType === event.eventType);
+
+        if (allSameType && !hasConflictInSlot(event, slotIndex, existingSlots)) {
+            return slotIndex;
+        }
+    }
+
+    return -1; // No suitable same-type slot found
+};
+
+// Helper function to find the next completely available slot
+const findNextAvailableSlot = (event: PogoEvent, existingSlots: EventSlot[]): number => {
+    let slotIndex = 0;
+    while (true) {
+        if (!hasConflictInSlot(event, slotIndex, existingSlots)) {
+            // Also check that this slot doesn't have different event types
+            const slotsInThisIndex = existingSlots.filter(slot => slot.slotIndex === slotIndex);
+            const hasDifferentTypes = slotsInThisIndex.some(slot => slot.event.eventType !== event.eventType);
+
+            if (!hasDifferentTypes) {
+                return slotIndex;
+            }
+        }
+        slotIndex++;
+    }
+};
+
+// Helper function to check if an event conflicts with existing events in a slot
+const hasConflictInSlot = (event: PogoEvent, slotIndex: number, existingSlots: EventSlot[]): boolean => {
+    const eventStart = parseEventDate(event.start);
+    const eventEnd = parseEventDate(event.end);
+    const slotsInThisIndex = existingSlots.filter(slot => slot.slotIndex === slotIndex);
+
+    return slotsInThisIndex.some(slot => {
+        const slotStart = parseEventDate(slot.event.start);
+        const slotEnd = parseEventDate(slot.event.end);
+
+        // Check for actual time overlap
+        const hasTimeOverlap = eventStart.isBefore(slotEnd) && eventEnd.isAfter(slotStart);
+
+        // Same-type events can share slots if they don't overlap in time
+        if (event.eventType === slot.event.eventType && !hasTimeOverlap) {
+            return false; // No conflict - same type, no time overlap
+        }
+
+        // Different types or time overlap = conflict
+        return hasTimeOverlap;
+    });
+};
 </script>
 
 <style scoped>

@@ -1,4 +1,12 @@
 /* Global styles for the app */
+
+/* Use border-box sizing for consistent and predictable layout calculations */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
 body {
     margin: 0;
     font-family:
