@@ -121,29 +121,37 @@ const eventSlots = computed((): EventSlot[] => {
     const events = multiDayEventsForCalendar.value;
     if (events.length === 0) return [];
 
-    // First, group events with identical start/end times
-    const eventGroups = new Map<string, PogoEvent[]>();
-    events.forEach(event => {
-        const timeKey = `${event.eventType}:${event.start}:${event.end}`;
-        if (!eventGroups.has(timeKey)) {
-            eventGroups.set(timeKey, []);
-        }
-        eventGroups.get(timeKey)!.push(event);
-    });
+    // Conditionally group events with identical start/end times based on setting
+    let representativeEvents: PogoEvent[];
 
-    // Convert groups to representative events
-    const representativeEvents = Array.from(eventGroups.values()).map(group => {
-        if (group.length === 1) {
-            return group[0]; // Single event
-        } else {
-            // Multiple identical events - create grouped representative
-            const representative = { ...group[0] };
-            (representative as any)._isGrouped = true;
-            (representative as any)._groupedEvents = group;
-            (representative as any)._displayName = getEventTypeInfo(group[0].eventType).name;
-            return representative;
-        }
-    });
+    if (calendarSettings.groupSimilarEvents) {
+        // Group events with identical start/end times
+        const eventGroups = new Map<string, PogoEvent[]>();
+        events.forEach(event => {
+            const timeKey = `${event.eventType}:${event.start}:${event.end}`;
+            if (!eventGroups.has(timeKey)) {
+                eventGroups.set(timeKey, []);
+            }
+            eventGroups.get(timeKey)!.push(event);
+        });
+
+        // Convert groups to representative events
+        representativeEvents = Array.from(eventGroups.values()).map(group => {
+            if (group.length === 1) {
+                return group[0]; // Single event
+            } else {
+                // Multiple identical events - create grouped representative
+                const representative = { ...group[0] };
+                (representative as any)._isGrouped = true;
+                (representative as any)._groupedEvents = group;
+                (representative as any)._displayName = getEventTypeInfo(group[0].eventType).name;
+                return representative;
+            }
+        });
+    } else {
+        // No grouping - use events as-is
+        representativeEvents = events;
+    }
 
     // Sort by event type priority (from eventTypes.ts), then grouped vs individual, then by start date
     const sortedEvents = representativeEvents.sort((a, b) => {

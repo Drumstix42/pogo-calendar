@@ -9,7 +9,12 @@
         <div class="day-number">{{ date }}</div>
 
         <!-- Multi-day events (rendered first, as background bars) -->
-        <div v-if="weekCompactSlots.size > 0" class="multi-day-events" :style="{ height: `${multiDayEventsHeight}px` }">
+        <div
+            v-if="weekCompactSlots.size > 0"
+            class="multi-day-events"
+            :xclass="{ 'no-single-day-events': !singleDayEvents.length }"
+            :style="{ height: `${multiDayEventsHeight}px` }"
+        >
             <template v-for="event in multiDayEvents" :key="`multi-${getEventKey(event)}`">
                 <div
                     class="multi-day-event-slot"
@@ -51,7 +56,7 @@
         </div>
 
         <!-- Single-day events (rendered second, as circles on top) -->
-        <div v-if="singleDayEvents.length > 0" class="single-day-events">
+        <div xv-if="singleDayEvents.length > 0" class="single-day-events">
             <VTooltip
                 v-for="event in singleDayEvents"
                 :key="`single-${getEventKey(event)}`"
@@ -85,7 +90,16 @@ import { computed } from 'vue';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { useEventFilterStore } from '@/stores/eventFilter';
 import { useEventsStore } from '@/stores/events';
-import { type PogoEvent, formatEventTime, getCalendarEventsForDate, getEventTypeInfo, isSameDayEvent, parseEventDate } from '@/utils/eventTypes';
+import {
+    type PogoEvent,
+    formatEventTime,
+    getCalendarEventsForDate,
+    getEventTypeInfo,
+    getEventsForDate,
+    isSameDayEvent,
+    parseEventDate,
+    sortEventsByPriority,
+} from '@/utils/eventTypes';
 
 import EventTooltip from './EventTooltip.vue';
 
@@ -112,18 +126,35 @@ const calendarSettings = useCalendarSettingsStore();
 
 // Get events for this specific day using the new grouping logic
 const calendarEvents = computed(() => {
-    const calendarData = getCalendarEventsForDate(eventsStore.events, props.dayjs);
+    if (calendarSettings.groupSimilarEvents) {
+        // Use the existing grouping logic
+        const calendarData = getCalendarEventsForDate(eventsStore.events, props.dayjs);
 
-    // Filter by enabled event types
-    const filteredSingleDay = calendarData.singleDayEvents.filter(event => eventFilter.isEventTypeEnabled(event.eventType));
-    const filteredMultiDay = calendarData.multiDayEvents.filter(event => eventFilter.isEventTypeEnabled(event.eventType));
-    const filteredGroups = calendarData.eventGroups.filter(group => group.events.some(event => eventFilter.isEventTypeEnabled(event.eventType)));
+        // Filter by enabled event types
+        const filteredSingleDay = calendarData.singleDayEvents.filter(event => eventFilter.isEventTypeEnabled(event.eventType));
+        const filteredMultiDay = calendarData.multiDayEvents.filter(event => eventFilter.isEventTypeEnabled(event.eventType));
+        const filteredGroups = calendarData.eventGroups.filter(group => group.events.some(event => eventFilter.isEventTypeEnabled(event.eventType)));
 
-    return {
-        singleDayEvents: filteredSingleDay,
-        multiDayEvents: filteredMultiDay,
-        eventGroups: filteredGroups,
-    };
+        return {
+            singleDayEvents: filteredSingleDay,
+            multiDayEvents: filteredMultiDay,
+            eventGroups: filteredGroups,
+        };
+    } else {
+        // No grouping - get individual events for the date
+        const eventsForDate = getEventsForDate(eventsStore.events, props.dayjs);
+
+        // Filter by enabled event types and separate by single/multi-day
+        const enabledEvents = eventsForDate.filter((event: PogoEvent) => eventFilter.isEventTypeEnabled(event.eventType));
+        const singleDay = enabledEvents.filter((event: PogoEvent) => isSameDayEvent(event));
+        const multiDay = enabledEvents.filter((event: PogoEvent) => !isSameDayEvent(event));
+
+        return {
+            singleDayEvents: sortEventsByPriority(singleDay),
+            multiDayEvents: sortEventsByPriority(multiDay),
+            eventGroups: [], // No groups when grouping is disabled
+        };
+    }
 });
 
 // Use individual single-day events without grouping
@@ -438,11 +469,14 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     display: flex;
     flex-direction: column;
     gap: 2px;
-    margin: 0.25rem 0 0 0; /* Remove horizontal margins - events handle their own spacing */
     position: relative;
     z-index: 1;
     overflow: visible;
     pointer-events: none; /* Allow events to pass through the container */
+}
+
+.multi-day-events.no-single-day-events {
+    margin-bottom: 1rem; /* Add spacing if no single-day events */
 }
 
 .multi-day-event-bar {
@@ -652,12 +686,13 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
 
 /* Single-day events (foreground layer) */
 .single-day-events {
+    z-index: 2;
     display: flex;
     flex-direction: column;
+    min-height: 28px; /* leave empty space below multi-day events, for better perceived margin before next visible week */
     gap: 3px;
     margin: 0.25rem 0.5rem 0.5rem 0.5rem; /* Add margin to replace padding */
     position: relative;
-    z-index: 2;
 }
 
 .single-day-event {

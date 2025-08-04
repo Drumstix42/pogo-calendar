@@ -18,10 +18,13 @@
         <div class="collapse" :class="{ show: isExpanded }">
             <div class="options-content mt-3">
                 <div class="row g-3">
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <FirstDaySelector />
                     </div>
-                    <div class="col-md-8">
+                    <div class="col-md-3">
+                        <EventGroupingToggle />
+                    </div>
+                    <div class="col-md-6">
                         <EventFilterOptions />
                     </div>
                 </div>
@@ -35,6 +38,7 @@ import { ChevronDown, Settings } from 'lucide-vue-next';
 import { ref } from 'vue';
 
 import EventFilterOptions from './EventFilterOptions.vue';
+import EventGroupingToggle from './EventGroupingToggle.vue';
 import FirstDaySelector from './FirstDaySelector.vue';
 
 const isExpanded = ref(false);
@@ -76,8 +80,8 @@ const isExpanded = ref(false);
 }
 
 @media (max-width: 767.98px) {
-    .row.g-3 .col-md-4,
-    .row.g-3 .col-md-8 {
+    .row.g-3 .col-md-3,
+    .row.g-3 .col-md-6 {
         margin-bottom: 1rem;
     }
 }

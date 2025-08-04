@@ -13,6 +13,9 @@ export const useCalendarSettingsStore = defineStore('calendarSettings', () => {
     // First day of week setting (full day name)
     const firstDayOfWeek = useLocalStorage<FirstDayOfWeek>(STORAGE_KEYS.FIRST_DAY_OF_WEEK, 'Sunday');
 
+    // Event grouping setting - whether to group events of same type with identical start/end times
+    const groupSimilarEvents = useLocalStorage<boolean>(STORAGE_KEYS.GROUP_SIMILAR_EVENTS, false);
+
     // Day name constants
     const allDayNames: FirstDayOfWeek[] = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     const shortDayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -46,10 +49,15 @@ export const useCalendarSettingsStore = defineStore('calendarSettings', () => {
         firstDayOfWeek.value = day;
     };
 
+    const setGroupSimilarEvents = (enabled: boolean) => {
+        groupSimilarEvents.value = enabled;
+    };
+
     return {
         // State
         firstDayOfWeek,
         allDayNames,
+        groupSimilarEvents,
 
         // Computed getters
         dayHeaders,
@@ -58,5 +66,6 @@ export const useCalendarSettingsStore = defineStore('calendarSettings', () => {
 
         // Actions
         setFirstDayOfWeek,
+        setGroupSimilarEvents,
     };
 });
