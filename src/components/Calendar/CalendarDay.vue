@@ -381,81 +381,57 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     }
 
     const today = currentDay.startOf('day');
-    const dayStart = today.clone();
-    const dayEnd = today.clone().add(1, 'day');
-
     const eventStart = parseEventDate(event.start);
     const eventEnd = parseEventDate(event.end);
 
-    // Calculate left offset based on start time within the day
-    const segmentStart = eventStart.isBefore(dayStart) ? dayStart : eventStart;
-    const startHours = segmentStart.diff(dayStart, 'hour', true);
-    const leftPercentage = (startHours / 24) * 100;
+    // This function only handles multi-day events that render as bars
+    const eventStartDay = eventStart.startOf('day');
+    const { weekEnd } = getWeekBoundaries(props.dayjs);
+    const weekEndDay = weekEnd.endOf('day');
+    const eventEndDay = eventEnd.startOf('day');
+    const actualEndDay = eventEndDay.isBefore(weekEndDay) ? eventEndDay : weekEndDay;
 
-    // Calculate end position and span
-    let endPercentage: number;
-    let spanDays: number;
-
-    // Check if this is a multi-day event
-    if (eventEnd.startOf('day').isAfter(eventStart.startOf('day'))) {
-        // Multi-day event - calculate span from current rendering day to event end
-        // Use consistent week boundaries based on the calendar row
-        const { weekEnd } = getWeekBoundaries(props.dayjs);
-        const weekEndDay = weekEnd.endOf('day');
-        const eventEndDay = eventEnd.startOf('day');
-        const actualEndDay = eventEndDay.isBefore(weekEndDay) ? eventEndDay : weekEndDay;
-
-        // Calculate how many days to span from today to the end
-        spanDays = actualEndDay.diff(today, 'day') + 1;
-
-        // If the event ends on the last day we're spanning to, check if it ends at a specific time
-        if (eventEndDay.isSame(actualEndDay, 'day') && eventEndDay.isSameOrBefore(weekEndDay, 'day')) {
-            // Event ends on the final day - calculate partial day width
-            const finalDayStart = actualEndDay.clone();
-            const finalDayEnd = finalDayStart.clone().add(1, 'day');
-            const segmentEnd = eventEnd.isAfter(finalDayEnd) ? finalDayEnd : eventEnd;
-            const endHours = segmentEnd.diff(finalDayStart, 'hour', true);
-            const finalDayPercentage = (endHours / 24) * 100;
-
-            // Width spans full days plus partial final day
-            endPercentage = (spanDays - 1) * 100 + finalDayPercentage;
-        } else {
-            // Event continues beyond the week or ends at day boundary
-            endPercentage = spanDays * 100;
-        }
+    // Calculate left offset - if event starts on this day, account for start time
+    let leftPercentage: number;
+    if (today.isSame(eventStartDay, 'day')) {
+        // Event starts on this day - calculate offset from event start time
+        const startHours = eventStart.diff(today, 'hour', true);
+        leftPercentage = (startHours / 24) * 100;
     } else {
-        // Single day event: calculate duration within the day
-        const segmentEnd = eventEnd.isAfter(dayEnd) ? dayEnd : eventEnd;
-        const endHours = segmentEnd.diff(dayStart, 'hour', true);
-        endPercentage = (endHours / 24) * 100;
-        spanDays = 1;
+        // Event started before this day - start from beginning of day
+        leftPercentage = 0;
     }
 
-    const widthPercentage = endPercentage - leftPercentage;
+    // Calculate end position and span days
+    let endPositionPercentage: number;
+    const spanDays = actualEndDay.diff(today, 'day') + 1;
 
-    // Check if this event is followed by another event in the same slot
-    let gapAdjustment = '';
-    if (slotData) {
-        const { weekEnd } = getWeekBoundaries(props.dayjs);
-        const weekEndDay = weekEnd.endOf('day');
+    // If the event ends on the last day we're spanning to, check if it ends at a specific time
+    if (eventEndDay.isSame(actualEndDay, 'day') && eventEndDay.isSameOrBefore(weekEndDay, 'day')) {
+        // Event ends on the final day - calculate end position as total hours from rendering start
+        const totalHours = eventEnd.diff(today, 'hour', true);
+        endPositionPercentage = (totalHours / 24) * 100;
+    } else {
+        // Event continues beyond the week or ends at day boundary
+        endPositionPercentage = spanDays * 100;
+    }
 
-        // Find other events in the same slot that start after this one ends
-        const hasFollowingEvent = props.eventSlots.some(slot => {
-            if (slot.slotIndex !== slotData.slotIndex || slot.event.eventID === event.eventID || slot.event.eventType !== event.eventType) {
-                return false;
-            }
+    const widthPercentage = endPositionPercentage - leftPercentage;
 
-            const otherStart = parseEventDate(slot.event.start);
-
-            // Check if other event starts at or shortly after this one ends (within 2 hours)
-            // AND starts within this same week
-            return otherStart.isSameOrAfter(eventEnd) && otherStart.diff(eventEnd, 'hour') <= 2 && otherStart.isSameOrBefore(weekEndDay);
-        });
-
-        if (hasFollowingEvent) {
-            gapAdjustment = ' - 4px';
+    // Check if this event is followed by another event in the same slot for gap adjustment
+    const hasFollowingEvent = props.eventSlots.some(slot => {
+        if (slot.slotIndex !== slotData.slotIndex || slot.event.eventID === event.eventID || slot.event.eventType !== event.eventType) {
+            return false;
         }
-    }
+
+        const otherStart = parseEventDate(slot.event.start);
+
+        // Check if other event starts at or shortly after this one ends (within 2 hours)
+        // AND starts within this same week
+        return otherStart.isSameOrAfter(eventEnd) && otherStart.diff(eventEnd, 'hour') <= 2 && otherStart.isSameOrBefore(weekEndDay);
+    });
+
+    const gapAdjustment = hasFollowingEvent ? ' - 3px' : '';
 
     return {
         left: `${leftPercentage}%`,
@@ -522,7 +498,7 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     display: flex;
     align-items: center;
     gap: 4px;
-    border-radius: 3px;
+    border-radius: 6px;
     font-size: 0.7rem;
     line-height: 1.2;
     color: white;

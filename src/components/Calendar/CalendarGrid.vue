@@ -379,7 +379,7 @@ const hasConflictInSlot = (event: PogoEvent, slotIndex: number, existingSlots: E
     background: white;
     border: 1px solid #dee2e6;
     border-radius: 0.375rem;
-    overflow: hidden;
+    overflow: visible;
 }
 
 .calendar-day-headers {
@@ -387,6 +387,11 @@ const hasConflictInSlot = (event: PogoEvent, slotIndex: number, existingSlots: E
     grid-template-columns: repeat(7, 1fr);
     background-color: #f8f9fa;
     border-bottom: 1px solid #dee2e6;
+    position: sticky;
+    top: 0;
+    z-index: 1020;
+    backdrop-filter: blur(8px);
+    background-color: rgba(248, 249, 250, 0.95);
 }
 
 .calendar-day-header {

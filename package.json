@@ -5,7 +5,7 @@
     "type": "module",
     "description": "A web-based calendar for Pokemon GO events",
     "scripts": {
-        "dev": "vite",
+        "dev": "vite --host",
         "build": "vite build",
         "preview": "vite preview",
         "lint": "eslint . --ext .vue,.js,.ts",
@@ -27,7 +27,7 @@
     },
     "devDependencies": {
         "@trivago/prettier-plugin-sort-imports": "~5.2.2",
-        "@types/node": "~24.1.0",
+        "@types/node": "~24.2.0",
         "@typescript-eslint/eslint-plugin": "~8.38.0",
         "@typescript-eslint/parser": "~8.38.0",
         "@vitejs/plugin-vue": "~6.0.1",

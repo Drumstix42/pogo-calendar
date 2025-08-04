@@ -1,38 +1,59 @@
 <template>
-    <div class="calendar-header d-flex justify-content-between align-items-center mb-2">
-        <button class="btn btn-outline-secondary" @click="goToPreviousMonth" :disabled="isPreviousDisabled">
-            <ChevronLeft :size="16" />
-            Previous
-        </button>
-
-        <div class="d-flex flex-column align-items-center">
-            <h3 class="mb-1">{{ currentMonthDisplay }}</h3>
+    <div class="calendar-header d-flex align-items-center justify-content-between mb-2">
+        <div class="d-flex align-items-center">
             <button
-                class="btn btn-sm"
-                :class="isCurrentMonth ? 'btn-outline-secondary' : 'btn-outline-primary'"
+                class="btn btn-sm me-3"
+                :class="isCurrentMonth ? 'btn-outline-secondary' : 'btn-outline-dark'"
                 @click="goToCurrentMonth"
                 :disabled="isCurrentMonth"
             >
                 Today
             </button>
+
+            <div class="d-flex align-items-center me-3">
+                <button class="btn btn-ghost btn-sm me-1" @click="goToPreviousMonth" :disabled="isPreviousDisabled">
+                    <ChevronLeft :size="24" />
+                </button>
+                <button class="btn btn-ghost btn-sm" @click="goToNextMonth" :disabled="isNextDisabled">
+                    <ChevronRight :size="24" />
+                </button>
+            </div>
+
+            <span class="month-label">{{ currentMonthDisplay }}</span>
         </div>
 
-        <button class="btn btn-outline-secondary" @click="goToNextMonth" :disabled="isNextDisabled">
-            Next
-            <ChevronRight :size="16" />
+        <button
+            class="btn btn-outline-secondary btn-sm d-flex align-items-center"
+            @click="toggleOptions"
+        >
+            <Settings :size="16" class="me-2" />
+            <span class="me-2">{{ isOptionsExpanded ? 'Hide' : 'Show' }} Options</span>
+            <ChevronDown :size="14" :class="{ 'rotate-180': isOptionsExpanded }" />
         </button>
     </div>
 </template>
 
 <script setup lang="ts">
 import dayjs from 'dayjs';
-import { ChevronLeft, ChevronRight } from 'lucide-vue-next';
-import { computed } from 'vue';
+import { ChevronDown, ChevronLeft, ChevronRight, Settings } from 'lucide-vue-next';
+import { computed, ref } from 'vue';
 
 import { useUrlSync } from '@/composables/useUrlSync';
 import { DATE_FORMAT } from '@/utils/dateFormat';
 
 const { urlMonth, urlYear } = useUrlSync();
+
+// Options toggle state
+const isOptionsExpanded = ref(false);
+
+const toggleOptions = () => {
+    isOptionsExpanded.value = !isOptionsExpanded.value;
+};
+
+// Expose the options state for parent component
+defineExpose({
+    isOptionsExpanded,
+});
 
 // Current month display
 const currentMonthDisplay = computed(() => {
@@ -84,5 +105,36 @@ const goToCurrentMonth = () => {
 <style scoped>
 .calendar-header {
     padding: 1rem 0;
+}
+
+.month-label {
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.btn-ghost {
+    background-color: transparent;
+    border: none;
+    color: var(--bs-body-color);
+    transition: background-color 0.15s ease-in-out;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.25rem 0.25rem;
+}
+
+.btn-ghost:hover:not(:disabled) {
+    background-color: var(--bs-secondary-bg, rgba(108, 117, 125, 0.1));
+    color: var(--bs-body-color);
+}
+
+.btn-ghost:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.rotate-180 {
+    transform: rotate(180deg);
+    transition: transform 0.2s ease-in-out;
 }
 </style>

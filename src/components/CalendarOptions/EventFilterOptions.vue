@@ -128,7 +128,7 @@ const eventGroups = computed(() => {
         }))
         .sort((a, b) => {
             // Sort categories in desired order
-            const order = ['community-and-raids', 'research', 'seasonal-premium', 'misc-and-events'];
+            const order = ['research', 'seasonal-premium', 'community-and-raids', 'misc-and-events'];
             const aIndex = order.indexOf(
                 Object.keys(categoryDisplayNames).find(key => categoryDisplayNames[key as keyof typeof categoryDisplayNames] === a.title) || '',
             );
@@ -185,7 +185,7 @@ const eventGroups = computed(() => {
 
 .filter-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 1rem;
     max-height: min(60vh, 422px);
     overflow-y: auto;

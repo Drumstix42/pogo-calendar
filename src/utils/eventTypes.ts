@@ -131,7 +131,7 @@ export const EVENT_TYPES: Record<string, EventTypeInfo> = {
     research: {
         name: 'Research',
         color: '#12836d', // teal
-        priority: 99,
+        priority: 98,
         category: 'research',
     },
     'research-day': {
@@ -221,7 +221,7 @@ export const EVENT_TYPES: Record<string, EventTypeInfo> = {
     'go-battle-league': {
         name: 'GO Battle League',
         color: '#8e44ad', // purple
-        priority: 56,
+        priority: 99,
         category: 'community-and-raids',
     },
 
@@ -498,7 +498,15 @@ export const parseEventDate = (dateStr: string): dayjs.Dayjs => {
 };
 
 export const formatEventTime = (dateStr: string): string => {
-    return parseEventDate(dateStr).format('ha');
+    const eventDate = parseEventDate(dateStr);
+    const minutes = eventDate.minute();
+
+    // Only show minutes if they're not zero
+    if (minutes === 0) {
+        return eventDate.format('ha');
+    } else {
+        return eventDate.format('h:mma');
+    }
 };
 
 export const getEventsForDate = (events: PogoEvent[], date: Date | string | dayjs.Dayjs): PogoEvent[] => {

@@ -25,7 +25,6 @@ yarn-debug.log*
 .eslintcache
 
 # IDE files
-.vscode/
 .idea/
 
 # OS files

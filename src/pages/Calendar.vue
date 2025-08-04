@@ -2,10 +2,10 @@
     <div class="calendar">
         <div class="container mt-2 mb-4">
             <!-- Month Navigation Header -->
-            <CalendarHeader />
+            <CalendarHeader ref="calendarHeaderRef" />
 
             <!-- Calendar Options -->
-            <div class="row">
+            <div v-if="isOptionsExpanded" class="row">
                 <div class="col-12">
                     <CalendarOptions />
                 </div>
@@ -22,7 +22,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 
 import { useEventsStore } from '@/stores/events';
 
@@ -31,6 +31,12 @@ import CalendarHeader from '@/components/Calendar/CalendarHeader.vue';
 import CalendarOptions from '@/components/CalendarOptions/CalendarOptions.vue';
 
 const eventsStore = useEventsStore();
+const calendarHeaderRef = ref<InstanceType<typeof CalendarHeader>>();
+
+// Get the options expanded state from the header component
+const isOptionsExpanded = computed(() => {
+    return calendarHeaderRef.value?.isOptionsExpanded || false;
+});
 
 // Auto-load events when the page mounts
 onMounted(async () => {
