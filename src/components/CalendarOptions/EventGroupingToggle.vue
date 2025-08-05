@@ -13,7 +13,7 @@
                 :checked="calendarSettings.groupSimilarEvents"
                 @change="handleToggleChange"
             />
-            <label for="groupSimilarEvents" class="form-check-label"> Group similar events into single bars </label>
+            <label for="groupSimilarEvents" class="form-check-label">Group similar event bars</label>
         </div>
 
         <small class="text-muted d-block mt-1">
