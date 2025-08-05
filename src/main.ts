@@ -15,5 +15,12 @@ const pinia = createPinia();
 
 app.use(pinia);
 app.use(router);
-app.use(FloatingVue);
+app.use(FloatingVue, {
+    themes: {
+        tooltip: {
+            placement: 'top',
+            triggers: ['hover', 'focus', /* 'touch', */ 'click'], // touch seems buggy when zooming and panning, so disabled for now
+        },
+    },
+});
 app.mount('#app');

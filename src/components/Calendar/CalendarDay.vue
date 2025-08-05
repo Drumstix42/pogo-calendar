@@ -36,7 +36,12 @@
                         }"
                         :data-debug="`Event: ${event.name} | ID: ${event.eventID} | Slot: ${getEventSlotData(event)?.slotIndex} | Grouped: ${(event as any)._isGrouped || false}`"
                     >
-                        <VTooltip placement="top" :delay="{ show: 50, hide: 0 }" distance="10">
+                        <VTooltip
+                            placement="top"
+                            :delay="tooltipOptionsDefaults.delay"
+                            :distance="tooltipOptionsDefaults.distance"
+                            :auto-hide="tooltipOptionsDefaults.autoHide"
+                        >
                             <div class="multi-day-event-bar--inner">
                                 <!-- Show Pokemon images for grouped or individual events -->
                                 <div v-if="calendarSettings.groupSimilarEvents && hasGroupedEvents(event)" class="d-flex align-items-center">
@@ -52,8 +57,8 @@
                                 <span class="event-name">{{ getEventDisplayName(event) }}</span>
                                 <span v-if="shouldShowBadge(event)" class="event-badge">{{ getEventCount(event) }}</span>
 
-                                <!-- Hide event type button (shows on hover) -->
-                                <div class="ms-auto d-flex align-items-center">
+                                <!-- Toggle event type button (shows on hover) (hide on touch devices) -->
+                                <div v-if="!isTouchDevice" class="ms-auto d-flex align-items-center">
                                     <EventToggleButton :event-type="event.eventType" @hide="hideEventType" />
                                 </div>
                             </div>
@@ -74,16 +79,17 @@
                     v-for="event in singleDayEvents"
                     :key="`single-${getEventKey(event)}`"
                     placement="top"
-                    :delay="{ show: 50, hide: 0 }"
-                    distance="10"
+                    :delay="tooltipOptionsDefaults.delay"
+                    :distance="tooltipOptionsDefaults.distance"
+                    :auto-hide="tooltipOptionsDefaults.autoHide"
                 >
                     <div class="single-day-event">
                         <div class="event-dot" :style="{ backgroundColor: getEventColor(event) }"></div>
                         <div class="event-content">
                             <div class="event-name-container">
                                 <div class="event-name">{{ getEventDisplayName(event) }}</div>
-                                <!-- Hide event type button for single-day events (shows on hover) -->
-                                <div class="ms-auto d-flex align-items-center">
+                                <!-- Toggle event type button (shows on hover) (hide on touch devices) -->
+                                <div v-if="!isTouchDevice" class="ms-auto d-flex align-items-center">
                                     <EventToggleButton :event-type="event.eventType" @hide="hideEventType" />
                                 </div>
                             </div>
@@ -105,6 +111,7 @@
 import type { Dayjs } from 'dayjs';
 import { computed } from 'vue';
 
+import { useDeviceDetection } from '@/composables/useDeviceDetection';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { useEventFilterStore } from '@/stores/eventFilter';
 import { useEventsStore } from '@/stores/events';
@@ -151,6 +158,14 @@ const props = defineProps<Props>();
 const eventFilter = useEventFilterStore();
 const eventsStore = useEventsStore();
 const calendarSettings = useCalendarSettingsStore();
+
+const { isTouchDevice } = useDeviceDetection();
+
+const tooltipOptionsDefaults = computed(() => ({
+    autoHide: isTouchDevice.value,
+    delay: { show: 50, hide: 0 },
+    distance: 10,
+}));
 
 // calculate week boundaries based on configured first day
 const getWeekBoundaries = (referenceDay: Dayjs) => {
