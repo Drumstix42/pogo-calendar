@@ -8,7 +8,7 @@
     >
         <div class="day-number">{{ date }}</div>
 
-        <!-- Multi-day events (rendered first, as background bars) -->
+        <!-- Multi-day events (day-spanning bars) -->
         <div v-if="weekCompactSlots.size > 0" class="multi-day-events" :style="{ height: `${multiDayEventsHeight}px` }">
             <template v-for="event in multiDayEvents" :key="`multi-${getEventKey(event)}`">
                 <div
@@ -52,7 +52,7 @@
             </template>
         </div>
 
-        <!-- Single-day events (rendered second, as circles on top) -->
+        <!-- Single-day events (vertically stacked event blocks with timestamps) -->
         <div xv-if="singleDayEvents.length > 0">
             <div class="single-day-events">
                 <VTooltip
