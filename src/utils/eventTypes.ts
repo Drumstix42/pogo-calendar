@@ -487,7 +487,25 @@ export const groupEventsByType = (events: PogoEvent[]): EventGroup[] => {
     return result;
 };
 
-// Helper function to parse dates consistently
+export const getGroupedEvents = (event: PogoEvent, options?: { limit?: number }): PogoEvent[] => {
+    const groupedEvents = (event as any)._groupedEvents || [event];
+
+    if (options?.limit && options.limit > 0) {
+        return groupedEvents.slice(0, options.limit);
+    }
+
+    return groupedEvents;
+};
+
+export const hasGroupedEvents = (event: PogoEvent): boolean => {
+    return (event as any)._isGrouped === true;
+};
+
+export const getGroupedEventsCount = (event: PogoEvent): number => {
+    const groupedEvents = (event as any)._groupedEvents;
+    return Array.isArray(groupedEvents) ? groupedEvents.length : 1;
+};
+
 export const parseEventDate = (dateStr: string): dayjs.Dayjs => {
     // Check if the date string is in UTC format (ends with Z)
     if (dateStr.endsWith('Z')) {

@@ -38,7 +38,17 @@
                     >
                         <VTooltip placement="top" :delay="{ show: 50, hide: 0 }" distance="10" :triggers="['hover']" :auto-hide="true">
                             <div class="multi-day-event-bar--inner">
-                                <PokemonImages :event="event" :event-name="getEventDisplayName(event)" size="medium" />
+                                <!-- Show Pokemon images for grouped or individual events -->
+                                <div v-if="calendarSettings.groupSimilarEvents && hasGroupedEvents(event)" class="d-flex align-items-center">
+                                    <template v-for="groupedEvent in getGroupedEvents(event, { limit: 2 })" :key="groupedEvent.eventID">
+                                        <PokemonImages :event="groupedEvent" :event-name="groupedEvent.name" :height="MULTI_DAY_EVENT_ICON_HEIGHT" />
+                                    </template>
+                                    <span v-if="getGroupedEventsCount(event) > 2" class="pokemon-more-indicator">+</span>
+                                </div>
+                                <template v-else>
+                                    <PokemonImages :event="event" :event-name="getEventDisplayName(event)" :height="MULTI_DAY_EVENT_ICON_HEIGHT" />
+                                </template>
+
                                 <span class="event-name">{{ getEventDisplayName(event) }}</span>
                                 <span v-if="shouldShowBadge(event)" class="event-badge">{{ getEventCount(event) }}</span>
                             </div>
@@ -69,7 +79,7 @@
                                 <div class="event-name">{{ getEventDisplayName(event) }}</div>
                             </div>
                             <div v-if="getEventTime(event)" class="event-time">{{ getEventTime(event) }}</div>
-                            <PokemonImages :event="event" :event-name="getEventDisplayName(event)" size="xl" />
+                            <PokemonImages :event="event" :event-name="getEventDisplayName(event)" :height="40" />
                         </div>
                     </div>
 
@@ -95,6 +105,9 @@ import {
     getCalendarEventsForDate,
     getEventTypeInfo,
     getEventsForDate,
+    getGroupedEvents,
+    getGroupedEventsCount,
+    hasGroupedEvents,
     isSameDayEvent,
     parseEventDate,
     sortEventsByPriority,
@@ -121,13 +134,14 @@ interface Props {
 
 const MULTI_DAY_EVENT_BAR_HEIGHT = 20; // px
 const MULTI_DAY_EVENT_BAR_MARGIN = 1; // px margin between bars
+const MULTI_DAY_EVENT_ICON_HEIGHT = MULTI_DAY_EVENT_BAR_HEIGHT - 2; // px
 
 const props = defineProps<Props>();
 const eventFilter = useEventFilterStore();
 const eventsStore = useEventsStore();
 const calendarSettings = useCalendarSettingsStore();
 
-// Helper function to calculate week boundaries based on configured first day
+// calculate week boundaries based on configured first day
 const getWeekBoundaries = (referenceDay: Dayjs) => {
     const firstDayIndex = calendarSettings.firstDayIndex;
 
@@ -265,8 +279,7 @@ const getEventDisplayName = (event: PogoEvent): string => {
 };
 
 const getEventCount = (event: PogoEvent): number => {
-    const groupedEvents = (event as any)._groupedEvents || [];
-    return groupedEvents.length;
+    return getGroupedEventsCount(event);
 };
 
 const shouldShowBadge = (event: PogoEvent): boolean => {
@@ -472,7 +485,7 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     border-radius: 6px;
     font-size: 0.7rem;
     line-height: 1.2;
-    color: white;
+    color: #fcfcfc;
     text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
     cursor: pointer;
     transition: background-color 0.2s ease;
@@ -501,7 +514,7 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     left: 0;
     right: 0;
     bottom: 0;
-    gap: 4px;
+    gap: 5px;
 }
 
 .multi-day-event-bar .event-name {
@@ -530,7 +543,23 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     font-size: 0.65rem;
     font-weight: 500;
     line-height: 16px;
-    margin-left: 4px;
+    flex-shrink: 0;
+    backdrop-filter: blur(2px);
+}
+
+.pokemon-more-indicator {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 8px;
+    height: 16px;
+    /* background-color: rgba(255, 255, 255, 0.3); */
+    /* color: rgba(255, 255, 255, 0.9); */
+    color: rgba(255, 255, 255, 0.9);
+    border-radius: 50%;
+    font-size: 0.7rem;
+    font-weight: 500;
+    line-height: 1;
     flex-shrink: 0;
     backdrop-filter: blur(2px);
 }

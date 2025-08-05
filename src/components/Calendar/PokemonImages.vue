@@ -1,5 +1,5 @@
 <template>
-    <div v-if="pokemonImages.length > 0" class="pokemon-images" :class="sizeClass">
+    <div v-if="pokemonImages.length > 0" class="pokemon-images">
         <div
             v-for="(imageUrl, index) in pokemonImages"
             :key="`pokemon-${eventId}-${index}`"
@@ -9,7 +9,13 @@
             <div v-if="showDynamaxOverlay" class="dynamax-overlay">
                 <img src="/images/overlay/dynamax-clouds.png" alt="Dynamax effect" class="dynamax-clouds" />
             </div>
-            <img :src="imageUrl" :alt="`${eventName} Pokemon ${index + 1}`" class="pokemon-icon" @error="handleImageError" />
+            <img
+                :src="imageUrl"
+                :alt="`${eventName} Pokemon ${index + 1}`"
+                class="pokemon-icon"
+                :style="{ height: `${height}px` }"
+                @error="handleImageError"
+            />
         </div>
     </div>
 </template>
@@ -23,11 +29,11 @@ import { type PogoEvent } from '@/utils/eventTypes';
 interface Props {
     event: PogoEvent;
     eventName: string;
-    size?: 'small' | 'medium' | 'large' | 'xl' | 'xxl';
+    height?: number;
 }
 
 const props = withDefaults(defineProps<Props>(), {
-    size: 'medium',
+    height: 18, // Default to medium size (18px)
 });
 
 // Compute Pokemon images once
@@ -35,9 +41,6 @@ const pokemonImages = computed(() => getEventPokemonImages(props.event));
 
 // Determine if we should show the Dynamax overlay
 const showDynamaxOverlay = computed(() => props.event.eventType === 'max-mondays');
-
-// CSS class for sizing
-const sizeClass = computed(() => `pokemon-images--${props.size}`);
 
 // Unique event ID for keys
 const eventId = computed(() => props.event.eventID);
@@ -83,27 +86,6 @@ const handleImageError = (event: Event): void => {
     position: relative;
     z-index: 2;
     flex-shrink: 0;
-}
-
-/* Size variants */
-.pokemon-images--small .pokemon-icon {
-    width: 16px;
-    height: 16px;
-}
-.pokemon-images--medium .pokemon-icon {
-    width: 18px;
-    height: 18px;
-}
-.pokemon-images--large .pokemon-icon {
-    width: 30px;
-    height: 30px;
-}
-.pokemon-images--xl .pokemon-icon {
-    width: 40px;
-    height: 40px;
-}
-.pokemon-images--xxl .pokemon-icon {
-    width: 50px;
-    height: 50px;
+    width: auto; /* Let width be automatic based on aspect ratio */
 }
 </style>

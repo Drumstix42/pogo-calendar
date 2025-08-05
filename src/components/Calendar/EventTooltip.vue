@@ -16,7 +16,7 @@
             >
                 <div class="event-content">
                     <!-- Pokemon images -->
-                    <PokemonImages :event="groupedEvent" :event-name="groupedEvent.name" size="xxl" />
+                    <PokemonImages :event="groupedEvent" :event-name="groupedEvent.name" :height="50" />
 
                     <!-- Event text content -->
                     <div class="event-text">
@@ -39,7 +39,7 @@
             >
                 <div class="event-content">
                     <!-- Pokemon images -->
-                    <PokemonImages :event="event" :event-name="event.name" size="xxl" />
+                    <PokemonImages :event="event" :event-name="event.name" :height="50" />
 
                     <!-- Event text content -->
                     <div class="event-text">
@@ -55,7 +55,7 @@
 <script setup lang="ts">
 import dayjs from 'dayjs';
 
-import { type PogoEvent, formatEventTime, getEventTypeInfo, isSameDayEvent, parseEventDate } from '@/utils/eventTypes';
+import { type PogoEvent, formatEventTime, getEventTypeInfo, getGroupedEvents, isSameDayEvent, parseEventDate } from '@/utils/eventTypes';
 
 import PokemonImages from './PokemonImages.vue';
 
@@ -76,7 +76,6 @@ const getEventTypeName = (event: PogoEvent): string => {
     return getEventTypeInfo(event.eventType).name;
 };
 
-// Helper function to format event duration for tooltips
 const formatEventDuration = (event: PogoEvent): string => {
     const startTime = formatEventTime(event.start);
     const endTime = formatEventTime(event.end);
@@ -90,11 +89,6 @@ const formatEventDuration = (event: PogoEvent): string => {
         const totalDays = dayjs(event.end).diff(dayjs(event.start), 'day') + 1;
         return `${startDate}, ${startTime} - ${endDate}, ${endTime} (${totalDays} day${totalDays > 1 ? 's' : ''})`;
     }
-};
-
-// Helper function to get grouped events for tooltip
-const getGroupedEvents = (event: PogoEvent): PogoEvent[] => {
-    return (event as any)._groupedEvents || [event];
 };
 </script>
 
@@ -113,7 +107,7 @@ const getGroupedEvents = (event: PogoEvent): PogoEvent[] => {
 
 .event-time-info {
     margin-bottom: 0.4rem;
-    padding: 0.4rem 0.6rem;
+    padding: 0.4rem 0.6rem 0.4rem 0.5rem;
     border-radius: 4px;
     border-left: 3px solid;
 }
@@ -121,7 +115,7 @@ const getGroupedEvents = (event: PogoEvent): PogoEvent[] => {
 .event-content {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 0.6rem;
 }
 
 .event-text {

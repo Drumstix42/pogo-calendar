@@ -242,7 +242,6 @@ const eventSlots = computed((): EventSlot[] => {
     return slots;
 });
 
-// Helper function to check if two events should be grouped in the same slot
 const shouldShareSlot = (eventA: PogoEvent, eventB: PogoEvent): boolean => {
     // Check if either event is a grouped event
     const aIsGrouped = (eventA as any)._isGrouped;
@@ -274,7 +273,6 @@ const shouldShareSlot = (eventA: PogoEvent, eventB: PogoEvent): boolean => {
     return true;
 };
 
-// Helper function to find an available slot for the same event type
 const findAvailableSlotForEventType = (event: PogoEvent, existingSlots: EventSlot[]): number => {
     // Group existing slots by slot index
     const slotsByIndex = new Map<number, EventSlot[]>();
@@ -298,7 +296,6 @@ const findAvailableSlotForEventType = (event: PogoEvent, existingSlots: EventSlo
     return -1; // No suitable same-type slot found
 };
 
-// Helper function to find the next completely available slot
 const findNextAvailableSlot = (event: PogoEvent, existingSlots: EventSlot[]): number => {
     let slotIndex = 0;
     while (true) {
@@ -315,7 +312,6 @@ const findNextAvailableSlot = (event: PogoEvent, existingSlots: EventSlot[]): nu
     }
 };
 
-// Helper function to check if an event conflicts with existing events in a slot
 const hasConflictInSlot = (event: PogoEvent, slotIndex: number, existingSlots: EventSlot[]): boolean => {
     const eventStart = parseEventDate(event.start);
     const eventEnd = parseEventDate(event.end);
