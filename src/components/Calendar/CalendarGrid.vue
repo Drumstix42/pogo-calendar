@@ -35,6 +35,7 @@ import { useUrlSync } from '@/composables/useUrlSync';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { useEventFilterStore } from '@/stores/eventFilter';
 import { useEventsStore } from '@/stores/events';
+import { getRaidSubType, getRaidSubTypePriority } from '@/utils/eventPokemon';
 import { type PogoEvent, getEventTypeInfo, isSameDayEvent, parseEventDate } from '@/utils/eventTypes';
 
 import CalendarDay from './CalendarDay.vue';
@@ -240,42 +241,6 @@ const eventSlots = computed((): EventSlot[] => {
 
     return slots;
 });
-
-// Helper function to extract raid sub-type from event name
-const getRaidSubType = (event: PogoEvent): string => {
-    if (event.eventType !== 'raid-battles') {
-        return ''; // Not applicable for non-raid events
-    }
-
-    const eventName = event.name.toLowerCase();
-
-    if (eventName.includes('shadow')) {
-        return 'shadow-raids';
-    } else if (eventName.includes('mega')) {
-        return 'mega-raids';
-    } else {
-        return 'raid-battles';
-    }
-};
-
-// Helper function to get raid sub-type priority (higher number = higher priority)
-const getRaidSubTypePriority = (event: PogoEvent): number => {
-    if (event.eventType !== 'raid-battles') {
-        return 0; // Not applicable for non-raid events
-    }
-
-    const subType = getRaidSubType(event);
-    switch (subType) {
-        case 'shadow-raids':
-            return 3;
-        case 'raid-battles':
-            return 2;
-        case 'mega-raids':
-            return 1;
-        default:
-            return 0;
-    }
-};
 
 // Helper function to check if two events should be grouped in the same slot
 const shouldShareSlot = (eventA: PogoEvent, eventB: PogoEvent): boolean => {

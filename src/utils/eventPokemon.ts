@@ -1,41 +1,69 @@
 import { type PogoEvent } from './eventTypes';
 import { getPokemonSpriteUrl } from './pokemonMapper.ts';
 
-/**
- * Extracts Pokemon name from raid-hour event titles
- * @param eventName - The event name like "Lugia Raid Hour"
- * @returns The Pokemon name or null if not found
- */
 function extractPokemonNameFromRaidHour(eventName: string): string | null {
     // Pattern: "<Pokemon Name> Raid Hour"
     const match = eventName.match(/^(.+?)\s+Raid\s+Hour$/i);
     return match ? match[1].trim() : null;
 }
 
-/**
- * Extracts Pokemon name from max-mondays event titles
- * @param eventName - The event name like "Dynamax Omanyte during Max Monday"
- * @returns The Pokemon name or null if not found
- */
 function extractPokemonNameFromMaxMonday(eventName: string): string | null {
     // Pattern: "Dynamax <Pokemon Name> during Max Monday"
     const match = eventName.match(/^Dynamax\s+(.+?)\s+during\s+Max\s+Monday$/i);
     return match ? match[1].trim() : null;
 }
 
-/**
- * Gets all Pokémon images for an event
- * @param event - The PoGo event object
- * @returns Array of image URLs, empty array if none found
- */
+// Uses getRaidSubType to determine the format, then applies appropriate regex patterns
+function extractPokemonNameFromRaidBattle(event: PogoEvent): string | null {
+    const subType = getRaidSubType(event);
+    const eventName = event.name;
+
+    switch (subType) {
+        case 'shadow-raids': {
+            // Pattern: "Shadow <Pokemon> in Shadow Raids"
+            const match = eventName.match(/^Shadow\s+(.+?)\s+in\s+Shadow\s+Raids$/i);
+            return match ? match[1].trim() : null;
+        }
+        case 'mega-raids': {
+            // Pattern: "<Pokemon> in Mega Raids"
+            const match = eventName.match(/^(.+?)\s+in\s+Mega\s+Raids$/i);
+            return match ? match[1].trim() : null;
+        }
+        case 'raid-battles': {
+            // Pattern: "<Pokemon> in <tier>-star Raid battles"
+            // Captures: [full match, pokemon name, tier number]
+            const match = eventName.match(/^(.+?)\s+in\s+(\d+)-star\s+Raid\s+battles$/i);
+            return match ? match[1].trim() : null;
+        }
+        default:
+            return null;
+    }
+}
+
 export function getEventPokemonImages(event: PogoEvent): string[] {
     if (!event.extraData) return [];
 
-    // Handle raid battles - can have multiple bosses
-    if (event.eventType === 'raid-battles' && event.extraData.raidbattles?.bosses) {
-        const bosses = event.extraData.raidbattles.bosses;
-        if (bosses.length > 0) {
-            return bosses.map(boss => boss.image).filter(image => image) as string[];
+    // Handle raid battles - try to extract Pokemon name first, then fall back to bosses data
+    if (event.eventType === 'raid-battles') {
+        // First try to extract Pokemon name from event title and generate sprite
+        const pokemonName = extractPokemonNameFromRaidBattle(event);
+        if (pokemonName) {
+            try {
+                const spriteUrl = getPokemonSpriteUrl(pokemonName);
+                if (spriteUrl) {
+                    return [spriteUrl];
+                }
+            } catch (error) {
+                console.warn(`Failed to generate sprite for ${pokemonName}:`, error);
+            }
+        }
+
+        // Fallback to LeetDuck's provided images (this will always be the case with Mega's due to limited API data)
+        if (event.extraData?.raidbattles?.bosses) {
+            const bosses = event.extraData.raidbattles.bosses;
+            if (bosses.length > 0) {
+                return bosses.map(boss => boss.image).filter(image => image) as string[];
+            }
         }
     }
 
@@ -165,20 +193,10 @@ export function getEventPokemonImages(event: PogoEvent): string[] {
     return [];
 }
 
-/**
- * Checks if an event has Pokémon image data available
- * @param event - The PoGo event object
- * @returns True if the event has Pokémon image data
- */
 export function hasEventPokemonImage(event: PogoEvent): boolean {
     return getEventPokemonImages(event).length > 0;
 }
 
-/**
- * Gets all Pokémon images for multi-day events
- * @param event - The PoGo event object
- * @returns Array of image URLs for multi-day events, empty array if none found
- */
 export function getMultiDayPokemonImages(event: PogoEvent): string[] {
     // Only show images for raid-battles events for now
     if (event.eventType !== 'raid-battles') {
@@ -186,4 +204,40 @@ export function getMultiDayPokemonImages(event: PogoEvent): string[] {
     }
 
     return getEventPokemonImages(event);
+}
+
+export function getRaidSubType(event: PogoEvent): string {
+    if (event.eventType !== 'raid-battles') {
+        return ''; // Not applicable for non-raid events
+    }
+
+    const eventName = event.name.toLowerCase();
+
+    if (eventName.includes('shadow')) {
+        return 'shadow-raids';
+    } else if (eventName.includes('mega')) {
+        return 'mega-raids';
+    } else if (eventName.includes('raid battles')) {
+        return 'raid-battles';
+    }
+    return ''; // Default case, no specific sub-type
+}
+
+// Higher number = higher priority for raid sub-type sorting
+export function getRaidSubTypePriority(event: PogoEvent): number {
+    if (event.eventType !== 'raid-battles') {
+        return 0; // Not applicable for non-raid events
+    }
+
+    const subType = getRaidSubType(event);
+    switch (subType) {
+        case 'shadow-raids':
+            return 3;
+        case 'raid-battles':
+            return 2;
+        case 'mega-raids':
+            return 1;
+        default:
+            return 0;
+    }
 }
