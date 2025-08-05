@@ -99,8 +99,8 @@ onMounted(() => {
 const categoryDisplayNames = {
     'community-and-raids': 'Community & Raids',
     research: 'Research',
-    'seasonal-premium': 'Seasonal & Premium',
-    'misc-and-events': 'Events & Misc.',
+    'seasonal-and-premium': 'Seasonal & Premium',
+    'events-and-misc': 'Events & Misc.',
 } as const;
 
 // Generate event groups dynamically from EVENT_TYPES categories
@@ -128,7 +128,7 @@ const eventGroups = computed(() => {
         }))
         .sort((a, b) => {
             // Sort categories in desired order
-            const order = ['research', 'seasonal-premium', 'community-and-raids', 'misc-and-events'];
+            const order = ['seasonal-and-premium', 'research', 'community-and-raids', 'events-and-misc'];
             const aIndex = order.indexOf(
                 Object.keys(categoryDisplayNames).find(key => categoryDisplayNames[key as keyof typeof categoryDisplayNames] === a.title) || '',
             );

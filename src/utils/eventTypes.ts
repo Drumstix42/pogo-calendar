@@ -9,7 +9,7 @@ export interface EventTypeInfo {
     name: string;
     color: string;
     priority: number;
-    category: 'community-and-raids' | 'research' | 'seasonal-premium' | 'misc-and-events';
+    category: 'community-and-raids' | 'research' | 'seasonal-and-premium' | 'events-and-misc';
 }
 
 export interface PokemonBoss {
@@ -170,25 +170,25 @@ export const EVENT_TYPES: Record<string, EventTypeInfo> = {
         name: 'Pokemon GO Fest',
         color: '#153d94', // dark blue
         priority: 20,
-        category: 'seasonal-premium',
+        category: 'seasonal-and-premium',
     },
     'pokemon-go-tour': {
         name: 'Pokemon GO Tour',
         color: '#1d3a74', // darker blue
         priority: 21,
-        category: 'seasonal-premium',
+        category: 'seasonal-and-premium',
     },
     'safari-zone': {
         name: 'Safari Zone',
         color: '#3d7141', // green
         priority: 22,
-        category: 'seasonal-premium',
+        category: 'seasonal-and-premium',
     },
     'ticketed-event': {
         name: 'Ticketed Event',
         color: '#c7378b', // pink
         priority: 90,
-        category: 'seasonal-premium',
+        category: 'seasonal-and-premium',
     },
 
     // Regular Events
@@ -196,25 +196,25 @@ export const EVENT_TYPES: Record<string, EventTypeInfo> = {
         name: 'Event',
         color: '#1d8247', // green
         priority: 58,
-        category: 'misc-and-events',
+        category: 'events-and-misc',
     },
     'live-event': {
         name: 'Live Event',
         color: '#d63031', // red
         priority: 75,
-        category: 'misc-and-events',
+        category: 'events-and-misc',
     },
     'location-specific': {
         name: 'Location Specific',
         color: '#284b92', // blue
         priority: 45,
-        category: 'misc-and-events',
+        category: 'events-and-misc',
     },
     'bonus-hour': {
         name: 'Bonus Hour',
         color: '#40407a', // purple-blue
         priority: 62,
-        category: 'misc-and-events',
+        category: 'events-and-misc',
     },
 
     // Battle Events
@@ -222,7 +222,7 @@ export const EVENT_TYPES: Record<string, EventTypeInfo> = {
         name: 'GO Battle League',
         color: '#8e44ad', // purple
         priority: 99,
-        category: 'community-and-raids',
+        category: 'seasonal-and-premium',
     },
 
     // Team Rocket
@@ -230,13 +230,13 @@ export const EVENT_TYPES: Record<string, EventTypeInfo> = {
         name: 'Team GO Rocket Takeover',
         color: '#1e1e1e', // dark
         priority: 84,
-        category: 'misc-and-events',
+        category: 'events-and-misc',
     },
     'team-go-rocket': {
         name: 'Team GO Rocket',
         color: '#1e1e1e', // dark
         priority: 55,
-        category: 'misc-and-events',
+        category: 'events-and-misc',
     },
     'giovanni-special-research': {
         name: 'Giovanni Special Research',
@@ -250,13 +250,13 @@ export const EVENT_TYPES: Record<string, EventTypeInfo> = {
         name: 'PokéStop Showcase',
         color: '#2f8274', // teal-green
         priority: 52,
-        category: 'misc-and-events',
+        category: 'events-and-misc',
     },
     'global-challenge': {
         name: 'Global Challenge',
         color: '#0a64b5', // blue
         priority: 82,
-        category: 'seasonal-premium',
+        category: 'seasonal-and-premium',
     },
 
     // System/Meta
@@ -264,25 +264,25 @@ export const EVENT_TYPES: Record<string, EventTypeInfo> = {
         name: 'Season',
         color: '#29817e', // teal
         priority: 100,
-        category: 'seasonal-premium',
+        category: 'seasonal-and-premium',
     },
     update: {
         name: 'Update',
         color: '#2679af', // blue
         priority: 10,
-        category: 'misc-and-events',
+        category: 'events-and-misc',
     },
     'potential-ultra-unlock': {
         name: 'Potential Ultra Unlock',
         color: '#2c3e50', // dark blue-grey
         priority: 42,
-        category: 'misc-and-events',
+        category: 'events-and-misc',
     },
     'go-pass': {
         name: 'GO Pass',
         color: '#896e17', // yellow/gold
         priority: 95,
-        category: 'seasonal-premium',
+        category: 'seasonal-and-premium',
     },
 };
 

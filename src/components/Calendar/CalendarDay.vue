@@ -18,7 +18,7 @@
                         top: `${getEventSlotTop(event)}px`,
                         left: '0',
                         right: '0',
-                        height: '20px',
+                        height: `${MULTI_DAY_EVENT_BAR_HEIGHT}px`,
                         pointerEvents: 'none',
                     }"
                 >
@@ -118,6 +118,9 @@ interface Props {
         shouldRenderOnDay: (day: Dayjs) => boolean;
     }>;
 }
+
+const MULTI_DAY_EVENT_BAR_HEIGHT = 20; // px
+const MULTI_DAY_EVENT_BAR_MARGIN = 1; // px margin between bars
 
 const props = defineProps<Props>();
 const eventFilter = useEventFilterStore();
@@ -242,7 +245,8 @@ const multiDayEventsHeight = computed(() => {
     if (compactSlots.length === 0) return 0;
 
     const maxCompactIndex = Math.max(...compactSlots.map(slot => slot.compactSlotIndex));
-    return (maxCompactIndex + 1) * 24; // 24px per slot, +1 because index is 0-based
+    // +1 because index is 0-based
+    return (maxCompactIndex + 1) * (MULTI_DAY_EVENT_BAR_HEIGHT + MULTI_DAY_EVENT_BAR_MARGIN);
 });
 
 // Helper functions for template
@@ -337,8 +341,8 @@ const getEventSlotTop = (event: PogoEvent): number => {
     const compactSlot = weekCompactSlots.value.get(event.eventID);
     if (!compactSlot) return 0;
 
-    // Each slot is 24px high (20px bar + 4px margin)
-    return compactSlot.compactSlotIndex * 24;
+    // Uses height + margin to calculate the top position
+    return compactSlot.compactSlotIndex * (MULTI_DAY_EVENT_BAR_HEIGHT + MULTI_DAY_EVENT_BAR_MARGIN);
 };
 
 const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; width: string } => {
@@ -472,12 +476,11 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
     cursor: pointer;
     transition: background-color 0.2s ease;
+    height: 100%;
     min-width: 0;
     margin-bottom: 1px;
     overflow: visible;
     position: relative;
-    height: 20px; /* Set explicit height instead of relying on padding */
-
     box-sizing: border-box; /* Use border-box for predictable sizing */
     pointer-events: auto; /* Ensure bars are interactive */
 }
@@ -492,7 +495,7 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     width: 100%;
     height: 100%;
     padding-left: 6px;
-    padding-right: 6px;
+    padding-right: 2px;
     position: absolute;
     top: 0;
     left: 0;
