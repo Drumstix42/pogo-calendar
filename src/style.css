@@ -90,5 +90,6 @@ h6 {
 
 /* Floating Vue */
 .v-popper--theme-tooltip .v-popper__inner {
+    padding: 5px 8px;
     background-color: rgba(0, 0, 0, 0.9);
 }

@@ -36,7 +36,7 @@
                         }"
                         :data-debug="`Event: ${event.name} | ID: ${event.eventID} | Slot: ${getEventSlotData(event)?.slotIndex} | Grouped: ${(event as any)._isGrouped || false}`"
                     >
-                        <VTooltip placement="top" :delay="{ show: 50, hide: 0 }" distance="10" :triggers="['hover']" :auto-hide="true">
+                        <VTooltip placement="top" :delay="{ show: 50, hide: 0 }" distance="10">
                             <div class="multi-day-event-bar--inner">
                                 <!-- Show Pokemon images for grouped or individual events -->
                                 <div v-if="calendarSettings.groupSimilarEvents && hasGroupedEvents(event)" class="d-flex align-items-center">
@@ -51,6 +51,11 @@
 
                                 <span class="event-name">{{ getEventDisplayName(event) }}</span>
                                 <span v-if="shouldShowBadge(event)" class="event-badge">{{ getEventCount(event) }}</span>
+
+                                <!-- Hide event type button (shows on hover) -->
+                                <div class="ms-auto d-flex align-items-center">
+                                    <EventToggleButton :event-type="event.eventType" @hide="hideEventType" />
+                                </div>
                             </div>
 
                             <template #popper>
@@ -77,6 +82,10 @@
                         <div class="event-content">
                             <div class="event-name-container">
                                 <div class="event-name">{{ getEventDisplayName(event) }}</div>
+                                <!-- Hide event type button for single-day events (shows on hover) -->
+                                <div class="ms-auto d-flex align-items-center">
+                                    <EventToggleButton :event-type="event.eventType" @hide="hideEventType" />
+                                </div>
                             </div>
                             <div v-if="getEventTime(event)" class="event-time">{{ getEventTime(event) }}</div>
                             <PokemonImages :event="event" :event-name="getEventDisplayName(event)" :height="40" />
@@ -100,6 +109,7 @@ import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { useEventFilterStore } from '@/stores/eventFilter';
 import { useEventsStore } from '@/stores/events';
 import {
+    type EventTypeKey,
     type PogoEvent,
     formatEventTime,
     getCalendarEventsForDate,
@@ -113,6 +123,7 @@ import {
     sortEventsByPriority,
 } from '@/utils/eventTypes';
 
+import EventToggleButton from './EventToggleButton.vue';
 import EventTooltip from './EventTooltip.vue';
 import PokemonImages from './PokemonImages.vue';
 
@@ -299,6 +310,11 @@ const getEventTime = (event: PogoEvent): string => {
 
     // For single-day events, show the start time
     return formatEventTime(event.start);
+};
+
+// Hide event type function
+const hideEventType = (eventType: EventTypeKey): void => {
+    eventFilter.disableEventType(eventType);
 };
 
 // Multi-day event bar state helpers
@@ -547,6 +563,18 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     backdrop-filter: blur(2px);
 }
 
+/* Hide toggle button by default */
+.single-day-event :deep(.event-toggle-button),
+.multi-day-event-bar :deep(.event-toggle-button) {
+    display: none;
+}
+
+/* Show toggle button on hover using deep selector */
+.single-day-event:hover :deep(.event-toggle-button),
+.multi-day-event-bar:hover :deep(.event-toggle-button) {
+    display: inline-flex;
+}
+
 .pokemon-more-indicator {
     display: inline-flex;
     align-items: center;
@@ -720,6 +748,7 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     transition: background-color 0.2s ease;
     min-width: 0;
     overflow: hidden;
+    position: relative; /* Added for button positioning */
 }
 
 .single-day-event:hover {
@@ -727,11 +756,11 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
 }
 
 .event-dot {
-    width: 7px;
-    height: 7px;
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
     flex-shrink: 0;
-    margin-top: 2px; /* Align with first line of text */
+    margin-top: 4px; /* Align with first line of text */
 }
 
 .event-content {
@@ -746,7 +775,8 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     font-size: 0.7rem;
     font-weight: 400;
     color: #333;
-    line-height: 1;
+    min-height: 15px;
+    line-height: 15px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -758,10 +788,11 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     font-size: 0.7rem;
     font-weight: 600;
     color: #444;
-    line-height: 1rem;
+    line-height: 0.8rem;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    margin-bottom: 2px;
 }
 
 .event-name-container {
