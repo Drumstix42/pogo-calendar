@@ -1,10 +1,11 @@
 <template>
     <div class="event-filter-options">
-        <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="mb-2">
             <h6 class="mb-0">Event Type Filters</h6>
+            <small class="text-muted d-block">Select which event types to display.</small>
         </div>
 
-        <div class="filter-stats mb-3">
+        <div class="filter-stats mb-2">
             <div class="btn-group btn-group-sm">
                 <button
                     :class="eventFilter.allEventTypesEnabled ? 'btn btn-dark' : 'btn btn-outline-secondary'"
@@ -19,7 +20,11 @@
                     None
                 </button>
             </div>
-            <small class="text-muted"> {{ eventFilter.enabledCount }} of {{ eventFilter.totalCount }} event types enabled </small>
+            <small v-if="eventFilter.enabledCount === eventFilter.totalCount" class="text-muted">
+                All {{ eventFilter.totalCount }} event types enabled
+            </small>
+            <small v-else-if="eventFilter.enabledCount === 0" class="text-muted"> All {{ eventFilter.totalCount }} event types <i>disabled</i></small>
+            <small v-else class="text-muted">{{ eventFilter.enabledCount }} of {{ eventFilter.totalCount }} event types enabled</small>
         </div>
 
         <div ref="filterGridContainer" class="filter-grid-container" :class="{ 'can-scroll-up': canScrollUp, 'can-scroll-down': canScrollDown }">

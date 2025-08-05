@@ -19,16 +19,16 @@
                 </button>
             </div>
 
-            <span class="month-label">{{ currentMonthDisplay }}</span>
+            <span class="month-label text-center">{{ currentMonthDisplay }}</span>
         </div>
 
         <button
-            class="btn-options-toggle btn btn-sm d-flex align-items-center gap-1"
+            class="btn-options-toggle btn btn-sm d-flex align-items-center gap-2"
             :class="[calendarSettings.optionsExpanded ? 'btn-secondary' : 'btn-outline-secondary']"
             @click="calendarSettings.toggleOptionsExpanded"
         >
             <Settings :size="16" class="flex-grow-0" />
-            <span class="flex-grow-1">{{ calendarSettings.optionsExpanded ? 'Hide' : 'Show' }} Options</span>
+            <span class="flex-grow-1">Options</span>
             <ChevronDown :size="14" class="icon-rotate" :class="{ 'rotate-180': calendarSettings.optionsExpanded }" />
         </button>
     </div>
@@ -96,6 +96,7 @@ const goToCurrentMonth = () => {
 <style scoped>
 .month-label {
     font-size: 1.2rem;
+    line-height: 1.4rem;
     font-weight: 500;
 }
 
@@ -104,9 +105,5 @@ const goToCurrentMonth = () => {
 }
 .rotate-180 {
     transform: rotate(180deg);
-}
-
-.btn-options-toggle {
-    min-width: 160px;
 }
 </style>

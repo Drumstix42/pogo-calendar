@@ -8,7 +8,7 @@
             </option>
         </select>
 
-        <small class="text-muted mt-2 d-block"> Calendar will start each week on {{ calendarSettings.firstDayOfWeek }} </small>
+        <small class="text-muted mt-2 d-block">Calendar week will start on the selected day.</small>
     </div>
 </template>
 

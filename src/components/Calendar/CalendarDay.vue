@@ -24,19 +24,19 @@
                 >
                     <div
                         class="multi-day-event-bar"
-                        :class="getMultiDayEventBarClass(event, props.dayjs)"
+                        :class="getMultiDayEventBarClass(event, props.dayInstance)"
                         :style="{
                             '--event-bg-color': getEventColor(event),
                             backgroundColor: getEventColor(event),
-                            left: getEventPosition(event, props.dayjs).left,
-                            width: getEventPosition(event, props.dayjs).width,
+                            left: getEventPosition(event, props.dayInstance).left,
+                            width: getEventPosition(event, props.dayInstance).width,
                             position: 'absolute',
                             pointerEvents: 'auto',
                             zIndex: 20 + getEventSlotTop(event),
                         }"
                         :data-debug="`Event: ${event.name} | ID: ${event.eventID} | Slot: ${getEventSlotData(event)?.slotIndex} | Grouped: ${(event as any)._isGrouped || false}`"
                     >
-                        <VTooltip
+                        <VMenu
                             placement="top"
                             :delay="tooltipOptionsDefaults.delay"
                             :distance="tooltipOptionsDefaults.distance"
@@ -66,7 +66,7 @@
                             <template #popper>
                                 <EventTooltip :event="event" />
                             </template>
-                        </VTooltip>
+                        </VMenu>
                     </div>
                 </div>
             </template>
@@ -75,7 +75,7 @@
         <!-- Single-day events (vertically stacked event blocks with timestamps) -->
         <div xv-if="singleDayEvents.length > 0">
             <div class="single-day-events">
-                <VTooltip
+                <VMenu
                     v-for="event in singleDayEvents"
                     :key="`single-${getEventKey(event)}`"
                     placement="top"
@@ -101,7 +101,7 @@
                     <template #popper>
                         <EventTooltip :event="event" :is-single-day="true" />
                     </template>
-                </VTooltip>
+                </VMenu>
             </div>
         </div>
     </div>
@@ -140,7 +140,7 @@ interface Props {
     year: number;
     isCurrentMonth: boolean;
     isToday: boolean;
-    dayjs: Dayjs;
+    dayInstance: Dayjs;
     eventSlots: Array<{
         event: PogoEvent;
         slotIndex: number;
@@ -186,7 +186,7 @@ const getWeekBoundaries = (referenceDay: Dayjs) => {
 const calendarEvents = computed(() => {
     if (calendarSettings.groupSimilarEvents) {
         // Use the existing grouping logic
-        const calendarData = getCalendarEventsForDate(eventsStore.events, props.dayjs);
+        const calendarData = getCalendarEventsForDate(eventsStore.events, props.dayInstance);
 
         // Filter by enabled event types
         const filteredSingleDay = calendarData.singleDayEvents.filter(event => eventFilter.isEventTypeEnabled(event.eventType));
@@ -200,7 +200,7 @@ const calendarEvents = computed(() => {
         };
     } else {
         // No grouping - get individual events for the date
-        const eventsForDate = getEventsForDate(eventsStore.events, props.dayjs);
+        const eventsForDate = getEventsForDate(eventsStore.events, props.dayInstance);
 
         // Filter by enabled event types and separate by single/multi-day
         const enabledEvents = eventsForDate.filter((event: PogoEvent) => eventFilter.isEventTypeEnabled(event.eventType));
@@ -221,7 +221,7 @@ const singleDayEvents = computed(() => {
 });
 
 const multiDayEvents = computed(() => {
-    const eventsOnThisDay = props.eventSlots.filter(slot => slot.shouldRenderOnDay(props.dayjs));
+    const eventsOnThisDay = props.eventSlots.filter(slot => slot.shouldRenderOnDay(props.dayInstance));
 
     // Sort by compact slot index instead of original slot index
     return eventsOnThisDay
@@ -239,7 +239,7 @@ const multiDayEvents = computed(() => {
 // Compact slot assignments for this specific week to remove gaps
 const weekCompactSlots = computed(() => {
     // Calculate week start properly based on configured first day
-    const { weekStart, weekEnd } = getWeekBoundaries(props.dayjs);
+    const { weekStart, weekEnd } = getWeekBoundaries(props.dayInstance);
 
     // Find all events that actually render on at least one day in this week
     const eventsRenderingInThisWeek = props.eventSlots.filter(slot => {
@@ -338,7 +338,7 @@ const getMultiDayEventBarClass = (event: PogoEvent, currentDay: Dayjs): string =
     if (!slotData || !slotData.shouldRenderOnDay(currentDay)) return '';
 
     const today = currentDay.startOf('day');
-    const { weekEnd } = getWeekBoundaries(props.dayjs);
+    const { weekEnd } = getWeekBoundaries(props.dayInstance);
     const weekEndDay = weekEnd.endOf('day');
 
     // Use the actual event's dates, not the composite slot's extended dates
@@ -401,7 +401,7 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
 
     // This function only handles multi-day events that render as bars
     const eventStartDay = eventStart.startOf('day');
-    const { weekEnd } = getWeekBoundaries(props.dayjs);
+    const { weekEnd } = getWeekBoundaries(props.dayInstance);
     const weekEndDay = weekEnd.endOf('day');
     const eventEndDay = eventEnd.startOf('day');
     const actualEndDay = eventEndDay.isBefore(weekEndDay) ? eventEndDay : weekEndDay;
@@ -556,7 +556,8 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     line-height: 1;
 }
 
-.multi-day-event-bar .v-popper--theme-tooltip {
+.multi-day-event-bar .v-popper--theme-tooltip,
+.multi-day-event-bar .v-popper--theme-dropdown {
     width: 100%;
     height: 100%;
 }

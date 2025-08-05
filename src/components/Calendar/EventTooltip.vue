@@ -96,13 +96,13 @@ const formatEventDuration = (event: PogoEvent): string => {
 .event-tooltip {
     max-width: 330px;
     padding: 0.4rem;
-    color: #ffffff !important;
 }
 
 .event-tooltip-type {
     font-size: 0.8rem;
     line-height: 1.2;
-    color: #cccccc;
+    font-weight: 600;
+    color: color-mix(in srgb, var(--bs-body-color) 80%, transparent);
     margin-bottom: 0.25rem;
 }
 
@@ -130,7 +130,7 @@ const formatEventDuration = (event: PogoEvent): string => {
 
 .event-separator {
     height: 1px;
-    background-color: rgba(255, 255, 255, 0.2);
+    background-color: color-mix(in srgb, var(--bs-body-color) 40%, transparent);
     margin-bottom: 0.5rem;
 }
 

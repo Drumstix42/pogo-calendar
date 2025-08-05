@@ -7,7 +7,19 @@
     box-sizing: border-box;
 }
 
+:root,
+/* Light theme */
+[data-bs-theme='light'] {
+    --bs-body-bg: #f8f9fa;
+}
+
+/* Dark theme */
+[data-bs-theme='dark'] {
+    --bs-body-bg: #343a40;
+}
+
 body {
+    background-color: var(--bs-body-bg);
     margin: 0;
     font-family:
         'Inter',
@@ -90,6 +102,10 @@ h6 {
 
 /* Floating Vue */
 .v-popper--theme-tooltip .v-popper__inner {
-    padding: 5px 8px;
+    padding: 5px;
     background-color: rgba(0, 0, 0, 0.9);
+}
+.v-popper--theme-dropdown .v-popper__inner {
+    padding: 5px;
+    background-color: #ffffff;
 }

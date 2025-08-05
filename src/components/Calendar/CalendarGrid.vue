@@ -19,7 +19,7 @@
                     :year="day.year"
                     :is-current-month="day.isCurrentMonth"
                     :is-today="day.isToday"
-                    :dayjs="day.dayjs"
+                    :day-instance="day.dayInstance"
                     :event-slots="eventSlots"
                 />
             </div>
@@ -89,7 +89,7 @@ const calendarDays = computed(() => {
             year: day.year(),
             isCurrentMonth: day.isSame(currentDate, 'month'),
             isToday: day.isSame(dayjs(), 'day'),
-            dayjs: day,
+            dayInstance: day,
         });
         day = day.add(1, 'day');
     }
@@ -107,8 +107,8 @@ const multiDayEventsForCalendar = computed(() => {
 
         const eventStart = parseEventDate(event.start).startOf('day');
         const eventEnd = parseEventDate(event.end).startOf('day');
-        const calendarStart = calendarDays.value[0]?.dayjs.startOf('day');
-        const calendarEnd = calendarDays.value[calendarDays.value.length - 1]?.dayjs.startOf('day');
+        const calendarStart = calendarDays.value[0]?.dayInstance.startOf('day');
+        const calendarEnd = calendarDays.value[calendarDays.value.length - 1]?.dayInstance.startOf('day');
 
         // Include event if it overlaps with the calendar view
         return (
@@ -340,7 +340,7 @@ const hasConflictInSlot = (event: PogoEvent, slotIndex: number, existingSlots: E
     background: white;
     border: 1px solid #dee2e6;
     border-radius: 0.375rem;
-    overflow: visible;
+    overflow: clip;
 }
 
 .calendar-day-headers {
@@ -351,12 +351,11 @@ const hasConflictInSlot = (event: PogoEvent, slotIndex: number, existingSlots: E
     position: sticky;
     top: 0;
     z-index: 1020;
-    backdrop-filter: blur(8px);
-    background-color: rgba(248, 249, 250, 0.95);
+    border-radius: 0.375rem 0.375rem 0 0;
 }
 
 .calendar-day-header {
-    padding: 0.75rem;
+    padding: 0.25rem;
     text-align: center;
     font-weight: 600;
     font-size: 0.875rem;

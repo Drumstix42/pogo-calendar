@@ -17,9 +17,14 @@ app.use(pinia);
 app.use(router);
 app.use(FloatingVue, {
     themes: {
+        // touch seems buggy when zooming and panning, so disabled for now
         tooltip: {
             placement: 'top',
-            triggers: ['hover', 'focus', /* 'touch', */ 'click'], // touch seems buggy when zooming and panning, so disabled for now
+            triggers: ['hover', 'focus', /* 'touch', */ 'click'],
+        },
+        menu: {
+            placement: 'top',
+            triggers: ['hover', 'focus', /* 'touch', */ 'click'],
         },
     },
 });
