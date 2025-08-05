@@ -1,7 +1,5 @@
 import { type PogoEvent } from './eventTypes';
-// Import the Pokemon mapper utility
-// @ts-ignore - JS file without type definitions
-import { getPokemonSpriteUrl } from './pokemonMapper.js';
+import { getPokemonSpriteUrl } from './pokemonMapper.ts';
 
 /**
  * Extracts Pokemon name from raid-hour event titles

@@ -1,4 +1,10 @@
 /* cSpell:disable */
+
+// Type definitions
+export type PokemonName = keyof typeof POKEMON_NAME_TO_ID;
+export type PokemonId = number;
+export type SpriteType = 'dream-world' | 'official-artwork' | 'home';
+
 export const POKEMON_NAME_TO_ID = {
     // Generation 1 (Kanto) - IDs 1-151
     Bulbasaur: 1,
@@ -1036,21 +1042,15 @@ export const POKEMON_NAME_TO_ID = {
     Pecharunt: 1025,
 };
 
-/**
- * Get Pokémon ID by name
- * @param {string} name - The Pokémon name
- * @returns {number|null} - The Pokémon ID or null if not found
- */
-export function getPokemonId(name) {
-    // Normalize the input name to handle case variations
+export function getPokemonId(name: string): number | null {
     const normalizedName = name.trim();
 
     // Try exact match first
-    if (POKEMON_NAME_TO_ID[normalizedName]) {
-        return POKEMON_NAME_TO_ID[normalizedName];
+    if (normalizedName in POKEMON_NAME_TO_ID) {
+        return POKEMON_NAME_TO_ID[normalizedName as PokemonName];
     }
 
-    // Try case-insensitive match
+    // Fallback to case-insensitive search
     const lowerName = normalizedName.toLowerCase();
     for (const [pokeName, id] of Object.entries(POKEMON_NAME_TO_ID)) {
         if (pokeName.toLowerCase() === lowerName) {
@@ -1061,17 +1061,13 @@ export function getPokemonId(name) {
     return null;
 }
 
-/**
- * Get Pokémon sprite URL
- * @param {string|number} pokemonNameOrId - The Pokémon name or ID
- * @param {string} type - The sprite type ('dream-world', 'official-artwork', etc.)
- */
-export function getPokemonSpriteUrl(pokemonNameOrId, type = 'official-artwork') {
-    let id;
+export function getPokemonSpriteUrl(pokemonNameOrId: string | number, type: SpriteType = 'official-artwork'): string | null {
+    let id: number;
 
     if (typeof pokemonNameOrId === 'string') {
-        id = getPokemonId(pokemonNameOrId);
-        if (!id) return null;
+        const pokemonId = getPokemonId(pokemonNameOrId);
+        if (!pokemonId) return null;
+        id = pokemonId;
     } else if (typeof pokemonNameOrId === 'number') {
         id = pokemonNameOrId;
     } else {
@@ -1092,24 +1088,11 @@ export function getPokemonSpriteUrl(pokemonNameOrId, type = 'official-artwork') 
     }
 }
 
-export function getAllPokemonNames() {
-    return Object.keys(POKEMON_NAME_TO_ID);
+export function getAllPokemonNames(): PokemonName[] {
+    return Object.keys(POKEMON_NAME_TO_ID) as PokemonName[];
 }
 
-/**
- * Search Pokémon by partial name
- * @param {string} partialName - Partial Pokémon name to search for
- * @returns {string[]} - Array of matching Pokémon names
- */
-export function searchPokemon(partialName) {
+export function searchPokemon(partialName: string): PokemonName[] {
     const searchTerm = partialName.toLowerCase();
-    return Object.keys(POKEMON_NAME_TO_ID).filter(name => name.toLowerCase().includes(searchTerm));
+    return Object.keys(POKEMON_NAME_TO_ID).filter(name => name.toLowerCase().includes(searchTerm)) as PokemonName[];
 }
-
-export default {
-    POKEMON_NAME_TO_ID,
-    getPokemonId,
-    getPokemonSpriteUrl,
-    getAllPokemonNames,
-    searchPokemon,
-};
