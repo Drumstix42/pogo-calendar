@@ -26,6 +26,7 @@
                         class="multi-day-event-bar"
                         :class="getMultiDayEventBarClass(event, props.dayjs)"
                         :style="{
+                            '--event-bg-color': getEventColor(event),
                             backgroundColor: getEventColor(event),
                             left: getEventPosition(event, props.dayjs).left,
                             width: getEventPosition(event, props.dayjs).width,
@@ -37,6 +38,7 @@
                     >
                         <VTooltip placement="top" :delay="{ show: 50, hide: 0 }" distance="10" :triggers="['hover']" :auto-hide="true">
                             <div class="multi-day-event-bar--inner">
+                                <PokemonImages :event="event" :event-name="getEventDisplayName(event)" size="medium" />
                                 <span class="event-name">{{ getEventDisplayName(event) }}</span>
                                 <span v-if="shouldShowBadge(event)" class="event-badge">{{ getEventCount(event) }}</span>
                             </div>
@@ -51,46 +53,31 @@
         </div>
 
         <!-- Single-day events (rendered second, as circles on top) -->
-        <div xv-if="singleDayEvents.length > 0" class="single-day-events">
-            <VTooltip
-                v-for="event in singleDayEvents"
-                :key="`single-${getEventKey(event)}`"
-                placement="top"
-                :delay="{ show: 50, hide: 0 }"
-                distance="10"
-            >
-                <div class="single-day-event">
-                    <div class="event-dot" :style="{ backgroundColor: getEventColor(event) }"></div>
-                    <div class="event-content">
-                        <div class="event-name-container">
-                            <div class="event-name">{{ getEventDisplayName(event) }}</div>
-                        </div>
-                        <div v-if="getEventTime(event)" class="event-time">{{ getEventTime(event) }}</div>
-                        <div v-if="shouldShowPokemonImage(event)" class="event-pokemon-image">
-                            <div
-                                v-for="(imageUrl, index) in getEventPokemonImageUrls(event)"
-                                :key="`pokemon-${index}`"
-                                class="pokemon-container"
-                                :class="{ 'has-dynamax-overlay': isMaxMondaysEvent(event) }"
-                            >
-                                <div v-if="isMaxMondaysEvent(event)" class="dynamax-overlay">
-                                    <img src="/images/overlay/dynamax-clouds.png" alt="Dynamax effect" class="dynamax-clouds" />
-                                </div>
-                                <img
-                                    :src="imageUrl"
-                                    :alt="`${getEventDisplayName(event)} Pokemon ${index + 1}`"
-                                    class="pokemon-icon"
-                                    @error="handleImageError"
-                                />
+        <div xv-if="singleDayEvents.length > 0">
+            <div class="single-day-events">
+                <VTooltip
+                    v-for="event in singleDayEvents"
+                    :key="`single-${getEventKey(event)}`"
+                    placement="top"
+                    :delay="{ show: 50, hide: 0 }"
+                    distance="10"
+                >
+                    <div class="single-day-event">
+                        <div class="event-dot" :style="{ backgroundColor: getEventColor(event) }"></div>
+                        <div class="event-content">
+                            <div class="event-name-container">
+                                <div class="event-name">{{ getEventDisplayName(event) }}</div>
                             </div>
+                            <div v-if="getEventTime(event)" class="event-time">{{ getEventTime(event) }}</div>
+                            <PokemonImages :event="event" :event-name="getEventDisplayName(event)" size="xl" />
                         </div>
                     </div>
-                </div>
 
-                <template #popper>
-                    <EventTooltip :event="event" :is-single-day="true" />
-                </template>
-            </VTooltip>
+                    <template #popper>
+                        <EventTooltip :event="event" :is-single-day="true" />
+                    </template>
+                </VTooltip>
+            </div>
         </div>
     </div>
 </template>
@@ -102,7 +89,6 @@ import { computed } from 'vue';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { useEventFilterStore } from '@/stores/eventFilter';
 import { useEventsStore } from '@/stores/events';
-import { getEventPokemonImages, hasEventPokemonImage } from '@/utils/eventPokemon';
 import {
     type PogoEvent,
     formatEventTime,
@@ -115,6 +101,7 @@ import {
 } from '@/utils/eventTypes';
 
 import EventTooltip from './EventTooltip.vue';
+import PokemonImages from './PokemonImages.vue';
 
 interface Props {
     date: number;
@@ -295,26 +282,6 @@ const getEventTime = (event: PogoEvent): string => {
 
     // For single-day events, show the start time
     return formatEventTime(event.start);
-};
-
-// Pokémon image helpers
-const getEventPokemonImageUrls = (event: PogoEvent): string[] => {
-    return getEventPokemonImages(event);
-};
-
-const shouldShowPokemonImage = (event: PogoEvent): boolean => {
-    return hasEventPokemonImage(event);
-};
-
-const isMaxMondaysEvent = (event: PogoEvent): boolean => {
-    return event.eventType === 'max-mondays';
-};
-
-const handleImageError = (event: Event): void => {
-    const target = event.target as HTMLImageElement;
-    if (target) {
-        target.style.display = 'none';
-    }
 };
 
 // Multi-day event bar state helpers
@@ -504,7 +471,7 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     color: white;
     text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
     cursor: pointer;
-    transition: opacity 0.2s ease;
+    transition: background-color 0.2s ease;
     min-width: 0;
     margin-bottom: 1px;
     overflow: visible;
@@ -516,7 +483,7 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
 }
 
 .multi-day-event-bar:hover {
-    opacity: 0.8;
+    background-color: color-mix(in srgb, var(--event-bg-color) 80%, white) !important;
 }
 
 .multi-day-event-bar--inner {
@@ -531,6 +498,7 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     left: 0;
     right: 0;
     bottom: 0;
+    gap: 4px;
 }
 
 .multi-day-event-bar .event-name {
@@ -538,6 +506,7 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     text-overflow: ellipsis;
     white-space: nowrap;
     font-weight: 500;
+    line-height: 1;
 }
 
 .multi-day-event-bar .v-popper--theme-tooltip {
@@ -731,44 +700,6 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     border-radius: 50%;
     flex-shrink: 0;
     margin-top: 2px; /* Align with first line of text */
-}
-
-.event-pokemon-image {
-    flex-shrink: 0;
-    margin-top: 2px;
-    display: flex;
-    justify-content: flex-start;
-    gap: 2px;
-    flex-wrap: wrap;
-}
-
-.pokemon-container {
-    position: relative;
-    display: inline-block;
-}
-
-.dynamax-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: -1;
-}
-
-.dynamax-clouds {
-    width: 100%;
-    /* height: 100%; */
-    object-fit: contain;
-}
-
-.pokemon-icon {
-    max-width: 100%;
-    height: 50px;
-    object-fit: contain;
-    border-radius: 2px;
-    position: relative;
-    z-index: 2;
 }
 
 .event-content {

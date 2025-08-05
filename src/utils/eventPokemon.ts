@@ -246,10 +246,15 @@ export function hasEventPokemonImage(event: PogoEvent): boolean {
 }
 
 /**
- * Checks if an event has multiple Pokémon images
+ * Gets all Pokémon images for multi-day events
  * @param event - The PoGo event object
- * @returns True if the event has multiple Pokémon images
+ * @returns Array of image URLs for multi-day events, empty array if none found
  */
-export function hasMultiplePokemonImages(event: PogoEvent): boolean {
-    return getEventPokemonImages(event).length > 1;
+export function getMultiDayPokemonImages(event: PogoEvent): string[] {
+    // Only show images for raid-battles events for now
+    if (event.eventType !== 'raid-battles') {
+        return [];
+    }
+
+    return getEventPokemonImages(event);
 }

@@ -2,6 +2,9 @@
     <div class="calendar-options">
         <div class="options-header">
             <h5 class="mb-0">Calendar Options</h5>
+            <button class="btn btn-icon-ghost btn-sm close-btn" @click="$emit('close')" aria-label="Close options">
+                <X :size="16" />
+            </button>
         </div>
         <div class="options-content">
             <div class="row g-3">
@@ -20,9 +23,16 @@
 </template>
 
 <script setup lang="ts">
+import { X } from 'lucide-vue-next';
+
 import EventFilterOptions from './EventFilterOptions.vue';
 import EventGroupingToggle from './EventGroupingToggle.vue';
 import FirstDaySelector from './FirstDaySelector.vue';
+
+// Define emits
+defineEmits<{
+    close: [];
+}>();
 </script>
 
 <style scoped>
@@ -34,10 +44,21 @@ import FirstDaySelector from './FirstDaySelector.vue';
 }
 
 .options-header {
-    padding: 0.75rem 1rem;
+    padding: 0.5rem 1rem;
     border-bottom: 1px solid #e9ecef;
     background-color: #f8f9fa;
     border-radius: 0.375rem 0.375rem 0 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.close-btn {
+    padding: 0.37rem;
+}
+
+.close-btn:hover {
+    color: #495057;
 }
 
 .options-content {

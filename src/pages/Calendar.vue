@@ -2,13 +2,13 @@
     <div class="calendar">
         <div class="container mt-2 mb-4">
             <!-- Month Navigation Header -->
-            <CalendarHeader ref="calendarHeaderRef" />
+            <CalendarHeader />
 
             <!-- Calendar Options -->
             <Transition name="slide-down">
-                <div v-if="isOptionsExpanded" class="row">
+                <div v-if="calendarSettings.optionsExpanded" class="row">
                     <div class="col-12">
-                        <CalendarOptions />
+                        <CalendarOptions @close="handleCloseOptions" />
                     </div>
                 </div>
             </Transition>
@@ -24,8 +24,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { onMounted } from 'vue';
 
+import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { useEventsStore } from '@/stores/events';
 
 import CalendarGrid from '@/components/Calendar/CalendarGrid.vue';
@@ -33,12 +34,12 @@ import CalendarHeader from '@/components/Calendar/CalendarHeader.vue';
 import CalendarOptions from '@/components/CalendarOptions/CalendarOptions.vue';
 
 const eventsStore = useEventsStore();
-const calendarHeaderRef = ref<InstanceType<typeof CalendarHeader>>();
+const calendarSettings = useCalendarSettingsStore();
 
-// Get the options expanded state from the header component
-const isOptionsExpanded = computed(() => {
-    return calendarHeaderRef.value?.isOptionsExpanded || false;
-});
+// Handle close options event from CalendarOptions component
+const handleCloseOptions = () => {
+    calendarSettings.setOptionsExpanded(false);
+};
 
 // Auto-load events when the page mounts
 onMounted(async () => {

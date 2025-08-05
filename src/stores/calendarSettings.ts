@@ -1,6 +1,6 @@
 import { useLocalStorage } from '@vueuse/core';
 import { defineStore } from 'pinia';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 
 import { STORAGE_KEYS } from '@/constants/storage';
 
@@ -15,6 +15,9 @@ export const useCalendarSettingsStore = defineStore('calendarSettings', () => {
 
     // Event grouping setting - whether to group events of same type with identical start/end times
     const groupSimilarEvents = useLocalStorage<boolean>(STORAGE_KEYS.GROUP_SIMILAR_EVENTS, false);
+
+    // Options panel expanded state (not persisted)
+    const optionsExpanded = ref<boolean>(false);
 
     // Day name constants
     const allDayNames: FirstDayOfWeek[] = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -53,11 +56,20 @@ export const useCalendarSettingsStore = defineStore('calendarSettings', () => {
         groupSimilarEvents.value = enabled;
     };
 
+    const toggleOptionsExpanded = () => {
+        optionsExpanded.value = !optionsExpanded.value;
+    };
+
+    const setOptionsExpanded = (expanded: boolean) => {
+        optionsExpanded.value = expanded;
+    };
+
     return {
         // State
         firstDayOfWeek,
         allDayNames,
         groupSimilarEvents,
+        optionsExpanded,
 
         // Computed getters
         dayHeaders,
@@ -67,5 +79,7 @@ export const useCalendarSettingsStore = defineStore('calendarSettings', () => {
         // Actions
         setFirstDayOfWeek,
         setGroupSimilarEvents,
+        toggleOptionsExpanded,
+        setOptionsExpanded,
     };
 });

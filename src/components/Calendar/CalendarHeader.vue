@@ -1,5 +1,5 @@
 <template>
-    <div class="calendar-header d-flex align-items-center justify-content-between mb-2">
+    <div class="calendar-header d-flex align-items-center justify-content-between my-3">
         <div class="d-flex align-items-center">
             <button
                 class="btn btn-sm me-3"
@@ -11,10 +11,10 @@
             </button>
 
             <div class="d-flex align-items-center me-3">
-                <button class="btn btn-ghost btn-sm me-1" @click="goToPreviousMonth" :disabled="isPreviousDisabled">
+                <button class="btn btn-icon-ghost btn-sm me-1" @click="goToPreviousMonth" :disabled="isPreviousDisabled">
                     <ChevronLeft :size="24" />
                 </button>
-                <button class="btn btn-ghost btn-sm" @click="goToNextMonth" :disabled="isNextDisabled">
+                <button class="btn btn-icon-ghost btn-sm" @click="goToNextMonth" :disabled="isNextDisabled">
                     <ChevronRight :size="24" />
                 </button>
             </div>
@@ -22,10 +22,14 @@
             <span class="month-label">{{ currentMonthDisplay }}</span>
         </div>
 
-        <button class="btn btn-outline-secondary btn-sm d-flex align-items-center" @click="toggleOptions">
-            <Settings :size="16" class="me-2" />
-            <span class="me-2">{{ isOptionsExpanded ? 'Hide' : 'Show' }} Options</span>
-            <ChevronDown :size="14" :class="{ 'rotate-180': isOptionsExpanded }" />
+        <button
+            class="btn-options-toggle btn btn-sm d-flex align-items-center gap-1"
+            :class="[calendarSettings.optionsExpanded ? 'btn-secondary' : 'btn-outline-secondary']"
+            @click="calendarSettings.toggleOptionsExpanded"
+        >
+            <Settings :size="16" class="flex-grow-0" />
+            <span class="flex-grow-1">{{ calendarSettings.optionsExpanded ? 'Hide' : 'Show' }} Options</span>
+            <ChevronDown :size="14" class="icon-rotate" :class="{ 'rotate-180': calendarSettings.optionsExpanded }" />
         </button>
     </div>
 </template>
@@ -33,24 +37,14 @@
 <script setup lang="ts">
 import dayjs from 'dayjs';
 import { ChevronDown, ChevronLeft, ChevronRight, Settings } from 'lucide-vue-next';
-import { computed, ref } from 'vue';
+import { computed } from 'vue';
 
 import { useUrlSync } from '@/composables/useUrlSync';
+import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { DATE_FORMAT } from '@/utils/dateFormat';
 
 const { urlMonth, urlYear } = useUrlSync();
-
-// Options toggle state
-const isOptionsExpanded = ref(false);
-
-const toggleOptions = () => {
-    isOptionsExpanded.value = !isOptionsExpanded.value;
-};
-
-// Expose the options state for parent component
-defineExpose({
-    isOptionsExpanded,
-});
+const calendarSettings = useCalendarSettingsStore();
 
 // Current month display
 const currentMonthDisplay = computed(() => {
@@ -100,38 +94,19 @@ const goToCurrentMonth = () => {
 </script>
 
 <style scoped>
-.calendar-header {
-    padding: 1rem 0;
-}
-
 .month-label {
     font-size: 1.2rem;
     font-weight: 500;
 }
 
-.btn-ghost {
-    background-color: transparent;
-    border: none;
-    color: var(--bs-body-color);
-    transition: background-color 0.15s ease-in-out;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0.25rem 0.25rem;
+.icon-rotate {
+    transition: transform 0.2s ease-in-out;
 }
-
-.btn-ghost:hover:not(:disabled) {
-    background-color: var(--bs-secondary-bg, rgba(108, 117, 125, 0.1));
-    color: var(--bs-body-color);
-}
-
-.btn-ghost:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
 .rotate-180 {
     transform: rotate(180deg);
-    transition: transform 0.2s ease-in-out;
+}
+
+.btn-options-toggle {
+    min-width: 160px;
 }
 </style>

@@ -62,8 +62,30 @@ h6 {
     font-weight: bold;
 }
 
+/* Button styles */
 .btn {
     text-decoration: none;
+}
+
+.btn-icon-ghost {
+    background-color: transparent;
+    border: none;
+    color: color-mix(in srgb, var(--bs-body-color) 70%, transparent);
+    transition: background-color 0.15s ease-in-out;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.25rem 0.25rem;
+}
+
+.btn-icon-ghost:hover:not(:disabled) {
+    background-color: var(--bs-secondary-bg, rgba(108, 117, 125, 0.1));
+    color: var(--bs-body-color);
+}
+
+.btn-icon-ghost:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 /* Floating Vue */

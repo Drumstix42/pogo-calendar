@@ -8,14 +8,22 @@
             <div
                 v-for="groupedEvent in getGroupedEvents(event)"
                 :key="groupedEvent.eventID"
-                class="grouped-event-item"
+                class="event-time-info"
                 :style="{
                     backgroundColor: getEventColor(groupedEvent),
                     borderLeftColor: `color-mix(in srgb, ${getEventColor(groupedEvent)} 70%, black)`,
                 }"
             >
-                <div class="grouped-event-name">{{ groupedEvent.name }}</div>
-                <div class="grouped-event-time">{{ formatEventDuration(groupedEvent) }}</div>
+                <div class="event-content">
+                    <!-- Pokemon images -->
+                    <PokemonImages :event="groupedEvent" :event-name="groupedEvent.name" size="xxl" />
+
+                    <!-- Event text content -->
+                    <div class="event-text">
+                        <div class="grouped-event-name">{{ groupedEvent.name }}</div>
+                        <div class="grouped-event-time">{{ formatEventDuration(groupedEvent) }}</div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -29,8 +37,16 @@
                     borderLeftColor: `color-mix(in srgb, ${getEventColor(event)} 70%, black)`,
                 }"
             >
-                <div class="grouped-event-name">{{ event.name }}</div>
-                <div :class="isSingleDay ? 'single-event-time' : 'grouped-event-time'">{{ formatEventDuration(event) }}</div>
+                <div class="event-content">
+                    <!-- Pokemon images -->
+                    <PokemonImages :event="event" :event-name="event.name" size="xxl" />
+
+                    <!-- Event text content -->
+                    <div class="event-text">
+                        <div class="grouped-event-name">{{ event.name }}</div>
+                        <div :class="isSingleDay ? 'single-event-time' : 'grouped-event-time'">{{ formatEventDuration(event) }}</div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -40,6 +56,8 @@
 import dayjs from 'dayjs';
 
 import { type PogoEvent, formatEventTime, getEventTypeInfo, isSameDayEvent, parseEventDate } from '@/utils/eventTypes';
+
+import PokemonImages from './PokemonImages.vue';
 
 interface Props {
     event: PogoEvent;
@@ -82,7 +100,7 @@ const getGroupedEvents = (event: PogoEvent): PogoEvent[] => {
 
 <style scoped>
 .event-tooltip {
-    max-width: 280px;
+    max-width: 330px;
     padding: 0.5rem;
     color: #ffffff !important;
 }
@@ -100,6 +118,21 @@ const getGroupedEvents = (event: PogoEvent): PogoEvent[] => {
     border-left: 3px solid;
 }
 
+.event-content {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.event-text {
+    flex: 1;
+    min-width: 0; /* Allow text to shrink */
+}
+
+.event-time-info:last-child {
+    margin-bottom: 0;
+}
+
 .event-separator {
     height: 1px;
     background-color: rgba(255, 255, 255, 0.2);
@@ -110,34 +143,25 @@ const getGroupedEvents = (event: PogoEvent): PogoEvent[] => {
     margin-top: 0.6rem;
 }
 
-.grouped-event-item {
-    margin-bottom: 0.4rem;
-    padding: 0.4rem 0.6rem;
-    border-radius: 4px;
-    border-left: 3px solid;
-}
-
-.grouped-event-item:last-child {
-    margin-bottom: 0;
-}
-
 .grouped-event-name {
     font-size: 0.75rem;
-    font-weight: 500;
+    font-weight: 400;
     line-height: 1.3;
     color: #ffffff;
     margin-bottom: 0.15rem;
 }
 
 .grouped-event-time {
-    font-size: 0.7rem;
-    color: #e0e0e0;
-    font-weight: 400;
+    font-size: 0.8rem;
+    color: #e5e5e5;
+    font-weight: 500;
+    text-shadow: 1px 2px 2px rgba(0, 0, 0, 0.3);
 }
 
 .single-event-time {
-    font-size: 0.85rem;
-    color: #e0e0e0;
+    font-size: 0.8rem;
+    color: #e5e5e5;
     font-weight: 500;
+    text-shadow: 1px 2px 2px rgba(0, 0, 0, 0.3);
 }
 </style>
