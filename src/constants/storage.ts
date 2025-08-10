@@ -11,4 +11,5 @@ export const STORAGE_KEYS = {
     DISABLED_FILTERS: createStorageKey('disabled-filters'),
     FIRST_DAY_OF_WEEK: createStorageKey('first-day-of-week'),
     GROUP_SIMILAR_EVENTS: createStorageKey('group-similar-events'),
+    THEME_MODE: createStorageKey('theme-mode'),
 } as const;

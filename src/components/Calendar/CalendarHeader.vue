@@ -1,6 +1,6 @@
 <template>
-    <div class="calendar-header d-flex align-items-center justify-content-between my-3">
-        <div class="d-flex align-items-center">
+    <div class="calendar-header d-flex align-items-center justify-content-between flex-wrap row-gap-2 my-3">
+        <div class="d-flex align-items-center flex-wrap row-gap-2">
             <button
                 class="btn btn-sm me-3"
                 :class="isCurrentMonth ? 'btn-outline-secondary' : 'btn-outline-dark'"
@@ -23,7 +23,7 @@
         </div>
 
         <button
-            class="btn-options-toggle btn btn-sm d-flex align-items-center gap-2"
+            class="btn-options-toggle btn btn-sm d-flex align-items-center gap-2 ms-auto"
             :class="[calendarSettings.optionsExpanded ? 'btn-secondary' : 'btn-outline-secondary']"
             @click="calendarSettings.toggleOptionsExpanded"
         >
