@@ -191,8 +191,8 @@ const eventGroups = computed(() => {
 .filter-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 1rem;
-    max-height: min(60vh, 422px);
+    gap: 0.5rem;
+    max-height: min(60vh, 372px);
     overflow-y: auto;
     padding-right: 0.5rem;
 }
@@ -238,7 +238,7 @@ const eventGroups = computed(() => {
 
 .filter-group-items {
     display: grid;
-    gap: 0.5rem;
+    gap: 1px;
 }
 
 .filter-item {

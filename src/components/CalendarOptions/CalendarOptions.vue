@@ -6,7 +6,7 @@
                 <X :size="16" />
             </button>
         </div>
-        <div class="options-content">
+        <div class="options-content p-3">
             <div class="row g-3">
                 <div class="col-md-3">
                     <FirstDaySelector />
@@ -59,10 +59,6 @@ defineEmits<{
 
 .close-btn:hover {
     color: #495057;
-}
-
-.options-content {
-    padding: 1rem;
 }
 
 @media (max-width: 767.98px) {
