@@ -11,11 +11,19 @@
 /* Light theme */
 [data-bs-theme='light'] {
     --bs-body-bg: #f8f9fa;
+
+    /* Override tertiary background for better contrast in dropdowns/hovers */
+    --bs-tertiary-bg: #e9ecef;
+    --bs-tertiary-bg-rgb: 233, 236, 239;
 }
 
 /* Dark theme */
 [data-bs-theme='dark'] {
     --bs-body-bg: #343a40;
+
+    /* defaults */
+    --bs-tertiary-bg: #2b3035;
+    --bs-tertiary-bg-rgb: 43, 48, 53;
 }
 
 body {

@@ -1,102 +1,82 @@
 <template>
     <div class="theme-selector">
-        <div class="btn-group" role="group" aria-label="Theme selector">
-            <input
-                id="theme-auto"
-                type="radio"
-                class="btn-check"
-                name="theme"
-                value="auto"
-                :checked="themeStore.themeMode === 'auto'"
-                @change="() => themeStore.setThemeMode('auto')"
-            />
-            <label for="theme-auto" class="btn btn-theme-selector btn-sm" title="Auto (system) theme">
-                <Monitor :size="16" />
-            </label>
-
-            <input
-                id="theme-dark"
-                type="radio"
-                class="btn-check"
-                name="theme"
-                value="dark"
-                :checked="themeStore.themeMode === 'dark'"
-                @change="() => themeStore.setThemeMode('dark')"
-            />
-            <label for="theme-dark" class="btn btn-theme-selector btn-sm" title="Dark theme">
-                <Moon :size="16" />
-            </label>
-
-            <input
-                id="theme-light"
-                type="radio"
-                class="btn-check"
-                name="theme"
-                value="light"
-                :checked="themeStore.themeMode === 'light'"
-                @change="() => themeStore.setThemeMode('light')"
-            />
-            <label for="theme-light" class="btn btn-theme-selector btn-sm" title="Light theme">
-                <Sun :size="16" />
-            </label>
+        <div class="dropdown">
+            <button
+                id="theme-selector-toggle"
+                class="btn btn-link nav-link px-0 px-lg-2 py-2 dropdown-toggle d-flex align-items-center"
+                type="button"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+                :title="`Current theme: ${currentThemeLabel}`"
+            >
+                <component :is="currentThemeIcon" :size="16" />
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="theme-selector-toggle">
+                <li v-for="option in themeOptions" :key="option.value">
+                    <button
+                        class="dropdown-item d-flex align-items-center justify-content-between"
+                        :class="{ active: themeStore.themeMode === option.value }"
+                        @click="themeStore.setThemeMode(option.value)"
+                    >
+                        <div class="d-flex align-items-center">
+                            <component :is="option.icon" :size="16" class="me-2" />
+                            {{ option.label }}
+                        </div>
+                        <Check v-if="themeStore.themeMode === option.value" :size="16" />
+                    </button>
+                </li>
+            </ul>
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { Monitor, Moon, Sun } from 'lucide-vue-next';
+import { Check, Moon, Sun, SunMoon } from 'lucide-vue-next';
+import { computed } from 'vue';
 
 import { useThemeStore } from '@/stores/theme';
+import type { ThemeMode } from '@/stores/theme';
 
 const themeStore = useThemeStore();
+
+// Theme options in your preferred order
+const themeOptions = [
+    { value: 'auto' as ThemeMode, label: 'Auto', icon: SunMoon },
+    { value: 'dark' as ThemeMode, label: 'Dark', icon: Moon },
+    { value: 'light' as ThemeMode, label: 'Light', icon: Sun },
+];
+
+// Current theme display
+const currentThemeIcon = computed(() => {
+    const option = themeOptions.find(opt => opt.value === themeStore.themeMode);
+    return option?.icon || SunMoon;
+});
+
+const currentThemeLabel = computed(() => {
+    const option = themeOptions.find(opt => opt.value === themeStore.themeMode);
+    return option?.label || 'Auto';
+});
 </script>
 
 <style scoped>
-.theme-selector .btn-group {
-    background-color: var(--bs-body-bg);
-    border: 1px solid var(--bs-border-color);
-    border-radius: var(--bs-border-radius-sm);
-    overflow: hidden;
-}
-
-.btn-theme-selector {
-    background-color: transparent;
+.btn-link.nav-link {
+    color: var(--bs-navbar-color, var(--bs-body-color));
+    text-decoration: none;
     border: none;
-    color: var(--bs-body-color);
-    opacity: 0.65;
-    transition: all 0.15s ease-in-out;
+    background: none;
 }
 
-.btn-theme-selector:hover {
-    background-color: var(--bs-secondary-bg);
-    color: var(--bs-body-color);
-    opacity: 0.85;
+.btn-link.nav-link:hover {
+    color: var(--bs-navbar-hover-color, var(--bs-body-color));
 }
 
-.btn-check:checked + .btn-theme-selector {
-    background-color: var(--bs-secondary-color);
-    color: var(--bs-secondary-bg);
-    opacity: 1;
-    font-weight: 500;
+.btn-link.nav-link:focus {
+    color: var(--bs-navbar-hover-color, var(--bs-body-color));
+    box-shadow: 0 0 0 0.25rem rgba(var(--bs-body-color-rgb), 0.15);
 }
 
-.btn-check:focus + .btn-theme-selector {
-    box-shadow: none;
-}
-
-/* Ensure proper spacing and alignment */
-.btn-theme-selector {
-    border-radius: 0;
-    padding: 0.375rem 0.5rem;
-}
-
-.btn-theme-selector:first-child {
-    border-top-left-radius: calc(var(--bs-border-radius-sm) - 1px);
-    border-bottom-left-radius: calc(var(--bs-border-radius-sm) - 1px);
-}
-
-.btn-theme-selector:last-child {
-    border-top-right-radius: calc(var(--bs-border-radius-sm) - 1px);
-    border-bottom-right-radius: calc(var(--bs-border-radius-sm) - 1px);
+/* Ensure dropdown appears above other content */
+.dropdown-menu {
+    z-index: 1050;
 }
 </style>
