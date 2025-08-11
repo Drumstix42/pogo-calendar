@@ -3,7 +3,7 @@
         <div class="dropdown">
             <button
                 id="theme-selector-toggle"
-                class="btn btn-link nav-link px-0 px-lg-2 py-2 dropdown-toggle d-flex align-items-center"
+                class="btn btn-link nav-link focus-ring px-0 px-lg-2 py-2 dropdown-toggle d-flex align-items-center"
                 type="button"
                 data-bs-toggle="dropdown"
                 aria-expanded="false"
@@ -72,7 +72,6 @@ const currentThemeLabel = computed(() => {
 
 .btn-link.nav-link:focus {
     color: var(--bs-navbar-hover-color, var(--bs-body-color));
-    box-shadow: 0 0 0 0.25rem rgba(var(--bs-body-color-rgb), 0.15);
 }
 
 /* Ensure dropdown appears above other content */

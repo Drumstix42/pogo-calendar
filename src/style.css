@@ -10,15 +10,17 @@
 :root,
 /* Light theme */
 [data-bs-theme='light'] {
+    /* Overrides */
     --bs-body-bg: #f8f9fa;
-
-    /* Override tertiary background for better contrast in dropdowns/hovers */
     --bs-tertiary-bg: #e9ecef;
     --bs-tertiary-bg-rgb: 233, 236, 239;
+
+    --bs-focus-ring-color: rgba(var(--bs-body-color-rgb), 0.15);
 }
 
 /* Dark theme */
 [data-bs-theme='dark'] {
+    /* Overrides */
     --bs-body-bg: #343a40;
 
     /* defaults */
@@ -98,7 +100,8 @@ h6 {
     padding: 0.25rem 0.25rem;
 }
 
-.btn-icon-ghost:hover:not(:disabled) {
+.btn-icon-ghost:hover:not(:disabled),
+.btn-icon-ghost:focus:not(:disabled) {
     background-color: var(--bs-secondary-bg, rgba(108, 117, 125, 0.1));
     color: var(--bs-body-color);
 }
