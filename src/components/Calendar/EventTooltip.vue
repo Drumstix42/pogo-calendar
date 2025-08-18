@@ -16,7 +16,12 @@
             >
                 <div class="event-content">
                     <!-- Pokemon images -->
-                    <PokemonImages :event="groupedEvent" :event-name="groupedEvent.name" :height="50" />
+                    <PokemonImages
+                        :event="groupedEvent"
+                        :event-name="groupedEvent.name"
+                        :height="50"
+                        :use-animated="calendarSettings.useAnimatedImages"
+                    />
 
                     <!-- Event text content -->
                     <div class="event-text">
@@ -39,7 +44,7 @@
             >
                 <div class="event-content">
                     <!-- Pokemon images -->
-                    <PokemonImages :event="event" :event-name="event.name" :height="50" />
+                    <PokemonImages :event="event" :event-name="event.name" :height="50" :use-animated="calendarSettings.useAnimatedImages" />
 
                     <!-- Event text content -->
                     <div class="event-text">
@@ -55,6 +60,7 @@
 <script setup lang="ts">
 import dayjs from 'dayjs';
 
+import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { type PogoEvent, formatEventTime, getEventTypeInfo, getGroupedEvents, isSameDayEvent, parseEventDate } from '@/utils/eventTypes';
 
 import PokemonImages from './PokemonImages.vue';
@@ -67,6 +73,8 @@ interface Props {
 withDefaults(defineProps<Props>(), {
     isSingleDay: false,
 });
+
+const calendarSettings = useCalendarSettingsStore();
 
 const getEventColor = (event: PogoEvent): string => {
     return getEventTypeInfo(event.eventType).color;
@@ -117,6 +125,10 @@ const formatEventDuration = (event: PogoEvent): string => {
     display: flex;
     align-items: center;
     gap: 0.6rem;
+}
+
+.event-content :deep(.pokemon-images) {
+    max-width: 150px; /* Force wrapping in constrained tooltip space */
 }
 
 .event-text {

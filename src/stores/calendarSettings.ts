@@ -16,6 +16,9 @@ export const useCalendarSettingsStore = defineStore('calendarSettings', () => {
     // Event grouping setting - whether to group events of same type with identical start/end times
     const groupSimilarEvents = useLocalStorage<boolean>(STORAGE_KEYS.GROUP_SIMILAR_EVENTS, false);
 
+    // Animated images setting - whether to use animated images in detailed views
+    const useAnimatedImages = useLocalStorage<boolean>(STORAGE_KEYS.USE_ANIMATED_IMAGES, true);
+
     // Options panel expanded state (not persisted)
     const optionsExpanded = ref<boolean>(false);
 
@@ -56,6 +59,10 @@ export const useCalendarSettingsStore = defineStore('calendarSettings', () => {
         groupSimilarEvents.value = enabled;
     };
 
+    const setUseAnimatedImages = (enabled: boolean) => {
+        useAnimatedImages.value = enabled;
+    };
+
     const toggleOptionsExpanded = () => {
         optionsExpanded.value = !optionsExpanded.value;
     };
@@ -69,6 +76,7 @@ export const useCalendarSettingsStore = defineStore('calendarSettings', () => {
         firstDayOfWeek,
         allDayNames,
         groupSimilarEvents,
+        useAnimatedImages,
         optionsExpanded,
 
         // Computed getters
@@ -79,6 +87,7 @@ export const useCalendarSettingsStore = defineStore('calendarSettings', () => {
         // Actions
         setFirstDayOfWeek,
         setGroupSimilarEvents,
+        setUseAnimatedImages,
         toggleOptionsExpanded,
         setOptionsExpanded,
     };

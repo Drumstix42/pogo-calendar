@@ -20,12 +20,15 @@ import { type PogoEvent } from '@/utils/eventTypes';
 interface Props {
     event: PogoEvent;
     eventName: string;
+    useAnimated?: boolean;
 }
 
-const props = defineProps<Props>();
+const props = withDefaults(defineProps<Props>(), {
+    useAnimated: false,
+});
 
 // Compute Pokemon images once - this is the "business logic" we do once
-const pokemonImages = computed(() => getMultiDayPokemonImages(props.event));
+const pokemonImages = computed(() => getMultiDayPokemonImages(props.event, { useAnimated: props.useAnimated }));
 
 const handleImageError = (event: Event): void => {
     const target = event.target as HTMLImageElement;

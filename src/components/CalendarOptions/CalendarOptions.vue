@@ -8,11 +8,12 @@
         </div>
         <div class="options-content p-3">
             <div class="row g-3">
-                <div class="col-md-3">
-                    <FirstDaySelector />
-                </div>
-                <div class="col-md-3">
-                    <EventGroupingToggle />
+                <div class="col-md-6">
+                    <div class="options-flex-container">
+                        <FirstDaySelector />
+                        <EventGroupingToggle />
+                        <AnimatedImagesToggle />
+                    </div>
                 </div>
                 <div class="col-md-6">
                     <EventFilterOptions />
@@ -25,6 +26,7 @@
 <script setup lang="ts">
 import { X } from 'lucide-vue-next';
 
+import AnimatedImagesToggle from './AnimatedImagesToggle.vue';
 import EventFilterOptions from './EventFilterOptions.vue';
 import EventGroupingToggle from './EventGroupingToggle.vue';
 import FirstDaySelector from './FirstDaySelector.vue';
@@ -61,9 +63,31 @@ defineEmits<{
     color: #495057;
 }
 
+.options-flex-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.options-flex-container > * {
+    flex: 1 1 280px; /* grow, shrink, min-width */
+    min-width: 280px;
+}
+
 @media (max-width: 767.98px) {
-    .row.g-3 .col-md-3,
     .row.g-3 .col-md-6 {
+        margin-bottom: 1rem;
+    }
+
+    .options-flex-container > * {
+        min-width: 100%;
+        flex-basis: 100%;
+    }
+}
+
+@media (max-width: 575.98px) {
+    /* On extra small screens, ensure proper spacing */
+    .row.g-3 > [class*='col-'] {
         margin-bottom: 1rem;
     }
 }

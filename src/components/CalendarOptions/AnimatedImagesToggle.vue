@@ -1,24 +1,22 @@
 <template>
-    <div class="event-grouping-toggle">
+    <div class="animated-images-toggle">
         <div class="d-flex justify-content-between align-items-center mb-2">
-            <h6 class="mb-0">Event Grouping</h6>
+            <h6 class="mb-0">Animated Images</h6>
         </div>
 
         <div class="form-check form-switch">
             <input
-                id="groupSimilarEvents"
+                id="useAnimatedImages"
                 class="form-check-input"
                 type="checkbox"
                 role="switch"
-                :checked="calendarSettings.groupSimilarEvents"
+                :checked="calendarSettings.useAnimatedImages"
                 @change="handleToggleChange"
             />
-            <label for="groupSimilarEvents" class="form-check-label">Group similar event bars</label>
+            <label for="useAnimatedImages" class="form-check-label">Use animated Pokémon images</label>
         </div>
 
-        <small class="text-muted d-block mt-1">
-            When enabled, events with identical type and start/times will be grouped into a single bar with a count badge.
-        </small>
+        <small class="text-muted d-block mt-1"> When enabled, animated Pokémon sprites will be used in detailed views. </small>
     </div>
 </template>
 
@@ -29,12 +27,12 @@ const calendarSettings = useCalendarSettingsStore();
 
 const handleToggleChange = (event: Event) => {
     const target = event.target as HTMLInputElement;
-    calendarSettings.setGroupSimilarEvents(target.checked);
+    calendarSettings.setUseAnimatedImages(target.checked);
 };
 </script>
 
 <style scoped>
-.event-grouping-toggle {
+.animated-images-toggle {
     padding: 1rem;
     background-color: #f8f9fa;
     border: 1px solid #dee2e6;

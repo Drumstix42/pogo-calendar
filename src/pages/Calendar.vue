@@ -4,8 +4,8 @@
             <!-- Month Navigation Header -->
             <CalendarHeader />
 
-            <!-- Calendar Options -->
-            <Transition name="slide-down">
+            <!-- Desktop: Calendar Options -->
+            <Transition v-if="isDesktop" name="slide-down">
                 <div v-if="calendarSettings.optionsExpanded" class="row">
                     <div class="col-12">
                         <CalendarOptions @close="handleCloseOptions" />
@@ -13,10 +13,17 @@
                 </div>
             </Transition>
 
-            <!-- Calendar Grid Component -->
-            <div class="row">
+            <!-- Desktop: Calendar Grid Component -->
+            <div v-if="isDesktop" class="row">
                 <div class="col-12">
                     <CalendarGrid />
+                </div>
+            </div>
+
+            <!-- Mobile: Calendar Mobile Component -->
+            <div v-if="isMobile" class="row">
+                <div class="col-12">
+                    <CalendarMobile />
                 </div>
             </div>
         </div>
@@ -24,6 +31,7 @@
 </template>
 
 <script setup lang="ts">
+import { breakpointsBootstrapV5, useBreakpoints } from '@vueuse/core';
 import { onMounted } from 'vue';
 
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
@@ -31,10 +39,16 @@ import { useEventsStore } from '@/stores/events';
 
 import CalendarGrid from '@/components/Calendar/CalendarGrid.vue';
 import CalendarHeader from '@/components/Calendar/CalendarHeader.vue';
+import CalendarMobile from '@/components/Calendar/CalendarMobile.vue';
 import CalendarOptions from '@/components/CalendarOptions/CalendarOptions.vue';
 
 const eventsStore = useEventsStore();
 const calendarSettings = useCalendarSettingsStore();
+
+// Responsive breakpoints https://getbootstrap.com/docs/5.0/layout/breakpoints/#available-breakpoints
+const breakpoints = useBreakpoints(breakpointsBootstrapV5);
+const isMobile = breakpoints.smaller('md'); // < 768px
+const isDesktop = breakpoints.greaterOrEqual('md'); // >= 768px
 
 // Handle close options event from CalendarOptions component
 const handleCloseOptions = () => {

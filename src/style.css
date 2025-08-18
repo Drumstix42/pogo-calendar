@@ -1,5 +1,11 @@
 /* Global styles for the app */
 
+/* Set minimum width for the entire page */
+html,
+body {
+    min-width: 320px;
+}
+
 /* Use border-box sizing for consistent and predictable layout calculations */
 *,
 *::before,

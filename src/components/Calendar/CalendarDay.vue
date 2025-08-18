@@ -163,8 +163,8 @@ const { isTouchDevice } = useDeviceDetection();
 
 const tooltipOptionsDefaults = computed(() => ({
     autoHide: isTouchDevice.value,
-    delay: { show: 50, hide: 0 },
-    distance: 10,
+    delay: { show: 100, hide: 100 },
+    distance: 4,
 }));
 
 // calculate week boundaries based on configured first day

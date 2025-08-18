@@ -5,6 +5,17 @@ export type PokemonName = keyof typeof POKEMON_NAME_TO_ID;
 export type PokemonId = number;
 export type SpriteType = 'dream-world' | 'official-artwork' | 'home';
 
+// Normalize Pokemon names for matching - smart Unicode normalization + gender symbols
+function normalizePokemonName(name: string): string {
+    return name
+        .toLowerCase()
+        .replace(/♀/g, 'f') // Female symbol → f
+        .replace(/♂/g, 'm') // Male symbol → m
+        .normalize('NFD') // Decompose accented characters (é → e + ́)
+        .replace(/[\u0300-\u036f]/g, '') // Remove all combining diacritical marks
+        .trim();
+}
+
 export const POKEMON_NAME_TO_ID = {
     // Generation 1 (Kanto) - IDs 1-151
     Bulbasaur: 1,
@@ -811,14 +822,21 @@ export const POKEMON_NAME_TO_ID = {
     Cosmoem: 790,
     Solgaleo: 791,
     Lunala: 792,
-    Necrozma: 793,
-    Magearna: 794,
-    Marshadow: 795,
-    Poipole: 796,
-    Naganadel: 797,
-    Stakataka: 798,
-    Blacephalon: 799,
-    Zeraora: 800,
+    Nihilego: 793,
+    Buzzwole: 794,
+    Pheromosa: 795,
+    Xurkitree: 796,
+    Celesteela: 797,
+    Kartana: 798,
+    Guzzlord: 799,
+    Necrozma: 800,
+    Magearna: 801,
+    Marshadow: 802,
+    Poipole: 803,
+    Naganadel: 804,
+    Stakataka: 805,
+    Blacephalon: 806,
+    Zeraora: 807,
     Meltan: 808,
     Melmetal: 809,
 
@@ -973,46 +991,47 @@ export const POKEMON_NAME_TO_ID = {
     Flittle: 955,
     Espathra: 956,
     Tinkatink: 957,
-    Tinkaton: 958,
-    Wiglett: 959,
-    Wugtrio: 960,
-    Bombirdier: 961,
-    Finizen: 962,
-    Palafin: 963,
-    Varoom: 964,
-    Revavroom: 965,
-    Cyclizar: 966,
-    Orthworm: 967,
-    Glimmet: 968,
-    Glimmora: 969,
-    Greavard: 970,
-    Houndstone: 971,
-    Flamigo: 972,
-    Cetoddle: 973,
-    Cetitan: 974,
-    Veluza: 975,
-    Dondozo: 976,
-    Tatsugiri: 977,
-    Annihilape: 978,
-    Clodsire: 979,
-    Farigiraf: 980,
-    Dudunsparce: 981,
-    Kingambit: 982,
-    'Great Tusk': 983,
-    'Scream Tail': 984,
-    'Brute Bonnet': 985,
-    'Flutter Mane': 986,
-    'Slither Wing': 987,
-    'Sandy Shocks': 988,
-    'Iron Treads': 989,
-    'Iron Bundle': 990,
-    'Iron Hands': 991,
-    'Iron Jugulis': 992,
-    'Iron Moth': 993,
-    'Iron Thorns': 994,
-    Frigibax: 995,
-    Arctibax: 996,
-    Baxcalibur: 997,
+    Tinkatuff: 958,
+    Tinkaton: 959,
+    Wiglett: 960,
+    Wugtrio: 961,
+    Bombirdier: 962,
+    Finizen: 963,
+    Palafin: 964,
+    Varoom: 965,
+    Revavroom: 966,
+    Cyclizar: 967,
+    Orthworm: 968,
+    Glimmet: 969,
+    Glimmora: 970,
+    Greavard: 971,
+    Houndstone: 972,
+    Flamigo: 973,
+    Cetoddle: 974,
+    Cetitan: 975,
+    Veluza: 976,
+    Dondozo: 977,
+    Tatsugiri: 978,
+    Annihilape: 979,
+    Clodsire: 980,
+    Farigiraf: 981,
+    Dudunsparce: 982,
+    Kingambit: 983,
+    'Great Tusk': 984,
+    'Scream Tail': 985,
+    'Brute Bonnet': 986,
+    'Flutter Mane': 987,
+    'Slither Wing': 988,
+    'Sandy Shocks': 989,
+    'Iron Treads': 990,
+    'Iron Bundle': 991,
+    'Iron Hands': 992,
+    'Iron Jugulis': 993,
+    'Iron Moth': 994,
+    'Iron Thorns': 995,
+    Frigibax: 996,
+    Arctibax: 997,
+    Baxcalibur: 998,
     Gimmighoul: 999,
     Gholdengo: 1000,
     'Wo-Chien': 1001,
@@ -1043,17 +1062,12 @@ export const POKEMON_NAME_TO_ID = {
 };
 
 export function getPokemonId(name: string): number | null {
-    const normalizedName = name.trim();
+    const normalizedInput = normalizePokemonName(name);
 
-    // Try exact match first
-    if (normalizedName in POKEMON_NAME_TO_ID) {
-        return POKEMON_NAME_TO_ID[normalizedName as PokemonName];
-    }
-
-    // Fallback to case-insensitive search
-    const lowerName = normalizedName.toLowerCase();
+    // Try direct normalized matching
     for (const [pokeName, id] of Object.entries(POKEMON_NAME_TO_ID)) {
-        if (pokeName.toLowerCase() === lowerName) {
+        const normalizedStoredName = normalizePokemonName(pokeName);
+        if (normalizedStoredName === normalizedInput) {
             return id;
         }
     }
@@ -1086,6 +1100,34 @@ export function getPokemonSpriteUrl(pokemonNameOrId: string | number, type: Spri
         default:
             return `${baseUrl}/dream-world/${id}.svg`;
     }
+}
+
+export function getPokemonAnimatedUrl(pokemonNameOrId: string | number, suffix?: string): string | null {
+    let pokemonName: string;
+
+    if (typeof pokemonNameOrId === 'string') {
+        // Validate that the Pokemon name exists
+        const pokemonId = getPokemonId(pokemonNameOrId);
+        if (!pokemonId) return null;
+        pokemonName = pokemonNameOrId;
+    } else if (typeof pokemonNameOrId === 'number') {
+        // Find the Pokemon name from the ID
+        const foundName = Object.entries(POKEMON_NAME_TO_ID).find(([, id]) => id === pokemonNameOrId);
+        if (!foundName) return null;
+        pokemonName = foundName[0];
+    } else {
+        return null;
+    }
+
+    // Clean Pokemon name for URL: use normalization + remove non-alphanumeric
+    let urlName = normalizePokemonName(pokemonName).replace(/[^a-z0-9]/g, ''); // Remove all non-alphanumeric characters (spaces, hyphens, apostrophes, etc.)
+
+    // Add suffix if provided
+    if (suffix) {
+        urlName += suffix;
+    }
+
+    return `https://raw.githubusercontent.com/mgrann03/pokemon-resources/main/graphics/ani/${urlName}.gif`;
 }
 
 export function getAllPokemonNames(): PokemonName[] {
