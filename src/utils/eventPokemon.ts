@@ -47,10 +47,11 @@ function extractPokemonNameFromRaidBattle(event: PogoEvent): string | null {
 
 // Helper function to get sprite URL based on options, with fallback logic
 function getSpriteUrlWithOptions(pokemonName: string, options?: PokemonImageOptions): string | null {
+    const suffix = options?.isMega ? '-mega' : undefined;
+
     if (options?.useAnimated) {
         try {
             // For mega pokemon, pass the suffix to the animated URL function
-            const suffix = options.isMega ? '-mega' : undefined;
             const animatedUrl = getPokemonAnimatedUrl(pokemonName, suffix);
             if (animatedUrl) {
                 return animatedUrl;
@@ -61,9 +62,9 @@ function getSpriteUrlWithOptions(pokemonName: string, options?: PokemonImageOpti
         // If animated fails, fall back to static sprite
     }
 
-    // Default to static sprite (use original name, not mega variant)
+    // Default to static sprite (also support mega variant)
     try {
-        return getPokemonSpriteUrl(pokemonName);
+        return getPokemonSpriteUrl(pokemonName, suffix);
     } catch (error) {
         console.warn(`Failed to generate sprite for ${pokemonName}:`, error);
         return null;

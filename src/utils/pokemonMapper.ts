@@ -1075,20 +1075,34 @@ export function getPokemonId(name: string): number | null {
     return null;
 }
 
-export function getPokemonSpriteUrl(pokemonNameOrId: string | number, type: SpriteType = 'official-artwork'): string | null {
-    let id: number;
+export function getPokemonSpriteUrl(pokemonNameOrId: string | number, suffix?: string): string | null {
+    let pokemonName: string;
 
     if (typeof pokemonNameOrId === 'string') {
+        // Validate that the Pokemon name exists
         const pokemonId = getPokemonId(pokemonNameOrId);
         if (!pokemonId) return null;
-        id = pokemonId;
+        pokemonName = pokemonNameOrId;
     } else if (typeof pokemonNameOrId === 'number') {
-        id = pokemonNameOrId;
+        // Find the Pokemon name from the ID
+        const foundName = Object.entries(POKEMON_NAME_TO_ID).find(([, id]) => id === pokemonNameOrId);
+        if (!foundName) return null;
+        pokemonName = foundName[0];
     } else {
         return null;
     }
 
-    const baseUrl = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other';
+    // Clean Pokemon name for URL: use normalization + remove non-alphanumeric
+    let urlName = normalizePokemonName(pokemonName).replace(/[^a-z0-9]/g, ''); // Remove all non-alphanumeric characters (spaces, hyphens, apostrophes, etc.)
+
+    // Add suffix if provided
+    if (suffix) {
+        urlName += suffix;
+    }
+
+    return `https://raw.githubusercontent.com/mgrann03/pokemon-resources/refs/heads/main/graphics/pogo/${urlName}.png`;
+
+    /* const baseUrl = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other';
 
     switch (type) {
         case 'dream-world':
@@ -1099,7 +1113,7 @@ export function getPokemonSpriteUrl(pokemonNameOrId: string | number, type: Spri
             return `${baseUrl}/home/${id}.png`;
         default:
             return `${baseUrl}/dream-world/${id}.svg`;
-    }
+    } */
 }
 
 export function getPokemonAnimatedUrl(pokemonNameOrId: string | number, suffix?: string): string | null {
