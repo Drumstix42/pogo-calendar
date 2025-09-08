@@ -27,16 +27,15 @@
             :class="{ active: calendarSettings.optionsExpanded }"
             @click="calendarSettings.toggleOptionsExpanded"
         >
+            <span class="config-label flex-grow-1">Config</span>
             <Settings :size="16" class="flex-grow-0" />
-            <span class="flex-grow-1">Config</span>
-            <ChevronDown :size="14" class="icon-rotate" :class="{ 'rotate-180': calendarSettings.optionsExpanded }" />
         </button>
     </div>
 </template>
 
 <script setup lang="ts">
 import dayjs from 'dayjs';
-import { ChevronDown, ChevronLeft, ChevronRight, Settings } from 'lucide-vue-next';
+import { ChevronLeft, ChevronRight, Settings } from 'lucide-vue-next';
 import { computed } from 'vue';
 
 import { useUrlSync } from '@/composables/useUrlSync';
@@ -109,19 +108,21 @@ const goToCurrentMonth = () => {
 
 /* Options button styling - no border but normal padding and clear active state */
 .btn-options-toggle {
-    background: transparent;
+    line-height: 1;
     color: var(--bs-body-color);
+    background: transparent;
     transition: all 0.15s ease-in-out;
+    padding: 0.4rem 0.6rem;
 }
 
 .btn-options-toggle:hover {
-    background-color: var(--bs-secondary-bg);
     color: var(--bs-body-color);
+    background-color: var(--bs-secondary-bg);
 }
 
 .btn-options-toggle.active {
-    background-color: var(--bs-secondary);
     color: var(--bs-white);
     border-color: var(--bs-secondary);
+    background-color: var(--bs-secondary);
 }
 </style>

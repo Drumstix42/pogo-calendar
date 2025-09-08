@@ -1,74 +1,78 @@
 <template>
-    <div class="event-filter-options">
+    <div class="option-section">
         <div class="mb-2">
             <div class="d-flex align-items-center">
-                <h6 class="mb-0 me-2">Event Type Filters</h6>
+                <h6 class="section-title me-2">Event Type Filters</h6>
                 <VTooltip class="d-none d-md-flex align-items-center" placement="top" :delay="{ show: 300, hide: 0 }" distance="8">
                     <Info :size="16" class="text-muted" />
                     <template #popper>
-                        <div class="calendar-options-tooltip-text">Select which event types to display.</div>
+                        <div class="calendar-options-tooltip-text">{{ tooltipText }}</div>
                     </template>
                 </VTooltip>
             </div>
-            <small class="text-muted d-block d-md-none">Select which event types to display.</small>
+            <small class="text-muted d-block d-md-none">{{ tooltipText }}</small>
         </div>
 
-        <div class="filter-stats mb-2">
-            <div class="btn-group btn-group-sm">
-                <button
-                    :class="eventFilter.allEventTypesEnabled ? 'btn btn-dark' : 'btn btn-outline-secondary'"
-                    @click="eventFilter.enableAllEventTypes()"
+        <div class="option-content">
+            <div class="filter-stats mb-2">
+                <div class="btn-group btn-group-sm">
+                    <button
+                        :class="eventFilter.allEventTypesEnabled ? 'btn btn-dark' : 'btn btn-outline-secondary'"
+                        @click="eventFilter.enableAllEventTypes()"
+                    >
+                        All
+                    </button>
+                    <button
+                        :class="eventFilter.noEventTypesEnabled ? 'btn btn-secondary' : 'btn btn-outline-secondary'"
+                        @click="eventFilter.disableAllEventTypes()"
+                    >
+                        None
+                    </button>
+                </div>
+                <small v-if="eventFilter.enabledCount === eventFilter.totalCount" class="text-muted">
+                    All {{ eventFilter.totalCount }} event types enabled
+                </small>
+                <small v-else-if="eventFilter.enabledCount === 0" class="text-muted">
+                    All {{ eventFilter.totalCount }} event types <i>disabled</i></small
                 >
-                    All
-                </button>
-                <button
-                    :class="eventFilter.noEventTypesEnabled ? 'btn btn-secondary' : 'btn btn-outline-secondary'"
-                    @click="eventFilter.disableAllEventTypes()"
-                >
-                    None
-                </button>
+                <small v-else class="text-muted">{{ eventFilter.enabledCount }} of {{ eventFilter.totalCount }} event types enabled</small>
             </div>
-            <small v-if="eventFilter.enabledCount === eventFilter.totalCount" class="text-muted">
-                All {{ eventFilter.totalCount }} event types enabled
-            </small>
-            <small v-else-if="eventFilter.enabledCount === 0" class="text-muted"> All {{ eventFilter.totalCount }} event types <i>disabled</i></small>
-            <small v-else class="text-muted">{{ eventFilter.enabledCount }} of {{ eventFilter.totalCount }} event types enabled</small>
-        </div>
 
-        <div ref="filterGridContainer" class="filter-grid-container" :class="{ 'can-scroll-up': canScrollUp, 'can-scroll-down': canScrollDown }">
-            <div class="filter-grid">
-                <div v-for="group in eventGroups" :key="group.title" class="filter-group">
-                    <h6 class="filter-group-title">{{ group.title }}</h6>
-                    <div class="filter-group-items">
-                        <label
-                            v-for="eventTypeKey in group.eventTypes"
-                            :key="eventTypeKey"
-                            class="filter-item"
-                            :class="{ 'filter-item--enabled': eventFilter.isEventTypeEnabled(eventTypeKey) }"
-                        >
-                            <input
-                                :id="`filter-option-${eventTypeKey}`"
-                                class="filter-checkbox"
-                                type="checkbox"
-                                :checked="eventFilter.isEventTypeEnabled(eventTypeKey)"
-                                @change="eventFilter.toggleEventType(eventTypeKey)"
-                            />
-                            <div class="filter-layout">
-                                <div
-                                    class="filter-checkbox-area"
-                                    :class="{ 'filter-checkbox-area--checked': eventFilter.isEventTypeEnabled(eventTypeKey) }"
-                                >
-                                    <Check
-                                        :size="22"
-                                        class="checkbox-icon"
-                                        :class="{ 'checkbox-icon--checked': eventFilter.isEventTypeEnabled(eventTypeKey) }"
-                                    />
+            <div ref="filterGridContainer" class="filter-grid-container" :class="{ 'can-scroll-up': canScrollUp, 'can-scroll-down': canScrollDown }">
+                <div class="filter-grid">
+                    <div v-for="group in eventGroups" :key="group.title" class="filter-group">
+                        <h6 class="filter-group-title">{{ group.title }}</h6>
+                        <div class="filter-group-items">
+                            <label
+                                v-for="eventTypeKey in group.eventTypes"
+                                :key="eventTypeKey"
+                                class="filter-item"
+                                :class="{ 'filter-item--enabled': eventFilter.isEventTypeEnabled(eventTypeKey) }"
+                            >
+                                <input
+                                    :id="`filter-option-${eventTypeKey}`"
+                                    class="filter-checkbox"
+                                    type="checkbox"
+                                    :checked="eventFilter.isEventTypeEnabled(eventTypeKey)"
+                                    @change="eventFilter.toggleEventType(eventTypeKey)"
+                                />
+                                <div class="filter-layout">
+                                    <div
+                                        class="filter-checkbox-area"
+                                        :class="{ 'filter-checkbox-area--checked': eventFilter.isEventTypeEnabled(eventTypeKey) }"
+                                    >
+                                        <Check
+                                            :size="22"
+                                            class="checkbox-icon"
+                                            :class="{ 'checkbox-icon--checked': eventFilter.isEventTypeEnabled(eventTypeKey) }"
+                                        />
+                                    </div>
+                                    <div class="filter-content" :style="{ backgroundColor: getEventTypeInfo(eventTypeKey).color }">
+                                        <span class="event-name">{{ getEventTypeInfo(eventTypeKey).name }}</span>
+                                    </div>
                                 </div>
-                                <div class="filter-content" :style="{ backgroundColor: getEventTypeInfo(eventTypeKey).color }">
-                                    <span class="event-name">{{ getEventTypeInfo(eventTypeKey).name }}</span>
-                                </div>
-                            </div>
-                        </label>
+                            </label>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -84,6 +88,8 @@ import { EVENT_TYPES, getEventTypeInfo } from '@/utils/eventTypes';
 import type { EventTypeKey } from '@/utils/eventTypes';
 
 const eventFilter = useEventFilterStore();
+
+const tooltipText = 'Select which event types to display.';
 const filterGridContainer = ref<HTMLElement>();
 const canScrollUp = ref(false);
 const canScrollDown = ref(false);
@@ -94,16 +100,19 @@ const checkScrollPosition = () => {
     if (!container) return;
 
     const { scrollTop, scrollHeight, clientHeight } = container;
-    canScrollUp.value = scrollTop > 0;
-    canScrollDown.value = scrollTop < scrollHeight - clientHeight - 1; // -1 for rounding
+
+    // More precise scroll detection
+    canScrollUp.value = scrollTop > 5; // Small threshold to avoid micro-scrolling issues
+    canScrollDown.value = scrollTop < scrollHeight - clientHeight - 5; // Small threshold
 };
 
 onMounted(() => {
     nextTick(() => {
         const container = filterGridContainer.value?.querySelector('.filter-grid') as HTMLElement;
         if (container) {
-            checkScrollPosition();
             container.addEventListener('scroll', checkScrollPosition);
+            // Initial check after a short delay to ensure content is rendered
+            setTimeout(checkScrollPosition, 100);
         }
     });
 });
@@ -154,15 +163,23 @@ const eventGroups = computed(() => {
 </script>
 
 <style scoped>
-.event-filter-options {
-    padding: 1rem;
-    background-color: var(--calendar-options-item-bg);
-    border: 1px solid #dee2e6;
-    border-radius: 0.375rem;
+.option-section {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.option-content {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
 }
 
 .filter-grid-container {
     position: relative;
+    flex: 1;
+    min-height: 0;
 }
 
 .filter-grid-container::before,
@@ -200,12 +217,11 @@ const eventGroups = computed(() => {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 0.5rem;
-    max-height: min(60vh, 372px);
+    height: 100%;
     overflow-y: auto;
     padding-right: 0.5rem;
 }
 
-/* Custom scrollbar styling */
 .filter-grid::-webkit-scrollbar {
     width: 8px;
 }
@@ -225,24 +241,21 @@ const eventGroups = computed(() => {
 }
 
 .filter-group {
-    /* background: #fff; */
-    /* border: 1px solid #e9ecef; */
     border-radius: 0.375rem;
-    /* padding: 0.5rem 1rem; */
 }
 
 .filter-group-title {
     z-index: 5;
     position: sticky;
     top: 0;
-    margin: 0 0 0 0;
+    margin: 0;
     font-size: 0.9rem;
     font-weight: 600;
     color: #495057;
     padding: 0.5rem 0 0.5rem 0.5rem;
-    /* border-top: 1px solid #dcdddf; */
     border-bottom: 1px solid rgba(220, 221, 223, 0.75);
-    background-color: rgba(245, 245, 245, 1);
+    border-radius: 0 0 5px 5px;
+    background-color: rgba(235, 235, 240, 1);
 }
 
 .filter-group-items {
@@ -254,7 +267,7 @@ const eventGroups = computed(() => {
 .filter-item {
     position: relative;
     cursor: pointer;
-    border-radius: 6px;
+    border-radius: 5px;
     overflow: hidden;
     transition: all 0.2s ease;
 }
@@ -294,8 +307,8 @@ const eventGroups = computed(() => {
     background-color: #f8f9fa;
     border: 1px solid #dee2e6;
     border-right: none;
-    border-top-left-radius: 6px;
-    border-bottom-left-radius: 6px;
+    border-top-left-radius: 5px;
+    border-bottom-left-radius: 5px;
     transition: all 0.2s ease;
 }
 
@@ -326,8 +339,8 @@ const eventGroups = computed(() => {
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
     flex: 1;
     border: 1px solid rgba(0, 0, 0, 0.1);
-    border-top-right-radius: 6px;
-    border-bottom-right-radius: 6px;
+    border-top-right-radius: 5px;
+    border-bottom-right-radius: 5px;
 }
 
 .filter-item--enabled .filter-content {

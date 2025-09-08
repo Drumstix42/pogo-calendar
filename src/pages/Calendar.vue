@@ -4,11 +4,11 @@
             <!-- Month Navigation Header -->
             <CalendarHeader />
 
-            <!-- Calendar Options Overlay -->
+            <!-- Calendar Options Offcanvas -->
             <Teleport to="body">
-                <Transition name="overlay-fade">
-                    <div v-if="calendarSettings.optionsExpanded" class="calendar-options-overlay" @click="handleBackdropClick">
-                        <div class="container" @click.stop>
+                <Transition name="offcanvas-fade">
+                    <div v-if="calendarSettings.optionsExpanded" class="calendar-options-backdrop" @click="handleBackdropClick">
+                        <div class="offcanvas offcanvas-end show calendar-options-offcanvas" @click.stop>
                             <CalendarOptions @close="handleCloseOptions" />
                         </div>
                     </div>
@@ -85,56 +85,69 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.overlay-fade-enter-active,
-.overlay-fade-leave-active {
-    transition: all 0.2s ease-in-out;
+.offcanvas-fade-enter-active,
+.offcanvas-fade-leave-active {
+    transition: all 0.3s ease-in-out;
 }
 
-.overlay-fade-enter-from,
-.overlay-fade-leave-to {
+.offcanvas-fade-enter-from,
+.offcanvas-fade-leave-to {
     opacity: 0;
 }
 
-.overlay-fade-enter-to,
-.overlay-fade-leave-from {
+.offcanvas-fade-enter-to,
+.offcanvas-fade-leave-from {
     opacity: 1;
 }
 
-.calendar-options-overlay {
-    z-index: 1050;
+.calendar-options-backdrop {
+    z-index: 1045;
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
-    padding: 1rem;
-    padding-top: 60px;
     background-color: rgba(0, 0, 0, 0.3);
-    backdrop-filter: blur(0.7px);
+    backdrop-filter: blur(0.5px);
 }
 
-.calendar-options-overlay .container {
-    transform: translateY(0);
-    transition: transform 0.2s ease-in-out;
+.calendar-options-offcanvas {
+    z-index: 1050;
+    width: 100vw;
+    max-width: 400px;
+    border: none;
+    box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
 }
 
-/* Mobile adjustments */
-@media (max-width: 767.98px) {
-    .calendar-options-overlay {
-        padding: 0.5rem;
-        padding-top: 20px;
-        align-items: flex-start;
+/* Offcanvas slide-in animation */
+.offcanvas-fade-enter-active .calendar-options-offcanvas {
+    transition: transform 0.3s ease-in-out;
+}
+
+.offcanvas-fade-enter-from .calendar-options-offcanvas {
+    transform: translateX(100%);
+}
+
+.offcanvas-fade-enter-to .calendar-options-offcanvas {
+    transform: translateX(0);
+}
+
+.offcanvas-fade-leave-active .calendar-options-offcanvas {
+    transition: transform 0.3s ease-in-out;
+}
+
+.offcanvas-fade-leave-from .calendar-options-offcanvas {
+    transform: translateX(0);
+}
+
+.offcanvas-fade-leave-to .calendar-options-offcanvas {
+    transform: translateX(100%);
+}
+
+/* Mobile: full width */
+@media (max-width: 575.98px) {
+    .calendar-options-offcanvas {
+        max-width: 100vw;
     }
-}
-
-.overlay-fade-enter-active .container {
-    transform: translateY(-10px);
-}
-
-.overlay-fade-enter-to .container {
-    transform: translateY(0);
 }
 </style>
