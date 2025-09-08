@@ -27,7 +27,7 @@ const handleDayChange = (event: Event) => {
 <style scoped>
 .first-day-selector {
     padding: 1rem;
-    background-color: #f8f9fa;
+    background-color: var(--calendar-options-item-bg);
     border: 1px solid #dee2e6;
     border-radius: 0.375rem;
 }

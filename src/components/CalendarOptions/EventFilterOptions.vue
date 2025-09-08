@@ -148,7 +148,7 @@ const eventGroups = computed(() => {
 <style scoped>
 .event-filter-options {
     padding: 1rem;
-    background-color: #f8f9fa;
+    background-color: var(--calendar-options-item-bg);
     border: 1px solid #dee2e6;
     border-radius: 0.375rem;
 }
@@ -217,28 +217,30 @@ const eventGroups = computed(() => {
 }
 
 .filter-group {
-    background: white;
-    border: 1px solid #e9ecef;
+    /* background: #fff; */
+    /* border: 1px solid #e9ecef; */
     border-radius: 0.375rem;
-    padding: 0.5rem 1rem;
+    /* padding: 0.5rem 1rem; */
 }
 
 .filter-group-title {
-    margin: 0 0 0.75rem 0;
+    z-index: 5;
+    position: sticky;
+    top: 0;
+    margin: 0 0 0 0;
     font-size: 0.9rem;
     font-weight: 600;
     color: #495057;
-    border-bottom: 1px solid #e9ecef;
-    padding: 0.5rem 0 0.5rem 0;
-    position: sticky;
-    top: 0;
-    background-color: white;
-    z-index: 5;
+    padding: 0.5rem 0 0.5rem 0.5rem;
+    /* border-top: 1px solid #dcdddf; */
+    border-bottom: 1px solid rgba(220, 221, 223, 0.75);
+    background-color: rgba(245, 245, 245, 1);
 }
 
 .filter-group-items {
     display: grid;
     gap: 1px;
+    padding: 5px;
 }
 
 .filter-item {
