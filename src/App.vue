@@ -14,6 +14,9 @@
         </nav>
 
         <router-view />
+
+        <!-- Toast notifications -->
+        <ToastContainer />
     </div>
 </template>
 
@@ -21,6 +24,7 @@
 import { useThemeStore } from '@/stores/theme';
 
 import ThemeSelector from '@/components/ThemeSelector.vue';
+import ToastContainer from '@/components/Toast/ToastContainer.vue';
 
 // Initialize theme store to apply theme on app start
 useThemeStore();

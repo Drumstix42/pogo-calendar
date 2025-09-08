@@ -9,23 +9,26 @@ import { computed } from 'vue';
  */
 export function useDeviceDetection() {
     const canHover = useMediaQuery('(hover: hover)');
+    const hasCoarsePointer = useMediaQuery('(pointer: coarse)');
+    const hasFinePointer = useMediaQuery('(pointer: fine)');
 
-    // Reliable touch device detection
+    // Touch device detection based on pointer capability
     const isTouchDevice = computed(() => {
-        const hasOntouchstart = 'ontouchstart' in window;
-        const hasMaxTouchPoints = navigator.maxTouchPoints > 0;
-        const hasMsMaxTouchPoints = (navigator as any).msMaxTouchPoints > 0;
+        // Primary detection: coarse pointer indicates touch input
+        if (hasCoarsePointer.value) {
+            return true;
+        }
 
-        // Primary detection: Mobile user agent patterns
+        // Secondary detection: fine pointer with hover capability indicates mouse/trackpad
+        if (hasFinePointer.value && canHover.value) {
+            return false;
+        }
+
+        // Fallback to user agent detection if pointer queries are not supported
         const userAgent = navigator.userAgent.toLowerCase();
         const isMobileUserAgent = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent);
 
-        // Secondary detection: Touch capability without hover support
-        const hasTouchCapability = hasOntouchstart || hasMaxTouchPoints || hasMsMaxTouchPoints;
-
-        // Return true if mobile user agent OR (touch capable AND can't hover)
-        // This handles cases where hover detection might be unreliable on some devices
-        return isMobileUserAgent || (hasTouchCapability && !canHover.value);
+        return isMobileUserAgent;
     });
 
     return {

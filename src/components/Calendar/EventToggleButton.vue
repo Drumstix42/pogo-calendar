@@ -1,7 +1,7 @@
 <template>
     <VTooltip placement="top" :delay="{ show: 50, hide: 0 }" distance="10" class="ms-auto d-flex align-items-center">
         <button class="event-toggle-button" @click.stop="$emit('hide', eventType)">
-            <EyeOff :size="14" />
+            <EyeOff :size="13" />
         </button>
 
         <template #popper>
@@ -38,7 +38,7 @@ const eventTypeName = computed(() => getEventTypeInfo(props.eventType).name);
     align-items: center;
     justify-content: center;
     width: 18px;
-    height: 16px;
+    height: 15px;
     padding: 0;
     background-color: rgba(0, 0, 0, 0.2);
     color: rgba(255, 255, 255, 0.7);

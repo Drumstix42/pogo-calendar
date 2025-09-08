@@ -7,7 +7,8 @@
                 borderLeftColor: `color-mix(in srgb, ${getEventColor(event)} 70%, black)`,
             }"
         >
-            {{ getEventTypeName(event) }}
+            <span class="event-type-name">{{ getEventTypeName(event) }}</span>
+            <EventToggleButton :event-type="event.eventType" @hide="hideEventType" />
         </div>
 
         <!-- Show individual events if grouped -->
@@ -52,9 +53,19 @@
 <script setup lang="ts">
 import dayjs from 'dayjs';
 
+import { useEventFilterToasts } from '@/composables/useEventFilterToasts';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
-import { type PogoEvent, formatEventTime, getEventTypeInfo, getGroupedEvents, isSameDayEvent, parseEventDate } from '@/utils/eventTypes';
+import {
+    type EventTypeKey,
+    type PogoEvent,
+    formatEventTime,
+    getEventTypeInfo,
+    getGroupedEvents,
+    isSameDayEvent,
+    parseEventDate,
+} from '@/utils/eventTypes';
 
+import EventToggleButton from './EventToggleButton.vue';
 import PokemonImages from './PokemonImages.vue';
 
 interface Props {
@@ -67,6 +78,11 @@ withDefaults(defineProps<Props>(), {
 });
 
 const calendarSettings = useCalendarSettingsStore();
+const { hideEventTypeWithToast } = useEventFilterToasts();
+
+const hideEventType = (eventType: EventTypeKey): void => {
+    hideEventTypeWithToast(eventType);
+};
 
 const getEventColor = (event: PogoEvent): string => {
     return getEventTypeInfo(event.eventType).color;
@@ -109,6 +125,13 @@ const formatEventDuration = (event: PogoEvent): string => {
     border-radius: 4px;
     border-left: 3px solid;
     text-shadow: 1px 2px 2px rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.event-type-name {
+    flex: 1;
 }
 
 .event-time-info {

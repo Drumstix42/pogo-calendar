@@ -115,6 +115,7 @@ import type { Dayjs } from 'dayjs';
 import { computed } from 'vue';
 
 import { useDeviceDetection } from '@/composables/useDeviceDetection';
+import { useEventFilterToasts } from '@/composables/useEventFilterToasts';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { useEventFilterStore } from '@/stores/eventFilter';
 import { useEventsStore } from '@/stores/events';
@@ -161,6 +162,7 @@ const props = defineProps<Props>();
 const eventFilter = useEventFilterStore();
 const eventsStore = useEventsStore();
 const calendarSettings = useCalendarSettingsStore();
+const { hideEventTypeWithToast } = useEventFilterToasts();
 
 const { isTouchDevice } = useDeviceDetection();
 
@@ -330,9 +332,8 @@ const getEventTime = (event: PogoEvent): string => {
     return formatEventTime(event.start);
 };
 
-// Hide event type function
 const hideEventType = (eventType: EventTypeKey): void => {
-    eventFilter.disableEventType(eventType);
+    hideEventTypeWithToast(eventType);
 };
 
 // Multi-day event bar state helpers

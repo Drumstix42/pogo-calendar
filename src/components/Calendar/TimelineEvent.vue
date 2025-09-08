@@ -44,7 +44,7 @@
 import dayjs from 'dayjs';
 import { computed } from 'vue';
 
-import { useEventFilterStore } from '@/stores/eventFilter';
+import { useEventFilterToasts } from '@/composables/useEventFilterToasts';
 import { type EventTypeKey, type PogoEvent, formatEventTime, getEventTypeInfo, isSameDayEvent, parseEventDate } from '@/utils/eventTypes';
 
 import EventToggleButton from './EventToggleButton.vue';
@@ -54,7 +54,7 @@ interface Props {
 }
 
 const props = defineProps<Props>();
-const eventFilter = useEventFilterStore();
+const { hideEventTypeWithToast } = useEventFilterToasts();
 
 // Event type color and name
 const eventColor = computed(() => {
@@ -176,9 +176,8 @@ const hasEventStarted = computed(() => {
     return !isSameDayEvent(props.event) && now.isAfter(eventStart) && eventEnd.isAfter(now);
 });
 
-// Hide event type function
 const hideEventType = (eventType: EventTypeKey): void => {
-    eventFilter.disableEventType(eventType);
+    hideEventTypeWithToast(eventType);
 };
 </script>
 
