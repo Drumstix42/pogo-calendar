@@ -10,8 +10,10 @@
 
         <!-- Multi-day events (day-spanning bars) -->
         <div v-if="weekCompactSlots.size > 0" class="multi-day-events" :style="{ height: `${multiDayEventsHeight}px` }">
-            <template v-for="event in multiDayEvents" :key="`multi-${getEventKey(event)}`">
+            <TransitionGroup name="fade" tag="div">
                 <div
+                    v-for="event in multiDayEvents"
+                    :key="`multi-${getEventKey(event)}`"
                     class="multi-day-event-slot"
                     :style="{
                         position: 'absolute',
@@ -70,12 +72,12 @@
                         </VMenu>
                     </div>
                 </div>
-            </template>
+            </TransitionGroup>
         </div>
 
         <!-- Single-day events (vertically stacked event blocks with timestamps) -->
         <div xv-if="singleDayEvents.length > 0">
-            <div class="single-day-events">
+            <TransitionGroup name="fade" tag="div" class="single-day-events">
                 <VMenu
                     v-for="event in singleDayEvents"
                     :key="`single-${getEventKey(event)}`"
@@ -103,7 +105,7 @@
                         <EventTooltip :event="event" :is-single-day="true" />
                     </template>
                 </VMenu>
-            </div>
+            </TransitionGroup>
         </div>
     </div>
 </template>

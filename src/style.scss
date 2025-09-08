@@ -138,6 +138,7 @@ h6 {
 /* Event Filter Hover Highlighting */
 $event-types: (
     'bonus-hour',
+    'city-safari',
     'community-day',
     'elite-raids',
     'event',
@@ -211,4 +212,19 @@ body {
             }
         }
     }
+}
+
+/* Vue Transition Animations for Calendar Events */
+.fade-enter-active,
+.fade-leave-active {
+    transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+    opacity: 0;
+}
+
+.fade-move {
+    transition: all 0.3s ease;
 }
