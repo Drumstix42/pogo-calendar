@@ -1,57 +1,44 @@
 <template>
-    <div class="option-section">
-        <div class="d-flex align-items-center">
-            <h6 class="section-title me-2">Detailed Views</h6>
-            <VTooltip class="d-none d-md-flex align-items-center" placement="top" :delay="{ show: 300, hide: 0 }" distance="8">
-                <Info :size="16" class="text-muted" />
-                <template #popper>
-                    <div class="calendar-options-tooltip-text">{{ tooltipText }}</div>
-                </template>
-            </VTooltip>
-        </div>
-
-        <div class="option-content">
-            <div class="toggle-with-image">
-                <div class="form-check form-switch">
-                    <input
-                        id="useAnimatedImages"
-                        class="form-check-input"
-                        type="checkbox"
-                        role="switch"
-                        :checked="calendarSettings.useAnimatedImages"
-                        @change="handleToggleChange"
-                    />
-                    <label for="useAnimatedImages" class="form-check-label">Animated Pokémon</label>
-                </div>
-                <div class="image-container">
-                    <img
-                        :src="
-                            calendarSettings.useAnimatedImages
-                                ? 'https://raw.githubusercontent.com/mgrann03/pokemon-resources/refs/heads/main/graphics/ani/rillaboom.gif'
-                                : 'https://raw.githubusercontent.com/mgrann03/pokemon-resources/refs/heads/main/graphics/pogo/rillaboom.png'
-                        "
-                        :alt="calendarSettings.useAnimatedImages ? 'Animated Rillaboom' : 'Static Rillaboom'"
-                        class="example-image"
-                        @click="toggleSetting"
-                    />
-                    <Transition name="flavor-text" mode="out-in">
-                        <div v-if="showFlavorText" :key="flavorTextKey" class="flavor-text" :style="{ color: flavorTextColor }">
-                            {{ flavorText }}
-                        </div>
-                    </Transition>
-                </div>
+    <CollapsibleSection title="Detailed Views" :tooltip-text="tooltipText" storage-key="animated-images">
+        <div class="toggle-with-image">
+            <div class="form-check form-switch">
+                <input
+                    id="useAnimatedImages"
+                    class="form-check-input"
+                    type="checkbox"
+                    role="switch"
+                    :checked="calendarSettings.useAnimatedImages"
+                    @change="handleToggleChange"
+                />
+                <label for="useAnimatedImages" class="form-check-label">Animated sprites</label>
             </div>
-
-            <small class="text-muted d-block mt-2 d-md-none">{{ tooltipText }}</small>
+            <div class="image-container">
+                <img
+                    :src="
+                        calendarSettings.useAnimatedImages
+                            ? 'https://raw.githubusercontent.com/mgrann03/pokemon-resources/refs/heads/main/graphics/ani/rillaboom.gif'
+                            : 'https://raw.githubusercontent.com/mgrann03/pokemon-resources/refs/heads/main/graphics/pogo/rillaboom.png'
+                    "
+                    :alt="calendarSettings.useAnimatedImages ? 'Animated Rillaboom' : 'Static Rillaboom'"
+                    class="example-image"
+                    @click="toggleSetting"
+                />
+                <Transition name="flavor-text" mode="out-in">
+                    <div v-if="showFlavorText" :key="flavorTextKey" class="flavor-text" :style="{ color: flavorTextColor }">
+                        {{ flavorText }}
+                    </div>
+                </Transition>
+            </div>
         </div>
-    </div>
+    </CollapsibleSection>
 </template>
 
 <script setup lang="ts">
-import { Info } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
+
+import CollapsibleSection from './CollapsibleSection.vue';
 
 const calendarSettings = useCalendarSettingsStore();
 

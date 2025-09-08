@@ -1,98 +1,83 @@
 <template>
-    <div class="option-section">
-        <div class="mb-2">
-            <div class="d-flex align-items-center">
-                <h6 class="section-title me-2">Event Type Filters</h6>
-                <VTooltip class="d-none d-md-flex align-items-center" placement="top" :delay="{ show: 300, hide: 0 }" distance="8">
-                    <Info :size="16" class="text-muted" />
-                    <template #popper>
-                        <div class="calendar-options-tooltip-text">{{ tooltipText }}</div>
-                    </template>
-                </VTooltip>
+    <CollapsibleSection title="Event Type Filters" :tooltip-text="tooltipText" storage-key="event-filters" class="flex-grow-section">
+        <div class="filter-stats mb-2">
+            <div class="btn-group btn-group-sm">
+                <button
+                    :class="eventFilter.allEventTypesEnabled ? 'btn btn-dark' : 'btn btn-outline-secondary'"
+                    @click="eventFilter.enableAllEventTypes()"
+                >
+                    All
+                </button>
+                <button
+                    :class="eventFilter.noEventTypesEnabled ? 'btn btn-secondary' : 'btn btn-outline-secondary'"
+                    @click="eventFilter.disableAllEventTypes()"
+                >
+                    None
+                </button>
             </div>
-            <small class="text-muted d-block d-md-none">{{ tooltipText }}</small>
+            <small v-if="eventFilter.enabledCount === eventFilter.totalCount" class="text-muted">
+                All {{ eventFilter.totalCount }} event types enabled
+            </small>
+            <small v-else-if="eventFilter.enabledCount === 0" class="text-muted"> All {{ eventFilter.totalCount }} event types <i>disabled</i></small>
+            <small v-else class="text-muted">{{ eventFilter.enabledCount }} of {{ eventFilter.totalCount }} event types enabled</small>
         </div>
 
-        <div class="option-content">
-            <div class="filter-stats mb-2">
-                <div class="btn-group btn-group-sm">
-                    <button
-                        :class="eventFilter.allEventTypesEnabled ? 'btn btn-dark' : 'btn btn-outline-secondary'"
-                        @click="eventFilter.enableAllEventTypes()"
-                    >
-                        All
-                    </button>
-                    <button
-                        :class="eventFilter.noEventTypesEnabled ? 'btn btn-secondary' : 'btn btn-outline-secondary'"
-                        @click="eventFilter.disableAllEventTypes()"
-                    >
-                        None
-                    </button>
-                </div>
-                <small v-if="eventFilter.enabledCount === eventFilter.totalCount" class="text-muted">
-                    All {{ eventFilter.totalCount }} event types enabled
-                </small>
-                <small v-else-if="eventFilter.enabledCount === 0" class="text-muted">
-                    All {{ eventFilter.totalCount }} event types <i>disabled</i></small
-                >
-                <small v-else class="text-muted">{{ eventFilter.enabledCount }} of {{ eventFilter.totalCount }} event types enabled</small>
-            </div>
-
-            <div
-                ref="filterGridContainer"
-                class="filter-grid-container"
-                :class="{ 'can-scroll-up': canScrollUp, 'can-scroll-down': canScrollDown }"
-                @mouseleave="clearHighlight"
-            >
-                <div class="filter-grid">
-                    <div v-for="group in eventGroups" :key="group.title" class="filter-group">
-                        <h6 class="filter-group-title">{{ group.title }}</h6>
-                        <div class="filter-group-items">
-                            <label
-                                v-for="eventTypeKey in group.eventTypes"
-                                :key="eventTypeKey"
-                                class="filter-item"
-                                :class="{ 'filter-item--enabled': eventFilter.isEventTypeEnabled(eventTypeKey) }"
-                                @mouseenter="highlightEventType(eventTypeKey)"
-                                @mouseleave="clearHighlight"
-                            >
-                                <input
-                                    :id="`filter-option-${eventTypeKey}`"
-                                    class="filter-checkbox"
-                                    type="checkbox"
-                                    :checked="eventFilter.isEventTypeEnabled(eventTypeKey)"
-                                    @change="eventFilter.toggleEventType(eventTypeKey)"
-                                />
-                                <div class="filter-layout">
-                                    <div
-                                        class="filter-checkbox-area"
-                                        :class="{ 'filter-checkbox-area--checked': eventFilter.isEventTypeEnabled(eventTypeKey) }"
-                                    >
-                                        <Check
-                                            :size="22"
-                                            class="checkbox-icon"
-                                            :class="{ 'checkbox-icon--checked': eventFilter.isEventTypeEnabled(eventTypeKey) }"
-                                        />
-                                    </div>
-                                    <div class="filter-content" :style="{ backgroundColor: getEventTypeInfo(eventTypeKey).color }">
-                                        <span class="event-name">{{ getEventTypeInfo(eventTypeKey).name }}</span>
-                                    </div>
+        <div
+            ref="filterGridContainer"
+            class="filter-grid-container"
+            :class="{ 'can-scroll-up': canScrollUp, 'can-scroll-down': canScrollDown }"
+            @mouseleave="clearHighlight"
+        >
+            <div class="filter-grid">
+                <div v-for="group in eventGroups" :key="group.title" class="filter-group">
+                    <h6 class="filter-group-title">{{ group.title }}</h6>
+                    <div class="filter-group-items">
+                        <label
+                            v-for="eventTypeKey in group.eventTypes"
+                            :key="eventTypeKey"
+                            class="filter-item"
+                            :class="{ 'filter-item--enabled': eventFilter.isEventTypeEnabled(eventTypeKey) }"
+                            @mouseenter="highlightEventType(eventTypeKey)"
+                            @mouseleave="clearHighlight"
+                        >
+                            <input
+                                :id="`filter-option-${eventTypeKey}`"
+                                class="filter-checkbox"
+                                type="checkbox"
+                                :checked="eventFilter.isEventTypeEnabled(eventTypeKey)"
+                                @change="eventFilter.toggleEventType(eventTypeKey)"
+                            />
+                            <div class="filter-layout">
+                                <div
+                                    class="filter-checkbox-area"
+                                    :class="{ 'filter-checkbox-area--checked': eventFilter.isEventTypeEnabled(eventTypeKey) }"
+                                >
+                                    <Check
+                                        :size="22"
+                                        class="checkbox-icon"
+                                        :class="{ 'checkbox-icon--checked': eventFilter.isEventTypeEnabled(eventTypeKey) }"
+                                    />
                                 </div>
-                            </label>
-                        </div>
+                                <div class="filter-content" :style="{ backgroundColor: getEventTypeInfo(eventTypeKey).color }">
+                                    <span class="event-name">{{ getEventTypeInfo(eventTypeKey).name }}</span>
+                                </div>
+                            </div>
+                        </label>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+    </CollapsibleSection>
 </template>
 <script setup lang="ts">
-import { Check, Info } from 'lucide-vue-next';
+import { Check } from 'lucide-vue-next';
 import { computed, nextTick, onMounted, ref } from 'vue';
 
 import { useEventFilterStore } from '@/stores/eventFilter';
 import { EVENT_TYPES, getEventTypeInfo } from '@/utils/eventTypes';
 import type { EventTypeKey } from '@/utils/eventTypes';
+
+import CollapsibleSection from './CollapsibleSection.vue';
 
 const eventFilter = useEventFilterStore();
 
@@ -179,13 +164,13 @@ const eventGroups = computed(() => {
 </script>
 
 <style scoped>
-.option-section {
+.flex-grow-section {
     display: flex;
     flex-direction: column;
     min-height: 0;
 }
 
-.option-content {
+:deep(.option-content) {
     display: flex;
     flex-direction: column;
     flex: 1;
@@ -238,6 +223,30 @@ const eventGroups = computed(() => {
     padding-right: 0.5rem;
 }
 
+/* On mobile, let the filter grid expand naturally without separate scrolling */
+@media (max-width: 767.98px) {
+    .filter-grid {
+        height: auto;
+        overflow-y: visible;
+        padding-right: 0;
+    }
+    
+    .filter-grid-container {
+        flex: none;
+        min-height: auto;
+    }
+    
+    :deep(.option-content) {
+        flex: none;
+        min-height: auto;
+    }
+    
+    .flex-grow-section {
+        flex: none;
+        min-height: auto;
+    }
+}
+
 .filter-grid::-webkit-scrollbar {
     width: 8px;
 }
@@ -270,7 +279,7 @@ const eventGroups = computed(() => {
     color: #495057;
     padding: 0.5rem 0 0.5rem 0.5rem;
     border-bottom: 1px solid rgba(220, 221, 223, 0.75);
-    border-radius: 0 0 5px 5px;
+    border-radius: 5px 5px 0 0;
     background-color: rgba(235, 235, 240, 1);
 }
 
@@ -290,6 +299,7 @@ const eventGroups = computed(() => {
 
 .filter-item:hover .filter-content {
     filter: brightness(1.05) saturate(1.1);
+    transition: none;
 }
 
 .filter-item:active .filter-content {
@@ -357,6 +367,7 @@ const eventGroups = computed(() => {
     border: 1px solid rgba(0, 0, 0, 0.1);
     border-top-right-radius: 5px;
     border-bottom-right-radius: 5px;
+    transition: all 0.2s ease;
 }
 
 .filter-item--enabled .filter-content {
@@ -366,6 +377,7 @@ const eventGroups = computed(() => {
 .filter-item:not(.filter-item--enabled) .filter-content {
     opacity: 0.5;
     filter: grayscale(0.6);
+    transition: all 0.5s ease;
 }
 
 .filter-item:not(.filter-item--enabled):active .filter-content {

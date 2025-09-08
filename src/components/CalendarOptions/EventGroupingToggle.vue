@@ -1,41 +1,23 @@
 <template>
-    <div class="option-section">
-        <div class="d-flex align-items-center">
-            <h6 class="section-title me-2">Event Grouping</h6>
-            <VTooltip class="d-none d-md-flex align-items-center" placement="top" :delay="{ show: 300, hide: 0 }" distance="8">
-                <Info :size="16" class="text-muted" />
-                <template #popper>
-                    <div class="calendar-options-tooltip-text">
-                        {{ tooltipText }}
-                    </div>
-                </template>
-            </VTooltip>
+    <CollapsibleSection title="Event Grouping" :tooltip-text="tooltipText" storage-key="event-grouping">
+        <div class="form-check form-switch">
+            <input
+                id="groupSimilarEvents"
+                class="form-check-input"
+                type="checkbox"
+                role="switch"
+                :checked="calendarSettings.groupSimilarEvents"
+                @change="handleToggleChange"
+            />
+            <label for="groupSimilarEvents" class="form-check-label">Group similar event bars</label>
         </div>
-
-        <div class="option-content">
-            <div class="form-check form-switch">
-                <input
-                    id="groupSimilarEvents"
-                    class="form-check-input"
-                    type="checkbox"
-                    role="switch"
-                    :checked="calendarSettings.groupSimilarEvents"
-                    @change="handleToggleChange"
-                />
-                <label for="groupSimilarEvents" class="form-check-label">Group similar event bars</label>
-            </div>
-
-            <small class="text-muted d-block mt-1 d-md-none">
-                {{ tooltipText }}
-            </small>
-        </div>
-    </div>
+    </CollapsibleSection>
 </template>
 
 <script setup lang="ts">
-import { Info } from 'lucide-vue-next';
-
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
+
+import CollapsibleSection from './CollapsibleSection.vue';
 
 const calendarSettings = useCalendarSettingsStore();
 

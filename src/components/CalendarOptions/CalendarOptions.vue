@@ -53,30 +53,11 @@ defineEmits<{
 }
 
 .options-content-wrapper {
-    padding: 1rem;
+    /* padding: 0.5rem; */
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 0.5rem;
     height: 100%;
-}
-
-/* Shared option section styles */
-.options-content-wrapper :deep(.option-section) {
-    padding: 0;
-    margin-bottom: 0.75rem;
-}
-
-.options-content-wrapper :deep(.section-title) {
-    font-weight: 600;
-    color: #343a40;
-    font-size: 0.95rem;
-    margin-bottom: 0;
-    line-height: 1;
-}
-
-.options-content-wrapper :deep(.option-content) {
-    padding-left: 1rem;
-    margin-top: 0.5rem;
 }
 
 .flex-grow-section {

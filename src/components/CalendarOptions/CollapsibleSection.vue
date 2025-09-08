@@ -1,0 +1,150 @@
+<template>
+    <div class="option-section collapsible-section">
+        <div
+            class="section-header"
+            @click="toggleCollapsed"
+            role="button"
+            tabindex="0"
+            @keydown.enter="toggleCollapsed"
+            @keydown.space="toggleCollapsed"
+        >
+            <button class="btn btn-icon-ghost btn-sm collapse-toggle" :class="{ collapsed: isCollapsed }" aria-label="Toggle section">
+                <ChevronDown :size="16" class="transition-transform" />
+            </button>
+            <div class="section-title">{{ title }}</div>
+            <VTooltip
+                v-if="tooltipText"
+                class="tooltip-icon d-none d-md-flex align-items-center"
+                placement="top"
+                :delay="{ show: 300, hide: 0 }"
+                distance="8"
+            >
+                <Info :size="13" class="text-muted" />
+                <template #popper>
+                    <div class="calendar-options-tooltip-text">{{ tooltipText }}</div>
+                </template>
+            </VTooltip>
+        </div>
+
+        <Transition name="collapse">
+            <div v-show="!isCollapsed" class="option-content">
+                <small v-if="tooltipText" class="text-muted mb-2 d-block d-md-none">{{ tooltipText }}</small>
+                <slot />
+            </div>
+        </Transition>
+    </div>
+</template>
+
+<script setup lang="ts">
+import { ChevronDown, Info } from 'lucide-vue-next';
+import { ref } from 'vue';
+
+interface Props {
+    title: string;
+    tooltipText?: string;
+    defaultCollapsed?: boolean;
+    storageKey?: string; // For persisting state
+}
+
+const props = withDefaults(defineProps<Props>(), {
+    defaultCollapsed: false,
+});
+
+// Load initial state from localStorage if storageKey is provided
+const getInitialState = () => {
+    if (props.storageKey) {
+        const stored = localStorage.getItem(`collapsible-${props.storageKey}`);
+        return stored ? JSON.parse(stored) : props.defaultCollapsed;
+    }
+    return props.defaultCollapsed;
+};
+
+const isCollapsed = ref(getInitialState());
+
+const toggleCollapsed = () => {
+    isCollapsed.value = !isCollapsed.value;
+
+    // Persist state if storageKey is provided
+    if (props.storageKey) {
+        localStorage.setItem(`collapsible-${props.storageKey}`, JSON.stringify(isCollapsed.value));
+    }
+};
+</script>
+
+<style scoped>
+.collapsible-section {
+    border: none;
+    padding: 0;
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    gap: 0.1rem;
+    padding: 0.3rem 0.1rem;
+    cursor: pointer;
+    background-color: rgba(225, 226, 228, 0.3);
+    border-bottom: 1px solid rgba(233, 236, 239, 0.4);
+    transition: background-color 0.2s ease;
+}
+
+.section-header:hover {
+    background-color: rgba(202, 213, 238, 0.3);
+}
+
+.section-header:focus {
+    outline: 2px solid var(--bs-focus-ring-color);
+    outline-offset: -2px;
+}
+
+.section-title {
+    font-weight: 600;
+    color: #343a40;
+    font-size: 0.9rem;
+    line-height: 1;
+}
+
+.collapse-toggle {
+    padding: 0.25rem;
+    flex-shrink: 0;
+}
+
+.collapse-toggle .transition-transform {
+    transition: transform 0.2s ease;
+}
+
+.collapse-toggle.collapsed .transition-transform {
+    transform: rotate(-90deg);
+}
+
+.tooltip-icon {
+    margin-left: 0.25rem;
+    flex-shrink: 0;
+}
+
+.option-content {
+    padding: 0.5rem;
+    padding-left: 1.7rem;
+}
+
+/* Collapse transition */
+.collapse-enter-active,
+.collapse-leave-active {
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.collapse-enter-from,
+.collapse-leave-to {
+    opacity: 0;
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+.collapse-enter-to,
+.collapse-leave-from {
+    opacity: 1;
+    max-height: 500px; /* Adjust based on your content height */
+}
+</style>
