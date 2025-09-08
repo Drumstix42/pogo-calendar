@@ -1,6 +1,9 @@
 <template>
     <div class="offcanvas-header">
-        <h5 class="offcanvas-title mb-0">Configuration</h5>
+        <h5 class="offcanvas-title mb-0 d-flex align-items-center gap-1">
+            <Settings :size="16" class="flex-grow-0" />
+            Configuration
+        </h5>
         <button class="btn btn-icon-ghost btn-sm" @click="$emit('close')" aria-label="Close options">
             <X :size="16" />
         </button>
@@ -16,14 +19,13 @@
 </template>
 
 <script setup lang="ts">
-import { X } from 'lucide-vue-next';
+import { Settings, X } from 'lucide-vue-next';
 
 import AnimatedImagesToggle from './AnimatedImagesToggle.vue';
 import EventFilterOptions from './EventFilterOptions.vue';
 import EventGroupingToggle from './EventGroupingToggle.vue';
 import FirstDaySelector from './FirstDaySelector.vue';
 
-// Define emits
 defineEmits<{
     close: [];
 }>();

@@ -23,8 +23,9 @@
                     }"
                 >
                     <div
-                        class="multi-day-event-bar"
+                        class="multi-day-event-bar calendar-event"
                         :class="getMultiDayEventBarClass(event, props.dayInstance)"
+                        :data-event-type="event.eventType"
                         :style="{
                             '--event-bg-color': getEventColor(event),
                             backgroundColor: getEventColor(event),
@@ -83,7 +84,7 @@
                     :distance="tooltipOptionsDefaults.distance"
                     :auto-hide="tooltipOptionsDefaults.autoHide"
                 >
-                    <div class="single-day-event">
+                    <div class="single-day-event calendar-event" :data-event-type="event.eventType">
                         <div class="event-dot" :style="{ backgroundColor: getEventColor(event) }"></div>
                         <div class="event-content">
                             <div class="event-name-container">

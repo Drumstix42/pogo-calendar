@@ -23,12 +23,12 @@
         </div>
 
         <button
-            class="btn-options-toggle btn btn-sm focus-ring d-flex align-items-center gap-2 ms-auto"
+            class="btn-options-toggle btn btn-sm focus-ring d-flex align-items-center gap-1 ms-auto"
             :class="{ active: calendarSettings.optionsExpanded }"
             @click="calendarSettings.toggleOptionsExpanded"
         >
-            <span class="config-label flex-grow-1">Config</span>
             <Settings :size="16" class="flex-grow-0" />
+            <span class="config-label flex-grow-1">Config</span>
         </button>
     </div>
 </template>

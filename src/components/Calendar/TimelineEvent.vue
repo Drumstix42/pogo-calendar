@@ -1,6 +1,7 @@
 <template>
     <div
-        class="timeline-event-card"
+        class="timeline-event-card calendar-event"
+        :data-event-type="event.eventType"
         :style="{
             borderColor: eventColor,
             '--event-color-dark': eventColorDark,

@@ -38,7 +38,12 @@
                 <small v-else class="text-muted">{{ eventFilter.enabledCount }} of {{ eventFilter.totalCount }} event types enabled</small>
             </div>
 
-            <div ref="filterGridContainer" class="filter-grid-container" :class="{ 'can-scroll-up': canScrollUp, 'can-scroll-down': canScrollDown }">
+            <div
+                ref="filterGridContainer"
+                class="filter-grid-container"
+                :class="{ 'can-scroll-up': canScrollUp, 'can-scroll-down': canScrollDown }"
+                @mouseleave="clearHighlight"
+            >
                 <div class="filter-grid">
                     <div v-for="group in eventGroups" :key="group.title" class="filter-group">
                         <h6 class="filter-group-title">{{ group.title }}</h6>
@@ -48,6 +53,8 @@
                                 :key="eventTypeKey"
                                 class="filter-item"
                                 :class="{ 'filter-item--enabled': eventFilter.isEventTypeEnabled(eventTypeKey) }"
+                                @mouseenter="highlightEventType(eventTypeKey)"
+                                @mouseleave="clearHighlight"
                             >
                                 <input
                                     :id="`filter-option-${eventTypeKey}`"
@@ -93,6 +100,15 @@ const tooltipText = 'Select which event types to display.';
 const filterGridContainer = ref<HTMLElement>();
 const canScrollUp = ref(false);
 const canScrollDown = ref(false);
+
+// Event type highlighting functions
+const highlightEventType = (eventTypeKey: EventTypeKey) => {
+    document.body.setAttribute('data-filter-hover-event-type', eventTypeKey);
+};
+
+const clearHighlight = () => {
+    document.body.removeAttribute('data-filter-hover-event-type');
+};
 
 // Check scroll position and update shadow hints
 const checkScrollPosition = () => {
