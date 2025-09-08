@@ -1,20 +1,25 @@
 <template>
     <div class="event-tooltip">
-        <div class="event-tooltip-type">{{ getEventTypeName(event) }}</div>
+        <div
+            class="event-tooltip-type"
+            :style="{
+                backgroundColor: getEventColor(event),
+                borderLeftColor: `color-mix(in srgb, ${getEventColor(event)} 70%, black)`,
+            }"
+        >
+            {{ getEventTypeName(event) }}
+        </div>
 
         <!-- Show individual events if grouped -->
         <div v-if="(event as any)._isGrouped" class="grouped-events">
-            <div class="event-separator"></div>
-            <div
-                v-for="groupedEvent in getGroupedEvents(event)"
-                :key="groupedEvent.eventID"
-                class="event-time-info"
-                :style="{
-                    backgroundColor: getEventColor(groupedEvent),
-                    borderLeftColor: `color-mix(in srgb, ${getEventColor(groupedEvent)} 70%, black)`,
-                }"
-            >
+            <div v-for="groupedEvent in getGroupedEvents(event)" :key="groupedEvent.eventID" class="event-time-info">
                 <div class="event-content">
+                    <!-- Event text content -->
+                    <div class="event-text">
+                        <div class="grouped-event-name">{{ groupedEvent.name }}</div>
+                        <div class="grouped-event-time">{{ formatEventDuration(groupedEvent) }}</div>
+                    </div>
+
                     <!-- Pokemon images -->
                     <PokemonImages
                         :event="groupedEvent"
@@ -22,35 +27,22 @@
                         :height="50"
                         :use-animated="calendarSettings.useAnimatedImages"
                     />
-
-                    <!-- Event text content -->
-                    <div class="event-text">
-                        <div class="grouped-event-name">{{ groupedEvent.name }}</div>
-                        <div class="grouped-event-time">{{ formatEventDuration(groupedEvent) }}</div>
-                    </div>
                 </div>
             </div>
         </div>
 
         <!-- Show time for single events -->
         <div v-else>
-            <div class="event-separator"></div>
-            <div
-                class="event-time-info"
-                :style="{
-                    backgroundColor: getEventColor(event),
-                    borderLeftColor: `color-mix(in srgb, ${getEventColor(event)} 70%, black)`,
-                }"
-            >
+            <div class="event-time-info">
                 <div class="event-content">
-                    <!-- Pokemon images -->
-                    <PokemonImages :event="event" :event-name="event.name" :height="50" :use-animated="calendarSettings.useAnimatedImages" />
-
                     <!-- Event text content -->
                     <div class="event-text">
                         <div class="grouped-event-name">{{ event.name }}</div>
                         <div :class="isSingleDay ? 'single-event-time' : 'grouped-event-time'">{{ formatEventDuration(event) }}</div>
                     </div>
+
+                    <!-- Pokemon images -->
+                    <PokemonImages :event="event" :event-name="event.name" :height="60" :use-animated="calendarSettings.useAnimatedImages" />
                 </div>
             </div>
         </div>
@@ -89,7 +81,8 @@ const formatEventDuration = (event: PogoEvent): string => {
     const endTime = formatEventTime(event.end);
 
     if (isSameDayEvent(event)) {
-        return `${startTime} - ${endTime}`;
+        const eventDate = parseEventDate(event.start).format('MMM D');
+        return `${eventDate}, ${startTime} - ${endTime}`;
     } else {
         // For multi-day events, show date and time range
         const startDate = parseEventDate(event.start).format('MMM D');
@@ -102,48 +95,40 @@ const formatEventDuration = (event: PogoEvent): string => {
 
 <style scoped>
 .event-tooltip {
-    max-width: 330px;
-    padding: 0.4rem;
+    max-width: 340px;
+    padding: 0rem;
 }
 
 .event-tooltip-type {
     font-size: 0.8rem;
     line-height: 1.2;
     font-weight: 600;
-    color: color-mix(in srgb, var(--bs-body-color) 80%, transparent);
+    color: #ffffff;
     margin-bottom: 0.25rem;
+    padding: 0.4rem 0.6rem 0.4rem 0.5rem;
+    border-radius: 4px;
+    border-left: 3px solid;
+    text-shadow: 1px 2px 2px rgba(0, 0, 0, 0.3);
 }
 
 .event-time-info {
     margin-bottom: 0.4rem;
     padding: 0.4rem 0.6rem 0.4rem 0.5rem;
     border-radius: 4px;
-    border-left: 3px solid;
 }
 
 .event-content {
     display: flex;
-    align-items: center;
+    flex-direction: column;
     gap: 0.6rem;
 }
 
-.event-content :deep(.pokemon-images) {
-    max-width: 150px; /* Force wrapping in constrained tooltip space */
-}
-
 .event-text {
-    flex: 1;
-    min-width: 0; /* Allow text to shrink */
+    width: 100%;
 }
 
 .event-time-info:last-child {
     margin-bottom: 0;
-}
-
-.event-separator {
-    height: 1px;
-    background-color: color-mix(in srgb, var(--bs-body-color) 40%, transparent);
-    margin-bottom: 0.5rem;
 }
 
 .grouped-events {
@@ -154,21 +139,19 @@ const formatEventDuration = (event: PogoEvent): string => {
     font-size: 0.75rem;
     font-weight: 400;
     line-height: 1.3;
-    color: #ffffff;
+    color: color-mix(in srgb, var(--bs-body-color) 90%, transparent);
     margin-bottom: 0.15rem;
 }
 
 .grouped-event-time {
     font-size: 0.8rem;
-    color: #e5e5e5;
-    font-weight: 500;
-    text-shadow: 1px 2px 2px rgba(0, 0, 0, 0.3);
+    color: color-mix(in srgb, var(--bs-body-color) 70%, transparent);
+    font-weight: 600;
 }
 
 .single-event-time {
     font-size: 0.8rem;
-    color: #e5e5e5;
-    font-weight: 500;
-    text-shadow: 1px 2px 2px rgba(0, 0, 0, 0.3);
+    color: color-mix(in srgb, var(--bs-body-color) 70%, transparent);
+    font-weight: 600;
 }
 </style>

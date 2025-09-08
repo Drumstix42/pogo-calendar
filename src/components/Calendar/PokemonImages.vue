@@ -91,10 +91,10 @@ const handleImageError = (event: Event): void => {
     top: 0;
     left: 0;
     right: 0;
-    bottom: 0;
+    /* bottom: 0; */
     z-index: 0;
-    scale: 1.2;
-    opacity: 0.75;
+    scale: 1.1;
+    opacity: 0.8;
 }
 
 .dynamax-clouds,
