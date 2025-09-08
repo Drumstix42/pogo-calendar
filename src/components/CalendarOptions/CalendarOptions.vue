@@ -1,7 +1,7 @@
 <template>
     <div class="calendar-options">
         <div class="options-header">
-            <h5 class="mb-0">Calendar Options</h5>
+            <h5 class="mb-0">Configuration</h5>
             <button class="btn btn-icon-ghost btn-sm close-btn" @click="$emit('close')" aria-label="Close options">
                 <X :size="16" />
             </button>

@@ -28,7 +28,7 @@
             @click="calendarSettings.toggleOptionsExpanded"
         >
             <Settings :size="16" class="flex-grow-0" />
-            <span class="flex-grow-1">Options</span>
+            <span class="flex-grow-1">Config</span>
             <ChevronDown :size="14" class="icon-rotate" :class="{ 'rotate-180': calendarSettings.optionsExpanded }" />
         </button>
     </div>

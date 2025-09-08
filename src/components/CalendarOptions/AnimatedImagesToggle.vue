@@ -1,7 +1,13 @@
 <template>
     <div class="animated-images-toggle">
-        <div class="d-flex justify-content-between align-items-center mb-2">
-            <h6 class="mb-0">Animated Images</h6>
+        <div class="d-flex align-items-center mb-2">
+            <h6 class="mb-0 me-2">Animated Images</h6>
+            <VTooltip class="d-none d-md-flex align-items-center" placement="top" :delay="{ show: 300, hide: 0 }" distance="8">
+                <Info :size="16" class="text-muted" />
+                <template #popper>
+                    <div class="calendar-options-tooltip-text">When enabled, animated Pokémon sprites will be used in detailed views.</div>
+                </template>
+            </VTooltip>
         </div>
 
         <div class="form-check form-switch">
@@ -16,11 +22,13 @@
             <label for="useAnimatedImages" class="form-check-label">Use animated Pokémon images</label>
         </div>
 
-        <small class="text-muted d-block mt-1"> When enabled, animated Pokémon sprites will be used in detailed views. </small>
+        <small class="text-muted d-block mt-1 d-md-none"> When enabled, animated Pokémon sprites will be used in detailed views. </small>
     </div>
 </template>
 
 <script setup lang="ts">
+import { Info } from 'lucide-vue-next';
+
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 
 const calendarSettings = useCalendarSettingsStore();

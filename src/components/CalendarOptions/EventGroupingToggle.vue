@@ -1,7 +1,15 @@
 <template>
     <div class="event-grouping-toggle">
-        <div class="d-flex justify-content-between align-items-center mb-2">
-            <h6 class="mb-0">Event Grouping</h6>
+        <div class="d-flex align-items-center mb-2">
+            <h6 class="mb-0 me-2">Event Grouping</h6>
+            <VTooltip class="d-none d-md-flex align-items-center" placement="top" :delay="{ show: 300, hide: 0 }" distance="8">
+                <Info :size="16" class="text-muted" />
+                <template #popper>
+                    <div class="calendar-options-tooltip-text">
+                        When enabled, events with identical type and start/times will be grouped into a single bar with a count badge.
+                    </div>
+                </template>
+            </VTooltip>
         </div>
 
         <div class="form-check form-switch">
@@ -16,13 +24,15 @@
             <label for="groupSimilarEvents" class="form-check-label">Group similar event bars</label>
         </div>
 
-        <small class="text-muted d-block mt-1">
+        <small class="text-muted d-block mt-1 d-md-none">
             When enabled, events with identical type and start/times will be grouped into a single bar with a count badge.
         </small>
     </div>
 </template>
 
 <script setup lang="ts">
+import { Info } from 'lucide-vue-next';
+
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 
 const calendarSettings = useCalendarSettingsStore();

@@ -1,8 +1,16 @@
 <template>
     <div class="event-filter-options">
         <div class="mb-2">
-            <h6 class="mb-0">Event Type Filters</h6>
-            <small class="text-muted d-block">Select which event types to display.</small>
+            <div class="d-flex align-items-center">
+                <h6 class="mb-0 me-2">Event Type Filters</h6>
+                <VTooltip class="d-none d-md-flex align-items-center" placement="top" :delay="{ show: 300, hide: 0 }" distance="8">
+                    <Info :size="16" class="text-muted" />
+                    <template #popper>
+                        <div class="calendar-options-tooltip-text">Select which event types to display.</div>
+                    </template>
+                </VTooltip>
+            </div>
+            <small class="text-muted d-block d-md-none">Select which event types to display.</small>
         </div>
 
         <div class="filter-stats mb-2">
@@ -68,7 +76,7 @@
     </div>
 </template>
 <script setup lang="ts">
-import { Check } from 'lucide-vue-next';
+import { Check, Info } from 'lucide-vue-next';
 import { computed, nextTick, onMounted, ref } from 'vue';
 
 import { useEventFilterStore } from '@/stores/eventFilter';
