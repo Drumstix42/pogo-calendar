@@ -136,6 +136,17 @@ h6 {
 
 /* Event Filter Hover Highlighting */
 /* Event Filter Hover Highlighting */
+
+/* Keyframes for letter spacing pulse animation */
+@keyframes letter-spacing-pulse {
+    from {
+        letter-spacing: 0.1px;
+    }
+    to {
+        letter-spacing: 0.4px;
+    }
+}
+
 $event-types: (
     'bonus-hour',
     'city-safari',
@@ -178,7 +189,7 @@ body {
         transition: all 0.1s ease !important;
 
         .event-name {
-            transition: all 0.1s ease !important;
+            transition: all 0.5s ease !important;
         }
     }
 
@@ -193,9 +204,9 @@ body {
 
                 .event-name {
                     font-weight: 600;
-                    letter-spacing: 0.5px;
-
+                    animation: letter-spacing-pulse 0.8s ease-out infinite alternate;
                     transition: all 0.5s ease !important;
+                    letter-spacing: 0.1px;
                 }
 
                 &.multi-day-event-bar .event-name {

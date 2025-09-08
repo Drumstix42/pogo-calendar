@@ -467,6 +467,7 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     min-width: 0;
     overflow: visible;
     position: relative;
+    transition: min-height 0.3s ease;
     /* Remove padding to allow precise event positioning */
 }
 
@@ -510,6 +511,7 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     z-index: 1;
     overflow: visible;
     pointer-events: none; /* Allow events to pass through the container */
+    transition: height 0.3s ease;
 }
 
 .multi-day-event-bar {
