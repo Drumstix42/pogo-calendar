@@ -230,17 +230,17 @@ const eventGroups = computed(() => {
         overflow-y: visible;
         padding-right: 0;
     }
-    
+
     .filter-grid-container {
         flex: none;
         min-height: auto;
     }
-    
+
     :deep(.option-content) {
         flex: none;
         min-height: auto;
     }
-    
+
     .flex-grow-section {
         flex: none;
         min-height: auto;
