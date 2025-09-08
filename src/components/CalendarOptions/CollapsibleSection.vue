@@ -37,36 +37,33 @@
 
 <script setup lang="ts">
 import { ChevronDown, Info } from 'lucide-vue-next';
-import { ref } from 'vue';
+import { computed } from 'vue';
+
+import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 
 interface Props {
     title: string;
     tooltipText?: string;
     defaultCollapsed?: boolean;
-    storageKey?: string; // For persisting state
+    storageKey?: string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
     defaultCollapsed: false,
 });
 
-// Load initial state from localStorage if storageKey is provided
-const getInitialState = () => {
-    if (props.storageKey) {
-        const stored = localStorage.getItem(`collapsible-${props.storageKey}`);
-        return stored ? JSON.parse(stored) : props.defaultCollapsed;
-    }
-    return props.defaultCollapsed;
-};
+const calendarSettings = useCalendarSettingsStore();
 
-const isCollapsed = ref(getInitialState());
+const isCollapsed = computed(() => {
+    if (!props.storageKey) {
+        return props.defaultCollapsed;
+    }
+    return calendarSettings.isCollapsibleSectionCollapsed(props.storageKey, props.defaultCollapsed);
+});
 
 const toggleCollapsed = () => {
-    isCollapsed.value = !isCollapsed.value;
-
-    // Persist state if storageKey is provided
     if (props.storageKey) {
-        localStorage.setItem(`collapsible-${props.storageKey}`, JSON.stringify(isCollapsed.value));
+        calendarSettings.toggleCollapsibleSection(props.storageKey, props.defaultCollapsed);
     }
 };
 </script>

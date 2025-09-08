@@ -19,7 +19,9 @@ export const useCalendarSettingsStore = defineStore('calendarSettings', () => {
     // Animated images setting - whether to use animated images in detailed views
     const useAnimatedImages = useLocalStorage<boolean>(STORAGE_KEYS.USE_ANIMATED_IMAGES, true);
 
-    // Options panel expanded state (not persisted)
+    // Collapsible sections state (keyed by section identifier)
+    const collapsibleSections = useLocalStorage<Record<string, boolean>>(STORAGE_KEYS.COLLAPSIBLE_SECTIONS, {});
+
     const optionsExpanded = ref<boolean>(false);
 
     // Day name constants
@@ -71,6 +73,19 @@ export const useCalendarSettingsStore = defineStore('calendarSettings', () => {
         optionsExpanded.value = expanded;
     };
 
+    const isCollapsibleSectionCollapsed = (key: string, defaultValue = false): boolean => {
+        return collapsibleSections.value[key] ?? defaultValue;
+    };
+
+    const setCollapsibleSection = (key: string, collapsed: boolean) => {
+        collapsibleSections.value[key] = collapsed;
+    };
+
+    const toggleCollapsibleSection = (key: string, defaultValue = false) => {
+        const currentValue = isCollapsibleSectionCollapsed(key, defaultValue);
+        setCollapsibleSection(key, !currentValue);
+    };
+
     return {
         // State
         firstDayOfWeek,
@@ -90,5 +105,8 @@ export const useCalendarSettingsStore = defineStore('calendarSettings', () => {
         setUseAnimatedImages,
         toggleOptionsExpanded,
         setOptionsExpanded,
+        isCollapsibleSectionCollapsed,
+        setCollapsibleSection,
+        toggleCollapsibleSection,
     };
 });
