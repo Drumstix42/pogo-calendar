@@ -6,6 +6,9 @@
             today: isToday,
         }"
     >
+        <!-- border overlay -->
+        <div v-if="showRightBorder" class="calendar-day-border-overlay"></div>
+
         <div class="day-number">{{ date }}</div>
 
         <!-- Multi-day events (day-spanning bars) -->
@@ -145,6 +148,7 @@ interface Props {
     isCurrentMonth: boolean;
     isToday: boolean;
     dayInstance: Dayjs;
+    showRightBorder: boolean;
     eventSlots: Array<{
         event: PogoEvent;
         slotIndex: number;
@@ -469,7 +473,6 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     overflow: visible;
     position: relative;
     transition: min-height 0.3s ease;
-    /* Remove padding to allow precise event positioning */
 }
 
 .calendar-day:nth-child(7n) {
@@ -840,5 +843,17 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     min-width: 14px;
     height: 14px;
     padding: 0 3px;
+}
+
+.calendar-day-border-overlay {
+    display: block;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: -1px;
+    width: 1px;
+    background-color: rgba(200, 200, 200, 0.1);
+    pointer-events: none;
+    z-index: 2;
 }
 </style>

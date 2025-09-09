@@ -12,7 +12,7 @@
             <!-- Calendar Days -->
             <div class="calendar-days">
                 <CalendarDay
-                    v-for="day in calendarDays"
+                    v-for="(day, index) in calendarDays"
                     :key="`${day.month}-${day.date}`"
                     :date="day.date"
                     :month="day.month"
@@ -21,6 +21,7 @@
                     :is-today="day.isToday"
                     :day-instance="day.dayInstance"
                     :event-slots="eventSlots"
+                    :show-right-border="(index + 1) % 7 !== 0"
                 />
             </div>
         </div>
@@ -337,6 +338,7 @@ const hasConflictInSlot = (event: PogoEvent, slotIndex: number, existingSlots: E
 
 <style scoped>
 .calendar-grid-container {
+    position: relative;
     background: white;
     border: 1px solid #dee2e6;
     border-radius: 0.375rem;
@@ -360,12 +362,12 @@ const hasConflictInSlot = (event: PogoEvent, slotIndex: number, existingSlots: E
     font-weight: 600;
     font-size: 0.875rem;
     color: #495057;
-    /* border-right: 1px solid #dee2e6; */
+    border-right: 1px solid #dee2e6;
 }
 
-/* .calendar-day-header:nth-child(7n) {
+.calendar-day-header:nth-child(7n) {
     border-right: none;
-} */
+}
 
 .calendar-days {
     display: grid;
