@@ -21,4 +21,11 @@ export default defineConfig({
     optimizeDeps: {
         include: ['vue', 'vue-router', 'lucide-vue-next', 'pinia'],
     },
+    css: {
+        preprocessorOptions: {
+            scss: {
+                silenceDeprecations: ['color-functions', 'global-builtin', 'import'],
+            },
+        },
+    },
 });

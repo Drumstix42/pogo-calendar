@@ -6,50 +6,12 @@ body {
     min-width: 320px;
 }
 
-/* Use border-box sizing for consistent and predictable layout calculations */
-*,
-*::before,
-*::after {
-    box-sizing: border-box;
-}
-
-:root,
-/* Light theme */
-[data-bs-theme='light'] {
-    /* Overrides */
-    --bs-body-bg: #f8f9fa;
-    --bs-tertiary-bg: #e9ecef;
-    --bs-tertiary-bg-rgb: 233, 236, 239;
-
-    --bs-focus-ring-color: rgba(var(--bs-body-color-rgb), 0.15);
-}
-
-/* Dark theme */
-[data-bs-theme='dark'] {
-    /* Overrides */
-    --bs-body-bg: #343a40;
-
-    /* defaults */
-    --bs-tertiary-bg: #2b3035;
-    --bs-tertiary-bg-rgb: 43, 48, 53;
-}
+/* Note: Bootstrap 5 includes box-sizing: border-box reset in reboot.scss */
 
 body {
     background-color: var(--bs-body-bg);
     margin: 0;
-    font-family:
-        'Inter',
-        -apple-system,
-        BlinkMacSystemFont,
-        'Segoe UI',
-        'Roboto',
-        'Oxygen',
-        'Ubuntu',
-        'Cantarell',
-        'Fira Sans',
-        'Droid Sans',
-        'Helvetica Neue',
-        sans-serif;
+    /* Font family now defined in Bootstrap customization */
     font-optical-sizing: auto;
     font-variation-settings: 'slnt' 0;
     -webkit-font-smoothing: antialiased;
@@ -57,13 +19,13 @@ body {
 }
 
 /* Typography improvements */
+/* Note: Font family is set in Bootstrap customization */
 h1,
 h2,
 h3,
 h4,
 h5,
 h6 {
-    font-family: 'Inter', sans-serif;
     font-weight: 600;
     line-height: 1.2;
 }
@@ -73,7 +35,6 @@ h6 {
 }
 
 .navbar-brand {
-    font-family: 'Inter', sans-serif;
     font-weight: 700;
 }
 
@@ -107,9 +68,12 @@ h6 {
 }
 
 .btn-icon-ghost:hover:not(:disabled),
-.btn-icon-ghost:focus:not(:disabled) {
-    background-color: var(--bs-secondary-bg, rgba(108, 117, 125, 0.1));
+.btn-icon-ghost:active:not(:disabled) {
+    background-color: rgba(233, 236, 239, 1);
     color: var(--bs-body-color);
+}
+.btn-icon-ghost:active:not(:disabled) {
+    background-color: rgba(219, 222, 224, 1);
 }
 
 .btn-icon-ghost:disabled {

@@ -12,7 +12,8 @@ export default {
 
     // Import sorting configuration
     importOrder: [
-        // `<THIRD_PARTY_MODULES>` is implicity and first by default
+        '^./styles/bootstrap-custom.scss$', // Specific style import first
+        `<THIRD_PARTY_MODULES>`, // this is first by default, can be commented out if already first
         '^(@/|[./])(?!.*\\.vue$)', // Local non-component imports (@ alias or relative paths excluding .vue)
         '(@/.*|.*)\\.vue$', // Local component imports (.vue files with @ alias or relative paths)
     ],

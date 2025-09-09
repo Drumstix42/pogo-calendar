@@ -1,0 +1,98 @@
+// Import Bootstrap functions first (required for variable customization)
+@import 'bootstrap/scss/functions';
+
+// Variable overrides should come before importing Bootstrap's variables
+// to ensure your custom values are used throughout Bootstrap
+
+/* $secondary: #e9ecef; */
+
+$font-family-sans-serif:
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    'Roboto',
+    'Oxygen',
+    'Ubuntu',
+    'Cantarell',
+    'Fira Sans',
+    'Droid Sans',
+    'Helvetica Neue',
+    sans-serif;
+
+// Bootstrap's variables
+@import 'bootstrap/scss/variables';
+@import 'bootstrap/scss/variables-dark';
+
+// Mixins, etc
+@import 'bootstrap/scss/maps';
+@import 'bootstrap/scss/mixins';
+@import 'bootstrap/scss/utilities';
+
+// Components (add/remove as needed)
+@import 'bootstrap/scss/root'; // creates all the :root --bs-* variables!
+@import 'bootstrap/scss/reboot';
+@import 'bootstrap/scss/type';
+@import 'bootstrap/scss/images';
+@import 'bootstrap/scss/containers';
+@import 'bootstrap/scss/grid';
+@import 'bootstrap/scss/tables';
+@import 'bootstrap/scss/forms';
+@import 'bootstrap/scss/buttons';
+@import 'bootstrap/scss/transitions';
+@import 'bootstrap/scss/dropdown';
+@import 'bootstrap/scss/button-group';
+@import 'bootstrap/scss/nav';
+@import 'bootstrap/scss/navbar';
+@import 'bootstrap/scss/card';
+@import 'bootstrap/scss/accordion';
+@import 'bootstrap/scss/breadcrumb';
+@import 'bootstrap/scss/pagination';
+@import 'bootstrap/scss/badge';
+@import 'bootstrap/scss/alert';
+@import 'bootstrap/scss/progress';
+@import 'bootstrap/scss/list-group';
+@import 'bootstrap/scss/close';
+@import 'bootstrap/scss/toasts';
+@import 'bootstrap/scss/modal';
+@import 'bootstrap/scss/tooltip';
+@import 'bootstrap/scss/popover';
+@import 'bootstrap/scss/carousel';
+@import 'bootstrap/scss/spinners';
+@import 'bootstrap/scss/offcanvas';
+@import 'bootstrap/scss/placeholders';
+
+// Helpers
+@import 'bootstrap/scss/helpers';
+
+// Utilities
+@import 'bootstrap/scss/utilities/api';
+
+// Custom CSS variables
+:root {
+    --example-cell-size: 120px;
+}
+
+// Theme overrides
+:root,
+[data-bs-theme='light'] {
+    // Light theme overrides
+    --bs-body-bg: #f8f9fa;
+    --bs-tertiary-bg: #e9ecef;
+    --bs-tertiary-bg-rgb: 233, 236, 239;
+    --bs-focus-ring-color: rgba(var(--bs-body-color-rgb), 0.15);
+}
+
+[data-bs-theme='dark'] {
+    // Dark theme overrides
+    --bs-body-bg: #343a40;
+    --bs-tertiary-bg: #2b3035;
+    --bs-tertiary-bg-rgb: 43, 48, 53;
+}
+
+// Responsive overrides for custom variables
+@include media-breakpoint-down(md) {
+    :root {
+        --example-cell-size: 100px;
+    }
+}

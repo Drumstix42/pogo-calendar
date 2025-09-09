@@ -1,4 +1,5 @@
-import 'bootstrap/dist/css/bootstrap.min.css';
+import './styles/bootstrap-custom.scss';
+
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import FloatingVue from 'floating-vue';
 import 'floating-vue/dist/style.css';
