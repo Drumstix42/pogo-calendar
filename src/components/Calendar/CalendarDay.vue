@@ -97,7 +97,7 @@
                                 </div>
                             </div>
                             <div v-if="getEventTime(event)" class="event-time">{{ getEventTime(event) }}</div>
-                            <PokemonImages :event="event" :event-name="getEventDisplayName(event)" :height="40" />
+                            <PokemonImages :event="event" :event-name="getEventDisplayName(event)" :height="40" :show-placeholder="true" />
                         </div>
                     </div>
 

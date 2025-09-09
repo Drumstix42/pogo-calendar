@@ -43,7 +43,13 @@
                     </div>
 
                     <!-- Pokemon images -->
-                    <PokemonImages :event="event" :event-name="event.name" :height="60" :use-animated="calendarSettings.useAnimatedImages" />
+                    <PokemonImages
+                        :event="event"
+                        :event-name="event.name"
+                        :height="60"
+                        :use-animated="calendarSettings.useAnimatedImages"
+                        :show-placeholder="isSingleDay"
+                    />
                 </div>
             </div>
         </div>
