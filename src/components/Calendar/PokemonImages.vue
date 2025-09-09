@@ -1,7 +1,7 @@
 <template>
-    <div v-if="pokemonImages.length > 0 || shouldShowPlaceholder" class="pokemon-images" :class="{ 'wrap-multiple': pokemonImages.length >= 3 }">
+    <div v-if="displayedImages.length > 0 || shouldShowPlaceholder" class="pokemon-images" :class="{ 'wrap-multiple': displayedImages.length >= 3 }">
         <div
-            v-for="(imageUrl, index) in pokemonImages"
+            v-for="(imageUrl, index) in displayedImages"
             :key="`pokemon-${eventId}-${index}`"
             class="pokemon-container"
             :class="{
@@ -23,6 +23,9 @@
                 @error="handleImageError"
             />
         </div>
+
+        <!-- More indicator when there are additional images beyond the limit -->
+        <span v-if="shouldShowMoreIndicator" class="pokemon-more-indicator">+</span>
 
         <div
             v-if="shouldShowPlaceholder"
@@ -56,15 +59,28 @@ interface Props {
     height?: number;
     useAnimated?: boolean;
     showPlaceholder?: boolean;
+    limit?: number;
 }
 
 const props = withDefaults(defineProps<Props>(), {
     height: 18, // Default to medium size (18px)
     useAnimated: false,
     showPlaceholder: false,
+    limit: undefined,
 });
 
 const pokemonImages = computed(() => getEventPokemonImages(props.event, { useAnimated: props.useAnimated }));
+
+const displayedImages = computed(() => {
+    if (props.limit === undefined || props.limit <= 0) {
+        return pokemonImages.value;
+    }
+    return pokemonImages.value.slice(0, props.limit);
+});
+
+const shouldShowMoreIndicator = computed(() => {
+    return props.limit !== undefined && props.limit > 0 && pokemonImages.value.length > props.limit;
+});
 
 const shouldShowPlaceholder = computed(() => {
     if (!props.showPlaceholder) return false;
@@ -95,6 +111,19 @@ const handleImageError = (event: Event): void => {
 
 .pokemon-images.wrap-multiple {
     flex-wrap: wrap;
+}
+
+.pokemon-more-indicator {
+    display: inline-flex;
+    align-items: center;
+    justify-content: start;
+    height: 16px;
+    color: rgba(230, 230, 230, 0.9);
+    font-size: 0.7rem;
+    font-weight: 800;
+    line-height: 1;
+    flex-shrink: 0;
+    margin-right: 0.1rem;
 }
 
 .pokemon-container {

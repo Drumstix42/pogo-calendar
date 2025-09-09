@@ -16,7 +16,7 @@
             </Teleport>
 
             <!-- Desktop: Calendar Grid Component -->
-            <div v-if="isDesktop" class="row">
+            <div xv-if="isDesktop" class="row">
                 <div class="col-12">
                     <CalendarGrid />
                 </div>
@@ -50,7 +50,7 @@ const calendarSettings = useCalendarSettingsStore();
 // responsive breakpoints https://getbootstrap.com/docs/5.0/layout/breakpoints/#available-breakpoints
 const breakpoints = useBreakpoints(breakpointsBootstrapV5);
 const isMobile = breakpoints.smaller('md'); // < 768px
-const isDesktop = breakpoints.greaterOrEqual('md'); // >= 768px
+// const isDesktop = breakpoints.greaterOrEqual('md'); // >= 768px
 
 const handleCloseOptions = () => {
     calendarSettings.setOptionsExpanded(false);
@@ -85,6 +85,19 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+.calendar {
+    .container {
+        max-width: 1300px;
+        padding-right: calc(var(--bs-gutter-x) * 0.5);
+        padding-left: calc(var(--bs-gutter-x) * 0.5);
+
+        @media (min-width: 576px) {
+            padding-right: calc(var(--bs-gutter-x) * 1);
+            padding-left: calc(var(--bs-gutter-x) * 1);
+        }
+    }
+}
+
 .offcanvas-fade-enter-active,
 .offcanvas-fade-leave-active {
     transition: all 0.3s ease-in-out;
@@ -144,9 +157,9 @@ onUnmounted(() => {
     transform: translateX(100%);
 }
 
-/* Mobile: full width */
 @media (max-width: 575.98px) {
     .calendar-options-offcanvas {
+        /* Mobile: full width */
         max-width: 100vw;
     }
 }

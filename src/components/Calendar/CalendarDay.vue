@@ -50,12 +50,9 @@
                         >
                             <div class="multi-day-event-bar--inner">
                                 <!-- Show Pokemon images for grouped or individual events -->
-                                <div v-if="calendarSettings.groupSimilarEvents && hasGroupedEvents(event)" class="d-flex align-items-center">
-                                    <template v-for="groupedEvent in getGroupedEvents(event, { limit: 2 })" :key="groupedEvent.eventID">
-                                        <PokemonImages :event="groupedEvent" :event-name="groupedEvent.name" :height="MULTI_DAY_EVENT_ICON_HEIGHT" />
-                                    </template>
-                                    <span v-if="getGroupedEventsCount(event) > 2" class="pokemon-more-indicator">+</span>
-                                </div>
+                                <template v-if="calendarSettings.groupSimilarEvents && hasGroupedEvents(event)">
+                                    <PokemonImages :event="event" :event-name="event.name" :height="MULTI_DAY_EVENT_ICON_HEIGHT" :limit="2" />
+                                </template>
                                 <template v-else>
                                     <PokemonImages :event="event" :event-name="getEventDisplayName(event)" :height="MULTI_DAY_EVENT_ICON_HEIGHT" />
                                 </template>
@@ -129,7 +126,6 @@ import {
     getCalendarEventsForDate,
     getEventTypeInfo,
     getEventsForDate,
-    getGroupedEvents,
     getGroupedEventsCount,
     hasGroupedEvents,
     isSameDayEvent,
@@ -465,7 +461,7 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
 
 <style scoped>
 .calendar-day {
-    min-height: 140px;
+    min-height: 50px;
     border-right: 1px solid #e9ecef;
     border-bottom: 1px solid #e9ecef;
     background: white;
@@ -499,11 +495,11 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 24px;
-    height: 24px;
+    width: 23px;
+    height: 23px;
     border-radius: 50%;
     font-size: 0.875rem;
-    margin: 0.4rem 0 0.4rem 0.4rem;
+    margin: 2px 0 2px 2px;
 }
 
 /* Multi-day events (background layer) */
@@ -532,7 +528,7 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     height: 100%;
     min-width: 0;
     margin-bottom: 1px;
-    overflow: visible;
+    overflow: hidden;
     position: relative;
     box-sizing: border-box; /* Use border-box for predictable sizing */
     pointer-events: auto; /* Ensure bars are interactive */
@@ -547,14 +543,14 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     align-items: center;
     width: 100%;
     height: 100%;
-    padding-left: 6px;
+    padding-left: 4px;
     padding-right: 2px;
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    gap: 5px;
+    gap: 4px;
 }
 
 .multi-day-event-bar .event-name {
@@ -563,6 +559,7 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     white-space: nowrap;
     font-weight: 500;
     line-height: 1;
+    min-width: 28px;
 }
 
 .multi-day-event-bar .v-popper--theme-tooltip,
@@ -575,17 +572,17 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 16px;
-    height: 16px;
+    flex-shrink: 1;
+    min-width: 15px;
+    height: 15px;
     padding: 0 4px;
-    background-color: rgba(255, 255, 255, 0.25);
-    color: rgba(255, 255, 255, 0.9);
-    border-radius: 8px;
+    margin-left: -2px;
     font-size: 0.65rem;
     font-weight: 500;
-    line-height: 16px;
-    flex-shrink: 0;
-    backdrop-filter: blur(2px);
+    line-height: 15px;
+    border-radius: 50%;
+    color: rgba(255, 255, 255, 0.9);
+    background-color: rgba(255, 255, 255, 0.25);
 }
 
 /* Hide toggle button by default */
@@ -598,23 +595,6 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
 .single-day-event:hover :deep(.event-toggle-button),
 .multi-day-event-bar:hover :deep(.event-toggle-button) {
     display: inline-flex;
-}
-
-.pokemon-more-indicator {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 8px;
-    height: 16px;
-    /* background-color: rgba(255, 255, 255, 0.3); */
-    /* color: rgba(255, 255, 255, 0.9); */
-    color: rgba(255, 255, 255, 0.9);
-    border-radius: 50%;
-    font-size: 0.7rem;
-    font-weight: 500;
-    line-height: 1;
-    flex-shrink: 0;
-    backdrop-filter: blur(2px);
 }
 
 /* Multi-day event bar cap styles */
@@ -757,7 +737,7 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     z-index: 2;
     display: flex;
     flex-direction: column;
-    min-height: 28px; /* leave empty space below multi-day events, for better perceived margin before next visible week */
+    min-height: 10px; /* leave empty space below multi-day events, for better perceived margin before next visible week */
     gap: 3px;
     margin: 0.25rem 0.1rem 0.5rem 0.1rem; /* Add margin to replace padding */
     position: relative;
@@ -793,11 +773,18 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     flex-direction: column;
     min-width: 0;
     flex: 1;
+    max-height: 130px;
     /* overflow: hidden; */
 }
 
 .event-content :deep(.pokemon-images) {
-    margin-left: -6px;
+    margin-left: -14px;
+}
+
+@media (min-width: 768px) {
+    .event-content :deep(.pokemon-images) {
+        margin-left: -6px;
+    }
 }
 
 .single-day-event .event-name {
@@ -814,6 +801,7 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
 }
 
 .single-day-event .event-time {
+    flex-shrink: 0;
     font-size: 0.7rem;
     font-weight: 600;
     color: #444;
@@ -852,7 +840,7 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     bottom: 0;
     right: -1px;
     width: 1px;
-    background-color: rgba(200, 200, 200, 0.1);
+    background-color: rgba(200, 200, 200, 0.12);
     pointer-events: none;
     z-index: 2;
 }
