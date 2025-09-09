@@ -30,6 +30,7 @@
                 </Transition>
             </div>
         </div>
+        <div class="footnote">Note: some animated sprites may not be available.</div>
     </CollapsibleSection>
 </template>
 
@@ -166,6 +167,12 @@ const toggleSetting = () => {
 
 .image-container {
     position: relative;
+}
+
+.footnote {
+    font-size: 0.7rem;
+    color: color-mix(in srgb, var(--bs-body-color) 60%, transparent);
+    margin-top: 0.5rem;
 }
 
 /* Flavor text transition animations */
