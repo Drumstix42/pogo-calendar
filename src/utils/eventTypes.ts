@@ -207,7 +207,7 @@ export const EVENT_TYPES: Record<string, EventTypeInfo> = {
     'city-safari': {
         name: 'City Safari',
         color: '#1a6d5b', // darker green
-        priority: 73,
+        priority: 33,
         category: 'events-and-misc',
     },
     'location-specific': {

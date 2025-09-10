@@ -1,6 +1,6 @@
 <template>
     <div class="calendar">
-        <div class="container mt-2 mb-4">
+        <div class="container app-container mt-2 mb-4">
             <!-- Month Navigation Header -->
             <CalendarHeader />
 
@@ -85,19 +85,6 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.calendar {
-    .container {
-        max-width: 1300px;
-        padding-right: calc(var(--bs-gutter-x) * 0.5);
-        padding-left: calc(var(--bs-gutter-x) * 0.5);
-
-        @media (min-width: 576px) {
-            padding-right: calc(var(--bs-gutter-x) * 1);
-            padding-left: calc(var(--bs-gutter-x) * 1);
-        }
-    }
-}
-
 .offcanvas-fade-enter-active,
 .offcanvas-fade-leave-active {
     transition: all 0.3s ease-in-out;

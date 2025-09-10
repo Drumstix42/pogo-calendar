@@ -2,6 +2,7 @@
     <div
         class="calendar-day"
         :class="{
+            loading: eventsStore.loading,
             'other-month': !isCurrentMonth,
             today: isToday,
         }"
@@ -10,6 +11,20 @@
         <div v-if="showRightBorder" class="calendar-day-border-overlay"></div>
 
         <div class="day-number">{{ date }}</div>
+
+        <!-- Loading skeleton -->
+        <div v-if="eventsStore.loading" class="loading-skeleton">
+            <div class="skeleton-multi-day placeholder-glow">
+                <span
+                    class="placeholder"
+                    :style="{ height: `${MULTI_DAY_EVENT_BAR_HEIGHT}px`, borderRadius: '6px', width: '100%', display: 'block' }"
+                ></span>
+            </div>
+
+            <div class="skeleton-single-day placeholder-glow">
+                <span class="placeholder" style="height: 30px; border-radius: 3px; width: 100%; display: block"></span>
+            </div>
+        </div>
 
         <!-- Multi-day events (day-spanning bars) -->
         <div v-if="weekCompactSlots.size > 0" class="multi-day-events" :style="{ height: `${multiDayEventsHeight}px` }">
@@ -469,6 +484,10 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     overflow: visible;
     position: relative;
     transition: min-height 0.3s ease;
+
+    &.loading {
+        min-height: 100px;
+    }
 }
 
 .calendar-day:nth-child(7n) {
@@ -532,6 +551,7 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     position: relative;
     box-sizing: border-box; /* Use border-box for predictable sizing */
     pointer-events: auto; /* Ensure bars are interactive */
+    transform: translate3d(0, 0, 0); /* Fixes some rendering issues in Chrome */
 }
 
 .multi-day-event-bar:hover {
@@ -843,5 +863,27 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     background-color: rgba(200, 200, 200, 0.12);
     pointer-events: none;
     z-index: 2;
+}
+
+/* Loading skeleton layout */
+.loading-skeleton {
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    padding: 0 0.1rem 0 0.1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    opacity: 0.2;
+}
+
+.skeleton-multi-day {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.skeleton-single-day {
+    margin-top: 4px;
 }
 </style>

@@ -38,6 +38,18 @@ h6 {
     font-weight: 700;
 }
 
+/* Global container styles for consistent layout */
+.app-container {
+    max-width: 1300px;
+    padding-right: calc(var(--bs-gutter-x) * 0.5);
+    padding-left: calc(var(--bs-gutter-x) * 0.5);
+
+    @media (min-width: 576px) {
+        padding-right: calc(var(--bs-gutter-x) * 1);
+        padding-left: calc(var(--bs-gutter-x) * 1);
+    }
+}
+
 /* Router link styles */
 .navbar-brand {
     text-decoration: none;
@@ -108,6 +120,9 @@ h6 {
     }
     to {
         letter-spacing: 0.4px;
+        /* margin-left: -2px;
+        font-size: 11.2px; */
+        transform: scale(1.03);
     }
 }
 
@@ -163,12 +178,12 @@ body {
                 transition: all 0.5s ease !important;
 
                 &.multi-day-event-bar {
-                    filter: brightness(1.2) saturate(1.2);
+                    filter: brightness(1.2) saturate(1.5);
                 }
 
                 .event-name {
                     font-weight: 600;
-                    animation: letter-spacing-pulse 0.8s ease-out infinite alternate;
+                    animation: letter-spacing-pulse 0.5s ease-out infinite alternate;
                     transition: all 0.5s ease !important;
                     letter-spacing: 0.1px;
                 }

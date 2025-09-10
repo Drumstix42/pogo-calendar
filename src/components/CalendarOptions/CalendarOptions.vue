@@ -1,8 +1,8 @@
 <template>
     <div class="offcanvas-header">
-        <h5 class="offcanvas-title mb-0 d-flex align-items-center gap-1">
+        <h5 class="offcanvas-title mb-0 d-flex align-items-center gap-2">
             <Settings :size="16" class="flex-grow-0" />
-            Configuration
+            Settings
         </h5>
         <button class="btn btn-icon-ghost btn-sm" @click="$emit('close')" aria-label="Close options">
             <X :size="16" />
@@ -12,7 +12,7 @@
         <div class="options-content-wrapper">
             <FirstDaySelector />
             <EventGroupingToggle />
-            <AnimatedImagesToggle />
+            <ImageOptions />
             <EventFilterOptions class="flex-grow-section" />
         </div>
     </div>
@@ -21,10 +21,10 @@
 <script setup lang="ts">
 import { Settings, X } from 'lucide-vue-next';
 
-import AnimatedImagesToggle from './AnimatedImagesToggle.vue';
 import EventFilterOptions from './EventFilterOptions.vue';
 import EventGroupingToggle from './EventGroupingToggle.vue';
 import FirstDaySelector from './FirstDaySelector.vue';
+import ImageOptions from './ImageOptions.vue';
 
 defineEmits<{
     close: [];
@@ -38,6 +38,7 @@ defineEmits<{
     display: flex;
     align-items: center;
     justify-content: space-between;
+    padding: 0.75rem 1rem;
 }
 
 .offcanvas-title {

@@ -28,7 +28,7 @@
 
         <Transition name="collapse">
             <div v-show="!isCollapsed" class="option-content">
-                <small v-if="tooltipText" class="text-muted mb-2 d-block d-md-none">{{ tooltipText }}</small>
+                <small v-if="tooltipText && isTouchDevice" class="text-muted mb-2 d-block">{{ tooltipText }}</small>
                 <slot />
             </div>
         </Transition>
@@ -39,6 +39,7 @@
 import { ChevronDown, Info } from 'lucide-vue-next';
 import { computed } from 'vue';
 
+import { useDeviceDetection } from '@/composables/useDeviceDetection';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 
 interface Props {
@@ -53,6 +54,7 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const calendarSettings = useCalendarSettingsStore();
+const { isTouchDevice } = useDeviceDetection();
 
 const isCollapsed = computed(() => {
     if (!props.storageKey) {

@@ -1,8 +1,8 @@
 <template>
-    <div class="calendar-header d-flex align-items-center justify-content-between flex-wrap row-gap-2 my-3">
-        <div class="d-flex align-items-center flex-wrap row-gap-2">
+    <div class="calendar-header d-flex align-items-center justify-content-between flex-wrap row-gap-2 mt-3 mb-2">
+        <div class="d-flex align-items-center flex-wrap gap-2">
             <button
-                class="btn btn-sm me-3"
+                class="btn btn-sm"
                 :class="isCurrentMonth ? 'btn-outline-secondary' : 'btn-outline-dark'"
                 @click="goToCurrentMonth"
                 :disabled="isCurrentMonth"
@@ -10,7 +10,7 @@
                 Today
             </button>
 
-            <div class="d-flex align-items-center me-3">
+            <div class="d-flex align-items-center">
                 <button class="btn btn-icon-ghost btn-sm me-1" @click="goToPreviousMonth" :disabled="isPreviousDisabled">
                     <ChevronLeft :size="24" />
                 </button>
@@ -23,12 +23,11 @@
         </div>
 
         <button
-            class="btn-options-toggle btn btn-sm xfocus-ring d-flex align-items-center gap-1 ms-auto"
+            class="btn-options-toggle btn xfocus-ring d-flex align-items-center gap-1 ms-auto"
             :class="{ active: calendarSettings.optionsExpanded }"
             @click="calendarSettings.toggleOptionsExpanded"
         >
-            <Settings :size="16" class="flex-grow-0" />
-            <span class="config-label flex-grow-1">Config</span>
+            <Settings :size="18" class="flex-grow-0" />
         </button>
     </div>
 </template>
@@ -109,7 +108,7 @@ const goToCurrentMonth = () => {
 /* Options button styling - no border but normal padding and clear active state */
 .btn-options-toggle {
     line-height: 1;
-    color: var(--bs-body-color);
+    color: color-mix(in srgb, var(--bs-body-color) 80%, transparent);
     background: transparent;
     transition: all 0.15s ease-in-out;
     padding: 0.4rem 0.6rem;

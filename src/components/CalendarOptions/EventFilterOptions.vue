@@ -15,11 +15,13 @@
                     None
                 </button>
             </div>
-            <small v-if="eventFilter.enabledCount === eventFilter.totalCount" class="text-muted">
+            <div v-if="eventFilter.enabledCount === eventFilter.totalCount" class="text-muted">
                 All {{ eventFilter.totalCount }} event types enabled
-            </small>
-            <small v-else-if="eventFilter.enabledCount === 0" class="text-muted"> All {{ eventFilter.totalCount }} event types <i>disabled</i></small>
-            <small v-else class="text-muted">{{ eventFilter.enabledCount }} of {{ eventFilter.totalCount }} event types enabled</small>
+            </div>
+            <div v-else-if="eventFilter.enabledCount === 0" class="text-muted">
+                <i>All {{ eventFilter.totalCount }} event types disabled</i>
+            </div>
+            <div v-else class="text-muted">{{ eventFilter.enabledCount }} of {{ eventFilter.totalCount }} event types enabled</div>
         </div>
 
         <div
@@ -393,9 +395,11 @@ const eventGroups = computed(() => {
 
 .filter-stats {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
-    gap: 1rem;
+    gap: 0.5rem;
+    font-size: 0.75rem;
 }
 
 .btn-group-sm .btn {

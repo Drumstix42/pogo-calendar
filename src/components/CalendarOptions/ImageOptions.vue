@@ -1,5 +1,5 @@
 <template>
-    <CollapsibleSection title="Detailed Views" :tooltip-text="tooltipText" storage-key="animated-images">
+    <CollapsibleSection title="Image Settings" :tooltip-text="tooltipText" storage-key="image-settings">
         <div class="toggle-with-image">
             <div class="form-check form-switch">
                 <input

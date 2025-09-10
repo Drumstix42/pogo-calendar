@@ -1,7 +1,7 @@
 <template>
     <div id="app">
         <nav class="navbar navbar-expand-lg border-bottom bg-body-tertiary">
-            <div class="container">
+            <div class="container app-container">
                 <a class="navbar-brand" href="#">
                     <img src="/favicon.svg" alt="Calendar" width="24" height="24" class="me-2" />
                     <strong>PoGo Event Calendar</strong>
