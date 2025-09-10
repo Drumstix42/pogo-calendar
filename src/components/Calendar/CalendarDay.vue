@@ -44,8 +44,14 @@
                 >
                     <div
                         class="multi-day-event-bar calendar-event"
-                        :class="getMultiDayEventBarClass(event, props.dayInstance)"
+                        :class="[
+                            getMultiDayEventBarClass(event, props.dayInstance),
+                            {
+                                'event-id-highlighted': isEventHighlighted(event.eventID),
+                            },
+                        ]"
                         :data-event-type="event.eventType"
+                        :data-event-id="event.eventID"
                         :style="{
                             '--event-bg-color': getEventColor(event),
                             backgroundColor: getEventColor(event),
@@ -56,6 +62,8 @@
                             zIndex: 20 + getEventSlotTop(event),
                         }"
                         :data-debug="`Event: ${event.name} | ID: ${event.eventID} | Slot: ${getEventSlotData(event)?.slotIndex} | Grouped: ${(event as any)._isGrouped || false}`"
+                        @mouseenter="highlightEventID(event.eventID)"
+                        @mouseleave="clearEventIDHighlight"
                     >
                         <VMenu
                             placement="top"
@@ -107,7 +115,7 @@
                     :distance="tooltipOptionsDefaults.distance"
                     :auto-hide="tooltipOptionsDefaults.autoHide"
                 >
-                    <div class="single-day-event calendar-event" :data-event-type="event.eventType">
+                    <div class="single-day-event calendar-event" :data-event-type="event.eventType" :data-event-id="event.eventID">
                         <div class="event-dot" :style="{ backgroundColor: getEventColor(event) }"></div>
                         <div class="event-content">
                             <div class="event-name-container">
@@ -145,6 +153,7 @@ import { useDeviceDetection } from '@/composables/useDeviceDetection';
 import { useEventFilterToasts } from '@/composables/useEventFilterToasts';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { useEventFilterStore } from '@/stores/eventFilter';
+import { useEventHighlightStore } from '@/stores/eventHighlight';
 import { useEventsStore } from '@/stores/events';
 import {
     type EventTypeKey,
@@ -189,8 +198,8 @@ const props = defineProps<Props>();
 const eventFilter = useEventFilterStore();
 const eventsStore = useEventsStore();
 const calendarSettings = useCalendarSettingsStore();
+const eventHighlight = useEventHighlightStore();
 const { hideEventTypeWithToast } = useEventFilterToasts();
-
 const { isTouchDevice } = useDeviceDetection();
 
 const tooltipOptionsDefaults = computed(() => ({
@@ -361,6 +370,18 @@ const getEventTime = (event: PogoEvent): string => {
 
 const hideEventType = (eventType: EventTypeKey): void => {
     hideEventTypeWithToast(eventType);
+};
+
+const highlightEventID = (eventID: string): void => {
+    eventHighlight.highlightEventID(eventID);
+};
+
+const clearEventIDHighlight = (): void => {
+    eventHighlight.clearEventIDHighlight();
+};
+
+const isEventHighlighted = (eventID: string): boolean => {
+    return eventHighlight.isEventHighlighted(eventID);
 };
 
 // Multi-day event bar state helpers

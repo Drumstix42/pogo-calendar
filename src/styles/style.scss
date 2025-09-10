@@ -225,6 +225,18 @@ body {
     }
 }
 
+/* Event ID Hover Highlighting */
+.calendar-event.event-id-highlighted {
+    &.multi-day-event-bar {
+        background-color: color-mix(in srgb, var(--event-bg-color) 80%, white) !important;
+    }
+
+    /* .event-name {
+        font-weight: 700;
+        animation: letter-spacing-pulse 0.4s ease-out infinite alternate;
+    } */
+}
+
 /* Vue Transition Animations for Calendar Events */
 .fade-enter-active,
 .fade-leave-active {
