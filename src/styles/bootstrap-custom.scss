@@ -76,18 +76,48 @@ $font-family-sans-serif:
 // Theme overrides
 :root,
 [data-bs-theme='light'] {
-    // Light theme overrides
-    --bs-body-bg: #f8f9fa;
-    --bs-tertiary-bg: #e9ecef;
-    --bs-tertiary-bg-rgb: 233, 236, 239;
+    --bs-body-bg: #e8eaed;
+    --bs-body-bg-rgb: 232, 234, 237;
+    --bs-tertiary-bg: #f1f3f4;
+    --bs-tertiary-bg-rgb: 241, 243, 244;
+    --bs-secondary-bg: #f8f9fa;
+    --bs-secondary-color: #5f6368;
+    --bs-border-color: #dadce0;
+    --bs-border-color-translucent: rgba(0, 0, 0, 0.15);
     --bs-focus-ring-color: rgba(var(--bs-body-color-rgb), 0.15);
+    --bs-dark: rgba(0, 0, 0, 0.87);
+    --bs-success: #137333;
+    --bs-success-rgb: 19, 115, 51;
+
+    --calendar-cell-bg: #fefefe;
+    --calendar-today-bg: #e8f4fd;
+    --calendar-other-month-bg: #f6f7f8;
+    --calendar-other-month-color: #5f6368;
+    --calendar-hover-bg: rgba(60, 64, 67, 0.04);
+    --calendar-border-color: #dadce0;
+    --event-highlight-text-color: #f2f2f2;
 }
 
 [data-bs-theme='dark'] {
-    // Dark theme overrides
-    --bs-body-bg: #343a40;
+    --bs-body-bg: #212529;
+    --bs-body-bg-rgb: 33, 37, 41;
     --bs-tertiary-bg: #2b3035;
     --bs-tertiary-bg-rgb: 43, 48, 53;
+    --bs-secondary-bg: #343a40;
+    --bs-secondary-color: #adb5bd;
+    --bs-border-color: #495057;
+    --bs-border-color-translucent: rgba(255, 255, 255, 0.15);
+    --bs-dark: rgba(255, 255, 255, 0.95);
+    --bs-success: #198754;
+    --bs-success-rgb: 25, 135, 84;
+
+    --calendar-cell-bg: #212529;
+    --calendar-today-bg: rgba(13, 110, 253, 0.25);
+    --calendar-other-month-bg: #2c3034;
+    --calendar-other-month-color: #6c757d;
+    --calendar-hover-bg: rgba(255, 255, 255, 0.08);
+    --calendar-border-color: #495057;
+    --event-highlight-text-color: #e9ecef;
 }
 
 // Responsive overrides for custom variables

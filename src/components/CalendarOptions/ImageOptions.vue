@@ -85,7 +85,7 @@ const flavorText = computed(() => {
 });
 
 const flavorTextColor = computed(() => {
-    return calendarSettings.useAnimatedImages ? '#198754' : '#343a40';
+    return calendarSettings.useAnimatedImages ? 'var(--bs-success)' : 'var(--bs-secondary)';
 });
 
 const showFlavorTextBriefly = () => {
@@ -132,13 +132,13 @@ const handleSingleDaySpritesToggle = (event: Event) => {
 
 <style scoped>
 .form-check-input:checked {
-    background-color: #198754;
-    border-color: #198754;
+    background-color: var(--bs-success);
+    border-color: var(--bs-success);
 }
 
 .form-check-input:focus {
-    box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.25);
-    border-color: #86b7fe;
+    box-shadow: 0 0 0 0.25rem rgba(var(--bs-success-rgb), 0.25);
+    border-color: var(--bs-focus-ring-color);
 }
 
 .toggle-with-image {
@@ -185,8 +185,8 @@ const handleSingleDaySpritesToggle = (event: Event) => {
     transform: translateX(-50%);
     font-size: 0.75rem;
     font-weight: 600;
-    color: #198754;
-    text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);
+    color: var(--bs-success);
+    text-shadow: 1px 1px 2px rgba(var(--bs-body-bg-rgb), 0.8);
     pointer-events: none;
     white-space: nowrap;
     z-index: 10;

@@ -510,9 +510,9 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
 <style scoped>
 .calendar-day {
     min-height: 50px;
-    border-right: 1px solid #e9ecef;
-    border-bottom: 1px solid #e9ecef;
-    background: white;
+    border-right: 1px solid var(--calendar-border-color);
+    border-bottom: 1px solid var(--calendar-border-color);
+    background: var(--calendar-cell-bg);
     min-width: 0;
     overflow: visible;
     position: relative;
@@ -528,19 +528,24 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
 }
 
 .calendar-day.other-month {
-    background-color: #f3f4f5;
-    color: #8c949b;
-    border-color: #dee2e6;
+    background-color: var(--calendar-other-month-bg);
+    color: var(--calendar-other-month-color);
+    border-color: var(--calendar-border-color);
 }
 
 .calendar-day.today {
-    background-color: #e3f2fd;
+    background-color: var(--calendar-today-bg);
 }
 
 .calendar-day.today .day-number {
     background-color: #2196f3;
     color: white;
     font-weight: 600;
+}
+
+[data-bs-theme='dark'] .calendar-day.today .day-number {
+    background-color: #0d6efd;
+    color: white;
 }
 
 .day-number {
@@ -573,7 +578,7 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     border-radius: 6px;
     font-size: 0.7rem;
     line-height: 1.2;
-    color: #fcfcfc;
+    color: #fafafa;
     text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
     cursor: pointer;
     transition: background-color 0.2s ease;
@@ -588,7 +593,7 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
 }
 
 .multi-day-event-bar:hover {
-    background-color: color-mix(in srgb, var(--event-bg-color) 80%, white) !important;
+    background-color: color-mix(in srgb, var(--event-bg-color) 85%, var(--calendar-cell-bg)) !important;
 }
 
 .multi-day-event-bar--inner {
@@ -811,7 +816,7 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
 }
 
 .single-day-event:hover {
-    background-color: rgba(0, 0, 0, 0.03);
+    background-color: var(--calendar-hover-bg);
 }
 
 .event-dot {
@@ -854,6 +859,10 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     flex: 1;
 }
 
+[data-bs-theme='dark'] .single-day-event .event-name {
+    color: #e9ecef;
+}
+
 .single-day-event .event-time {
     flex-shrink: 0;
     font-size: 0.7rem;
@@ -864,6 +873,10 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     text-overflow: ellipsis;
     white-space: nowrap;
     margin-bottom: 8px;
+}
+
+[data-bs-theme='dark'] .single-day-event .event-time {
+    color: #adb5bd;
 }
 
 .event-name-container {
@@ -897,6 +910,10 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     background-color: rgba(200, 200, 200, 0.12);
     pointer-events: none;
     z-index: 2;
+}
+
+[data-bs-theme='dark'] .calendar-day-border-overlay {
+    background-color: rgba(255, 255, 255, 0.15);
 }
 
 /* Loading skeleton layout */

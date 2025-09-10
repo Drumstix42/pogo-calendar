@@ -13,8 +13,8 @@
 
 <style scoped>
 .mini-calendar {
-    background: #f8f9fa;
-    border: 2px dashed #dee2e6;
+    background: var(--bs-tertiary-bg);
+    border: 2px dashed var(--bs-border-color);
     border-radius: 8px;
     padding: 20px;
     text-align: center;

@@ -200,12 +200,12 @@ const eventGroups = computed(() => {
 
 .filter-grid-container::before {
     top: 0;
-    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0));
+    background: linear-gradient(to bottom, rgba(var(--bs-body-color-rgb), 0.1), rgba(var(--bs-body-color-rgb), 0));
 }
 
 .filter-grid-container::after {
     bottom: 0;
-    background: linear-gradient(to top, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0));
+    background: linear-gradient(to top, rgba(var(--bs-body-color-rgb), 0.1), rgba(var(--bs-body-color-rgb), 0));
 }
 
 .filter-grid-container.can-scroll-up::before {
@@ -332,8 +332,8 @@ const eventGroups = computed(() => {
     align-items: center;
     justify-content: center;
     width: 36px;
-    background-color: #f8f9fa;
-    border: 1px solid #dee2e6;
+    background-color: var(--bs-tertiary-bg);
+    border: 1px solid var(--bs-border-color);
     border-right: none;
     border-top-left-radius: 5px;
     border-bottom-left-radius: 5px;
@@ -341,8 +341,8 @@ const eventGroups = computed(() => {
 }
 
 .filter-checkbox-area--checked {
-    background-color: #f8f9fa;
-    border-color: #dee2e6;
+    background-color: var(--bs-tertiary-bg);
+    border-color: var(--bs-border-color);
 }
 
 .checkbox-icon {
