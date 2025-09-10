@@ -498,7 +498,7 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
         return otherStart.isSameOrAfter(eventEnd) && otherStart.diff(eventEnd, 'hour') <= 2 && otherStart.isSameOrBefore(weekEndDay);
     });
 
-    const gapAdjustment = hasFollowingEvent ? ' - 3px' : '';
+    const gapAdjustment = hasFollowingEvent ? ' - 1px' : '';
 
     return {
         left: `${leftPercentage}%`,
