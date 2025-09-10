@@ -29,19 +29,4 @@ const handleToggleChange = (event: Event) => {
 };
 </script>
 
-<style scoped>
-.form-check-input:checked {
-    background-color: #198754;
-    border-color: #198754;
-}
-
-.form-check-input:focus {
-    box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.25);
-    border-color: #86b7fe;
-}
-
-.form-check-label {
-    font-size: 0.9rem;
-    font-weight: 500;
-}
-</style>
+<style scoped></style>

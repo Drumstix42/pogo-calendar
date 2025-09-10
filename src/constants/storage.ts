@@ -14,4 +14,6 @@ export const STORAGE_KEYS = {
     GROUP_SIMILAR_EVENTS: createStorageKey('group-similar-events'),
     THEME_MODE: createStorageKey('theme-mode'),
     USE_ANIMATED_IMAGES: createStorageKey('use-animated-images'),
+    USE_MULTI_DAY_EVENT_SPRITES: createStorageKey('use-multi-day-event-sprites'),
+    USE_SINGLE_DAY_EVENT_SPRITES: createStorageKey('use-single-day-event-sprites'),
 } as const;

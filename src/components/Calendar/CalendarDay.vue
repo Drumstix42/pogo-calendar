@@ -65,11 +65,17 @@
                         >
                             <div class="multi-day-event-bar--inner">
                                 <!-- Show Pokemon images for grouped or individual events -->
-                                <template v-if="calendarSettings.groupSimilarEvents && hasGroupedEvents(event)">
-                                    <PokemonImages :event="event" :event-name="event.name" :height="MULTI_DAY_EVENT_ICON_HEIGHT" :limit="2" />
-                                </template>
-                                <template v-else>
-                                    <PokemonImages :event="event" :event-name="getEventDisplayName(event)" :height="MULTI_DAY_EVENT_ICON_HEIGHT" />
+                                <template v-if="calendarSettings.useMultiDayEventSprites">
+                                    <template v-if="calendarSettings.groupSimilarEvents && hasGroupedEvents(event)">
+                                        <PokemonImages :event="event" :event-name="event.name" :height="MULTI_DAY_EVENT_ICON_HEIGHT" :limit="2" />
+                                    </template>
+                                    <template v-else>
+                                        <PokemonImages
+                                            :event="event"
+                                            :event-name="getEventDisplayName(event)"
+                                            :height="MULTI_DAY_EVENT_ICON_HEIGHT"
+                                        />
+                                    </template>
                                 </template>
 
                                 <span class="event-name">{{ getEventDisplayName(event) }}</span>
@@ -112,7 +118,13 @@
                                 </div>
                             </div>
                             <div v-if="getEventTime(event)" class="event-time">{{ getEventTime(event) }}</div>
-                            <PokemonImages :event="event" :event-name="getEventDisplayName(event)" :height="40" :show-placeholder="true" />
+                            <PokemonImages
+                                v-if="calendarSettings.useSingleDayEventSprites"
+                                :event="event"
+                                :event-name="getEventDisplayName(event)"
+                                :height="40"
+                                :show-placeholder="true"
+                            />
                         </div>
                     </div>
 
@@ -571,6 +583,7 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     right: 0;
     bottom: 0;
     gap: 4px;
+    transform: translate3d(0, 0, 0); /* Fixes some rendering issues in Chrome */
 }
 
 .multi-day-event-bar .event-name {

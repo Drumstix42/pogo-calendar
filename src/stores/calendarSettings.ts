@@ -19,6 +19,12 @@ export const useCalendarSettingsStore = defineStore('calendarSettings', () => {
     // Animated images setting - whether to use animated images in detailed views
     const useAnimatedImages = useLocalStorage<boolean>(STORAGE_KEYS.USE_ANIMATED_IMAGES, true);
 
+    // Multi-day event sprites setting - whether to show Pokemon sprites in multi-day event bars
+    const useMultiDayEventSprites = useLocalStorage<boolean>(STORAGE_KEYS.USE_MULTI_DAY_EVENT_SPRITES, true);
+
+    // Single-day event sprites setting - whether to show Pokemon sprites in single-day events
+    const useSingleDayEventSprites = useLocalStorage<boolean>(STORAGE_KEYS.USE_SINGLE_DAY_EVENT_SPRITES, true);
+
     // Collapsible sections state (keyed by section identifier)
     const collapsibleSections = useLocalStorage<Record<string, boolean>>(STORAGE_KEYS.COLLAPSIBLE_SECTIONS, {});
 
@@ -65,6 +71,14 @@ export const useCalendarSettingsStore = defineStore('calendarSettings', () => {
         useAnimatedImages.value = enabled;
     };
 
+    const setUseMultiDayEventSprites = (enabled: boolean) => {
+        useMultiDayEventSprites.value = enabled;
+    };
+
+    const setUseSingleDayEventSprites = (enabled: boolean) => {
+        useSingleDayEventSprites.value = enabled;
+    };
+
     const toggleOptionsExpanded = () => {
         optionsExpanded.value = !optionsExpanded.value;
     };
@@ -92,6 +106,8 @@ export const useCalendarSettingsStore = defineStore('calendarSettings', () => {
         allDayNames,
         groupSimilarEvents,
         useAnimatedImages,
+        useMultiDayEventSprites,
+        useSingleDayEventSprites,
         optionsExpanded,
 
         // Computed getters
@@ -103,6 +119,8 @@ export const useCalendarSettingsStore = defineStore('calendarSettings', () => {
         setFirstDayOfWeek,
         setGroupSimilarEvents,
         setUseAnimatedImages,
+        setUseMultiDayEventSprites,
+        setUseSingleDayEventSprites,
         toggleOptionsExpanded,
         setOptionsExpanded,
         isCollapsibleSectionCollapsed,

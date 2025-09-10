@@ -1,5 +1,29 @@
 <template>
     <CollapsibleSection title="Image Settings" :tooltip-text="tooltipText" storage-key="image-settings">
+        <div class="form-check form-switch">
+            <input
+                id="useMultiDayEventSprites"
+                class="form-check-input"
+                type="checkbox"
+                role="switch"
+                :checked="calendarSettings.useMultiDayEventSprites"
+                @change="handleMultiDaySpritesToggle"
+            />
+            <label for="useMultiDayEventSprites" class="form-check-label">Inline sprites for multi-day event bars</label>
+        </div>
+
+        <div class="form-check form-switch">
+            <input
+                id="useSingleDayEventSprites"
+                class="form-check-input"
+                type="checkbox"
+                role="switch"
+                :checked="calendarSettings.useSingleDayEventSprites"
+                @change="handleSingleDaySpritesToggle"
+            />
+            <label for="useSingleDayEventSprites" class="form-check-label">Inline sprites for single-day events</label>
+        </div>
+
         <div class="toggle-with-image">
             <div class="form-check form-switch">
                 <input
@@ -30,6 +54,7 @@
                 </Transition>
             </div>
         </div>
+
         <div class="footnote">Note: some animated sprites may not be available.</div>
     </CollapsibleSection>
 </template>
@@ -93,6 +118,16 @@ const toggleSetting = () => {
     calendarSettings.setUseAnimatedImages(!calendarSettings.useAnimatedImages);
     showFlavorTextBriefly();
 };
+
+const handleMultiDaySpritesToggle = (event: Event) => {
+    const target = event.target as HTMLInputElement;
+    calendarSettings.setUseMultiDayEventSprites(target.checked);
+};
+
+const handleSingleDaySpritesToggle = (event: Event) => {
+    const target = event.target as HTMLInputElement;
+    calendarSettings.setUseSingleDayEventSprites(target.checked);
+};
 </script>
 
 <style scoped>
@@ -126,14 +161,6 @@ const toggleSetting = () => {
 
 .form-check-input {
     margin-top: 0;
-}
-
-.form-check-label {
-    font-size: 0.9rem;
-    font-weight: 500;
-    margin: 0;
-    line-height: 1.2;
-    cursor: pointer;
 }
 
 .example-image {
@@ -173,6 +200,11 @@ const toggleSetting = () => {
     font-size: 0.7rem;
     color: color-mix(in srgb, var(--bs-body-color) 60%, transparent);
     margin-top: 0.5rem;
+}
+
+/* Add spacing between toggle switches */
+.form-check.form-switch + .form-check.form-switch {
+    margin-top: 0.75rem;
 }
 
 /* Flavor text transition animations */

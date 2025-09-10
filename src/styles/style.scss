@@ -93,6 +93,27 @@ h6 {
     cursor: not-allowed;
 }
 
+/* Form styles */
+.form-check-input {
+    cursor: pointer;
+
+    &:checked {
+        background-color: #198754;
+        border-color: #198754;
+    }
+
+    &:focus {
+        box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.25);
+        border-color: #86b7fe;
+    }
+}
+
+.form-check-label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+}
+
 /* Floating Vue */
 .v-popper--theme-tooltip .v-popper__inner {
     padding: 5px;
