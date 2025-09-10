@@ -53,11 +53,28 @@
                 </div>
             </div>
         </div>
+
+        <div v-if="spotlightBonus" class="spotlight-bonus"><strong>Bonus:</strong> {{ spotlightBonus }}</div>
+
+        <!-- Bonuses for community day events -->
+        <div v-if="communityDayBonuses" class="community-day-bonuses">
+            <div class="bonus-header"><strong>Bonuses:</strong></div>
+            <div class="bonus-list">
+                <div v-for="bonus in communityDayBonuses" :key="bonus.text" class="bonus-item">
+                    <img :src="bonus.image" :alt="bonus.text" class="bonus-icon" />
+                    <span class="bonus-text">{{ bonus.text }}</span>
+                </div>
+                <div v-if="communityDayBonusDisclaimers" class="bonus-disclaimers">
+                    <div v-for="disclaimer in communityDayBonusDisclaimers" :key="disclaimer" class="disclaimer-text" v-html="disclaimer"></div>
+                </div>
+            </div>
+        </div>
     </div>
 </template>
 
 <script setup lang="ts">
 import dayjs from 'dayjs';
+import { computed } from 'vue';
 
 import { useEventFilterToasts } from '@/composables/useEventFilterToasts';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
@@ -79,12 +96,33 @@ interface Props {
     isSingleDay?: boolean;
 }
 
-withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<Props>(), {
     isSingleDay: false,
 });
 
 const calendarSettings = useCalendarSettingsStore();
 const { hideEventTypeWithToast } = useEventFilterToasts();
+
+const spotlightBonus = computed(() => {
+    if (props.event.eventType === 'pokemon-spotlight-hour' && props.event.extraData?.spotlight?.bonus) {
+        return props.event.extraData.spotlight.bonus;
+    }
+    return null;
+});
+
+const communityDayBonuses = computed(() => {
+    if (props.event.eventType === 'community-day' && props.event.extraData?.communityday?.bonuses) {
+        return props.event.extraData.communityday.bonuses;
+    }
+    return null;
+});
+
+const communityDayBonusDisclaimers = computed(() => {
+    if (props.event.eventType === 'community-day' && props.event.extraData?.communityday?.bonusDisclaimers) {
+        return props.event.extraData.communityday.bonusDisclaimers;
+    }
+    return null;
+});
 
 const hideEventType = (eventType: EventTypeKey): void => {
     hideEventTypeWithToast(eventType);
@@ -149,7 +187,7 @@ const formatEventDuration = (event: PogoEvent): string => {
 .event-content {
     display: flex;
     flex-direction: column;
-    gap: 0.6rem;
+    gap: 0.4rem;
 }
 
 .event-text {
@@ -174,13 +212,78 @@ const formatEventDuration = (event: PogoEvent): string => {
 
 .grouped-event-time {
     font-size: 0.8rem;
-    color: color-mix(in srgb, var(--bs-body-color) 70%, transparent);
+    color: color-mix(in srgb, var(--bs-body-color) 90%, transparent);
     font-weight: 600;
 }
 
 .single-event-time {
     font-size: 0.8rem;
-    color: color-mix(in srgb, var(--bs-body-color) 70%, transparent);
+    color: color-mix(in srgb, var(--bs-body-color) 95%, transparent);
     font-weight: 600;
+}
+
+.spotlight-bonus {
+    font-size: 12px;
+    color: color-mix(in srgb, var(--bs-body-color) 80%, transparent);
+    padding: 0 0.6rem 0.3rem 0.5rem;
+    margin-top: 0.2rem;
+}
+
+.community-day-bonuses {
+    margin-top: 0.3rem;
+}
+
+.bonus-header {
+    font-size: 12px;
+    line-height: 1;
+    color: color-mix(in srgb, var(--bs-body-color) 80%, transparent);
+    font-weight: 00;
+    padding: 0 0.6rem 0.2rem 0.5rem;
+}
+
+.bonus-list {
+    max-height: 107px;
+    overflow-y: auto;
+    padding: 0 0.6rem 0.3rem 0.5rem;
+}
+
+.bonus-item {
+    display: flex;
+    align-items: start;
+    gap: 0.4rem;
+    margin-bottom: 0.18rem;
+}
+
+.bonus-item:last-child {
+    margin-bottom: 0;
+}
+
+.bonus-icon {
+    width: 15px;
+    height: 15px;
+    flex-shrink: 0;
+    object-fit: contain;
+}
+
+.bonus-text {
+    font-size: 0.7rem;
+    color: color-mix(in srgb, var(--bs-body-color) 80%, transparent);
+    line-height: 1.1;
+}
+
+.bonus-disclaimers {
+    margin-top: 0.75rem;
+}
+
+.disclaimer-text {
+    font-size: 0.65rem;
+    color: color-mix(in srgb, var(--bs-body-color) 70%, transparent);
+    line-height: 1.2;
+    font-style: italic;
+    margin-bottom: 0.2rem;
+}
+
+.disclaimer-text:last-child {
+    margin-bottom: 0;
 }
 </style>
