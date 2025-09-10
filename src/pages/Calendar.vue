@@ -117,6 +117,7 @@ onUnmounted(() => {
     max-width: 400px;
     border: none;
     box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+    background-color: var(--bs-body-bg);
 }
 
 /* Offcanvas slide-in animation */

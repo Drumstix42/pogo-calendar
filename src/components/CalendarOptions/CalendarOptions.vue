@@ -93,10 +93,6 @@ defineEmits<{
     padding: 0.37rem;
 }
 
-.btn:hover {
-    color: #495057;
-}
-
 @media (max-width: 399.98px) {
     .options-content-wrapper {
         padding: 0.75rem;

@@ -76,8 +76,8 @@ $font-family-sans-serif:
 // Theme overrides
 :root,
 [data-bs-theme='light'] {
-    --bs-body-bg: #e8eaed;
-    --bs-body-bg-rgb: 232, 234, 237;
+    --bs-body-bg: #f5f6f7;
+    --bs-body-bg-rgb: 245, 246, 247;
     --bs-tertiary-bg: #f1f3f4;
     --bs-tertiary-bg-rgb: 241, 243, 244;
     --bs-secondary-bg: #f8f9fa;
@@ -89,17 +89,25 @@ $font-family-sans-serif:
     --bs-success: #137333;
     --bs-success-rgb: 19, 115, 51;
 
+    --calendar-bg: #ededed;
     --calendar-cell-bg: #fefefe;
-    --calendar-today-bg: #e8f4fd;
+    --calendar-today-bg: #e0f2ff;
     --calendar-other-month-bg: #f6f7f8;
     --calendar-other-month-color: #5f6368;
     --calendar-hover-bg: rgba(60, 64, 67, 0.04);
     --calendar-border-color: #dadce0;
+    --calendar-day-border-overlay: color-mix(in srgb, var(--calendar-bg) 10%, transparent);
     --event-highlight-text-color: #f2f2f2;
+
+    // Button icon ghost colors
+    --btn-icon-ghost-color: #495057;
+    --btn-icon-ghost-hover-bg: #dee2e6;
+    --btn-icon-ghost-hover-color: #212529;
+    --btn-icon-ghost-active-bg: #ced4da;
 }
 
 [data-bs-theme='dark'] {
-    --bs-body-bg: #212529;
+    --bs-body-bg: #26272b;
     --bs-body-bg-rgb: 33, 37, 41;
     --bs-tertiary-bg: #2b3035;
     --bs-tertiary-bg-rgb: 43, 48, 53;
@@ -111,13 +119,21 @@ $font-family-sans-serif:
     --bs-success: #198754;
     --bs-success-rgb: 25, 135, 84;
 
-    --calendar-cell-bg: #212529;
-    --calendar-today-bg: rgba(13, 110, 253, 0.25);
-    --calendar-other-month-bg: #2c3034;
+    --calendar-bg: #222327;
+    --calendar-cell-bg: #323339;
+    --calendar-today-bg: rgba(103, 157, 230, 0.2);
+    --calendar-other-month-bg: #2b2d34;
     --calendar-other-month-color: #6c757d;
     --calendar-hover-bg: rgba(255, 255, 255, 0.08);
     --calendar-border-color: #495057;
+    --calendar-day-border-overlay: color-mix(in srgb, var(--calendar-bg) 8%, transparent);
     --event-highlight-text-color: #e9ecef;
+
+    // Button icon ghost colors for dark theme
+    --btn-icon-ghost-color: color-mix(in srgb, var(--bs-body-color) 70%, transparent);
+    --btn-icon-ghost-hover-bg: var(--bs-secondary-bg);
+    --btn-icon-ghost-hover-color: var(--bs-body-color);
+    --btn-icon-ghost-active-bg: var(--bs-tertiary-bg);
 }
 
 // Responsive overrides for custom variables

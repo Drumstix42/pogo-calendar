@@ -339,21 +339,19 @@ const hasConflictInSlot = (event: PogoEvent, slotIndex: number, existingSlots: E
 <style scoped>
 .calendar-grid-container {
     position: relative;
-    background: var(--calendar-cell-bg);
-    border: 1px solid var(--calendar-border-color);
-    border-radius: 0.375rem;
+    background: var(--calendar-bg);
+    /* border-radius: 0.5rem; */
     overflow: clip;
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.08);
 }
 
 .calendar-day-headers {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    background-color: var(--bs-tertiary-bg);
-    border-bottom: 1px solid var(--calendar-border-color);
+    background: var(--calendar-bg);
     position: sticky;
     top: 0;
     z-index: 1020;
-    border-radius: 0.375rem 0.375rem 0 0;
 }
 
 .calendar-day-header {
@@ -362,7 +360,6 @@ const hasConflictInSlot = (event: PogoEvent, slotIndex: number, existingSlots: E
     font-weight: 600;
     font-size: 0.875rem;
     color: #495057;
-    /* border-right: 1px solid #dee2e6; */
 }
 
 [data-bs-theme='dark'] .calendar-day-header {

@@ -23,7 +23,7 @@
         </div>
 
         <button
-            class="btn-options-toggle btn xfocus-ring d-flex align-items-center gap-1 ms-auto"
+            class="btn btn-icon-ghost btn-options-toggle xfocus-ring d-flex align-items-center gap-1 ms-auto"
             :class="{ active: calendarSettings.optionsExpanded }"
             @click="calendarSettings.toggleOptionsExpanded"
         >
@@ -105,23 +105,8 @@ const goToCurrentMonth = () => {
     transform: rotate(180deg);
 }
 
-/* Options button styling - no border but normal padding and clear active state */
 .btn-options-toggle {
     line-height: 1;
-    color: color-mix(in srgb, var(--bs-body-color) 80%, transparent);
-    background: transparent;
-    transition: all 0.15s ease-in-out;
     padding: 0.4rem 0.6rem;
-    border: none;
-}
-
-.btn-options-toggle:hover {
-    color: var(--bs-body-color);
-    background-color: var(--bs-secondary-bg);
-}
-
-.btn-options-toggle.active {
-    color: var(--bs-white);
-    background-color: var(--bs-secondary);
 }
 </style>

@@ -502,7 +502,7 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
 
     return {
         left: `${leftPercentage}%`,
-        width: `calc(${Math.max(widthPercentage, 5)}% + ${spanDays}px${gapAdjustment})`,
+        width: `calc(${Math.max(widthPercentage, 5)}% + 0px${gapAdjustment})`,
     };
 };
 </script>
@@ -510,13 +510,13 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
 <style scoped>
 .calendar-day {
     min-height: 50px;
-    border-right: 1px solid var(--calendar-border-color);
-    border-bottom: 1px solid var(--calendar-border-color);
     background: var(--calendar-cell-bg);
     min-width: 0;
     overflow: visible;
     position: relative;
     transition: min-height 0.3s ease;
+    border-radius: 7px;
+    box-shadow: 0px 0px 0px 1px var(--calendar-bg) inset;
 
     &.loading {
         min-height: 100px;
@@ -530,7 +530,6 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
 .calendar-day.other-month {
     background-color: var(--calendar-other-month-bg);
     color: var(--calendar-other-month-color);
-    border-color: var(--calendar-border-color);
 }
 
 .calendar-day.today {
@@ -578,7 +577,7 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     border-radius: 6px;
     font-size: 0.7rem;
     line-height: 1.2;
-    color: #fafafa;
+    color: #f2f2f2;
     text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
     cursor: pointer;
     transition: background-color 0.2s ease;
@@ -906,14 +905,10 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     top: 0;
     bottom: 0;
     right: -1px;
-    width: 1px;
-    background-color: rgba(200, 200, 200, 0.12);
+    width: 2px;
+    background-color: var(--calendar-day-border-overlay);
     pointer-events: none;
     z-index: 2;
-}
-
-[data-bs-theme='dark'] .calendar-day-border-overlay {
-    background-color: rgba(255, 255, 255, 0.15);
 }
 
 /* Loading skeleton layout */
@@ -921,11 +916,11 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     position: absolute;
     height: 100%;
     width: 100%;
-    padding: 0 0.1rem 0 0.1rem;
+    padding: 0 0.3rem 0 0.3rem;
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-    opacity: 0.2;
+    opacity: 0.15;
 }
 
 .skeleton-multi-day {
