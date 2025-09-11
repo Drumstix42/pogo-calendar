@@ -96,7 +96,7 @@ $font-family-sans-serif:
     --calendar-other-month-color: #5f6368;
     --calendar-hover-bg: rgba(60, 64, 67, 0.04);
     --calendar-border-color: #dadce0;
-    --calendar-day-border-overlay: color-mix(in srgb, var(--calendar-bg) 10%, transparent);
+    --calendar-day-border-overlay: color-mix(in srgb, var(--calendar-bg) 8%, transparent);
     --event-highlight-text-color: #f2f2f2;
 
     // Button icon ghost colors
