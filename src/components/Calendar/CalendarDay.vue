@@ -575,7 +575,7 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     align-items: center;
     gap: 4px;
     border-radius: 6px;
-    font-size: 0.7rem;
+    font-size: 11px;
     line-height: 1.2;
     color: #f2f2f2;
     text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);

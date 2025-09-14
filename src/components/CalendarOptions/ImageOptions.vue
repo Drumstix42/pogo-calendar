@@ -1,5 +1,5 @@
 <template>
-    <CollapsibleSection title="Image Settings" :tooltip-text="tooltipText" storage-key="image-settings">
+    <CollapsibleSection title="Image Display" :tooltip-text="tooltipText" storage-key="image-display">
         <div class="form-check form-switch">
             <input
                 id="useMultiDayEventSprites"
@@ -180,9 +180,9 @@ const handleSingleDaySpritesToggle = (event: Event) => {
 
 .flavor-text {
     position: absolute;
-    top: -20px;
-    left: 50%;
-    transform: translateX(-50%);
+    top: 50%;
+    left: 100%;
+    transform: translateY(-50%);
     font-size: 0.75rem;
     font-weight: 600;
     color: var(--bs-success);
@@ -190,6 +190,7 @@ const handleSingleDaySpritesToggle = (event: Event) => {
     pointer-events: none;
     white-space: nowrap;
     z-index: 10;
+    margin-left: 5px;
 }
 
 .image-container {
@@ -218,21 +219,21 @@ const handleSingleDaySpritesToggle = (event: Event) => {
 
 .flavor-text-enter-from {
     opacity: 0;
-    transform: translateX(-50%) translateY(10px) scale(0.8);
+    transform: translateY(-50%) translateX(-15px) scale(0.8);
 }
 
 .flavor-text-enter-to {
     opacity: 1;
-    transform: translateX(-50%) translateY(0) scale(1);
+    transform: translateY(-50%) translateX(0) scale(1);
 }
 
 .flavor-text-leave-from {
     opacity: 1;
-    transform: translateX(-50%) translateY(0) scale(1);
+    transform: translateY(-50%) translateX(0) scale(1);
 }
 
 .flavor-text-leave-to {
     opacity: 0;
-    transform: translateX(-50%) translateY(-15px) scale(0.9);
+    transform: translateY(-50%) translateX(10px) scale(0.9);
 }
 </style>

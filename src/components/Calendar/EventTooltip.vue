@@ -19,6 +19,17 @@
                     <div class="event-text">
                         <div class="grouped-event-name">{{ groupedEvent.name }}</div>
                         <div class="grouped-event-time">{{ formatEventDuration(groupedEvent) }}</div>
+                        <div v-if="groupedEvent.link" class="lh-1">
+                            <a
+                                :href="groupedEvent.link"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                class="link-secondary link-underline-opacity-0 link-underline-opacity-100-hover d-inline-flex align-items-center gap-1"
+                                style="font-size: 0.7rem"
+                            >
+                                View on LeekDuck <ExternalLink :size="11" />
+                            </a>
+                        </div>
                     </div>
 
                     <!-- Pokemon images -->
@@ -69,11 +80,25 @@
                 </div>
             </div>
         </div>
+
+        <!-- External link to LeekDuck for single events -->
+        <div v-if="event.link && !(event as any)._isGrouped" class="px-2 pb-1">
+            <a
+                :href="event.link"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="link-secondary link-underline-opacity-0 link-underline-opacity-100-hover d-inline-flex align-items-center gap-1"
+                style="font-size: 0.75rem"
+            >
+                View on LeekDuck <ExternalLink :size="12" />
+            </a>
+        </div>
     </div>
 </template>
 
 <script setup lang="ts">
 import dayjs from 'dayjs';
+import { ExternalLink } from 'lucide-vue-next';
 import { computed } from 'vue';
 
 import { useEventFilterToasts } from '@/composables/useEventFilterToasts';

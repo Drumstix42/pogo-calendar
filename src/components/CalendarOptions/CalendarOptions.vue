@@ -11,7 +11,7 @@
     <div class="offcanvas-body">
         <div class="options-content-wrapper">
             <FirstDaySelector />
-            <EventGroupingToggle />
+            <EventOptions />
             <ImageOptions />
             <EventFilterOptions class="flex-grow-section" />
         </div>
@@ -22,7 +22,7 @@
 import { Settings, X } from 'lucide-vue-next';
 
 import EventFilterOptions from './EventFilterOptions.vue';
-import EventGroupingToggle from './EventGroupingToggle.vue';
+import EventOptions from './EventOptions.vue';
 import FirstDaySelector from './FirstDaySelector.vue';
 import ImageOptions from './ImageOptions.vue';
 

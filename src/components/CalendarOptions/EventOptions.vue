@@ -1,5 +1,5 @@
 <template>
-    <CollapsibleSection title="Event Grouping" :tooltip-text="tooltipText" storage-key="event-grouping">
+    <CollapsibleSection title="Event Options" :tooltip-text="tooltipText" storage-key="event-options">
         <div class="form-check form-switch">
             <input
                 id="groupSimilarEvents"
