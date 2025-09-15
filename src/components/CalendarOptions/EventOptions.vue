@@ -17,7 +17,7 @@
 
         <div class="d-flex flex-column mt-3 slider-container">
             <label for="eventBarFontSize" class="form-label"
-                >Event bar font size: <span class="bar-size--label">{{ calendarSettings.eventBarFontSize }}px</span></label
+                >Event bar font size: <span class="bar-size--label">{{ localFontSize }}px</span></label
             >
             <input
                 id="eventBarFontSize"
@@ -26,7 +26,7 @@
                 min="10"
                 max="18"
                 step="1"
-                :value="calendarSettings.eventBarFontSize"
+                :value="localFontSize"
                 @input="handleFontSizeChange"
             />
             <div class="d-flex justify-content-between">
@@ -38,11 +38,34 @@
 </template>
 
 <script setup lang="ts">
+import { useDebounceFn } from '@vueuse/core';
+import { ref, watch } from 'vue';
+
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 
 import CollapsibleSection from './CollapsibleSection.vue';
 
 const calendarSettings = useCalendarSettingsStore();
+
+const localFontSize = ref(calendarSettings.eventBarFontSize);
+
+// Debounced font size: immediate UI feedback with delayed store persistence
+const debouncedUpdateFontSize = useDebounceFn((size: number) => {
+    calendarSettings.setEventBarFontSize(size);
+}, 50);
+
+watch(localFontSize, newSize => {
+    debouncedUpdateFontSize(newSize);
+});
+
+watch(
+    () => calendarSettings.eventBarFontSize,
+    newSize => {
+        if (localFontSize.value !== newSize) {
+            localFontSize.value = newSize;
+        }
+    },
+);
 
 const handleToggleChange = (event: Event) => {
     const target = event.target as HTMLInputElement;
@@ -51,7 +74,7 @@ const handleToggleChange = (event: Event) => {
 
 const handleFontSizeChange = (event: Event) => {
     const target = event.target as HTMLInputElement;
-    calendarSettings.setEventBarFontSize(Number(target.value));
+    localFontSize.value = Number(target.value);
 };
 </script>
 
