@@ -1,5 +1,5 @@
 <template>
-    <CollapsibleSection title="Event Type Filters" :tooltip-text="tooltipText" storage-key="event-filters" class="flex-grow-section">
+    <CollapsibleSection title="Event Type Filters" storage-key="event-filters" class="flex-grow-section">
         <div class="filter-stats mb-2">
             <div class="btn-group btn-group-sm">
                 <button
@@ -83,7 +83,6 @@ import CollapsibleSection from './CollapsibleSection.vue';
 
 const eventFilter = useEventFilterStore();
 
-const tooltipText = 'Select which event types to display.';
 const filterGridContainer = ref<HTMLElement>();
 const canScrollUp = ref(false);
 const canScrollDown = ref(false);

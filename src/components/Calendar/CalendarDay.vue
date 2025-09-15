@@ -17,7 +17,7 @@
             <div class="skeleton-multi-day placeholder-glow">
                 <span
                     class="placeholder"
-                    :style="{ height: `${MULTI_DAY_EVENT_BAR_HEIGHT}px`, borderRadius: '6px', width: '100%', display: 'block' }"
+                    :style="{ height: `${multiDayEventBarHeight}px`, borderRadius: '6px', width: '100%', display: 'block' }"
                 ></span>
             </div>
 
@@ -38,7 +38,7 @@
                         top: `${getEventSlotTop(event)}px`,
                         left: '0',
                         right: '0',
-                        height: `${MULTI_DAY_EVENT_BAR_HEIGHT}px`,
+                        height: `${multiDayEventBarHeight}px`,
                         pointerEvents: 'none',
                     }"
                 >
@@ -55,6 +55,7 @@
                         :style="{
                             '--event-bg-color': getEventColor(event),
                             backgroundColor: getEventColor(event),
+                            fontSize: `${calendarSettings.eventBarFontSize}px`,
                             left: getEventPosition(event, props.dayInstance).left,
                             width: getEventPosition(event, props.dayInstance).width,
                             position: 'absolute',
@@ -75,14 +76,10 @@
                                 <!-- Show Pokemon images for grouped or individual events -->
                                 <template v-if="calendarSettings.useMultiDayEventSprites">
                                     <template v-if="calendarSettings.groupSimilarEvents && hasGroupedEvents(event)">
-                                        <PokemonImages :event="event" :event-name="event.name" :height="MULTI_DAY_EVENT_ICON_HEIGHT" :limit="2" />
+                                        <PokemonImages :event="event" :event-name="event.name" :height="multiDayEventIconHeight" :limit="2" />
                                     </template>
                                     <template v-else>
-                                        <PokemonImages
-                                            :event="event"
-                                            :event-name="getEventDisplayName(event)"
-                                            :height="MULTI_DAY_EVENT_ICON_HEIGHT"
-                                        />
+                                        <PokemonImages :event="event" :event-name="getEventDisplayName(event)" :height="multiDayEventIconHeight" />
                                     </template>
                                 </template>
 
@@ -190,9 +187,7 @@ interface Props {
     }>;
 }
 
-const MULTI_DAY_EVENT_BAR_HEIGHT = 20; // px
 const MULTI_DAY_EVENT_BAR_MARGIN = 1; // px margin between bars
-const MULTI_DAY_EVENT_ICON_HEIGHT = MULTI_DAY_EVENT_BAR_HEIGHT - 2; // px
 
 const props = defineProps<Props>();
 const eventFilter = useEventFilterStore();
@@ -201,6 +196,10 @@ const calendarSettings = useCalendarSettingsStore();
 const eventHighlight = useEventHighlightStore();
 const { hideEventTypeWithToast } = useEventFilterToasts();
 const { isTouchDevice } = useDeviceDetection();
+
+// Reactive values for multi-day event bar sizing
+const multiDayEventBarHeight = computed(() => calendarSettings.eventBarHeight);
+const multiDayEventIconHeight = computed(() => multiDayEventBarHeight.value - 2);
 
 const tooltipOptionsDefaults = computed(() => ({
     autoHide: isTouchDevice.value,
@@ -327,7 +326,7 @@ const multiDayEventsHeight = computed(() => {
 
     const maxCompactIndex = Math.max(...compactSlots.map(slot => slot.compactSlotIndex));
     // +1 because index is 0-based
-    return (maxCompactIndex + 1) * (MULTI_DAY_EVENT_BAR_HEIGHT + MULTI_DAY_EVENT_BAR_MARGIN);
+    return (maxCompactIndex + 1) * (multiDayEventBarHeight.value + MULTI_DAY_EVENT_BAR_MARGIN);
 });
 
 // Helper functions for template
@@ -438,7 +437,7 @@ const getEventSlotTop = (event: PogoEvent): number => {
     if (!compactSlot) return 0;
 
     // Uses height + margin to calculate the top position
-    return compactSlot.compactSlotIndex * (MULTI_DAY_EVENT_BAR_HEIGHT + MULTI_DAY_EVENT_BAR_MARGIN);
+    return compactSlot.compactSlotIndex * (multiDayEventBarHeight.value + MULTI_DAY_EVENT_BAR_MARGIN);
 };
 
 const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; width: string } => {

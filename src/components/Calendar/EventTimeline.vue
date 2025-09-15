@@ -9,9 +9,9 @@
                 <div v-if="categorizedEvents[category.key]?.length > 0 || category.key === 'today'" class="category-section">
                     <!-- Category header with horizontal rule -->
                     <div class="category-header">
-                        <div class="category-text">
+                        <div class="category-text d-flex align-items-center gap-2">
+                            <span class="badge rounded-pill bg-secondary">{{ totalEventsCounts[category.key] }}</span>
                             <span class="category-title">{{ category.title }}</span>
-                            <span class="category-count">({{ totalEventsCounts[category.key] }})</span>
                         </div>
                     </div>
 
@@ -191,8 +191,8 @@ const hiddenEventsCounts = computed(() => eventData.value.hiddenEventsCounts);
     top: 0;
     z-index: 10;
     margin: 0 0 12px 0;
-    padding: 10px 0;
-    background: var(--bs-body-bg);
+    padding: 8px;
+    background: var(--bs-secondary-bg);
     border-bottom: 1px solid var(--bs-border-color);
 }
 
@@ -202,15 +202,12 @@ const hiddenEventsCounts = computed(() => eventData.value.hiddenEventsCounts);
     font-weight: 600;
     color: var(--bs-body-color);
     white-space: nowrap;
-}
 
-.category-title {
-    margin-right: 6px;
-}
-
-.category-count {
-    font-weight: 400;
-    color: var(--bs-secondary-color);
+    .badge {
+        font-size: 0.75rem;
+        line-height: 1;
+        padding: 0.25em 0.5em;
+    }
 }
 
 .category-events {
@@ -226,7 +223,7 @@ const hiddenEventsCounts = computed(() => eventData.value.hiddenEventsCounts);
     color: var(--bs-secondary-color);
     text-align: center;
     font-style: italic;
-    background: var(--bs-body-bg);
+    background: var(--bs-tertiary-bg);
     border-radius: 4px;
     border: 1px dashed var(--bs-tertiary-color);
 }

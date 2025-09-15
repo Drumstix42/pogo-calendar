@@ -25,6 +25,9 @@ export const useCalendarSettingsStore = defineStore('calendarSettings', () => {
     // Single-day event sprites setting - whether to show Pokemon sprites in single-day events
     const useSingleDayEventSprites = useLocalStorage<boolean>(STORAGE_KEYS.USE_SINGLE_DAY_EVENT_SPRITES, true);
 
+    // Event bar font size setting - font size for multi-day event bars in pixels
+    const eventBarFontSize = useLocalStorage<number>(STORAGE_KEYS.EVENT_BAR_FONT_SIZE, 11);
+
     // Collapsible sections state (keyed by section identifier)
     const collapsibleSections = useLocalStorage<Record<string, boolean>>(STORAGE_KEYS.COLLAPSIBLE_SECTIONS, {});
 
@@ -58,6 +61,22 @@ export const useCalendarSettingsStore = defineStore('calendarSettings', () => {
 
     const firstDayIndex = computed(() => getDayIndex(firstDayOfWeek.value));
 
+    // Font size to bar height mapping - precise control over each size
+    const fontSizeToHeightMap: Record<number, number> = {
+        10: 19,
+        11: 20,
+        12: 21,
+        13: 22,
+        14: 23,
+        15: 24,
+        16: 25,
+        17: 26,
+        18: 27,
+    };
+
+    // Computed event bar height based on font size using precise mapping
+    const eventBarHeight = computed(() => fontSizeToHeightMap[eventBarFontSize.value] ?? 20);
+
     // Actions
     const setFirstDayOfWeek = (day: FirstDayOfWeek) => {
         firstDayOfWeek.value = day;
@@ -77,6 +96,10 @@ export const useCalendarSettingsStore = defineStore('calendarSettings', () => {
 
     const setUseSingleDayEventSprites = (enabled: boolean) => {
         useSingleDayEventSprites.value = enabled;
+    };
+
+    const setEventBarFontSize = (size: number) => {
+        eventBarFontSize.value = Math.max(10, Math.min(18, size)); // Clamp between 10-18px
     };
 
     const toggleOptionsExpanded = () => {
@@ -108,12 +131,14 @@ export const useCalendarSettingsStore = defineStore('calendarSettings', () => {
         useAnimatedImages,
         useMultiDayEventSprites,
         useSingleDayEventSprites,
+        eventBarFontSize,
         optionsExpanded,
 
         // Computed getters
         dayHeaders,
         fullDayHeaders,
         firstDayIndex,
+        eventBarHeight,
 
         // Actions
         setFirstDayOfWeek,
@@ -121,6 +146,7 @@ export const useCalendarSettingsStore = defineStore('calendarSettings', () => {
         setUseAnimatedImages,
         setUseMultiDayEventSprites,
         setUseSingleDayEventSprites,
+        setEventBarFontSize,
         toggleOptionsExpanded,
         setOptionsExpanded,
         isCollapsibleSectionCollapsed,

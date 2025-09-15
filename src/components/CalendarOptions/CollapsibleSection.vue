@@ -12,23 +12,10 @@
                 <ChevronDown :size="16" class="transition-transform" />
             </button>
             <div class="section-title">{{ title }}</div>
-            <VTooltip
-                v-if="tooltipText"
-                class="tooltip-icon d-none d-md-flex align-items-center"
-                placement="top"
-                :delay="{ show: 300, hide: 0 }"
-                distance="8"
-            >
-                <Info :size="13" class="text-muted" />
-                <template #popper>
-                    <div class="calendar-options-tooltip-text">{{ tooltipText }}</div>
-                </template>
-            </VTooltip>
         </div>
 
         <Transition name="collapse">
             <div v-show="!isCollapsed" class="option-content">
-                <small v-if="tooltipText && isTouchDevice" class="text-muted mb-2 d-block">{{ tooltipText }}</small>
                 <slot />
             </div>
         </Transition>
@@ -36,15 +23,13 @@
 </template>
 
 <script setup lang="ts">
-import { ChevronDown, Info } from 'lucide-vue-next';
+import { ChevronDown } from 'lucide-vue-next';
 import { computed } from 'vue';
 
-import { useDeviceDetection } from '@/composables/useDeviceDetection';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 
 interface Props {
     title: string;
-    tooltipText?: string;
     defaultCollapsed?: boolean;
     storageKey?: string;
 }
@@ -54,7 +39,6 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const calendarSettings = useCalendarSettingsStore();
-const { isTouchDevice } = useDeviceDetection();
 
 const isCollapsed = computed(() => {
     if (!props.storageKey) {
@@ -82,13 +66,13 @@ const toggleCollapsed = () => {
     gap: 0.1rem;
     padding: 0.3rem 0.1rem;
     cursor: pointer;
-    background-color: rgba(225, 226, 228, 0.3);
-    border-bottom: 1px solid rgba(233, 236, 239, 0.4);
+    background-color: var(--bs-secondary-bg);
+    border-bottom: 1px solid var(--bs-border-color);
     transition: background-color 0.2s ease;
 }
 
 .section-header:hover {
-    background-color: rgba(202, 213, 238, 0.3);
+    background-color: var(--bs-tertiary-bg);
 }
 
 .section-header:focus {
@@ -98,7 +82,7 @@ const toggleCollapsed = () => {
 
 .section-title {
     font-weight: 600;
-    color: #343a40;
+    color: var(--bs-body-color);
     font-size: 0.9rem;
     line-height: 1;
 }
@@ -116,14 +100,8 @@ const toggleCollapsed = () => {
     transform: rotate(-90deg);
 }
 
-.tooltip-icon {
-    margin-left: 0.25rem;
-    flex-shrink: 0;
-}
-
 .option-content {
-    padding: 0.5rem;
-    padding-left: 1.7rem;
+    padding: 0.5rem 0.8rem;
 }
 
 /* Collapse transition */

@@ -1,5 +1,5 @@
 <template>
-    <CollapsibleSection title="Image Display" :tooltip-text="tooltipText" storage-key="image-display">
+    <CollapsibleSection title="Image Display" storage-key="image-display">
         <div class="form-check form-switch">
             <input
                 id="useMultiDayEventSprites"
@@ -24,7 +24,7 @@
             <label for="useSingleDayEventSprites" class="form-check-label">Inline sprites for single-day events</label>
         </div>
 
-        <div class="toggle-with-image">
+        <div class="toggle-with-image mt-1">
             <div class="form-check form-switch">
                 <input
                     id="useAnimatedImages"
@@ -55,6 +55,7 @@
             </div>
         </div>
 
+        <small class="text-muted mt-1 d-block">When enabled, Pokémon sprites will be animated in detailed views.</small>
         <div class="footnote">Note: some animated sprites may not be available.</div>
     </CollapsibleSection>
 </template>
@@ -67,8 +68,6 @@ import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import CollapsibleSection from './CollapsibleSection.vue';
 
 const calendarSettings = useCalendarSettingsStore();
-
-const tooltipText = 'When enabled, Pokémon sprites will be animated in detailed views.';
 
 const showFlavorText = ref(false);
 const flavorTextKey = ref(0);

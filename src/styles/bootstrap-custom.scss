@@ -76,11 +76,11 @@ $font-family-sans-serif:
 // Theme overrides
 :root,
 [data-bs-theme='light'] {
-    --bs-body-bg: #f5f6f7;
-    --bs-body-bg-rgb: 245, 246, 247;
+    --bs-body-bg: #ffffff;
+    --bs-body-bg-rgb: 240, 241, 242;
     --bs-tertiary-bg: #f1f3f4;
     --bs-tertiary-bg-rgb: 241, 243, 244;
-    --bs-secondary-bg: #f8f9fa;
+    --bs-secondary-bg: #e9ecef;
     --bs-secondary-color: #5f6368;
     --bs-border-color: #dadce0;
     --bs-border-color-translucent: rgba(0, 0, 0, 0.15);
