@@ -8,10 +8,16 @@
             @keydown.enter="toggleCollapsed"
             @keydown.space="toggleCollapsed"
         >
-            <button class="btn btn-icon-ghost btn-sm collapse-toggle" :class="{ collapsed: isCollapsed }" aria-label="Toggle section">
-                <ChevronDown :size="16" class="transition-transform" />
-            </button>
+            <div v-if="$slots.icon" class="section-icon">
+                <slot name="icon" />
+            </div>
+
             <div class="section-title">{{ title }}</div>
+
+            <button class="btn btn-icon-ghost btn-sm collapse-toggle" aria-label="Toggle section">
+                <ChevronDown v-if="isCollapsed" :size="16" class="transition-transform" />
+                <ChevronUp v-else :size="16" class="transition-transform" />
+            </button>
         </div>
 
         <Transition name="collapse">
@@ -23,33 +29,30 @@
 </template>
 
 <script setup lang="ts">
-import { ChevronDown } from 'lucide-vue-next';
+import { ChevronDown, ChevronUp } from 'lucide-vue-next';
 import { computed } from 'vue';
 
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 
 interface Props {
     title: string;
-    defaultCollapsed?: boolean;
     storageKey?: string;
 }
 
-const props = withDefaults(defineProps<Props>(), {
-    defaultCollapsed: false,
-});
+const props = defineProps<Props>();
 
 const calendarSettings = useCalendarSettingsStore();
 
 const isCollapsed = computed(() => {
     if (!props.storageKey) {
-        return props.defaultCollapsed;
+        return false;
     }
-    return calendarSettings.isCollapsibleSectionCollapsed(props.storageKey, props.defaultCollapsed);
+    return calendarSettings.isCollapsibleSectionCollapsed(props.storageKey);
 });
 
 const toggleCollapsed = () => {
     if (props.storageKey) {
-        calendarSettings.toggleCollapsibleSection(props.storageKey, props.defaultCollapsed);
+        calendarSettings.toggleCollapsibleSection(props.storageKey);
     }
 };
 </script>
@@ -63,8 +66,8 @@ const toggleCollapsed = () => {
 .section-header {
     display: flex;
     align-items: center;
-    gap: 0.1rem;
-    padding: 0.3rem 0.1rem;
+    gap: 0.5rem;
+    padding: 0.3rem 0.8rem;
     cursor: pointer;
     background-color: var(--bs-secondary-bg);
     border-bottom: 1px solid var(--bs-border-color);
@@ -80,11 +83,19 @@ const toggleCollapsed = () => {
     outline-offset: -2px;
 }
 
+.section-icon {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    color: var(--bs-body-color);
+}
+
 .section-title {
     font-weight: 600;
     color: var(--bs-body-color);
     font-size: 0.9rem;
     line-height: 1;
+    flex: 1;
 }
 
 .collapse-toggle {
@@ -96,12 +107,8 @@ const toggleCollapsed = () => {
     transition: transform 0.2s ease;
 }
 
-.collapse-toggle.collapsed .transition-transform {
-    transform: rotate(-90deg);
-}
-
 .option-content {
-    padding: 0.5rem 0.8rem;
+    padding: 0.8rem 0.8rem;
 }
 
 /* Collapse transition */

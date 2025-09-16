@@ -1,5 +1,5 @@
 <template>
-    <CollapsibleSection title="Event Options" storage-key="event-options">
+    <CollapsibleSection title="Event Options" storage-key="calendarSettings/event-options">
         <div class="form-check form-switch">
             <input
                 id="groupSimilarEvents"
@@ -43,7 +43,7 @@ import { ref, watch } from 'vue';
 
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 
-import CollapsibleSection from './CollapsibleSection.vue';
+import CollapsibleSection from '@/components/CollapsibleSection.vue';
 
 const calendarSettings = useCalendarSettingsStore();
 

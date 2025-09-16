@@ -1,5 +1,5 @@
 <template>
-    <CollapsibleSection title="Event Type Filters" storage-key="event-filters" class="flex-grow-section">
+    <CollapsibleSection title="Event Type Filters" storage-key="calendarSettings/event-filters" class="flex-grow-section">
         <div class="filter-stats mb-2">
             <div class="btn-group btn-group-sm">
                 <button
@@ -79,7 +79,7 @@ import { useEventFilterStore } from '@/stores/eventFilter';
 import { EVENT_TYPES, getEventTypeInfo } from '@/utils/eventTypes';
 import type { EventTypeKey } from '@/utils/eventTypes';
 
-import CollapsibleSection from './CollapsibleSection.vue';
+import CollapsibleSection from '@/components/CollapsibleSection.vue';
 
 const eventFilter = useEventFilterStore();
 

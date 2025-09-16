@@ -1,39 +1,55 @@
 <template>
-    <div class="calendar">
-        <div class="container app-container mt-2 mb-4">
+    <div class="container app-container mt-2 mb-4">
+        <CollapsibleSection title="Calendar" storage-key="main/calendar-section" class="calendar-section">
+            <template #icon>
+                <CalendarIcon :size="18" />
+            </template>
             <!-- Month Navigation Header -->
             <CalendarHeader />
 
-            <!-- Calendar Options Offcanvas -->
-            <Teleport to="body">
-                <Transition name="offcanvas-fade">
-                    <div v-if="calendarSettings.optionsExpanded" class="calendar-options-backdrop" @click="handleBackdropClick">
-                        <div class="offcanvas offcanvas-end show calendar-options-offcanvas" @click.stop>
-                            <CalendarOptions @close="handleCloseOptions" />
-                        </div>
-                    </div>
-                </Transition>
-            </Teleport>
-
-            <!-- Desktop: Calendar Grid Component -->
-            <div xv-if="isDesktop" class="row">
+            <!-- Calendar Grid Component -->
+            <div class="row">
                 <div class="col-12">
+                    <!-- Main Calendar Grid -->
                     <CalendarGrid />
+
+                    <!-- Mini Calendar underneath -->
+                    <div class="mt-3">
+                        <CalendarMobile />
+                    </div>
                 </div>
             </div>
+        </CollapsibleSection>
 
-            <!-- Mobile: Calendar Mobile Component -->
-            <div v-if="isMobile" class="row">
-                <div class="col-12">
-                    <CalendarMobile />
-                </div>
+        <!-- Event Timeline Section -->
+        <div class="row mt-3">
+            <div class="col-12">
+                <CollapsibleSection title="Timeline" storage-key="main/timeline-section" class="timeline-section">
+                    <template #icon>
+                        <PanelTop :size="18" />
+                    </template>
+
+                    <EventTimeline />
+                </CollapsibleSection>
             </div>
         </div>
+
+        <!-- Calendar Options Offcanvas -->
+        <Teleport to="body">
+            <Transition name="offcanvas-fade">
+                <div v-if="calendarSettings.optionsExpanded" class="calendar-options-backdrop" @click="handleBackdropClick">
+                    <div class="offcanvas offcanvas-end show calendar-options-offcanvas" @click.stop>
+                        <CalendarOptions @close="handleCloseOptions" />
+                    </div>
+                </div>
+            </Transition>
+        </Teleport>
     </div>
 </template>
 
 <script setup lang="ts">
 import { breakpointsBootstrapV5, useBreakpoints } from '@vueuse/core';
+import { Calendar as CalendarIcon, PanelTop } from 'lucide-vue-next';
 import { onMounted, onUnmounted, watchEffect } from 'vue';
 
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
@@ -42,7 +58,9 @@ import { useEventsStore } from '@/stores/events';
 import CalendarGrid from '@/components/Calendar/CalendarGrid.vue';
 import CalendarHeader from '@/components/Calendar/CalendarHeader.vue';
 import CalendarMobile from '@/components/Calendar/CalendarMobile.vue';
+import EventTimeline from '@/components/Calendar/EventTimeline.vue';
 import CalendarOptions from '@/components/CalendarOptions/CalendarOptions.vue';
+import CollapsibleSection from '@/components/CollapsibleSection.vue';
 
 const eventsStore = useEventsStore();
 const calendarSettings = useCalendarSettingsStore();

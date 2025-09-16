@@ -1,5 +1,5 @@
 <template>
-    <CollapsibleSection title="Week Starts On" storage-key="first-day-selector">
+    <CollapsibleSection title="Week Starts On" storage-key="calendarSettings/first-day-selector">
         <select id="firstDayOfWeek" class="form-select" :value="calendarSettings.firstDayOfWeek" @change="handleDayChange">
             <option v-for="day in calendarSettings.allDayNames" :key="day" :value="day">
                 {{ day }}
@@ -13,7 +13,7 @@
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import type { FirstDayOfWeek } from '@/stores/calendarSettings';
 
-import CollapsibleSection from './CollapsibleSection.vue';
+import CollapsibleSection from '@/components/CollapsibleSection.vue';
 
 const calendarSettings = useCalendarSettingsStore();
 

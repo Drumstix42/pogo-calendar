@@ -14,7 +14,7 @@ export const useCalendarSettingsStore = defineStore('calendarSettings', () => {
     const firstDayOfWeek = useLocalStorage<FirstDayOfWeek>(STORAGE_KEYS.FIRST_DAY_OF_WEEK, 'Sunday');
 
     // Event grouping setting - whether to group events of same type with identical start/end times
-    const groupSimilarEvents = useLocalStorage<boolean>(STORAGE_KEYS.GROUP_SIMILAR_EVENTS, false);
+    const groupSimilarEvents = useLocalStorage<boolean>(STORAGE_KEYS.GROUP_SIMILAR_EVENTS, true);
 
     // Animated images setting - whether to use animated images in detailed views
     const useAnimatedImages = useLocalStorage<boolean>(STORAGE_KEYS.USE_ANIMATED_IMAGES, true);
@@ -28,8 +28,8 @@ export const useCalendarSettingsStore = defineStore('calendarSettings', () => {
     // Event bar font size setting - font size for multi-day event bars in pixels
     const eventBarFontSize = useLocalStorage<number>(STORAGE_KEYS.EVENT_BAR_FONT_SIZE, 11);
 
-    // Collapsible sections state (keyed by section identifier)
-    const collapsibleSections = useLocalStorage<Record<string, boolean>>(STORAGE_KEYS.COLLAPSIBLE_SECTIONS, {});
+    // Collapsed sections state - only stores sections that are collapsed (expanded is default)
+    const collapsedSections = useLocalStorage<Record<string, true>>(STORAGE_KEYS.COLLAPSIBLE_SECTIONS, {});
 
     const optionsExpanded = ref<boolean>(false);
 
@@ -110,16 +110,20 @@ export const useCalendarSettingsStore = defineStore('calendarSettings', () => {
         optionsExpanded.value = expanded;
     };
 
-    const isCollapsibleSectionCollapsed = (key: string, defaultValue = false): boolean => {
-        return collapsibleSections.value[key] ?? defaultValue;
+    const isCollapsibleSectionCollapsed = (key: string): boolean => {
+        return key in collapsedSections.value;
     };
 
     const setCollapsibleSection = (key: string, collapsed: boolean) => {
-        collapsibleSections.value[key] = collapsed;
+        if (collapsed) {
+            collapsedSections.value[key] = true;
+        } else {
+            delete collapsedSections.value[key];
+        }
     };
 
-    const toggleCollapsibleSection = (key: string, defaultValue = false) => {
-        const currentValue = isCollapsibleSectionCollapsed(key, defaultValue);
+    const toggleCollapsibleSection = (key: string) => {
+        const currentValue = isCollapsibleSectionCollapsed(key);
         setCollapsibleSection(key, !currentValue);
     };
 

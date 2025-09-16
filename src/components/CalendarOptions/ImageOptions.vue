@@ -1,5 +1,5 @@
 <template>
-    <CollapsibleSection title="Image Display" storage-key="image-display">
+    <CollapsibleSection title="Image Display" storage-key="calendarSettings/image-display">
         <div class="form-check form-switch">
             <input
                 id="useMultiDayEventSprites"
@@ -65,7 +65,7 @@ import { computed, ref } from 'vue';
 
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 
-import CollapsibleSection from './CollapsibleSection.vue';
+import CollapsibleSection from '@/components/CollapsibleSection.vue';
 
 const calendarSettings = useCalendarSettingsStore();
 

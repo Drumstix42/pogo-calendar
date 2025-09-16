@@ -12,7 +12,7 @@ export type ThemeMode = 'light' | 'dark' | 'auto';
  */
 export const useThemeStore = defineStore('theme', () => {
     // Store the user's theme preference
-    const themeMode = useLocalStorage<ThemeMode>(STORAGE_KEYS.THEME_MODE, 'auto');
+    const themeMode = useLocalStorage<ThemeMode>(STORAGE_KEYS.THEME_MODE, 'light');
 
     // Get system preference
     const systemPreference = usePreferredColorScheme();
