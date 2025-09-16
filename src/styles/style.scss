@@ -9,7 +9,7 @@ body {
 /* Note: Bootstrap 5 includes box-sizing: border-box reset in reboot.scss */
 
 body {
-    background-color: #f5f6f7;
+    background-color: #f7f8f9;
     margin: 0;
     min-height: 100vh;
     /* Font family now defined in Bootstrap customization */
@@ -101,6 +101,31 @@ small,
 }
 
 .btn-icon-ghost:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-icon-ghost-dark {
+    background-color: transparent;
+    border: none;
+    color: var(--btn-icon-ghost-dark-color);
+    transition: background-color 0.15s ease-in-out;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.25rem 0.25rem;
+}
+
+.btn-icon-ghost-dark:hover:not(:disabled),
+.btn-icon-ghost-dark:active:not(:disabled) {
+    background-color: var(--btn-icon-ghost-dark-hover-bg);
+    color: var(--btn-icon-ghost-dark-hover-color);
+}
+.btn-icon-ghost-dark:active:not(:disabled) {
+    background-color: var(--btn-icon-ghost-dark-active-bg);
+}
+
+.btn-icon-ghost-dark:disabled {
     opacity: 0.5;
     cursor: not-allowed;
 }

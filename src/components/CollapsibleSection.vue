@@ -1,5 +1,5 @@
 <template>
-    <div class="option-section collapsible-section">
+    <div class="option-section collapsible-section" :class="{ open: !isCollapsed, closed: isCollapsed }">
         <div
             class="section-header"
             @click="toggleCollapsed"
@@ -61,6 +61,10 @@ const toggleCollapsed = () => {
 .collapsible-section {
     border: none;
     padding: 0;
+
+    &.closed .section-header {
+        border-bottom: 1px solid var(--bs-secondary-bg);
+    }
 }
 
 .section-header {
@@ -129,6 +133,6 @@ const toggleCollapsed = () => {
 .collapse-enter-to,
 .collapse-leave-from {
     opacity: 1;
-    max-height: 500px; /* Adjust based on your content height */
+    max-height: 800px; /* Adjust based on your content height */
 }
 </style>

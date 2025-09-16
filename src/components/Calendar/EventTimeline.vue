@@ -188,7 +188,7 @@ const hiddenEventsCounts = computed(() => eventData.value.hiddenEventsCounts);
 
 .category-header {
     position: sticky;
-    top: 0;
+    top: var(--navbar-height-scrolled);
     z-index: 10;
     margin: 0 0 12px 0;
     padding: 8px;

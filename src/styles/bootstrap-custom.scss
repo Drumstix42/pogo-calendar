@@ -71,6 +71,7 @@ $font-family-sans-serif:
 // Custom CSS variables
 :root {
     --example-cell-size: 120px;
+    --navbar-height-scrolled: 42px; /* Minimized navbar height when scrolled */
 }
 
 // Theme overrides
@@ -104,6 +105,12 @@ $font-family-sans-serif:
     --btn-icon-ghost-hover-bg: #dee2e6;
     --btn-icon-ghost-hover-color: #212529;
     --btn-icon-ghost-active-bg: #ced4da;
+
+    // Button icon ghost dark variant for dark backgrounds
+    --btn-icon-ghost-dark-color: rgba(255, 255, 255, 0.65);
+    --btn-icon-ghost-dark-hover-bg: rgba(255, 255, 255, 0.1);
+    --btn-icon-ghost-dark-hover-color: rgba(255, 255, 255, 0.85);
+    --btn-icon-ghost-dark-active-bg: rgba(255, 255, 255, 0.15);
 }
 
 [data-bs-theme='dark'] {
@@ -134,6 +141,12 @@ $font-family-sans-serif:
     --btn-icon-ghost-hover-bg: var(--bs-secondary-bg);
     --btn-icon-ghost-hover-color: var(--bs-body-color);
     --btn-icon-ghost-active-bg: var(--bs-tertiary-bg);
+
+    // Button icon ghost dark variant for dark backgrounds (same values for both themes)
+    --btn-icon-ghost-dark-color: rgba(255, 255, 255, 0.65);
+    --btn-icon-ghost-dark-hover-bg: rgba(255, 255, 255, 0.1);
+    --btn-icon-ghost-dark-hover-color: rgba(255, 255, 255, 0.85);
+    --btn-icon-ghost-dark-active-bg: rgba(255, 255, 255, 0.15);
 }
 
 // Responsive overrides for custom variables

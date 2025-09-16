@@ -350,8 +350,8 @@ const hasConflictInSlot = (event: PogoEvent, slotIndex: number, existingSlots: E
     grid-template-columns: repeat(7, 1fr);
     background: var(--calendar-bg);
     position: sticky;
-    top: 0;
-    z-index: 1020;
+    top: var(--navbar-height-scrolled);
+    z-index: 200;
 }
 
 .calendar-day-header {

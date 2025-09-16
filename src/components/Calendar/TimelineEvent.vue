@@ -183,7 +183,7 @@ const hideEventType = (eventType: EventTypeKey): void => {
 
 <style scoped>
 .timeline-event-card {
-    background: white;
+    background: var(--calendar-cell-bg);
     border: 2px solid;
     border-radius: 8px;
     overflow: hidden;

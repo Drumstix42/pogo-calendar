@@ -1,5 +1,5 @@
 <template>
-    <div class="calendar-header d-flex align-items-center justify-content-between flex-wrap row-gap-2 mt-3 mb-2">
+    <div class="calendar-header d-flex align-items-center justify-content-between flex-wrap row-gap-2 mb-2">
         <div class="d-flex align-items-center flex-wrap gap-2">
             <button
                 class="btn btn-sm"
@@ -21,28 +21,18 @@
 
             <span class="month-label text-center">{{ currentMonthDisplay }}</span>
         </div>
-
-        <button
-            class="btn btn-icon-ghost btn-options-toggle xfocus-ring d-flex align-items-center gap-1 ms-auto"
-            :class="{ active: calendarSettings.optionsExpanded }"
-            @click="calendarSettings.toggleOptionsExpanded"
-        >
-            <Settings :size="18" class="flex-grow-0" />
-        </button>
     </div>
 </template>
 
 <script setup lang="ts">
 import dayjs from 'dayjs';
-import { ChevronLeft, ChevronRight, Settings } from 'lucide-vue-next';
+import { ChevronLeft, ChevronRight } from 'lucide-vue-next';
 import { computed } from 'vue';
 
 import { useUrlSync } from '@/composables/useUrlSync';
-import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { DATE_FORMAT } from '@/utils/dateFormat';
 
 const { urlMonth, urlYear } = useUrlSync();
-const calendarSettings = useCalendarSettingsStore();
 
 // Current month display
 const currentMonthDisplay = computed(() => {
@@ -93,8 +83,8 @@ const goToCurrentMonth = () => {
 
 <style scoped>
 .month-label {
-    font-size: 1.2rem;
-    line-height: 1.4rem;
+    font-size: 1.1rem;
+    line-height: 1;
     font-weight: 500;
 }
 
@@ -103,10 +93,5 @@ const goToCurrentMonth = () => {
 }
 .rotate-180 {
     transform: rotate(180deg);
-}
-
-.btn-options-toggle {
-    line-height: 1;
-    padding: 0.4rem 0.6rem;
 }
 </style>

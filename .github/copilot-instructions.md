@@ -1,5 +1,16 @@
 # PoGo Calendar - AI Coding Agent Instructions
 
+## CRITICAL WORKFLOW - MUST FOLLOW
+
+1. **Assess the scope**: Determine if the request is a new feature/request OR a larger change that affects multiple files or components
+2. **For new requests or larger changes**: First outline your approach and wait for user confirmation before implementing
+3. **For smaller changes**: Implement directly while following all Development Standards
+4. **Never add "improvements" beyond the specific request** - implement exactly what was asked
+5. **Focus on code changes only** - do not run dev servers or builds unless specifically requested
+6. **Use minimal comments** - let descriptive naming speak for itself, but add comments for complex logic (why, not what)
+7. **Avoid overly pleasing language** - be concise and to the point when communicating (anything beyond code changes)
+8. **Refer to the "Development Standards" section below for coding conventions and patterns**
+
 ## Project Overview
 
 Vue 3 + TypeScript calendar for Pokemon GO events. Events fetched from external API with Pokemon-themed UI.
@@ -13,15 +24,12 @@ Vue 3 + TypeScript calendar for Pokemon GO events. Events fetched from external 
 
 ## Development Standards
 
-- When implementing a new request, or larger change, first outline the approach. Changes/iterations can be made based on feedback.
 - Use `<script setup>` syntax with TypeScript
-- Minimal comments - descriptive naming instead
 - VueUse breakpoints: `breakpointsBootstrapV5`
 - FloatingVue tooltips with touch disabled
 - `DATE_FORMAT` constants for consistency
 - CSS variables for theming
 - Responsive design patterns (mobile/desktop components), with Bootstrap 5 classes and media queries
-- Focus on code changes; no need to run dev servers or builds
 - For icons, use the Lucide Vue library
 - Use `src/utils/pokemonMapper.ts` for Pokemon name normalization and ID lookup
 
