@@ -1,27 +1,31 @@
 <template>
     <div id="app">
-        <nav class="navbar navbar-expand-lg border-bottom page-header" :class="{ 'navbar-scrolled': isScrolled }">
-            <div class="container app-container" style="max-width: none">
-                <a class="navbar-brand" href="#">
-                    <img src="/favicon.svg" alt="Calendar" width="24" height="24" class="me-2" />
-                    <strong>PoGO Event Calendar</strong>
-                </a>
+        <div class="navbar-wrapper">
+            <nav class="navbar navbar-expand-lg border-bottom page-header" :class="{ 'navbar-scrolled': isScrolled }">
+                <div class="container app-container" style="max-width: none">
+                    <a class="navbar-brand" href="#">
+                        <img src="/favicon.svg" alt="Calendar" width="24" height="24" class="me-2" />
+                        <strong>PoGO Event Calendar</strong>
+                    </a>
 
-                <div class="ms-auto d-flex align-items-center gap-1">
-                    <ThemeSelector />
-                    <button
-                        type="button"
-                        class="btn btn-icon-ghost-dark btn-options-toggle d-flex align-items-center gap-1"
-                        title="Settings"
-                        @click="calendarSettings.toggleOptionsExpanded"
-                    >
-                        <Settings :size="18" class="flex-grow-0" />
-                    </button>
+                    <div class="ms-auto d-flex align-items-center gap-1">
+                        <ThemeSelector />
+                        <button
+                            type="button"
+                            class="btn btn-icon-ghost-dark btn-options-toggle d-flex align-items-center gap-1"
+                            title="Settings"
+                            @click="calendarSettings.toggleOptionsExpanded"
+                        >
+                            <Settings :size="18" class="flex-grow-0" />
+                        </button>
+                    </div>
                 </div>
-            </div>
-        </nav>
+            </nav>
+        </div>
 
-        <router-view />
+        <main class="main-content">
+            <router-view />
+        </main>
 
         <!-- Toast notifications -->
         <ToastContainer />
@@ -39,36 +43,51 @@ import { useThemeStore } from '@/stores/theme';
 import ThemeSelector from '@/components/ThemeSelector.vue';
 import ToastContainer from '@/components/Toast/ToastContainer.vue';
 
-// Initialize theme store to apply theme on app start
 useThemeStore();
 
-// Initialize calendar settings store for options button
 const calendarSettings = useCalendarSettingsStore();
 
-// Scroll detection for navbar minimization using VueUse
 const { y: scrollY } = useWindowScroll();
-const scrollThreshold = 10; // Pixels to scroll before minimizing
+const scrollThreshold = 10;
 
 const isScrolled = computed(() => scrollY.value > scrollThreshold);
 </script>
 
 <style scoped>
-.page-header {
-    background-color: #343a40;
-    border-color: rgba(255, 255, 255, 0.1) !important;
+.navbar-wrapper {
     position: sticky;
     top: 0;
     z-index: 300;
+    height: var(--navbar-height-scrolled);
+    overflow: visible;
+}
+
+.page-header {
+    background-color: #343a40;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    height: 56px;
+    display: flex;
+    align-items: center;
     transition:
-        padding 0.3s ease,
+        height 0.3s ease,
         box-shadow 0.3s ease;
-    padding: 0.5rem 0;
 
     &.navbar-scrolled {
         height: var(--navbar-height-scrolled);
-        padding: 0.2rem 0;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
+
+    .container {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 calc(var(--bs-gutter-x) * 0.5);
+        margin: 0;
+    }
+}
+
+.main-content {
+    padding-top: 20px;
 }
 
 [data-bs-theme='dark'] .page-header {
@@ -88,7 +107,6 @@ const isScrolled = computed(() => scrollY.value > scrollThreshold);
     color: #e74c3c !important;
 }
 
-/* Make theme selector visible on dark header */
 [data-bs-theme='light'] .page-header :deep(.btn-link.nav-link) {
     color: rgba(255, 255, 255, 0.8) !important;
 }
