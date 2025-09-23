@@ -3,196 +3,277 @@ import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import utc from 'dayjs/plugin/utc';
 import { defineStore } from 'pinia';
+import { computed, ref } from 'vue';
 
 import { DATE_FORMAT } from '../utils/dateFormat';
-import { type EventTypeInfo, type PogoEvent, getEventTypeInfo, getEventsForDate, sortEventsByPriority } from '../utils/eventTypes';
+import {
+    type EventTypeInfo,
+    type PogoEvent,
+    formatEventTime,
+    getEventTypeInfo,
+    isMultiDayEvent,
+    parseEventDate,
+    sortEventsByPriority,
+} from '../utils/eventTypes';
 
 // Day.js plugins - extend adds functionality to the core library
 dayjs.extend(utc); // Adds UTC timezone support for parsing/converting dates
 dayjs.extend(isSameOrBefore); // Adds comparison method for date <= checks
 dayjs.extend(isSameOrAfter); // Adds comparison method for date >= checks
 
-interface EventsState {
-    events: PogoEvent[];
-    loading: boolean;
-    error: string | null;
-    lastFetched: number | null;
-    currentMonth: number;
-    currentYear: number;
-}
-
 interface EventWithTypeInfo extends PogoEvent {
     typeInfo: EventTypeInfo;
 }
 
+export interface EventMetadata {
+    // Precomputed dates
+    startDate: dayjs.Dayjs;
+    endDate: dayjs.Dayjs;
+
+    // Classifications
+    isMultiDayEvent: boolean;
+    isPastEvent: boolean;
+    isFutureEvent: boolean;
+
+    // Type information
+    typeInfo: EventTypeInfo;
+    color: string;
+
+    // Display helpers
+    formattedTime: string;
+    displayName: string;
+
+    // Grouping metadata (for when grouping is enabled)
+    isGrouped?: boolean;
+    groupedEvents?: PogoEvent[];
+    groupCount?: number;
+}
+
 const SCRAPED_EVENTS_URL = 'https://raw.githubusercontent.com/bigfoott/ScrapedDuck/data/events.min.json';
 
-export const useEventsStore = defineStore('events', {
-    state: (): EventsState => ({
-        events: [],
-        loading: false,
-        error: null,
-        lastFetched: null,
-        currentMonth: dayjs().month(),
-        currentYear: dayjs().year(),
-    }),
+export const useEventsStore = defineStore('events', () => {
+    // State
+    const events = ref<PogoEvent[]>([]);
+    const loading = ref(false);
+    const error = ref<string | null>(null);
+    const lastFetched = ref<number | null>(null);
+    const currentMonth = ref(dayjs().month());
+    const currentYear = ref(dayjs().year());
 
-    getters: {
-        currentMonthEvents: (state): PogoEvent[] => {
-            const startOfMonth = dayjs().year(state.currentYear).month(state.currentMonth).startOf('month');
-            const endOfMonth = dayjs().year(state.currentYear).month(state.currentMonth).endOf('month');
+    // Getters (computed)
+    const currentMonthEvents = computed((): PogoEvent[] => {
+        const startOfMonth = dayjs().year(currentYear.value).month(currentMonth.value).startOf('month');
+        const endOfMonth = dayjs().year(currentYear.value).month(currentMonth.value).endOf('month');
 
-            return state.events.filter(event => {
-                if (!event.start || !event.end) return false;
+        return events.value.filter(event => {
+            if (!event.start || !event.end) return false;
 
-                const eventStart = dayjs.utc(event.start).local();
-                const eventEnd = dayjs.utc(event.end).local();
+            const eventStart = dayjs.utc(event.start).local();
+            const eventEnd = dayjs.utc(event.end).local();
 
-                return eventStart.isSameOrBefore(endOfMonth) && eventEnd.isSameOrAfter(startOfMonth);
-            });
-        },
+            return eventStart.isSameOrBefore(endOfMonth) && eventEnd.isSameOrAfter(startOfMonth);
+        });
+    });
 
-        getEventsForDate: state => {
-            return (date: Date | string | dayjs.Dayjs): PogoEvent[] => {
-                return getEventsForDate(state.events, date);
-            };
-        },
+    const eventsByDate = computed((): Record<string, EventWithTypeInfo[]> => {
+        const grouped: Record<string, EventWithTypeInfo[]> = {};
+        const startOfMonth = dayjs().year(currentYear.value).month(currentMonth.value).startOf('month');
+        const endOfMonth = dayjs().year(currentYear.value).month(currentMonth.value).endOf('month');
 
-        eventsByDate: (state): Record<string, EventWithTypeInfo[]> => {
-            const grouped: Record<string, EventWithTypeInfo[]> = {};
-            const startOfMonth = dayjs().year(state.currentYear).month(state.currentMonth).startOf('month');
-            const endOfMonth = dayjs().year(state.currentYear).month(state.currentMonth).endOf('month');
+        // Initialize all dates in month
+        for (let d = startOfMonth; d.isSameOrBefore(endOfMonth); d = d.add(1, 'day')) {
+            const dateKey = d.format(DATE_FORMAT.CALENDAR_DATE);
+            grouped[dateKey] = [];
+        }
 
-            // Initialize all dates in month
-            for (let d = startOfMonth; d.isSameOrBefore(endOfMonth); d = d.add(1, 'day')) {
+        // Add events to their respective dates
+        events.value.forEach(event => {
+            if (!event.start || !event.end) return;
+
+            const eventStart = dayjs.utc(event.start).local();
+            const eventEnd = dayjs.utc(event.end).local();
+
+            // Add event to each date it spans within the current month
+            const spanStart = eventStart.isAfter(startOfMonth) ? eventStart : startOfMonth;
+            const spanEnd = eventEnd.isBefore(endOfMonth) ? eventEnd : endOfMonth;
+
+            for (let d = spanStart.startOf('day'); d.isSameOrBefore(spanEnd.startOf('day')); d = d.add(1, 'day')) {
                 const dateKey = d.format(DATE_FORMAT.CALENDAR_DATE);
-                grouped[dateKey] = [];
-            }
-
-            // Add events to their respective dates
-            state.events.forEach(event => {
-                if (!event.start || !event.end) return;
-
-                const eventStart = dayjs.utc(event.start).local();
-                const eventEnd = dayjs.utc(event.end).local();
-
-                // Add event to each date it spans within the current month
-                const spanStart = eventStart.isAfter(startOfMonth) ? eventStart : startOfMonth;
-                const spanEnd = eventEnd.isBefore(endOfMonth) ? eventEnd : endOfMonth;
-
-                for (let d = spanStart.startOf('day'); d.isSameOrBefore(spanEnd.startOf('day')); d = d.add(1, 'day')) {
-                    const dateKey = d.format(DATE_FORMAT.CALENDAR_DATE);
-                    if (grouped[dateKey]) {
-                        grouped[dateKey].push({
-                            ...event,
-                            typeInfo: getEventTypeInfo(event.eventType),
-                        });
-                    }
-                }
-            });
-
-            // Sort events by priority within each date
-            Object.keys(grouped).forEach(date => {
-                grouped[date] = sortEventsByPriority(grouped[date]) as EventWithTypeInfo[];
-            });
-
-            return grouped;
-        },
-
-        // Check if we have fresh data (less than 1 hour old)
-        hasFreshData: (state): boolean => {
-            if (!state.lastFetched) return false;
-            const oneHour = 60 * 60 * 1000;
-            return Date.now() - state.lastFetched < oneHour;
-        },
-
-        currentMonthName: (state): string => {
-            return dayjs().year(state.currentYear).month(state.currentMonth).format(DATE_FORMAT.MONTH_YEAR);
-        },
-    },
-
-    actions: {
-        async fetchEvents(force: boolean = false): Promise<void> {
-            // Skip if we have fresh data and not forcing
-            if (!force && this.hasFreshData) {
-                return;
-            }
-
-            this.loading = true;
-            this.error = null;
-
-            try {
-                const response = await fetch(SCRAPED_EVENTS_URL);
-
-                if (!response.ok) {
-                    throw new Error(`Failed to fetch events: ${response.status} ${response.statusText}`);
-                }
-
-                const events: PogoEvent[] = await response.json();
-
-                this.events = events;
-                this.lastFetched = Date.now();
-                this.error = null;
-
-                console.log(`Loaded ${events.length} events from ScrapedDuck`);
-
-                // Log some sample events and date analysis
-                if (events.length > 0) {
-                    const sampleEvent = events[0];
-                    console.log('Sample event:', {
-                        name: sampleEvent.name,
-                        type: sampleEvent.eventType,
-                        start: sampleEvent.start,
-                        end: sampleEvent.end,
-                        startParsed: dayjs.utc(sampleEvent.start).local().format(DATE_FORMAT.DATE_TIME),
-                        endParsed: dayjs.utc(sampleEvent.end).local().format(DATE_FORMAT.DATE_TIME),
+                if (grouped[dateKey]) {
+                    grouped[dateKey].push({
+                        ...event,
+                        typeInfo: getEventTypeInfo(event.eventType),
                     });
-
-                    const currentMonthCount = this.currentMonthEvents.length;
-                    console.log(`Events for current month (${dayjs().format(DATE_FORMAT.MONTH_YEAR)}): ${currentMonthCount}`);
                 }
-            } catch (error) {
-                console.error('Error fetching events:', error);
-                this.error = error instanceof Error ? error.message : 'Unknown error occurred';
-            } finally {
-                this.loading = false;
             }
-        },
+        });
 
-        setCurrentMonth(month: number, year: number): void {
-            this.currentMonth = month;
-            this.currentYear = year;
-        },
+        // Sort events by priority within each date
+        Object.keys(grouped).forEach(date => {
+            grouped[date] = sortEventsByPriority(grouped[date]) as EventWithTypeInfo[];
+        });
 
-        navigateToNextMonth(): void {
-            if (this.currentMonth === 11) {
-                this.currentMonth = 0;
-                this.currentYear++;
-            } else {
-                this.currentMonth++;
+        return grouped;
+    });
+
+    // Check if we have fresh data (less than 1 hour old)
+    const hasFreshData = computed((): boolean => {
+        if (!lastFetched.value) return false;
+        const oneHour = 60 * 60 * 1000;
+        return Date.now() - lastFetched.value < oneHour;
+    });
+
+    const currentMonthName = computed((): string => {
+        return dayjs().year(currentYear.value).month(currentMonth.value).format(DATE_FORMAT.MONTH_YEAR);
+    });
+
+    /** Event metadata with precomputed values for performance */
+    const eventMetadata = computed((): Record<string, EventMetadata> => {
+        const metadata: Record<string, EventMetadata> = {};
+        const now = dayjs();
+
+        events.value.forEach(event => {
+            const startDate = parseEventDate(event.start);
+            const endDate = parseEventDate(event.end);
+            const typeInfo = getEventTypeInfo(event.eventType);
+            const isMultiDay = isMultiDayEvent(event);
+
+            metadata[event.eventID] = {
+                displayName: event.name, // Can be enhanced with grouping logic later
+                startDate,
+                endDate,
+                typeInfo,
+                color: typeInfo.color,
+                formattedTime: isMultiDay ? '' : formatEventTime(event.start),
+                isMultiDayEvent: isMultiDay,
+                isPastEvent: endDate.isBefore(now),
+                isFutureEvent: startDate.isAfter(now),
+            };
+        });
+
+        return metadata;
+    });
+
+    // Actions (including function-based getters)
+    function getEventsForDate(date: Date | string | dayjs.Dayjs): PogoEvent[] {
+        const targetDate = dayjs(date);
+
+        return events.value.filter(event => {
+            if (!event.start || !event.end) return false;
+
+            const eventStart = dayjs.utc(event.start).local();
+            const eventEnd = dayjs.utc(event.end).local();
+
+            return targetDate.isSameOrAfter(eventStart.startOf('day')) && targetDate.isSameOrBefore(eventEnd.startOf('day'));
+        });
+    }
+
+    async function fetchEvents(force: boolean = false): Promise<void> {
+        // Skip if we have fresh data and not forcing
+        if (!force && hasFreshData.value) {
+            return;
+        }
+
+        loading.value = true;
+        error.value = null;
+
+        try {
+            const response = await fetch(SCRAPED_EVENTS_URL);
+
+            if (!response.ok) {
+                throw new Error(`Failed to fetch events: ${response.status} ${response.statusText}`);
             }
-        },
 
-        navigateToPreviousMonth(): void {
-            if (this.currentMonth === 0) {
-                this.currentMonth = 11;
-                this.currentYear--;
-            } else {
-                this.currentMonth--;
+            const fetchedEvents: PogoEvent[] = await response.json();
+
+            events.value = fetchedEvents;
+            lastFetched.value = Date.now();
+            error.value = null;
+
+            console.log(`Loaded ${fetchedEvents.length} events from ScrapedDuck`);
+
+            // Log some sample events and date analysis
+            if (fetchedEvents.length > 0) {
+                const sampleEvent = fetchedEvents[0];
+                console.log('Sample event:', {
+                    name: sampleEvent.name,
+                    type: sampleEvent.eventType,
+                    start: sampleEvent.start,
+                    end: sampleEvent.end,
+                    startParsed: dayjs.utc(sampleEvent.start).local().format(DATE_FORMAT.DATE_TIME),
+                    endParsed: dayjs.utc(sampleEvent.end).local().format(DATE_FORMAT.DATE_TIME),
+                });
+
+                const currentMonthCount = currentMonthEvents.value.length;
+                console.log(`Events for current month (${dayjs().format(DATE_FORMAT.MONTH_YEAR)}): ${currentMonthCount}`);
             }
-        },
+        } catch (fetchError) {
+            console.error('Error fetching events:', fetchError);
+            error.value = fetchError instanceof Error ? fetchError.message : 'Unknown error occurred';
+        } finally {
+            loading.value = false;
+        }
+    }
 
-        goToToday(): void {
-            const today = dayjs();
-            this.currentMonth = today.month();
-            this.currentYear = today.year();
-        },
+    function setCurrentMonth(month: number, year: number): void {
+        currentMonth.value = month;
+        currentYear.value = year;
+    }
 
-        // Clear all data (useful for testing or refresh)
-        clearEvents(): void {
-            this.events = [];
-            this.lastFetched = null;
-            this.error = null;
-        },
-    },
+    function navigateToNextMonth(): void {
+        if (currentMonth.value === 11) {
+            currentMonth.value = 0;
+            currentYear.value++;
+        } else {
+            currentMonth.value++;
+        }
+    }
+
+    function navigateToPreviousMonth(): void {
+        if (currentMonth.value === 0) {
+            currentMonth.value = 11;
+            currentYear.value--;
+        } else {
+            currentMonth.value--;
+        }
+    }
+
+    function goToToday(): void {
+        const today = dayjs();
+        currentMonth.value = today.month();
+        currentYear.value = today.year();
+    }
+
+    // Clear all data (useful for testing or refresh)
+    function clearEvents(): void {
+        events.value = [];
+        lastFetched.value = null;
+        error.value = null;
+    }
+
+    return {
+        // State
+        events,
+        loading,
+        error,
+        lastFetched,
+        currentMonth,
+        currentYear,
+
+        // Getters
+        currentMonthEvents,
+        eventsByDate,
+        hasFreshData,
+        currentMonthName,
+        eventMetadata,
+
+        // Actions
+        getEventsForDate,
+        fetchEvents,
+        setCurrentMonth,
+        navigateToNextMonth,
+        navigateToPreviousMonth,
+        goToToday,
+        clearEvents,
+    };
 });
