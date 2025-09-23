@@ -48,7 +48,7 @@
                             getMultiDayEventBarClass(event, props.dayInstance),
                             {
                                 'event-id-highlighted': isEventHighlighted(event.eventID),
-                                'event-past': isEventEnded(event),
+                                'event-past': eventsStore.eventMetadata[event.eventID]?.isPastEvent,
                             },
                         ]"
                         :data-event-type="event.eventType"
@@ -115,7 +115,7 @@
                 >
                     <div
                         class="single-day-event calendar-event"
-                        :class="{ 'event-past': isEventEnded(event) }"
+                        :class="{ 'event-past': eventsStore.eventMetadata[event.eventID]?.isPastEvent }"
                         :data-event-type="event.eventType"
                         :data-event-id="event.eventID"
                     >
@@ -149,7 +149,7 @@
 </template>
 
 <script setup lang="ts">
-import dayjs, { type Dayjs } from 'dayjs';
+import { type Dayjs } from 'dayjs';
 import { computed } from 'vue';
 
 import { useDeviceDetection } from '@/composables/useDeviceDetection';
@@ -387,12 +387,6 @@ const clearEventIDHighlight = (): void => {
 
 const isEventHighlighted = (eventID: string): boolean => {
     return eventHighlight.isEventHighlighted(eventID);
-};
-
-const isEventEnded = (event: PogoEvent): boolean => {
-    const eventEnd = parseEventDate(event.end);
-    const now = dayjs();
-    return eventEnd.isBefore(now);
 };
 
 // Multi-day event bar state helpers
