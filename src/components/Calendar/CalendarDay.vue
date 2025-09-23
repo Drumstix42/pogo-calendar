@@ -48,6 +48,7 @@
                             getMultiDayEventBarClass(event, props.dayInstance),
                             {
                                 'event-id-highlighted': isEventHighlighted(event.eventID),
+                                'event-past': isEventEnded(event),
                             },
                         ]"
                         :data-event-type="event.eventType"
@@ -112,7 +113,12 @@
                     :distance="tooltipOptionsDefaults.distance"
                     :auto-hide="tooltipOptionsDefaults.autoHide"
                 >
-                    <div class="single-day-event calendar-event" :data-event-type="event.eventType" :data-event-id="event.eventID">
+                    <div
+                        class="single-day-event calendar-event"
+                        :class="{ 'event-past': isEventEnded(event) }"
+                        :data-event-type="event.eventType"
+                        :data-event-id="event.eventID"
+                    >
                         <div class="event-dot" :style="{ backgroundColor: getEventColor(event) }"></div>
                         <div class="event-content">
                             <div class="event-name-container">
@@ -143,7 +149,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Dayjs } from 'dayjs';
+import dayjs, { type Dayjs } from 'dayjs';
 import { computed } from 'vue';
 
 import { useDeviceDetection } from '@/composables/useDeviceDetection';
@@ -383,6 +389,12 @@ const isEventHighlighted = (eventID: string): boolean => {
     return eventHighlight.isEventHighlighted(eventID);
 };
 
+const isEventEnded = (event: PogoEvent): boolean => {
+    const eventEnd = parseEventDate(event.end);
+    const now = dayjs();
+    return eventEnd.isBefore(now);
+};
+
 // Multi-day event bar state helpers
 const getMultiDayEventBarClass = (event: PogoEvent, currentDay: Dayjs): string => {
     const slotData = getEventSlotData(event);
@@ -579,7 +591,6 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     color: #f2f2f2;
     text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
     cursor: pointer;
-    transition: background-color 0.2s ease;
     height: 100%;
     min-width: 0;
     margin-bottom: 1px;
@@ -591,6 +602,7 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
 }
 
 .multi-day-event-bar:hover {
+    color: #ffffff;
     background-color: color-mix(in srgb, var(--event-bg-color) 85%, var(--calendar-cell-bg)) !important;
 }
 
@@ -623,6 +635,39 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
 .multi-day-event-bar .v-popper--theme-dropdown {
     width: 100%;
     height: 100%;
+}
+
+.single-day-event.event-past {
+    .event-content {
+        transition:
+            filter 0.3s ease,
+            opacity 0.3s ease;
+    }
+
+    &:not(:hover) {
+        .event-content {
+            opacity: 0.6;
+            filter: grayscale(30%);
+        }
+    }
+}
+
+.multi-day-event-bar.event-past {
+    .event-name {
+        transition:
+            opacity 0.3s ease,
+            color 0.3s ease;
+    }
+    &:not(:hover) {
+        opacity: 0.9;
+        .event-name {
+            color: #ccc;
+        }
+        .pokemon-images {
+            opacity: 0.9;
+            filter: grayscale(100%);
+        }
+    }
 }
 
 .event-badge {
@@ -807,7 +852,6 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     padding: 2px 1px 2px 3px;
     border-radius: 3px;
     cursor: pointer;
-    transition: background-color 0.2s ease;
     min-width: 0;
     overflow: hidden;
     position: relative; /* Added for button positioning */

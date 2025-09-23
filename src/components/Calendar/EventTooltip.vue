@@ -180,7 +180,7 @@ const formatEventDuration = (event: PogoEvent): string => {
 
 <style scoped>
 .event-tooltip {
-    max-width: 340px;
+    max-width: 350px;
     padding: 0rem;
 }
 

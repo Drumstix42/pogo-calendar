@@ -232,10 +232,13 @@ body {
     .calendar-event {
         transition:
             background-color 0.1s ease,
+            opacity 0.2s ease,
             filter 0.1s ease !important;
 
         .event-name {
             transition:
+                opacity 0.2s ease,
+                color 0.2s ease,
                 font-weight 0.5s ease,
                 letter-spacing 0.5s ease,
                 font-size 0.5s ease,

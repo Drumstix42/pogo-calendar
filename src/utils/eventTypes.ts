@@ -298,6 +298,7 @@ export type EventTypeKey = keyof typeof EVENT_TYPES;
 export const getEventTypeInfo = (eventType: string): EventTypeInfo => {
     return (
         EVENT_TYPES[eventType] || {
+            // replaces dashes with spaces and capitalizes each word
             name: eventType.replace(/-/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()),
             color: '#757575', // Default grey
             priority: 5,
