@@ -70,13 +70,21 @@
         <!-- Bonuses for community day events -->
         <div v-if="communityDayBonuses" class="community-day-bonuses">
             <div class="bonus-header"><strong>Bonuses:</strong></div>
-            <div class="bonus-list">
-                <div v-for="bonus in communityDayBonuses" :key="bonus.text" class="bonus-item">
-                    <img :src="bonus.image" :alt="bonus.text" class="bonus-icon" />
-                    <span class="bonus-text">{{ bonus.text }}</span>
-                </div>
-                <div v-if="communityDayBonusDisclaimers" class="bonus-disclaimers">
-                    <div v-for="disclaimer in communityDayBonusDisclaimers" :key="disclaimer" class="disclaimer-text" v-html="disclaimer"></div>
+            <div
+                class="bonus-list-container scroll-shadow-hints"
+                :class="{
+                    'can-scroll-up': canScrollUp,
+                    'can-scroll-down': canScrollDown,
+                }"
+            >
+                <div ref="bonusListRef" class="bonus-list" @scroll="updateScrollState">
+                    <div v-for="bonus in communityDayBonuses" :key="bonus.text" class="bonus-item">
+                        <img :src="bonus.image" :alt="bonus.text" class="bonus-icon" />
+                        <span class="bonus-text">{{ bonus.text }}</span>
+                    </div>
+                    <div v-if="communityDayBonusDisclaimers" class="bonus-disclaimers">
+                        <div v-for="disclaimer in communityDayBonusDisclaimers" :key="disclaimer" class="disclaimer-text" v-html="disclaimer"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -99,7 +107,7 @@
 <script setup lang="ts">
 import dayjs from 'dayjs';
 import { ExternalLink } from 'lucide-vue-next';
-import { computed } from 'vue';
+import { computed, nextTick, onMounted, ref } from 'vue';
 
 import { useEventFilterToasts } from '@/composables/useEventFilterToasts';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
@@ -128,6 +136,20 @@ const props = withDefaults(defineProps<Props>(), {
 const calendarSettings = useCalendarSettingsStore();
 const { hideEventTypeWithToast } = useEventFilterToasts();
 
+const bonusListRef = ref<HTMLElement>();
+const canScrollUp = ref(false);
+const canScrollDown = ref(false);
+
+const updateScrollState = () => {
+    const element = bonusListRef.value;
+    if (!element) return;
+
+    const { scrollTop, scrollHeight, clientHeight } = element;
+
+    canScrollUp.value = scrollTop > 5;
+    canScrollDown.value = scrollTop < scrollHeight - clientHeight - 5;
+};
+
 const spotlightBonus = computed(() => {
     if (props.event.eventType === 'pokemon-spotlight-hour' && props.event.extraData?.spotlight?.bonus) {
         return props.event.extraData.spotlight.bonus;
@@ -147,6 +169,12 @@ const communityDayBonusDisclaimers = computed(() => {
         return props.event.extraData.communityday.bonusDisclaimers;
     }
     return null;
+});
+
+onMounted(() => {
+    nextTick(() => {
+        setTimeout(updateScrollState, 50);
+    });
 });
 
 const hideEventType = (eventType: EventTypeKey): void => {
@@ -266,6 +294,10 @@ const formatEventDuration = (event: PogoEvent): string => {
     color: color-mix(in srgb, var(--bs-body-color) 80%, transparent);
     font-weight: 00;
     padding: 0 0.6rem 0.2rem 0.5rem;
+}
+
+.bonus-list-container {
+    position: relative;
 }
 
 .bonus-list {

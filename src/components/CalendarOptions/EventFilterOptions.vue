@@ -24,12 +24,7 @@
             <div v-else class="text-muted">{{ eventFilter.enabledCount }} of {{ eventFilter.totalCount }} event types enabled</div>
         </div>
 
-        <div
-            ref="filterGridContainer"
-            class="filter-grid-container"
-            :class="{ 'can-scroll-up': canScrollUp, 'can-scroll-down': canScrollDown }"
-            @mouseleave="clearHighlight"
-        >
+        <div ref="filterGridContainer" class="filter-grid-container" @mouseleave="clearHighlight">
             <div class="filter-grid">
                 <div v-for="group in eventGroups" :key="group.title" class="filter-group">
                     <h6 class="filter-group-title">{{ group.title }}</h6>
@@ -73,7 +68,7 @@
 </template>
 <script setup lang="ts">
 import { Check } from 'lucide-vue-next';
-import { computed, nextTick, onMounted, ref } from 'vue';
+import { computed } from 'vue';
 
 import { useEventFilterStore } from '@/stores/eventFilter';
 import { EVENT_TYPES, getEventTypeInfo } from '@/utils/eventTypes';
@@ -83,10 +78,6 @@ import CollapsibleSection from '@/components/CollapsibleSection.vue';
 
 const eventFilter = useEventFilterStore();
 
-const filterGridContainer = ref<HTMLElement>();
-const canScrollUp = ref(false);
-const canScrollDown = ref(false);
-
 // Event type highlighting functions
 const highlightEventType = (eventTypeKey: EventTypeKey) => {
     document.body.setAttribute('data-filter-hover-event-type', eventTypeKey);
@@ -95,29 +86,6 @@ const highlightEventType = (eventTypeKey: EventTypeKey) => {
 const clearHighlight = () => {
     document.body.removeAttribute('data-filter-hover-event-type');
 };
-
-// Check scroll position and update shadow hints
-const checkScrollPosition = () => {
-    const container = filterGridContainer.value?.querySelector('.filter-grid') as HTMLElement;
-    if (!container) return;
-
-    const { scrollTop, scrollHeight, clientHeight } = container;
-
-    // More precise scroll detection
-    canScrollUp.value = scrollTop > 5; // Small threshold to avoid micro-scrolling issues
-    canScrollDown.value = scrollTop < scrollHeight - clientHeight - 5; // Small threshold
-};
-
-onMounted(() => {
-    nextTick(() => {
-        const container = filterGridContainer.value?.querySelector('.filter-grid') as HTMLElement;
-        if (container) {
-            container.addEventListener('scroll', checkScrollPosition);
-            // Initial check after a short delay to ensure content is rendered
-            setTimeout(checkScrollPosition, 100);
-        }
-    });
-});
 
 // Category display names
 const categoryDisplayNames = {
