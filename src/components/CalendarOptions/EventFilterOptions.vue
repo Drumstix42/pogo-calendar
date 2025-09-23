@@ -3,7 +3,7 @@
         <div class="filter-stats mb-2">
             <div class="btn-group btn-group-sm">
                 <button
-                    :class="eventFilter.allEventTypesEnabled ? 'btn btn-dark' : 'btn btn-outline-secondary'"
+                    :class="eventFilter.allEventTypesEnabled ? 'btn btn-secondary' : 'btn btn-outline-secondary'"
                     @click="eventFilter.enableAllEventTypes()"
                 >
                     All
@@ -165,105 +165,14 @@ const eventGroups = computed(() => {
 </script>
 
 <style scoped>
-.flex-grow-section {
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
-}
-
-:deep(.option-content) {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    min-height: 0;
-}
-
 .filter-grid-container {
     position: relative;
-    flex: 1;
-    min-height: 0;
-}
-
-.filter-grid-container::before,
-.filter-grid-container::after {
-    content: '';
-    position: absolute;
-    left: 0;
-    right: 0;
-    height: 5px;
-    pointer-events: none;
-    z-index: 10;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-
-.filter-grid-container::before {
-    top: 0;
-    background: linear-gradient(to bottom, rgba(var(--bs-body-color-rgb), 0.1), rgba(var(--bs-body-color-rgb), 0));
-}
-
-.filter-grid-container::after {
-    bottom: 0;
-    background: linear-gradient(to top, rgba(var(--bs-body-color-rgb), 0.1), rgba(var(--bs-body-color-rgb), 0));
-}
-
-.filter-grid-container.can-scroll-up::before {
-    opacity: 1;
-}
-
-.filter-grid-container.can-scroll-down::after {
-    opacity: 1;
 }
 
 .filter-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 0.5rem;
-    height: 100%;
-    overflow-y: auto;
-    padding-right: 0.5rem;
-}
-
-/* On mobile, let the filter grid expand naturally without separate scrolling */
-@media (max-width: 767.98px) {
-    .filter-grid {
-        height: auto;
-        overflow-y: visible;
-        padding-right: 0;
-    }
-
-    .filter-grid-container {
-        flex: none;
-        min-height: auto;
-    }
-
-    :deep(.option-content) {
-        flex: none;
-        min-height: auto;
-    }
-
-    .flex-grow-section {
-        flex: none;
-        min-height: auto;
-    }
-}
-
-.filter-grid::-webkit-scrollbar {
-    width: 8px;
-}
-
-.filter-grid::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 4px;
-}
-
-.filter-grid::-webkit-scrollbar-thumb {
-    background: #c1c1c1;
-    border-radius: 4px;
-}
-
-.filter-grid::-webkit-scrollbar-thumb:hover {
-    background: #a8a8a8;
 }
 
 .filter-group {
@@ -275,13 +184,13 @@ const eventGroups = computed(() => {
     position: sticky;
     top: 0;
     margin: 0;
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: #495057;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--bs-body-color);
     padding: 0.5rem 0 0.5rem 0.5rem;
-    border-bottom: 1px solid rgba(220, 221, 223, 0.75);
+    border-bottom: 1px solid var(--bs-border-color);
     border-radius: 5px 5px 0 0;
-    background-color: rgba(235, 235, 240, 1);
+    background-color: var(--bs-tertiary-bg);
 }
 
 .filter-group-items {
@@ -308,11 +217,11 @@ const eventGroups = computed(() => {
 }
 
 .filter-item:hover .filter-checkbox-area {
-    border-color: #adb5bd;
+    border-color: var(--bs-border-color-translucent);
 }
 
 .filter-item:hover .filter-content {
-    border-color: rgba(0, 0, 0, 0.2);
+    border-color: var(--bs-border-color-translucent);
 }
 
 .filter-checkbox {
@@ -331,7 +240,7 @@ const eventGroups = computed(() => {
     align-items: center;
     justify-content: center;
     width: 36px;
-    background-color: var(--bs-tertiary-bg);
+    background-color: #fcfcfc;
     border: 1px solid var(--bs-border-color);
     border-right: none;
     border-top-left-radius: 5px;
@@ -339,23 +248,34 @@ const eventGroups = computed(() => {
     transition: all 0.2s ease;
 }
 
+[data-bs-theme='dark'] .filter-checkbox-area {
+    background-color: #8a8b8c;
+}
+
 .filter-checkbox-area--checked {
-    background-color: var(--bs-tertiary-bg);
+    background-color: #e4e6e7;
     border-color: var(--bs-border-color);
+}
+
+[data-bs-theme='dark'] .filter-checkbox-area--checked {
+    background-color: #e2e3e4;
 }
 
 .checkbox-icon {
     color: transparent;
     transition: color 0.2s ease;
     stroke-width: 2.5;
+    transform: scale(0.25);
+    transition: transform 0.2s ease;
 }
 
 .checkbox-icon--checked {
-    color: #333;
+    color: #1f2023;
+    transform: scale(1);
 }
 
 .filter-item:hover .checkbox-icon--checked {
-    color: #000;
+    transform: scale(1.06);
 }
 
 .filter-content {
@@ -381,9 +301,10 @@ const eventGroups = computed(() => {
     transition: all 0.5s ease;
 }
 
-.filter-item:not(.filter-item--enabled):active .filter-content {
-    opacity: 0.6;
-    filter: grayscale(0.6);
+.filter-item:not(.filter-item--enabled):active .filter-content,
+.filter-item:not(.filter-item--enabled):hover .filter-content {
+    opacity: 0.7;
+    filter: grayscale(0.5);
 }
 
 .event-name {

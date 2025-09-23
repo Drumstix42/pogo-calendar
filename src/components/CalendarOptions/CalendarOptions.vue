@@ -104,13 +104,12 @@ onUnmounted(() => {
 
 .flex-grow-section {
     flex: 1;
-    min-height: 400px;
     display: flex;
     flex-direction: column;
 }
 
 /* Custom scrollbar for offcanvas body */
-@media (pointer: fine) {
+/* @media (pointer: fine) {
     .offcanvas-body::-webkit-scrollbar {
         width: 8px;
     }
@@ -128,7 +127,7 @@ onUnmounted(() => {
     .offcanvas-body::-webkit-scrollbar-thumb:hover {
         background: #a8a8a8;
     }
-}
+} */
 .btn {
     padding: 0.37rem;
 }
