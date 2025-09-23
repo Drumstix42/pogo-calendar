@@ -2,6 +2,7 @@
     <div
         class="toast-message"
         :class="[`toast-${toast.type}`, { 'toast-paused': isPaused }]"
+        :style="{ boxShadow: toast.color ? `0 1px 12px 1px color-mix(in srgb, ${toast.color} 25%, transparent)` : '' }"
         @mouseenter="resetAndPauseTimer"
         @mouseleave="resetTimer"
     >
@@ -21,7 +22,7 @@
                         v-for="action in toast.actions"
                         :key="action.label"
                         type="button"
-                        class="undo-btn btn btn-light btn-sm"
+                        class="undo-btn btn btn-icon-ghost btn-sm"
                         @click="handleAction(action)"
                     >
                         Undo
@@ -143,10 +144,9 @@ onUnmounted(() => {
 <style scoped>
 .toast-message {
     pointer-events: auto;
-    background: white;
-    border: 1px solid rgba(0, 0, 0, 0.1);
+    background: var(--calendar-cell-bg);
+    border: 1px solid var(--bs-border-color-translucent);
     border-radius: 0.375rem;
-    box-shadow: 0 1px 10px 2px rgba(0, 0, 0, 0.1);
     position: relative;
     overflow: hidden;
     min-width: 250px;
@@ -157,7 +157,7 @@ onUnmounted(() => {
     position: absolute;
     top: 0;
     left: 0;
-    width: 4px;
+    width: 5px;
     height: 100%;
     z-index: 1;
 }
@@ -187,7 +187,7 @@ onUnmounted(() => {
     padding: 0.65rem 1rem;
     font-size: 0.875rem;
     line-height: 1;
-    color: var(--bs-secondary-color);
+    color: var(--bs-primary-color);
 }
 
 .toast-content-row {
@@ -225,13 +225,13 @@ onUnmounted(() => {
     left: 0;
     right: 0;
     height: 3px;
-    background: rgba(0, 0, 0, 0.1);
+    background: var(--bs-secondary-bg);
     overflow: hidden;
 }
 
 .toast-progress-bar {
     height: 100%;
-    background: rgba(var(--bs-secondary-rgb), 0.5); /* Bootstrap's secondary color - nice dark theme color */
+    background: rgba(var(--bs-secondary-rgb), 0.7); /* Bootstrap's secondary color - nice dark theme color */
     transition: width 100ms linear;
     opacity: 0.8;
 }

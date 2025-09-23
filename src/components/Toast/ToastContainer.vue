@@ -23,10 +23,10 @@ const { removeToast } = toastsStore;
 <style scoped>
 .toast-container {
     position: fixed;
-    top: 1rem;
+    top: 4rem;
     left: 50%;
     transform: translateX(-50%);
-    z-index: 1060; /* Higher than Bootstrap modals */
+    z-index: 20000;
     pointer-events: none; /* Allow clicks to pass through container */
 }
 
