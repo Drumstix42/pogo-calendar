@@ -2,8 +2,8 @@
     <div class="calendar-header d-flex align-items-center justify-content-between flex-wrap row-gap-2 mb-2">
         <div class="d-flex align-items-center flex-wrap gap-2">
             <button
-                class="btn btn-sm"
-                :class="isCurrentMonth ? 'btn-outline-secondary' : 'btn-outline-dark'"
+                class="btn btn-sm btn-outline-secondary today-btn"
+                :class="{ 'disabled-subtle': isCurrentMonth }"
                 @click="goToCurrentMonth"
                 :disabled="isCurrentMonth"
             >
@@ -93,5 +93,29 @@ const goToCurrentMonth = () => {
 }
 .rotate-180 {
     transform: rotate(180deg);
+}
+
+.today-btn {
+    color: var(--bs-secondary-color);
+    border-color: var(--bs-border-color);
+}
+
+.today-btn:hover:not(:disabled) {
+    color: var(--bs-body-color);
+    border-color: var(--bs-secondary);
+    background-color: transparent;
+}
+
+.today-btn.disabled-subtle {
+    opacity: 0.4;
+    border-color: var(--bs-border-color);
+    color: var(--bs-secondary-color);
+    background-color: transparent;
+}
+
+.today-btn.disabled-subtle:hover {
+    border-color: var(--bs-border-color);
+    color: var(--bs-secondary-color);
+    background-color: transparent;
 }
 </style>

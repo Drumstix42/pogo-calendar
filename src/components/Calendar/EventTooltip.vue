@@ -82,7 +82,7 @@
         </div>
 
         <!-- External link to LeekDuck for single events -->
-        <div v-if="event.link && !(event as any)._isGrouped" class="px-2 pb-1">
+        <div v-if="event.link && !(event as any)._isGrouped" class="px-2">
             <a
                 :href="event.link"
                 target="_blank"
@@ -225,6 +225,8 @@ const formatEventDuration = (event: PogoEvent): string => {
 
 .grouped-events {
     margin-top: 0.6rem;
+    max-height: 40vh;
+    overflow-y: auto;
 }
 
 .grouped-event-name {

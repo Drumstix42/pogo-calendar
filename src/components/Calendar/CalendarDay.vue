@@ -88,9 +88,9 @@
                                 <span v-if="shouldShowBadge(event)" class="event-badge">{{ getEventCount(event) }}</span>
 
                                 <!-- Toggle event type button (shows on hover) (hide on touch devices) -->
-                                <div v-if="!isTouchDevice" class="ms-auto d-flex align-items-center">
+                                <!-- <div v-if="!isTouchDevice" class="ms-auto d-flex align-items-center">
                                     <EventToggleButton :event-type="event.eventType" @hide="hideEventType" />
-                                </div>
+                                </div> -->
                             </div>
 
                             <template #popper>
@@ -103,7 +103,7 @@
         </div>
 
         <!-- Single-day events (vertically stacked event blocks with timestamps) -->
-        <div xv-if="singleDayEvents.length > 0">
+        <div>
             <TransitionGroup name="fade" tag="div" class="single-day-events">
                 <VMenu
                     v-for="event in singleDayEvents"
@@ -124,9 +124,9 @@
                             <div class="event-name-container">
                                 <div class="event-name">{{ getEventDisplayName(event) }}</div>
                                 <!-- Toggle event type button (shows on hover) (hide on touch devices) -->
-                                <div v-if="!isTouchDevice" class="ms-auto d-flex align-items-center">
+                                <!-- <div v-if="!isTouchDevice" class="ms-auto d-flex align-items-center">
                                     <EventToggleButton :event-type="event.eventType" @hide="hideEventType" />
-                                </div>
+                                </div> -->
                             </div>
                             <div v-if="getEventTime(event)" class="event-time">{{ getEventTime(event) }}</div>
                             <PokemonImages
@@ -153,13 +153,11 @@ import { type Dayjs } from 'dayjs';
 import { computed } from 'vue';
 
 import { useDeviceDetection } from '@/composables/useDeviceDetection';
-import { useEventFilterToasts } from '@/composables/useEventFilterToasts';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { useEventFilterStore } from '@/stores/eventFilter';
 import { useEventHighlightStore } from '@/stores/eventHighlight';
 import { useEventsStore } from '@/stores/events';
 import {
-    type EventTypeKey,
     type PogoEvent,
     formatEventTime,
     getCalendarEventsForDate,
@@ -172,7 +170,6 @@ import {
     sortEventsByPriority,
 } from '@/utils/eventTypes';
 
-import EventToggleButton from './EventToggleButton.vue';
 import EventTooltip from './EventTooltip.vue';
 import PokemonImages from './PokemonImages.vue';
 
@@ -200,7 +197,6 @@ const eventFilter = useEventFilterStore();
 const eventsStore = useEventsStore();
 const calendarSettings = useCalendarSettingsStore();
 const eventHighlight = useEventHighlightStore();
-const { hideEventTypeWithToast } = useEventFilterToasts();
 const { isTouchDevice } = useDeviceDetection();
 
 // Reactive values for multi-day event bar sizing
@@ -373,9 +369,9 @@ const getEventTime = (event: PogoEvent): string => {
     return formatEventTime(event.start);
 };
 
-const hideEventType = (eventType: EventTypeKey): void => {
+/* const hideEventType = (eventType: EventTypeKey): void => {
     hideEventTypeWithToast(eventType);
-};
+}; */
 
 const highlightEventID = (eventID: string): void => {
     eventHighlight.highlightEventID(eventID);
@@ -514,7 +510,7 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
 
 <style scoped>
 .calendar-day {
-    min-height: 50px;
+    min-height: 60px;
     background: var(--calendar-cell-bg);
     min-width: 0;
     overflow: visible;
@@ -621,7 +617,7 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     text-overflow: ellipsis;
     white-space: nowrap;
     font-weight: 500;
-    line-height: 1;
+    line-height: 1.2;
     min-width: 28px;
 }
 
@@ -831,15 +827,17 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
 /* Single-day events (foreground layer) */
 .single-day-events {
     z-index: 2;
+    position: relative;
     display: flex;
     flex-direction: column;
-    min-height: 10px; /* leave empty space below multi-day events, for better perceived margin before next visible week */
+    min-height: 5px; /* leave empty space below multi-day events, for better perceived margin before next visible week */
     gap: 3px;
-    margin: 0.25rem 0.1rem 0.5rem 0.1rem; /* Add margin to replace padding */
-    position: relative;
+    margin: 0.25rem 0.1rem 0.1rem 0.1rem;
 }
 
 .single-day-event {
+    position: relative;
+    min-height: 90px;
     display: flex;
     align-items: flex-start;
     gap: 5px;
@@ -848,7 +846,6 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     cursor: pointer;
     min-width: 0;
     overflow: hidden;
-    position: relative; /* Added for button positioning */
 }
 
 .single-day-event:hover {

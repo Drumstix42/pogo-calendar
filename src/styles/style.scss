@@ -47,12 +47,12 @@ h6 {
 /* Global container styles for consistent layout */
 .app-container {
     max-width: 1300px;
-    padding-right: calc(var(--bs-gutter-x) * 0.5);
-    padding-left: calc(var(--bs-gutter-x) * 0.5);
+    padding-right: 5px;
+    padding-left: 5px;
 
     @media (min-width: 576px) {
-        padding-right: calc(var(--bs-gutter-x) * 1);
-        padding-left: calc(var(--bs-gutter-x) * 1);
+        padding-right: calc(var(--bs-gutter-x) * 0.5);
+        padding-left: calc(var(--bs-gutter-x) * 0.5);
     }
 }
 
@@ -163,8 +163,24 @@ small,
     border: 1px solid var(--calendar-border-color);
 }
 
+.v-popper--theme-dropdown .v-popper__arrow-inner {
+    border-color: var(--calendar-cell-bg);
+}
+
+.v-popper--theme-dropdown .v-popper__arrow-outer {
+    border-color: var(--calendar-border-color);
+}
+
 [data-bs-theme='dark'] .v-popper--theme-dropdown .v-popper__inner {
     background-color: var(--calendar-cell-bg);
+    border-color: #495057;
+}
+
+[data-bs-theme='dark'] .v-popper--theme-dropdown .v-popper__arrow-inner {
+    border-color: var(--calendar-cell-bg);
+}
+
+[data-bs-theme='dark'] .v-popper--theme-dropdown .v-popper__arrow-outer {
     border-color: #495057;
 }
 

@@ -122,6 +122,7 @@ const isScrolled = computed(() => scrollY.value > scrollThreshold);
     line-height: 1;
     font-weight: 600;
     display: flex;
+    margin: 0;
     align-items: center;
     transition:
         color 0.2s ease,

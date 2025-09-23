@@ -1,5 +1,5 @@
 <template>
-    <div class="option-section collapsible-section" :class="{ open: !isCollapsed, closed: isCollapsed }">
+    <div class="collapsible-section" :class="{ open: !isCollapsed, closed: isCollapsed }">
         <div
             class="section-header"
             @click="toggleCollapsed"
@@ -21,7 +21,7 @@
         </div>
 
         <Transition name="collapse">
-            <div v-show="!isCollapsed" class="option-content">
+            <div v-show="!isCollapsed" class="section-content" :class="contentClass">
                 <slot />
             </div>
         </Transition>
@@ -37,6 +37,7 @@ import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 interface Props {
     title: string;
     storageKey?: string;
+    contentClass?: string;
 }
 
 const props = defineProps<Props>();
@@ -111,8 +112,8 @@ const toggleCollapsed = () => {
     transition: transform 0.2s ease;
 }
 
-.option-content {
-    padding: 0.8rem 0.8rem;
+.section-content {
+    padding: 0.8rem 0;
 }
 
 /* Collapse transition */

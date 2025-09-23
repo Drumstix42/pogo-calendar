@@ -102,6 +102,10 @@ onUnmounted(() => {
     height: 100%;
 }
 
+.options-section :deep(.section-content) {
+    padding: 0.8rem;
+}
+
 .flex-grow-section {
     flex: 1;
     display: flex;
@@ -160,7 +164,7 @@ onUnmounted(() => {
     transition: opacity 0.1s ease;
 }
 
-.slider-interacting .option-content {
+.slider-interacting .section-content {
     background-color: color-mix(in srgb, var(--bs-body-bg) 95%, transparent);
 }
 </style>

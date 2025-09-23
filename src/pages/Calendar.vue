@@ -131,11 +131,18 @@ onUnmounted(() => {
 
 .calendar-options-offcanvas {
     z-index: 1050;
-    width: 100vw;
+    width: 100%;
     max-width: 400px;
     border: none;
     box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
     background-color: var(--bs-body-bg);
+}
+
+@media (max-width: 575.98px) {
+    .calendar-options-offcanvas {
+        /* Mobile: full width */
+        max-width: 100%;
+    }
 }
 
 /* Offcanvas slide-in animation */
@@ -161,12 +168,5 @@ onUnmounted(() => {
 
 .offcanvas-fade-leave-to .calendar-options-offcanvas {
     transform: translateX(100%);
-}
-
-@media (max-width: 575.98px) {
-    .calendar-options-offcanvas {
-        /* Mobile: full width */
-        max-width: 100vw;
-    }
 }
 </style>
