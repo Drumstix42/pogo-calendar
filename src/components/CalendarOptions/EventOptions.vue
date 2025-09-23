@@ -15,7 +15,7 @@
             >When enabled, events with identical type and start/times will be grouped into a single bar with a count badge.</small
         >
 
-        <div class="d-flex flex-column mt-3 slider-container">
+        <div class="d-flex flex-column mt-3 event-bar-size-container slider-container">
             <label for="eventBarFontSize" class="form-label"
                 >Event bar font size: <span class="bar-size--label">{{ localFontSize }}px</span></label
             >
@@ -89,6 +89,11 @@ const handleFontSizeChange = (event: Event) => {
     font-size: 0.875rem;
     font-weight: 600;
     margin-left: 0.25rem;
+}
+
+.event-bar-size-container {
+    width: 200px;
+    max-width: 100%;
 }
 
 .slider-container {

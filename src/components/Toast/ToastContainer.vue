@@ -46,7 +46,7 @@ const { removeToast } = toastsStore;
 /* Mobile adjustments */
 @media (max-width: 768px) {
     .toast-container {
-        top: 4rem; /* Position below mobile header */
+        top: 4.8rem; /* Position below mobile header */
     }
 
     .toast-stack {

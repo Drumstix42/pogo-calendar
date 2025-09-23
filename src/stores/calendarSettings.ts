@@ -63,15 +63,15 @@ export const useCalendarSettingsStore = defineStore('calendarSettings', () => {
 
     // Font size to bar height mapping - precise control over each size
     const fontSizeToHeightMap: Record<number, number> = {
-        10: 19,
-        11: 20,
-        12: 21,
-        13: 22,
-        14: 23,
-        15: 24,
-        16: 25,
-        17: 26,
-        18: 27,
+        10: 16,
+        11: 18,
+        12: 18,
+        13: 19,
+        14: 20,
+        15: 20,
+        16: 21,
+        17: 21,
+        18: 22,
     };
 
     // Computed event bar height based on font size using precise mapping

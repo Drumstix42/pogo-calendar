@@ -225,7 +225,7 @@ const formatEventDuration = (event: PogoEvent): string => {
 
 .grouped-events {
     margin-top: 0.6rem;
-    max-height: 40vh;
+    max-height: calc(45dvh - 45px);
     overflow-y: auto;
 }
 

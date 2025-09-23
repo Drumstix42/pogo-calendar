@@ -47,15 +47,15 @@
                         :class="[
                             getMultiDayEventBarClass(event, props.dayInstance),
                             {
-                                'event-id-highlighted': isEventHighlighted(event.eventID),
+                                'event-id-highlighted': eventHighlight.hoveredEventID === event.eventID,
                                 'event-past': eventsStore.eventMetadata[event.eventID]?.isPastEvent,
                             },
                         ]"
                         :data-event-type="event.eventType"
                         :data-event-id="event.eventID"
                         :style="{
-                            '--event-bg-color': getEventColor(event),
-                            backgroundColor: getEventColor(event),
+                            '--event-bg-color': eventsStore.eventMetadata[event.eventID]?.color,
+                            backgroundColor: eventsStore.eventMetadata[event.eventID]?.color,
                             fontSize: `${calendarSettings.eventBarFontSize}px`,
                             left: getEventPosition(event, props.dayInstance).left,
                             width: getEventPosition(event, props.dayInstance).width,
@@ -64,8 +64,8 @@
                             zIndex: 20 + getEventSlotTop(event),
                         }"
                         :data-debug="`Event: ${event.name} | ID: ${event.eventID} | Slot: ${getEventSlotData(event)?.slotIndex} | Grouped: ${(event as any)._isGrouped || false}`"
-                        @mouseenter="highlightEventID(event.eventID)"
-                        @mouseleave="clearEventIDHighlight"
+                        @mouseenter="debouncedHighlightEventID(event.eventID)"
+                        @mouseleave="debouncedClearEventIDHighlight"
                     >
                         <VMenu
                             placement="top"
@@ -119,7 +119,7 @@
                         :data-event-type="event.eventType"
                         :data-event-id="event.eventID"
                     >
-                        <div class="event-dot" :style="{ backgroundColor: getEventColor(event) }"></div>
+                        <div class="event-dot" :style="{ backgroundColor: eventsStore.eventMetadata[event.eventID]?.color }"></div>
                         <div class="event-content">
                             <div class="event-name-container">
                                 <div class="event-name">{{ getEventDisplayName(event) }}</div>
@@ -161,7 +161,6 @@ import {
     type PogoEvent,
     formatEventTime,
     getCalendarEventsForDate,
-    getEventTypeInfo,
     getEventsForDate,
     getGroupedEventsCount,
     hasGroupedEvents,
@@ -354,9 +353,9 @@ const shouldShowBadge = (event: PogoEvent): boolean => {
     return getEventCount(event) > 1;
 };
 
-const getEventColor = (event: PogoEvent): string => {
+/* const getEventColor = (event: PogoEvent): string => {
     return getEventTypeInfo(event.eventType).color;
-};
+}; */
 
 const getEventTime = (event: PogoEvent): string => {
     // Check if this is a multi-day event
@@ -381,11 +380,28 @@ const clearEventIDHighlight = (): void => {
     eventHighlight.clearEventIDHighlight();
 };
 
-const isEventHighlighted = (eventID: string): boolean => {
-    return eventHighlight.isEventHighlighted(eventID);
+let highlightTimeout: number | null = null;
+
+const debouncedHighlightEventID = (eventID: string): void => {
+    if (highlightTimeout) {
+        clearTimeout(highlightTimeout);
+    }
+
+    highlightTimeout = setTimeout(() => {
+        highlightEventID(eventID);
+        highlightTimeout = null;
+    }, 500);
 };
 
-// Multi-day event bar state helpers
+const debouncedClearEventIDHighlight = (): void => {
+    if (highlightTimeout) {
+        clearTimeout(highlightTimeout);
+        highlightTimeout = null;
+    }
+
+    clearEventIDHighlight();
+};
+
 const getMultiDayEventBarClass = (event: PogoEvent, currentDay: Dayjs): string => {
     const slotData = getEventSlotData(event);
     if (!slotData || !slotData.shouldRenderOnDay(currentDay)) return '';
@@ -589,11 +605,12 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     box-sizing: border-box; /* Use border-box for predictable sizing */
     pointer-events: auto; /* Ensure bars are interactive */
     transform: translate3d(0, 0, 0); /* Fixes some rendering issues in Chrome */
+    transition: background-color 0.5s ease;
 }
 
 .multi-day-event-bar:hover {
     color: #ffffff;
-    background-color: color-mix(in srgb, var(--event-bg-color) 85%, var(--calendar-cell-bg)) !important;
+    background-color: color-mix(in srgb, var(--event-bg-color) 85%, #fefefe) !important;
 }
 
 .multi-day-event-bar--inner {
@@ -616,9 +633,15 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font-weight: 500;
-    line-height: 1.2;
+    font-weight: 400;
+    line-height: 1.3;
     min-width: 28px;
+}
+
+.multi-day-event-bar:hover {
+    .event-name {
+        font-weight: 500;
+    }
 }
 
 .multi-day-event-bar .v-popper--theme-tooltip,
@@ -638,6 +661,10 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
         .event-content {
             opacity: 0.6;
             filter: grayscale(30%);
+
+            .event-name {
+                text-shadow: none;
+            }
         }
     }
 }
@@ -652,6 +679,7 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
         opacity: 0.9;
         .event-name {
             color: #ccc;
+            text-shadow: none;
         }
         .pokemon-images {
             opacity: 0.9;
@@ -888,6 +916,7 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
     margin-top: 1px;
     flex: 1;
 }

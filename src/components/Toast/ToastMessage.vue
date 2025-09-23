@@ -2,7 +2,7 @@
     <div
         class="toast-message"
         :class="[`toast-${toast.type}`, { 'toast-paused': isPaused }]"
-        :style="{ boxShadow: toast.color ? `0 1px 12px 1px color-mix(in srgb, ${toast.color} 25%, transparent)` : '' }"
+        :style="{ boxShadow: toast.color ? `0 1px 10px 2px color-mix(in srgb, ${toast.color} 30%, transparent)` : '' }"
         @mouseenter="resetAndPauseTimer"
         @mouseleave="resetTimer"
     >
@@ -13,8 +13,8 @@
         <div class="toast-body">
             <div class="toast-content-row">
                 <div class="toast-text">
-                    <div class="mb-1 small">{{ toast.title }}</div>
-                    <strong>{{ toast.message }}</strong>
+                    <div class="mb-1 small" v-html="toast.title"></div>
+                    <strong v-html="toast.message"></strong>
                 </div>
                 <div class="toast-right-section">
                     <button

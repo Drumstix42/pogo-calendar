@@ -57,7 +57,9 @@ export const useToastsStore = defineStore('toasts', () => {
         undoAction?: () => void;
         duration?: number;
     }): number => {
-        const title = action === 'hidden' ? 'Event type hidden:' : 'Event type shown:';
+        const actionColor = action === 'hidden' ? '#e6a700' : '#32d74b'; // yellow / green
+        const styledAction = `<span style="color: ${actionColor}">${action}</span>`;
+        const title = `Event type ${styledAction}:`;
         const message = eventTypeName;
 
         const actions: ToastAction[] = [];
