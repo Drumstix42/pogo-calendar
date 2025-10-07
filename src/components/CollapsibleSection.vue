@@ -21,7 +21,7 @@
         </div>
 
         <Transition name="collapse">
-            <div v-show="!isCollapsed" class="section-content" :class="contentClass">
+            <div v-if="!isCollapsed" class="section-content" :class="contentClass">
                 <slot />
             </div>
         </Transition>
@@ -134,6 +134,6 @@ const toggleCollapsed = () => {
 .collapse-enter-to,
 .collapse-leave-from {
     opacity: 1;
-    max-height: 800px; /* Adjust based on your content height */
+    max-height: 1000px; /* Adjust based on your content height */
 }
 </style>

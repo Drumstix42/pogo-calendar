@@ -42,17 +42,18 @@
 </template>
 
 <script setup lang="ts">
-import dayjs from 'dayjs';
 import { computed, ref } from 'vue';
 
+import { useCurrentTime } from '@/composables/useCurrentTime';
 import { useEventFilterStore } from '@/stores/eventFilter';
 import { useEventsStore } from '@/stores/events';
-import { type PogoEvent, parseEventDate } from '@/utils/eventTypes';
+import { type PogoEvent, sortEventsByTimingAndPriority } from '@/utils/eventTypes';
 
 import TimelineEvent from './TimelineEvent.vue';
 
 const eventsStore = useEventsStore();
 const eventFilter = useEventFilterStore();
+const { liveMinute } = useCurrentTime();
 
 const activeEventId = ref<string | null>(null);
 
@@ -70,29 +71,31 @@ const eventCategories = [
 
 // Get filtered events
 const filteredEvents = computed(() => {
-    const startDate = dayjs().subtract(1, 'day'); // Include yesterday for ongoing events
-    const endDate = dayjs().add(60, 'days'); // Show next 60 days
+    // Use liveMinute to ensure reactivity to time changes
+    const now = liveMinute.value;
+    const startDate = now.subtract(1, 'day'); // Include yesterday for ongoing events
+    const endDate = now.add(60, 'days'); // Show next 60 days
 
     return eventsStore.events
         .filter(event => {
-            // Filter by date range - include events that overlap with our date range
-            const eventStart = parseEventDate(event.start);
-            const eventEnd = parseEventDate(event.end);
+            const metadata = eventsStore.eventMetadata[event.eventID];
+            if (!metadata) return false;
 
             // Include if event starts before endDate AND ends after startDate
-            return eventStart.isBefore(endDate) && eventEnd.isAfter(startDate);
+            return metadata.startDate.isBefore(endDate) && metadata.endDate.isAfter(startDate);
         })
         .sort((a, b) => {
             // Sort by start time (chronological)
-            const aStart = parseEventDate(a.start);
-            const bStart = parseEventDate(b.start);
-            return aStart.diff(bStart);
+            const aMetadata = eventsStore.eventMetadata[a.eventID];
+            const bMetadata = eventsStore.eventMetadata[b.eventID];
+            return aMetadata.startDate.diff(bMetadata.startDate);
         });
 });
 
 // Process all event data in a single pass for efficiency
 const eventData = computed(() => {
-    const now = dayjs();
+    // Use liveMinute to ensure reactivity to time changes
+    const now = liveMinute.value;
     const today = now.startOf('day');
     const twoWeeksFromNow = now.add(2, 'weeks');
 
@@ -118,25 +121,26 @@ const eventData = computed(() => {
     };
 
     filteredEvents.value.forEach(event => {
-        const eventStart = parseEventDate(event.start);
-        const eventEnd = parseEventDate(event.end);
-        const eventStartDay = eventStart.startOf('day');
+        const metadata = eventsStore.eventMetadata[event.eventID];
+        if (!metadata) return;
+
+        const eventStartDay = metadata.startDate.startOf('day');
 
         // Determine which category this event belongs to
         let categoryKey: string;
-        if (eventStartDay.isSame(today) && eventEnd.isSame(today, 'day')) {
+        if (eventStartDay.isSame(today) && metadata.endDate.isSame(today, 'day')) {
             // Single-day events happening only today
             categoryKey = 'today';
-        } else if (eventStartDay.isSame(today) && eventEnd.isAfter(today, 'day')) {
+        } else if (eventStartDay.isSame(today) && metadata.endDate.isAfter(today, 'day')) {
             // Multi-day events that start today
             categoryKey = 'ongoing';
-        } else if (now.isAfter(eventStart) && now.isBefore(eventEnd)) {
+        } else if (now.isAfter(metadata.startDate) && now.isBefore(metadata.endDate)) {
             // Events that are currently ongoing (started before today, end after today)
             categoryKey = 'ongoing';
-        } else if (eventStart.isAfter(now) && eventStart.isBefore(twoWeeksFromNow)) {
+        } else if (metadata.startDate.isAfter(now) && metadata.startDate.isBefore(twoWeeksFromNow)) {
             // Events starting in the future within 2 weeks
             categoryKey = 'upcoming';
-        } else if (eventStart.isAfter(now)) {
+        } else if (metadata.startDate.isAfter(now)) {
             // Events starting more than 2 weeks from now
             categoryKey = 'future';
         } else {
@@ -153,6 +157,11 @@ const eventData = computed(() => {
         } else {
             hiddenCounts[categoryKey]++;
         }
+    });
+
+    // Apply sorting to each category
+    Object.keys(categories).forEach(key => {
+        categories[key] = sortEventsByTimingAndPriority(categories[key], eventsStore.eventMetadata);
     });
 
     return {

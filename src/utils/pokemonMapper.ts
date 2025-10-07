@@ -7,6 +7,10 @@ export type PokemonName = keyof typeof POKEMON_NAME_TO_ID;
 export type PokemonId = number;
 export type SpriteType = 'dream-world' | 'official-artwork' | 'home';
 
+// track logged missing sprites (to avoid spam)
+const loggedMissingStaticSprites = new Set<string>();
+const loggedMissingAnimatedSprites = new Set<string>();
+
 // Normalize Pokemon names for matching - smart Unicode normalization + gender symbols
 function normalizePokemonName(name: string): string {
     return name
@@ -69,7 +73,11 @@ export function getPokemonSpriteUrl(pokemonNameOrId: string | number, suffix?: s
 
     // Check if this static sprite exists before generating the URL
     if (!isValidStaticSprite(urlName)) {
-        console.info('Could not find static sprite for:', pokemonNameOrId);
+        // Only log if we haven't seen this missing sprite before
+        if (!loggedMissingStaticSprites.has(urlName)) {
+            console.info('Could not find static sprite for:', pokemonNameOrId);
+            loggedMissingStaticSprites.add(urlName);
+        }
         return null;
     }
 
@@ -116,7 +124,11 @@ export function getPokemonAnimatedUrl(pokemonNameOrId: string | number, suffix?:
 
     // Check if this animated sprite exists before generating the URL
     if (!isValidAnimatedSprite(urlName)) {
-        console.info('Could not find animated sprite for:', pokemonNameOrId);
+        // Only log if we haven't seen this missing sprite before
+        if (!loggedMissingAnimatedSprites.has(urlName)) {
+            console.info('Could not find animated sprite for:', pokemonNameOrId);
+            loggedMissingAnimatedSprites.add(urlName);
+        }
         return null;
     }
 

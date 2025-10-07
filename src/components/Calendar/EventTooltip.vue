@@ -18,7 +18,7 @@
                     <!-- Event text content -->
                     <div class="event-text">
                         <div class="grouped-event-name">{{ formatEventName(groupedEvent.name) }}</div>
-                        <div class="grouped-event-time">{{ formatEventDuration(groupedEvent) }}</div>
+                        <EventTimeDisplay :event="groupedEvent" />
                         <div v-if="groupedEvent.link" class="lh-1">
                             <a
                                 :href="groupedEvent.link"
@@ -51,7 +51,7 @@
                     <!-- Event text content -->
                     <div class="event-text">
                         <div class="grouped-event-name">{{ formatEventName(event.name) }}</div>
-                        <div :class="isSingleDay ? 'single-event-time' : 'grouped-event-time'">{{ formatEventDuration(event) }}</div>
+                        <EventTimeDisplay :event="event" />
                     </div>
 
                     <!-- Pokemon images -->
@@ -74,23 +74,15 @@
 </template>
 
 <script setup lang="ts">
-import dayjs from 'dayjs';
 import { ExternalLink } from 'lucide-vue-next';
 
 import { useEventFilterToasts } from '@/composables/useEventFilterToasts';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { formatEventName } from '@/utils/eventName';
-import {
-    type EventTypeKey,
-    type PogoEvent,
-    formatEventTime,
-    getEventTypeInfo,
-    getGroupedEvents,
-    isSameDayEvent,
-    parseEventDate,
-} from '@/utils/eventTypes';
+import { type EventTypeKey, type PogoEvent, getEventTypeInfo, getGroupedEvents } from '@/utils/eventTypes';
 
 import EventExtras from './EventExtras.vue';
+import EventTimeDisplay from './EventTimeDisplay.vue';
 import EventToggleButton from './EventToggleButton.vue';
 import PokemonImages from './PokemonImages.vue';
 
@@ -116,22 +108,6 @@ const getEventColor = (event: PogoEvent): string => {
 
 const getEventTypeName = (event: PogoEvent): string => {
     return getEventTypeInfo(event.eventType).name;
-};
-
-const formatEventDuration = (event: PogoEvent): string => {
-    const startTime = formatEventTime(event.start);
-    const endTime = formatEventTime(event.end);
-
-    if (isSameDayEvent(event)) {
-        const eventDate = parseEventDate(event.start).format('MMM D');
-        return `${eventDate}, ${startTime} - ${endTime}`;
-    } else {
-        // For multi-day events, show date and time range
-        const startDate = parseEventDate(event.start).format('MMM D');
-        const endDate = parseEventDate(event.end).format('MMM D');
-        const totalDays = dayjs(event.end).diff(dayjs(event.start), 'day') + 1;
-        return `${startDate}, ${startTime} - ${endDate}, ${endTime} (${totalDays} day${totalDays > 1 ? 's' : ''})`;
-    }
 };
 </script>
 
@@ -191,19 +167,7 @@ const formatEventDuration = (event: PogoEvent): string => {
     font-weight: 400;
     line-height: 1.3;
     color: color-mix(in srgb, var(--bs-body-color) 90%, transparent);
-    margin-bottom: 0.15rem;
-}
-
-.grouped-event-time {
-    font-size: 0.8rem;
-    color: color-mix(in srgb, var(--bs-body-color) 90%, transparent);
-    font-weight: 600;
-}
-
-.single-event-time {
-    font-size: 0.8rem;
-    color: color-mix(in srgb, var(--bs-body-color) 95%, transparent);
-    font-weight: 600;
+    margin-bottom: 0.5rem;
 }
 
 .event-extras-wrapper {
