@@ -1,48 +1,70 @@
 <template>
     <div v-if="displayedImages.length > 0 || shouldShowPlaceholder" class="pokemon-images" :class="{ 'wrap-multiple': displayedImages.length >= 3 }">
-        <div
-            v-for="(imageUrl, index) in displayedImages"
-            :key="`pokemon-${eventId}-${index}`"
-            class="pokemon-container"
-            :class="{
-                'has-dynamax-overlay': showDynamaxOverlay,
-                'has-shadow-effect': showShadowEffect,
-            }"
-        >
-            <div v-if="showDynamaxOverlay" class="dynamax-overlay">
-                <img src="/images/overlay/dynamax-clouds.png" alt="Dynamax effect" class="dynamax-clouds" />
+        <Transition name="fade" :duration="{ enter: 250, leave: 150 }">
+            <div :key="useAnimated ? 'animated' : 'static'" class="pokemon-container-group" :class="{ 'wrap-multiple': displayedImages.length >= 3 }">
+                <VTooltip
+                    v-for="(pokemonData, index) in displayedImages"
+                    :key="`pokemon-${index}`"
+                    placement="top"
+                    :delay="{ show: 50, hide: 0 }"
+                    distance="8"
+                    :disabled="!showTooltips"
+                >
+                    <div
+                        class="pokemon-container"
+                        :class="{
+                            'has-dynamax-overlay': showDynamaxOverlay,
+                            'has-shadow-effect': showShadowEffect,
+                        }"
+                    >
+                        <div v-if="showDynamaxOverlay" class="dynamax-overlay">
+                            <img src="/images/overlay/dynamax-clouds.png" alt="Dynamax effect" class="dynamax-clouds" />
+                        </div>
+                        <div v-if="showShadowEffect" class="shadow-overlay">
+                            <img src="/images/overlay/shadow-fire.svg" alt="Shadow effect" class="shadow-fire" />
+                        </div>
+                        <img
+                            :src="pokemonData.imageUrl"
+                            :alt="`${eventName} Pokemon ${index + 1}`"
+                            class="pokemon-icon"
+                            :style="{ height: `${height}px`, width: `${height}px` }"
+                            @error="handleImageError"
+                        />
+                    </div>
+
+                    <template #popper>
+                        <div class="tooltip-text">
+                            {{ pokemonData.name }}
+                        </div>
+                    </template>
+                </VTooltip>
             </div>
-            <div v-if="showShadowEffect" class="shadow-overlay">
-                <img src="/images/overlay/shadow-fire.svg" alt="Shadow effect" class="shadow-fire" />
-            </div>
-            <img
-                :src="imageUrl"
-                :alt="`${eventName} Pokemon ${index + 1}`"
-                class="pokemon-icon"
-                :style="{ height: `${height}px`, width: `${height}px` }"
-                @error="handleImageError"
-            />
-        </div>
+        </Transition>
 
         <!-- More indicator when there are additional images beyond the limit -->
         <span v-if="shouldShowMoreIndicator" class="pokemon-more-indicator">+</span>
 
-        <div
-            v-if="shouldShowPlaceholder"
-            class="pokemon-container placeholder-container"
-            :class="{
-                'has-dynamax-overlay': showDynamaxOverlay,
-                'has-shadow-effect': showShadowEffect,
-            }"
-        >
-            <div v-if="showDynamaxOverlay" class="dynamax-overlay">
-                <img src="/images/overlay/dynamax-clouds.png" alt="Dynamax effect" class="dynamax-clouds" />
+        <VTooltip v-if="shouldShowPlaceholder" placement="top" :delay="{ show: 50, hide: 0 }" distance="8" :disabled="!showTooltips">
+            <div
+                class="pokemon-container placeholder-container"
+                :class="{
+                    'has-dynamax-overlay': showDynamaxOverlay,
+                    'has-shadow-effect': showShadowEffect,
+                }"
+            >
+                <div v-if="showDynamaxOverlay" class="dynamax-overlay">
+                    <img src="/images/overlay/dynamax-clouds.png" alt="Dynamax effect" class="dynamax-clouds" />
+                </div>
+                <div v-if="showShadowEffect" class="shadow-overlay">
+                    <img src="/images/overlay/shadow-fire.svg" alt="Shadow effect" class="shadow-fire" />
+                </div>
+                <CircleHelpIcon class="placeholder-icon" :size="height" />
             </div>
-            <div v-if="showShadowEffect" class="shadow-overlay">
-                <img src="/images/overlay/shadow-fire.svg" alt="Shadow effect" class="shadow-fire" />
-            </div>
-            <CircleHelpIcon class="placeholder-icon" :size="height" />
-        </div>
+
+            <template #popper>
+                <div class="tooltip-text">Missing sprite</div>
+            </template>
+        </VTooltip>
     </div>
 </template>
 
@@ -60,6 +82,7 @@ interface Props {
     useAnimated?: boolean;
     showPlaceholder?: boolean;
     limit?: number;
+    showTooltips?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -67,6 +90,7 @@ const props = withDefaults(defineProps<Props>(), {
     useAnimated: false,
     showPlaceholder: false,
     limit: undefined,
+    showTooltips: false,
 });
 
 const pokemonImages = computed(() => getEventPokemonImages(props.event, { useAnimated: props.useAnimated }));
@@ -98,7 +122,6 @@ const shouldShowPlaceholder = computed(() => {
     return pokemonImages.value.length === 0 && relevantEventTypes.includes(props.event.eventType);
 });
 
-const eventId = computed(() => props.event.eventID);
 const showDynamaxOverlay = computed(() => props.event.eventType === 'max-mondays');
 const showShadowEffect = computed(() => getRaidSubType(props.event) === 'shadow-raids');
 
@@ -116,10 +139,39 @@ const handleImageError = (event: Event): void => {
     align-items: center;
     /* flex-wrap: wrap; */
     flex-shrink: 0;
+    position: relative; /* For absolute positioning during transitions */
 }
 
 .pokemon-images.wrap-multiple {
     flex-wrap: wrap;
+}
+
+.pokemon-container-group {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.pokemon-container-group.wrap-multiple {
+    flex-wrap: wrap;
+}
+
+/* Handle simultaneous fade transitions */
+.fade-enter-active,
+.fade-leave-active {
+    transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+    opacity: 0;
+}
+
+/* Position leaving elements absolutely during transition */
+.fade-leave-active {
+    position: absolute;
+    top: 0;
+    left: 0;
 }
 
 .pokemon-more-indicator {
@@ -188,5 +240,11 @@ const handleImageError = (event: Event): void => {
 
 .has-dynamax-overlay .placeholder-icon {
     margin-top: 4px;
+}
+
+.tooltip-text {
+    font-size: 0.75rem;
+    line-height: 1.2;
+    white-space: nowrap;
 }
 </style>

@@ -38,6 +38,7 @@
                         :event-name="formatEventName(groupedEvent.name)"
                         :height="50"
                         :use-animated="calendarSettings.useAnimatedImages"
+                        :show-tooltips="true"
                     />
                 </div>
             </div>
@@ -60,6 +61,7 @@
                         :height="60"
                         :use-animated="calendarSettings.useAnimatedImages"
                         :show-placeholder="isSingleDay"
+                        :show-tooltips="true"
                     />
                 </div>
             </div>

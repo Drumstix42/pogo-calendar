@@ -50,7 +50,7 @@ const eventFilter = useEventFilterStore();
 
 // Event categories in order (updated order and descriptions)
 const eventCategories = [
-    { key: 'today', title: 'Happening Today Only' },
+    { key: 'today', title: 'Today Only' },
     { key: 'ongoing', title: 'Ongoing Events' },
     { key: 'upcoming', title: 'Upcoming Events (Next 2 Weeks)' },
     { key: 'future', title: 'Future Events (Beyond 2 Weeks)' },

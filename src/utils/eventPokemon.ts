@@ -7,6 +7,11 @@ export interface PokemonImageOptions {
     isMega?: boolean;
 }
 
+export interface PokemonImageData {
+    name: string;
+    imageUrl: string;
+}
+
 function extractPokemonNamesFromRaidHour(eventName: string): string[] {
     // Decode HTML entities first
     const decodedEventName = formatEventName(eventName);
@@ -183,7 +188,7 @@ function getSpriteUrl(pokemonName: string, suffix?: string, options?: PokemonIma
     }
 }
 
-export function getEventPokemonImages(event: PogoEvent, options?: PokemonImageOptions): string[] {
+export function getEventPokemonImages(event: PogoEvent, options?: PokemonImageOptions): PokemonImageData[] {
     if (!event.extraData) return [];
 
     // Handle raid battles - check bosses data FIRST, then fall back to event name extraction
@@ -191,7 +196,7 @@ export function getEventPokemonImages(event: PogoEvent, options?: PokemonImageOp
         // First try to use bosses data from extraData
         if (event.extraData?.raidbattles?.bosses && event.extraData.raidbattles.bosses.length > 0) {
             const bosses = event.extraData.raidbattles.bosses;
-            const images: string[] = [];
+            const images: PokemonImageData[] = [];
 
             for (const boss of bosses) {
                 const parsedData = parsePokemonNameAndSuffix(boss.name);
@@ -206,14 +211,14 @@ export function getEventPokemonImages(event: PogoEvent, options?: PokemonImageOp
                     }
 
                     if (spriteUrl) {
-                        images.push(spriteUrl);
+                        images.push({ name: boss.name, imageUrl: spriteUrl });
                     } else if (boss.image) {
                         // Fallback to API image if sprite generation fails
-                        images.push(boss.image);
+                        images.push({ name: boss.name, imageUrl: boss.image });
                     }
                 } else if (boss.image) {
                     // If we can't parse the boss name, use the API image
-                    images.push(boss.image);
+                    images.push({ name: boss.name, imageUrl: boss.image });
                 }
             }
 
@@ -229,7 +234,7 @@ export function getEventPokemonImages(event: PogoEvent, options?: PokemonImageOp
             const suffix = isMega ? '-mega' : undefined;
             const spriteUrl = getSpriteUrl(pokemonName, suffix, options);
             if (spriteUrl) {
-                return [spriteUrl];
+                return [{ name: pokemonName, imageUrl: spriteUrl }];
             }
         }
 
@@ -237,7 +242,7 @@ export function getEventPokemonImages(event: PogoEvent, options?: PokemonImageOp
         if (event.extraData?.raidbattles?.bosses) {
             const bosses = event.extraData.raidbattles.bosses;
             if (bosses.length > 0) {
-                return bosses.map(boss => boss.image).filter(image => image) as string[];
+                return bosses.map(boss => ({ name: boss.name, imageUrl: boss.image })).filter(item => item.imageUrl);
             }
         }
     }
@@ -246,7 +251,7 @@ export function getEventPokemonImages(event: PogoEvent, options?: PokemonImageOp
     if (event.eventType === 'raid-hour') {
         const pokemonNames = extractPokemonNamesFromRaidHour(formatEventName(event.name));
         if (pokemonNames.length > 0) {
-            const images: string[] = [];
+            const images: PokemonImageData[] = [];
 
             for (const pokemonNameString of pokemonNames) {
                 const parsedData = parsePokemonNameAndSuffix(pokemonNameString);
@@ -261,7 +266,7 @@ export function getEventPokemonImages(event: PogoEvent, options?: PokemonImageOp
                     }
 
                     if (spriteUrl) {
-                        images.push(spriteUrl);
+                        images.push({ name: pokemonNameString, imageUrl: spriteUrl });
                     }
                 }
             }
@@ -292,7 +297,7 @@ export function getEventPokemonImages(event: PogoEvent, options?: PokemonImageOp
                 }
 
                 if (spriteUrl) {
-                    return [spriteUrl];
+                    return [{ name: pokemonNameString, imageUrl: spriteUrl }];
                 }
             }
         }
@@ -304,11 +309,11 @@ export function getEventPokemonImages(event: PogoEvent, options?: PokemonImageOp
         if (pokemonName) {
             const spriteUrl = getSpriteUrl(pokemonName, undefined, options);
             if (spriteUrl) {
-                return [spriteUrl];
+                return [{ name: pokemonName, imageUrl: spriteUrl }];
             } else {
                 // If sprite generation fails, fall back to event image
                 if (event.image) {
-                    return [event.image];
+                    return [{ name: pokemonName, imageUrl: event.image }];
                 }
             }
         }
@@ -316,7 +321,7 @@ export function getEventPokemonImages(event: PogoEvent, options?: PokemonImageOp
 
     // Handle spotlight hours - can have multiple Pokémon
     if (event.eventType === 'pokemon-spotlight-hour' && event.extraData.spotlight) {
-        const images: string[] = [];
+        const images: PokemonImageData[] = [];
 
         // Try to get images from our sprite mapper first
         if (event.extraData.spotlight.list && event.extraData.spotlight.list.length > 0) {
@@ -324,24 +329,24 @@ export function getEventPokemonImages(event: PogoEvent, options?: PokemonImageOp
             for (const pokemon of event.extraData.spotlight.list) {
                 const spriteUrl = getSpriteUrl(pokemon.name, undefined, options);
                 if (spriteUrl) {
-                    images.push(spriteUrl);
+                    images.push({ name: pokemon.name, imageUrl: spriteUrl });
                 } else if (pokemon.image) {
                     // Fallback to API image if sprite generation fails
-                    images.push(pokemon.image);
+                    images.push({ name: pokemon.name, imageUrl: pokemon.image });
                 }
             }
         } else if (event.extraData.spotlight.name) {
             // Handle single Pokémon
             const spriteUrl = getSpriteUrl(event.extraData.spotlight.name, undefined, options);
             if (spriteUrl) {
-                images.push(spriteUrl);
+                images.push({ name: event.extraData.spotlight.name, imageUrl: spriteUrl });
             } else if (event.extraData.spotlight.image) {
                 // Fallback to API image
-                images.push(event.extraData.spotlight.image);
+                images.push({ name: event.extraData.spotlight.name, imageUrl: event.extraData.spotlight.image });
             }
         } else if (event.extraData.spotlight.image) {
-            // Last fallback - just use the API image
-            images.push(event.extraData.spotlight.image);
+            // Last fallback - just use the API image (we may not have the name in this case)
+            images.push({ name: 'Spotlight Pokemon', imageUrl: event.extraData.spotlight.image });
         }
 
         if (images.length > 0) {
@@ -352,16 +357,16 @@ export function getEventPokemonImages(event: PogoEvent, options?: PokemonImageOp
     // Handle community day events - use spawns data and generate sprites
     if (event.eventType === 'community-day' && event.extraData.communityday?.spawns) {
         const spawns = event.extraData.communityday.spawns;
-        const images: string[] = [];
+        const images: PokemonImageData[] = [];
 
         for (const spawn of spawns) {
             if (spawn.name) {
                 const spriteUrl = getSpriteUrl(spawn.name, undefined, options);
                 if (spriteUrl) {
-                    images.push(spriteUrl);
+                    images.push({ name: spawn.name, imageUrl: spriteUrl });
                 } else if (spawn.image) {
                     // Fallback to API image if sprite generation fails
-                    images.push(spawn.image);
+                    images.push({ name: spawn.name, imageUrl: spawn.image });
                 }
             }
         }
@@ -374,7 +379,7 @@ export function getEventPokemonImages(event: PogoEvent, options?: PokemonImageOp
     // Handle max battles - use the main event image
     if (event.eventType === 'max-battles') {
         if (event.image) {
-            return [event.image];
+            return [{ name: 'Max Battle', imageUrl: event.image }];
         }
     }
 
@@ -423,7 +428,7 @@ export function getEventPokemonImages(event: PogoEvent, options?: PokemonImageOp
                 pokemonNames.push(pokemonNameString);
             }
 
-            const images: string[] = [];
+            const images: PokemonImageData[] = [];
 
             for (const name of pokemonNames) {
                 const parsedData = parsePokemonNameAndSuffix(name);
@@ -438,7 +443,7 @@ export function getEventPokemonImages(event: PogoEvent, options?: PokemonImageOp
                     }
 
                     if (spriteUrl) {
-                        images.push(spriteUrl);
+                        images.push({ name: name, imageUrl: spriteUrl });
                     }
                 }
             }
@@ -454,7 +459,7 @@ export function hasEventPokemonImage(event: PogoEvent, options?: PokemonImageOpt
     return getEventPokemonImages(event, options).length > 0;
 }
 
-export function getMultiDayPokemonImages(event: PogoEvent, options?: PokemonImageOptions): string[] {
+export function getMultiDayPokemonImages(event: PogoEvent, options?: PokemonImageOptions): PokemonImageData[] {
     // Only show images for raid-battles events for now
     if (event.eventType === 'raid-battles' || event.eventType === 'raid-weekend') {
         return getEventPokemonImages(event, options);
