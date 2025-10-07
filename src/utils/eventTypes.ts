@@ -2,6 +2,7 @@ import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 
 import { DATE_FORMAT } from './dateFormat';
+import { formatEventName } from './eventName';
 
 dayjs.extend(utc);
 
@@ -47,7 +48,7 @@ export interface MaxBattlesData {
 export interface PogoEvent {
     eventID: string;
     name: string;
-    eventType: string;
+    eventType: EventTypeKey | string;
     heading: string;
     link: string;
     image: string;
@@ -190,6 +191,12 @@ export const EVENT_TYPES: Record<string, EventTypeInfo> = {
         priority: 90,
         category: 'seasonal-and-premium',
     },
+    'wild-area': {
+        name: 'Wild Area',
+        color: '#155a4a', // darker teal-green
+        priority: 19,
+        category: 'seasonal-and-premium',
+    },
 
     // Regular Events
     event: {
@@ -295,6 +302,51 @@ export const EVENT_TYPES: Record<string, EventTypeInfo> = {
 // Type for valid event type keys
 export type EventTypeKey = keyof typeof EVENT_TYPES;
 
+// Event types that support sub-typing/categorization
+export const EVENTS_WITH_SUBTYPE = ['raid-battles', 'raid-weekend'] as const;
+export type EventWithSubtype = (typeof EVENTS_WITH_SUBTYPE)[number];
+
+/** Subtypes are a custom categorization for specific event types */
+export function isEventWithSubtype(eventType: EventTypeKey) {
+    return EVENTS_WITH_SUBTYPE.includes(eventType as EventWithSubtype);
+}
+
+export function getRaidSubType(event: PogoEvent): string {
+    if (!isEventWithSubtype(event.eventType)) {
+        return ''; // Not applicable for non-raid events
+    }
+
+    const eventName = event.name.toLowerCase();
+
+    if (eventName.includes('shadow')) {
+        return 'shadow-raids';
+    } else if (eventName.includes('mega')) {
+        return 'mega-raids';
+    } else if (eventName.includes('raid battles') || eventName.includes('raid weekend')) {
+        return 'raid-battles';
+    }
+    return ''; // Default case, no specific sub-type
+}
+
+/** Higher number = higher priority for raid sub-type sorting */
+export function getRaidSubTypePriority(event: PogoEvent): number {
+    if (!isEventWithSubtype(event.eventType)) {
+        return 0; // Not applicable for non-raid events
+    }
+
+    const subType = getRaidSubType(event);
+    switch (subType) {
+        case 'shadow-raids':
+            return 3;
+        case 'raid-battles':
+            return 2;
+        case 'mega-raids':
+            return 1;
+        default:
+            return 0;
+    }
+}
+
 export const getEventTypeInfo = (eventType: string): EventTypeInfo => {
     return (
         EVENT_TYPES[eventType] || {
@@ -397,7 +449,7 @@ export const groupEventsByType = (events: PogoEvent[]): EventGroup[] => {
             result.push({
                 eventType,
                 events: [event],
-                displayName: event.name, // Use actual event name for single events
+                displayName: formatEventName(event.name), // Use actual event name for single events
                 color: getEventTypeInfo(eventType).color,
                 isMultiDay: isMultiDayEvent(event),
                 startDate: parseEventDate(event.start),
@@ -428,7 +480,7 @@ export const groupEventsByType = (events: PogoEvent[]): EventGroup[] => {
                         result.push({
                             eventType,
                             events: [event],
-                            displayName: event.name,
+                            displayName: formatEventName(event.name),
                             color: getEventTypeInfo(eventType).color,
                             isMultiDay: false,
                             startDate: parseEventDate(event.start),
@@ -468,7 +520,7 @@ export const groupEventsByType = (events: PogoEvent[]): EventGroup[] => {
                         result.push({
                             eventType,
                             events: [event],
-                            displayName: event.name,
+                            displayName: formatEventName(event.name),
                             color: getEventTypeInfo(eventType).color,
                             isMultiDay: true,
                             startDate: parseEventDate(event.start),

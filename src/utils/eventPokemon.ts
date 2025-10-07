@@ -1,4 +1,5 @@
-import { type PogoEvent } from './eventTypes';
+import { formatEventName } from './eventName.ts';
+import { type PogoEvent, getRaidSubType } from './eventTypes';
 import { getPokemonAnimatedUrl, getPokemonSpriteUrl } from './pokemonMapper.ts';
 
 export interface PokemonImageOptions {
@@ -7,13 +8,26 @@ export interface PokemonImageOptions {
 }
 
 function extractPokemonNamesFromRaidHour(eventName: string): string[] {
+    // Decode HTML entities first
+    const decodedEventName = formatEventName(eventName);
+
     // Pattern: "<Pokemon Name(s)> Raid Hour"
-    const match = eventName.match(/^(.+?)\s+Raid\s+Hour$/i);
+    const match = decodedEventName.match(/^(.+?)\s+Raid\s+Hour$/i);
     if (!match) {
         return [];
     }
 
     const pokemonPart = match[1].trim();
+
+    // Handle special case: Pokemon with forms in parentheses
+    // Example: "Deoxys (Attack & Speed Forme)" should become ["Deoxys (Attack Forme)", "Deoxys (Speed Forme)"]
+    const formeParenthesesMatch = pokemonPart.match(/^(.+?)\s+\((.+?)\s+&\s+(.+?)\s+forme?\)$/i);
+    if (formeParenthesesMatch) {
+        const baseName = formeParenthesesMatch[1].trim();
+        const form1 = formeParenthesesMatch[2].trim();
+        const form2 = formeParenthesesMatch[3].trim();
+        return [`${baseName} (${form1} Forme)`, `${baseName} (${form2} Forme)`];
+    }
 
     // Split on "and" and also handle potential commas for 3+ Pokemon
     // Examples: "Mega Latias and Mega Latios", "Pokemon A, Pokemon B, and Pokemon C"
@@ -53,7 +67,7 @@ function extractPokemonNameFromMaxMonday(eventName: string): string | null {
 // Uses getRaidSubType to determine the format, then applies appropriate regex patterns
 function extractPokemonNameFromRaidBattle(event: PogoEvent): string | null {
     const subType = getRaidSubType(event);
-    const eventName = event.name;
+    const eventName = formatEventName(event.name);
 
     switch (subType) {
         case 'shadow-raids': {
@@ -121,11 +135,23 @@ function parsePokemonNameAndSuffix(pokemonNameString: string): { pokemonName: st
 
     // Handle Pokemon with special forms in parentheses
     // Examples: "Palkia (Origin Forme)" → "palkia-origin", "Landorus (Therian Form)" → "landorus-therian"
-    const formeMatch = pokemonNameString.match(/^(.+?)\s+\((.+?)\s+forme?\)$/i);
+    // Also handles: "Deoxys (Normal)" → no suffix, "Deoxys (Attack)" → "deoxys-attack"
+    const formeMatch = pokemonNameString.match(/^(.+?)\s+\((.+?)(?:\s+forme?)?\)$/i);
     if (formeMatch) {
         const baseName = formeMatch[1].trim();
         const formeName = formeMatch[2].trim().toLowerCase();
+
+        // Special handling for Deoxys Normal form - no suffix needed
+        if (baseName.toLowerCase() === 'deoxys' && formeName === 'normal') {
+            return { pokemonName: baseName };
+        }
+
         return { pokemonName: baseName, suffix: `-${formeName}` };
+    }
+
+    // Special case: Genesect without form specified defaults to "normal" form for static sprites
+    if (pokemonNameString.toLowerCase().trim() === 'genesect') {
+        return { pokemonName: 'Genesect', suffix: '-normal' };
     }
 
     // Regular Pokemon (no prefix)
@@ -218,7 +244,7 @@ export function getEventPokemonImages(event: PogoEvent, options?: PokemonImageOp
 
     // Handle raid-hour events - parse Pokemon names from title and generate sprite URLs
     if (event.eventType === 'raid-hour') {
-        const pokemonNames = extractPokemonNamesFromRaidHour(event.name);
+        const pokemonNames = extractPokemonNamesFromRaidHour(formatEventName(event.name));
         if (pokemonNames.length > 0) {
             const images: string[] = [];
 
@@ -246,9 +272,35 @@ export function getEventPokemonImages(event: PogoEvent, options?: PokemonImageOp
         }
     }
 
+    // Handle raid-day events - parse Pokemon name from title and generate sprite URL
+    if (event.eventType === 'raid-day') {
+        const eventName = formatEventName(event.name);
+
+        // Pattern: "<Pokemon Name> Raid Day"
+        const match = eventName.match(/^(.+?)\s+Raid\s+Day$/i);
+        if (match) {
+            const pokemonNameString = match[1].trim();
+            const parsedData = parsePokemonNameAndSuffix(pokemonNameString);
+            if (parsedData) {
+                let spriteUrl: string | null = null;
+
+                // If we have a custom suffix (like -mega), use it directly
+                if (parsedData.suffix) {
+                    spriteUrl = getSpriteUrl(parsedData.pokemonName, parsedData.suffix, options);
+                } else {
+                    spriteUrl = getSpriteUrl(parsedData.pokemonName, undefined, options);
+                }
+
+                if (spriteUrl) {
+                    return [spriteUrl];
+                }
+            }
+        }
+    }
+
     // Handle max-mondays events - parse Pokemon name from title and generate sprite URL
     if (event.eventType === 'max-mondays') {
-        const pokemonName = extractPokemonNameFromMaxMonday(event.name);
+        const pokemonName = extractPokemonNameFromMaxMonday(formatEventName(event.name));
         if (pokemonName) {
             const spriteUrl = getSpriteUrl(pokemonName, undefined, options);
             if (spriteUrl) {
@@ -326,6 +378,75 @@ export function getEventPokemonImages(event: PogoEvent, options?: PokemonImageOp
         }
     }
 
+    // Handle pokestop showcases - parse Pokemon name(s) from title and generate sprite URLs
+    if (event.eventType === 'pokestop-showcase') {
+        const eventName = formatEventName(event.name);
+
+        // Pattern: "<Pokemon Name(s)> PokéStop Showcase(s)"
+        const match = eventName.match(/^(.+?)\s+PokéStop\s+Showcases?$/i);
+        if (match) {
+            const pokemonNameString = match[1].trim();
+
+            // Skip if it's a general type-based showcase (contains "-type" or " type")
+            if (/(?:\w+-type|\s+type)\b/i.test(pokemonNameString)) {
+                return [];
+            }
+
+            // Handle multiple Pokemon separated by commas and "and"
+            const pokemonNames: string[] = [];
+
+            // First split on commas, then handle "and" in the last part
+            const commaParts = pokemonNameString.split(',').map(part => part.trim());
+
+            for (let i = 0; i < commaParts.length; i++) {
+                const part = commaParts[i];
+
+                if (i === commaParts.length - 1 && part.includes(' and ')) {
+                    // Last part might contain "and" - split it
+                    const andParts = part.split(' and ').map(p => p.trim());
+                    pokemonNames.push(...andParts);
+                } else {
+                    pokemonNames.push(part);
+                }
+            }
+
+            // If no commas were found, just split on "and"
+            if (commaParts.length === 1 && pokemonNameString.includes(' and ')) {
+                pokemonNames.length = 0; // Clear the array
+                const andParts = pokemonNameString.split(' and ').map(p => p.trim());
+                pokemonNames.push(...andParts);
+            }
+
+            // If still no multiple Pokemon found, treat as single Pokemon
+            if (pokemonNames.length <= 1) {
+                pokemonNames.length = 0;
+                pokemonNames.push(pokemonNameString);
+            }
+
+            const images: string[] = [];
+
+            for (const name of pokemonNames) {
+                const parsedData = parsePokemonNameAndSuffix(name);
+                if (parsedData) {
+                    let spriteUrl: string | null = null;
+
+                    // If we have a custom suffix (like forms), use it directly
+                    if (parsedData.suffix) {
+                        spriteUrl = getSpriteUrl(parsedData.pokemonName, parsedData.suffix, options);
+                    } else {
+                        spriteUrl = getSpriteUrl(parsedData.pokemonName, undefined, options);
+                    }
+
+                    if (spriteUrl) {
+                        images.push(spriteUrl);
+                    }
+                }
+            }
+
+            return images;
+        }
+    }
+
     return [];
 }
 
@@ -339,40 +460,4 @@ export function getMultiDayPokemonImages(event: PogoEvent, options?: PokemonImag
         return getEventPokemonImages(event, options);
     }
     return [];
-}
-
-export function getRaidSubType(event: PogoEvent): string {
-    if (event.eventType !== 'raid-battles' && event.eventType !== 'raid-weekend') {
-        return ''; // Not applicable for non-raid events
-    }
-
-    const eventName = event.name.toLowerCase();
-
-    if (eventName.includes('shadow')) {
-        return 'shadow-raids';
-    } else if (eventName.includes('mega')) {
-        return 'mega-raids';
-    } else if (eventName.includes('raid battles') || eventName.includes('raid weekend')) {
-        return 'raid-battles';
-    }
-    return ''; // Default case, no specific sub-type
-}
-
-// Higher number = higher priority for raid sub-type sorting
-export function getRaidSubTypePriority(event: PogoEvent): number {
-    if (event.eventType !== 'raid-battles' && event.eventType !== 'raid-weekend') {
-        return 0; // Not applicable for non-raid events
-    }
-
-    const subType = getRaidSubType(event);
-    switch (subType) {
-        case 'shadow-raids':
-            return 3;
-        case 'raid-battles':
-            return 2;
-        case 'mega-raids':
-            return 1;
-        default:
-            return 0;
-    }
 }

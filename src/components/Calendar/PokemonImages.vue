@@ -50,8 +50,8 @@
 import { CircleHelpIcon } from 'lucide-vue-next';
 import { computed } from 'vue';
 
-import { getEventPokemonImages, getRaidSubType } from '@/utils/eventPokemon';
-import { type PogoEvent } from '@/utils/eventTypes';
+import { getEventPokemonImages } from '@/utils/eventPokemon';
+import { type PogoEvent, getRaidSubType } from '@/utils/eventTypes';
 
 interface Props {
     event: PogoEvent;
@@ -85,7 +85,16 @@ const shouldShowMoreIndicator = computed(() => {
 const shouldShowPlaceholder = computed(() => {
     if (!props.showPlaceholder) return false;
 
-    const relevantEventTypes = ['raid-day', 'raid-battles', 'raid-weekend', 'raid-hour', 'max-mondays', 'pokemon-spotlight-hour', 'community-day'];
+    const relevantEventTypes = [
+        'raid-day',
+        'raid-battles',
+        'raid-weekend',
+        'raid-hour',
+        'max-mondays',
+        'pokemon-spotlight-hour',
+        'community-day',
+        'pokestop-showcase',
+    ];
     return pokemonImages.value.length === 0 && relevantEventTypes.includes(props.event.eventType);
 });
 

@@ -6,6 +6,7 @@ import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
 
 import { DATE_FORMAT } from '../utils/dateFormat';
+import { formatEventName } from '../utils/eventName';
 import {
     type EventTypeInfo,
     type PogoEvent,
@@ -139,7 +140,7 @@ export const useEventsStore = defineStore('events', () => {
             const isMultiDay = isMultiDayEvent(event);
 
             metadata[event.eventID] = {
-                displayName: event.name, // Can be enhanced with grouping logic later
+                displayName: formatEventName(event.name), // Can be enhanced with grouping logic later
                 startDate,
                 endDate,
                 typeInfo,

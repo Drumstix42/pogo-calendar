@@ -77,7 +77,12 @@
                                 <!-- Show Pokemon images for grouped or individual events -->
                                 <template v-if="calendarSettings.useMultiDayEventSprites">
                                     <template v-if="calendarSettings.groupSimilarEvents && hasGroupedEvents(event)">
-                                        <PokemonImages :event="event" :event-name="event.name" :height="multiDayEventIconHeight" :limit="2" />
+                                        <PokemonImages
+                                            :event="event"
+                                            :event-name="formatEventName(event.name)"
+                                            :height="multiDayEventIconHeight"
+                                            :limit="2"
+                                        />
                                     </template>
                                     <template v-else>
                                         <PokemonImages :event="event" :event-name="getEventDisplayName(event)" :height="multiDayEventIconHeight" />
@@ -157,6 +162,7 @@ import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { useEventFilterStore } from '@/stores/eventFilter';
 import { useEventHighlightStore } from '@/stores/eventHighlight';
 import { useEventsStore } from '@/stores/events';
+import { formatEventName } from '@/utils/eventName';
 import {
     type PogoEvent,
     formatEventTime,
@@ -338,11 +344,11 @@ const getEventKey = (event: PogoEvent): string => {
 const getEventDisplayName = (event: PogoEvent): string => {
     // Check if this event has a custom display name (from grouping)
     if ((event as any)._displayName) {
-        return (event as any)._displayName;
+        return formatEventName((event as any)._displayName);
     }
 
     // For individual events, always show the event name
-    return event.name;
+    return formatEventName(event.name);
 };
 
 const getEventCount = (event: PogoEvent): number => {

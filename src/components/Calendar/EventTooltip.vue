@@ -17,7 +17,7 @@
                 <div class="event-content">
                     <!-- Event text content -->
                     <div class="event-text">
-                        <div class="grouped-event-name">{{ groupedEvent.name }}</div>
+                        <div class="grouped-event-name">{{ formatEventName(groupedEvent.name) }}</div>
                         <div class="grouped-event-time">{{ formatEventDuration(groupedEvent) }}</div>
                         <div v-if="groupedEvent.link" class="lh-1">
                             <a
@@ -35,7 +35,7 @@
                     <!-- Pokemon images -->
                     <PokemonImages
                         :event="groupedEvent"
-                        :event-name="groupedEvent.name"
+                        :event-name="formatEventName(groupedEvent.name)"
                         :height="50"
                         :use-animated="calendarSettings.useAnimatedImages"
                     />
@@ -49,14 +49,14 @@
                 <div class="event-content">
                     <!-- Event text content -->
                     <div class="event-text">
-                        <div class="grouped-event-name">{{ event.name }}</div>
+                        <div class="grouped-event-name">{{ formatEventName(event.name) }}</div>
                         <div :class="isSingleDay ? 'single-event-time' : 'grouped-event-time'">{{ formatEventDuration(event) }}</div>
                     </div>
 
                     <!-- Pokemon images -->
                     <PokemonImages
                         :event="event"
-                        :event-name="event.name"
+                        :event-name="formatEventName(event.name)"
                         :height="60"
                         :use-animated="calendarSettings.useAnimatedImages"
                         :show-placeholder="isSingleDay"
@@ -111,6 +111,7 @@ import { computed, nextTick, onMounted, ref } from 'vue';
 
 import { useEventFilterToasts } from '@/composables/useEventFilterToasts';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
+import { formatEventName } from '@/utils/eventName';
 import {
     type EventTypeKey,
     type PogoEvent,

@@ -36,7 +36,8 @@ import { useUrlSync } from '@/composables/useUrlSync';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { useEventFilterStore } from '@/stores/eventFilter';
 import { useEventsStore } from '@/stores/events';
-import { getRaidSubType, getRaidSubTypePriority } from '@/utils/eventPokemon';
+import { formatEventName } from '@/utils/eventName';
+import { getRaidSubType, getRaidSubTypePriority, isEventWithSubtype } from '@/utils/eventTypes';
 import { type PogoEvent, getEventTypeInfo, isSameDayEvent, parseEventDate } from '@/utils/eventTypes';
 
 import CalendarDay from './CalendarDay.vue';
@@ -130,7 +131,16 @@ const eventSlots = computed((): EventSlot[] => {
         // Group events with identical start/end times
         const eventGroups = new Map<string, PogoEvent[]>();
         events.forEach(event => {
-            const timeKey = `${event.eventType}:${event.start}:${event.end}`;
+            // Create more specific grouping key for events with subtypes
+            let groupingType = event.eventType;
+            if (isEventWithSubtype(event.eventType)) {
+                const raidSubType = getRaidSubType(event);
+                if (raidSubType) {
+                    groupingType = raidSubType;
+                }
+            }
+
+            const timeKey = `${groupingType}:${event.start}:${event.end}`;
             if (!eventGroups.has(timeKey)) {
                 eventGroups.set(timeKey, []);
             }
@@ -153,7 +163,7 @@ const eventSlots = computed((): EventSlot[] => {
                     }
 
                     // Then by event name for consistency
-                    return a.name.localeCompare(b.name);
+                    return formatEventName(a.name).localeCompare(formatEventName(b.name));
                 });
 
                 const representative = { ...sortedGroup[0] };

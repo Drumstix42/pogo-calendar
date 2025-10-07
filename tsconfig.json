@@ -22,9 +22,8 @@
 
         /* Vue specific */
         "types": ["vite/client"],
-        "baseUrl": ".",
         "paths": {
-            "@/*": ["src/*"]
+            "@/*": ["./src/*"]
         }
     },
     "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.vue"]

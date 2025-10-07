@@ -19,7 +19,7 @@
 
         <!-- Event body with event name and details -->
         <div class="event-body">
-            <div class="event-name">{{ event.name }}</div>
+            <div class="event-name">{{ formatEventName(event.name) }}</div>
             <div v-if="isSameDayEvent(event)" class="single-day-datetime">
                 <div class="single-day-times">{{ formatEventTime(event.start) }} - {{ formatEventTime(event.end) }}</div>
                 <div class="single-day-date-line">
@@ -45,6 +45,7 @@ import dayjs from 'dayjs';
 import { computed } from 'vue';
 
 import { useEventFilterToasts } from '@/composables/useEventFilterToasts';
+import { formatEventName } from '@/utils/eventName';
 import { type EventTypeKey, type PogoEvent, formatEventTime, getEventTypeInfo, isSameDayEvent, parseEventDate } from '@/utils/eventTypes';
 
 import EventToggleButton from './EventToggleButton.vue';
