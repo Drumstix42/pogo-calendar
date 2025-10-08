@@ -396,7 +396,7 @@ const debouncedHighlightEventID = (eventID: string): void => {
     highlightTimeout = setTimeout(() => {
         highlightEventID(eventID);
         highlightTimeout = null;
-    }, 500);
+    }, 200);
 };
 
 const debouncedClearEventIDHighlight = (): void => {

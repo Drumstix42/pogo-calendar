@@ -306,8 +306,12 @@ body {
         transition:
             background-color 0.5s ease,
             filter 0.5s ease !important;
+
         &:not(:hover) {
             background-color: color-mix(in srgb, var(--event-bg-color) 80%, white) !important;
+            .event-name {
+                font-weight: 500;
+            }
         }
     }
     /* .event-name {
