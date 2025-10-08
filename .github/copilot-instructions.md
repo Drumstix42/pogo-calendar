@@ -32,6 +32,7 @@ Vue 3 + TypeScript calendar for Pokemon GO events. Events fetched from external 
 - Responsive design patterns (mobile/desktop components), with Bootstrap 5 classes and media queries
 - For icons, use the Lucide Vue library
 - Use `src/utils/pokemonMapper.ts` for Pokemon name normalization and ID lookup
+- Don't set function return types unless it improves clarity
 
 ## Critical Patterns
 

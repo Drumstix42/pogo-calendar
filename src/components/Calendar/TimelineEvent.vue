@@ -1,7 +1,7 @@
 <template>
     <div
         class="timeline-event-card calendar-event"
-        :class="{ 'is-active': isActive }"
+        :class="{ 'is-active': props.isActive }"
         :data-event-type="event.eventType"
         :style="{
             borderColor: eventColor,
@@ -11,20 +11,23 @@
     >
         <!-- Colored header with event type -->
         <div class="event-header" :style="{ backgroundColor: eventColor }">
-            <span class="event-type">{{ eventTypeName }}</span>
-            <div v-if="headerDuration" class="header-duration">{{ headerDuration }}</div>
+            <div class="header-content">
+                <span class="event-type">{{ eventTypeName }}</span>
+                <component :is="props.isActive ? ChevronsDownUp : ChevronsUpDown" :size="14" class="chevron-icon" />
+            </div>
             <!-- Hide event type button -->
-            <div class="event-toggle-container">
+            <div v-if="props.isActive" class="event-toggle-container">
+                <div class="header-action-text">Hide type?</div>
                 <EventToggleButton :event-type="event.eventType" @hide="hideEventType" />
             </div>
         </div>
 
         <!-- Event body with event name and details -->
         <div class="event-body">
-            <div class="event-content">
-                <div class="event-text">
-                    <div class="event-name">{{ formatEventName(event.name) }}</div>
+            <div class="event-name">{{ formatEventName(event.name) }}</div>
 
+            <div class="event-content">
+                <div class="event-details">
                     <!-- Standardized time row with focus styling -->
                     <div class="time-row" :class="{ 'is-completed': timeDisplayParts.isCompleted }">
                         <span v-if="timeDisplayParts.prefix">{{ timeDisplayParts.prefix }}</span>
@@ -57,11 +60,15 @@
                 <PokemonImages
                     :event="event"
                     :event-name="formatEventName(event.name)"
-                    :height="55"
-                    :use-animated="isActive ? true : false"
+                    :height="40"
+                    :use-animated="props.isActive ? true : false"
                     :show-placeholder="true"
                     :show-tooltips="true"
                 />
+            </div>
+
+            <div class="event-extras-wrapper">
+                <EventExtras v-if="props.isActive" :event="event" />
             </div>
         </div>
     </div>
@@ -69,28 +76,33 @@
 
 <script setup lang="ts">
 import dayjs from 'dayjs';
-import { CalendarClock } from 'lucide-vue-next';
-import { computed, ref } from 'vue';
+import { CalendarClock, ChevronsDownUp, ChevronsUpDown } from 'lucide-vue-next';
+import { computed } from 'vue';
 
 import { useEventFilterToasts } from '@/composables/useEventFilterToasts';
 import { formatEventName } from '@/utils/eventName';
 import { type EventTypeKey, type PogoEvent, formatEventTime, getEventTypeInfo, isSameDayEvent, parseEventDate } from '@/utils/eventTypes';
 
+import EventExtras from './EventExtras.vue';
 import EventToggleButton from './EventToggleButton.vue';
 import PokemonImages from './PokemonImages.vue';
 
 interface Props {
     event: PogoEvent;
+    isActive: boolean;
+}
+
+interface Emits {
+    activate: [eventId: string];
 }
 
 const props = defineProps<Props>();
+const emit = defineEmits<Emits>();
 const { hideEventTypeWithToast } = useEventFilterToasts();
 
-const isActive = ref(false);
-
-const toggleActive = (): void => {
-    isActive.value = !isActive.value;
-};
+function toggleActive() {
+    emit('activate', props.event.eventID);
+}
 
 // Event type color and name
 const eventColor = computed(() => {
@@ -104,30 +116,6 @@ const eventTypeName = computed(() => {
 // Darker color for active state
 const eventColorDark = computed(() => {
     return `color-mix(in srgb, ${eventColor.value} 80%, black)`;
-});
-
-// Header duration display (day count for multi-day, hours for single-day)
-const headerDuration = computed(() => {
-    const startDate = parseEventDate(props.event.start);
-    const endDate = parseEventDate(props.event.end);
-
-    if (isSameDayEvent(props.event)) {
-        // For single-day events, show hours duration
-        const hours = endDate.diff(startDate, 'hour', true);
-        if (hours < 1) {
-            const minutes = endDate.diff(startDate, 'minute');
-            return `${minutes} min${minutes !== 1 ? 's' : ''}`;
-        } else if (hours === Math.floor(hours)) {
-            const wholeHours = Math.floor(hours);
-            return `${wholeHours} hour${wholeHours !== 1 ? 's' : ''}`;
-        } else {
-            return `${hours.toFixed(1)} hours`;
-        }
-    } else {
-        // For multi-day events, show day count
-        const totalDays = endDate.diff(startDate, 'day') + 1;
-        return `${totalDays} day${totalDays > 1 ? 's' : ''}`;
-    }
 });
 
 // Standardized time display for all events
@@ -387,14 +375,28 @@ const hideEventType = (eventType: EventTypeKey): void => {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
+
+    .header-content {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        flex: 1;
+        min-width: 0;
+    }
 
     .event-type {
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
-        flex: 1;
         min-width: 0;
+    }
+
+    .chevron-icon {
+        opacity: 0.7;
+        transition: opacity 0.2s ease;
+        flex-shrink: 0;
+        color: var(--bs-body-color);
     }
 
     .header-duration {
@@ -406,8 +408,21 @@ const hideEventType = (eventType: EventTypeKey): void => {
         transition: opacity 0.2s ease;
     }
 
+    .header-action-text {
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1;
+        opacity: 0.9;
+        flex-shrink: 0;
+        white-space: nowrap;
+        font-style: italic;
+    }
+
     .event-toggle-container {
         flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        gap: 6px;
     }
 }
 
@@ -415,23 +430,33 @@ const hideEventType = (eventType: EventTypeKey): void => {
     padding: 12px 12px;
     text-align: left;
 
-    .event-content {
-        display: flex;
-        gap: 12px;
-        align-items: flex-start;
-    }
-
-    .event-text {
-        flex: 1;
-        min-width: 0;
-    }
-
     .event-name {
         font-size: 0.85rem;
         font-weight: 500;
         color: color-mix(in srgb, var(--bs-body-color) 90%, transparent);
-        margin-bottom: 4px;
         line-height: 1.3;
+        margin-bottom: 3px;
+    }
+
+    .event-content {
+        display: flex;
+        gap: 0px;
+        align-items: flex-start;
+        /* flex-wrap: wrap; */
+
+        :deep(.pokemon-images) {
+            justify-content: end;
+            flex-grow: 0;
+            flex-shrink: 1;
+            margin-left: auto;
+            flex-wrap: nowrap;
+        }
+    }
+
+    .event-details {
+        flex-grow: 1;
+        flex-shrink: 0;
+        margin-top: 4px;
     }
 
     .time-row {
@@ -501,6 +526,16 @@ const hideEventType = (eventType: EventTypeKey): void => {
         .status-upcoming {
             color: color-mix(in srgb, var(--bs-secondary-color) 30%, var(--bs-success) 100%);
             font-weight: 500;
+        }
+    }
+
+    .event-extras-wrapper {
+        :deep(.event-extras) {
+            margin-top: 0.5rem;
+        }
+
+        :deep(.community-day-bonuses) {
+            margin-top: 1rem;
         }
     }
 }

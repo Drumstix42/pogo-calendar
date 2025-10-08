@@ -1,7 +1,7 @@
 <template>
     <div v-if="displayedImages.length > 0 || shouldShowPlaceholder" class="pokemon-images" :class="{ 'wrap-multiple': displayedImages.length >= 3 }">
         <Transition name="fade" :duration="{ enter: 250, leave: 150 }">
-            <div :key="useAnimated ? 'animated' : 'static'" class="pokemon-container-group" :class="{ 'wrap-multiple': displayedImages.length >= 3 }">
+            <div :key="useAnimated ? 'animated' : 'static'" class="pokemon-images" :class="{ 'wrap-multiple': displayedImages.length >= 3 }">
                 <VTooltip
                     v-for="(pokemonData, index) in displayedImages"
                     :key="`pokemon-${index}`"
@@ -137,22 +137,10 @@ const handleImageError = (event: Event): void => {
 .pokemon-images {
     display: flex;
     align-items: center;
-    /* flex-wrap: wrap; */
-    flex-shrink: 0;
     position: relative; /* For absolute positioning during transitions */
 }
 
 .pokemon-images.wrap-multiple {
-    flex-wrap: wrap;
-}
-
-.pokemon-container-group {
-    display: flex;
-    align-items: center;
-    flex-shrink: 0;
-}
-
-.pokemon-container-group.wrap-multiple {
     flex-wrap: wrap;
 }
 

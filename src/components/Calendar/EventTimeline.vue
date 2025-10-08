@@ -17,7 +17,13 @@
 
                     <!-- Events in this category -->
                     <div class="category-events">
-                        <TimelineEvent v-for="event in categorizedEvents[category.key]" :key="event.eventID" :event="event" />
+                        <TimelineEvent
+                            v-for="event in categorizedEvents[category.key]"
+                            :key="event.eventID"
+                            :event="event"
+                            :is-active="activeEventId === event.eventID"
+                            @activate="setActiveEvent"
+                        />
 
                         <!-- Special message for Today section when no events exist -->
                         <div v-if="category.key === 'today' && totalEventsCounts[category.key] === 0" class="no-events-today">
@@ -37,7 +43,7 @@
 
 <script setup lang="ts">
 import dayjs from 'dayjs';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 
 import { useEventFilterStore } from '@/stores/eventFilter';
 import { useEventsStore } from '@/stores/events';
@@ -47,6 +53,12 @@ import TimelineEvent from './TimelineEvent.vue';
 
 const eventsStore = useEventsStore();
 const eventFilter = useEventFilterStore();
+
+const activeEventId = ref<string | null>(null);
+
+const setActiveEvent = (eventId: string): void => {
+    activeEventId.value = activeEventId.value === eventId ? null : eventId;
+};
 
 // Event categories in order (updated order and descriptions)
 const eventCategories = [

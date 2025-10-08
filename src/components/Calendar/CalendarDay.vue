@@ -635,6 +635,10 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     transform: translate3d(0, 0, 0); /* Fixes some rendering issues in Chrome */
 }
 
+:deep(.multi-day-event-bar--inner .pokemon-images) {
+    flex-shrink: 0;
+}
+
 .multi-day-event-bar .event-name {
     overflow: hidden;
     text-overflow: ellipsis;
@@ -904,14 +908,14 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
 }
 
 .event-content :deep(.pokemon-images) {
-    margin-left: -14px;
+    margin-left: -6px;
 }
 
-@media (min-width: 768px) {
+/* @media (min-width: 768px) {
     .event-content :deep(.pokemon-images) {
         margin-left: -6px;
     }
-}
+} */
 
 .single-day-event .event-name {
     font-size: 0.7rem;
