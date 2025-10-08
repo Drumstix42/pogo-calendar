@@ -8,10 +8,9 @@
             backgroundColor: eventColor,
             '--event-color-dark': eventColorDark,
         }"
-        @click="toggleActive"
     >
         <!-- Colored header with event type -->
-        <div class="event-header" :style="{ backgroundColor: eventColor }">
+        <div class="event-header" :style="{ backgroundColor: eventColor }" @click="toggleActive">
             <div class="header-content">
                 <span class="event-type">{{ eventTypeName }}</span>
                 <!-- Hide event type button -->
@@ -90,7 +89,7 @@ const eventTypeName = computed(() => {
 
 // Darker color for active state
 const eventColorDark = computed(() => {
-    return `color-mix(in srgb, ${eventColor.value} 80%, black)`;
+    return `color-mix(in srgb, ${eventColor.value} 90%, black)`;
 });
 
 const hideEventType = (eventType: EventTypeKey): void => {
@@ -103,17 +102,20 @@ const hideEventType = (eventType: EventTypeKey): void => {
     border: 2px solid;
     border-radius: 8px;
     overflow: hidden;
-    cursor: pointer;
+
     transition:
         transform 0.15s ease,
         border-color 0.15s ease;
 
-    &:hover {
-        border-color: var(--event-color-dark);
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    @media (pointer: fine) {
+        &:hover {
+            border-color: var(--event-color-dark);
+            background-color: var(--event-color-dark);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 
-        .header-duration {
-            opacity: 0.9;
+            .event-header {
+                background-color: var(--event-color-dark) !important;
+            }
         }
     }
 
@@ -121,16 +123,6 @@ const hideEventType = (eventType: EventTypeKey): void => {
         transform: scale(1.02);
         border-color: var(--event-color-dark);
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-
-        .header-duration {
-            opacity: 0.9;
-        }
-    }
-
-    &:focus-within {
-        .header-duration {
-            opacity: 0.9;
-        }
     }
 }
 
@@ -145,6 +137,13 @@ const hideEventType = (eventType: EventTypeKey): void => {
     justify-content: space-between;
     align-items: center;
     gap: 6px;
+    cursor: pointer;
+
+    @media (pointer: fine) {
+        &:hover {
+            font-weight: 600;
+        }
+    }
 
     .header-content {
         display: flex;
@@ -167,15 +166,6 @@ const hideEventType = (eventType: EventTypeKey): void => {
         flex-shrink: 0;
         color: white;
         margin-left: auto;
-    }
-
-    .header-duration {
-        font-size: 12px;
-        font-weight: 400;
-        opacity: 0;
-        flex-shrink: 0;
-        white-space: nowrap;
-        transition: opacity 0.2s ease;
     }
 
     .header-action-text {

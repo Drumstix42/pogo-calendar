@@ -211,10 +211,12 @@ const hiddenEventsCounts = computed(() => eventData.value.hiddenEventsCounts);
     position: sticky;
     top: var(--navbar-height-scrolled);
     z-index: 10;
-    margin: 0 0 12px 0;
-    padding: 8px;
+    margin: 0;
+    padding: 6px 7px;
+    line-height: 1;
     background: var(--bs-secondary-bg);
     border-bottom: 1px solid var(--bs-border-color);
+    border-radius: 0 0 5px 5px;
 }
 
 .category-text {
@@ -235,10 +237,12 @@ const hiddenEventsCounts = computed(() => eventData.value.hiddenEventsCounts);
     display: flex;
     flex-direction: column;
     gap: 6px;
+    margin-top: 12px;
+    padding: 0 4px;
 }
 
 .hidden-events-indicator {
-    margin-top: 8px;
+    margin: 8px 16px 0 16px;
     padding: 8px 12px;
     font-size: 12px;
     color: var(--bs-secondary-color);

@@ -64,7 +64,7 @@ const toggleCollapsed = () => {
     padding: 0;
 
     &.closed .section-header {
-        border-bottom: 1px solid var(--bs-secondary-bg);
+        border-bottom: 1px solid var(--bs-tertiary-bg);
     }
 }
 
@@ -74,13 +74,13 @@ const toggleCollapsed = () => {
     gap: 0.5rem;
     padding: 0.3rem 0.8rem;
     cursor: pointer;
-    background-color: var(--bs-secondary-bg);
+    background-color: var(--bs-tertiary-bg);
     border-bottom: 1px solid var(--bs-border-color);
     transition: background-color 0.2s ease;
 }
 
 .section-header:hover {
-    background-color: var(--bs-tertiary-bg);
+    background-color: var(--bs-secondary-bg);
 }
 
 .section-header:focus {
