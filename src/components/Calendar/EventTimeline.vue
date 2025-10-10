@@ -193,7 +193,7 @@ const eventData = computed(() => {
 
         // Add to visible events or hidden count based on filter setting
         const shouldFilter = calendarSettings.filtersApplyToTimeline;
-        const isVisible = !shouldFilter || eventFilter.isEventTypeEnabled(event.eventType);
+        const isVisible = !shouldFilter || eventFilter.isEventVisible(event.eventType, event.eventID);
 
         if (isVisible) {
             categories[categoryKey].push(event);

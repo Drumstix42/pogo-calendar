@@ -14,7 +14,7 @@
             <div class="toast-content-row">
                 <div class="toast-text">
                     <div class="mb-1 small" v-html="toast.title"></div>
-                    <strong v-html="toast.message"></strong>
+                    <div class="toast-text--message" v-html="toast.message"></div>
                 </div>
                 <div class="toast-right-section">
                     <button
@@ -141,7 +141,7 @@ onUnmounted(() => {
 });
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .toast-message {
     pointer-events: auto;
     background: var(--calendar-cell-bg);
@@ -200,6 +200,11 @@ onUnmounted(() => {
 .toast-text {
     flex: 1;
     min-width: 0;
+
+    .toast-text--message {
+        font-weight: 500;
+        line-height: 1.3;
+    }
 }
 
 .toast-right-section {

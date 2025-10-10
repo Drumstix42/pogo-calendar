@@ -49,6 +49,16 @@
                 </div>
             </Transition>
         </Teleport>
+
+        <!-- Hide Event Modal -->
+        <HideEventModal
+            v-if="hideEventModal.currentEvent.value"
+            :show="hideEventModal.showModal.value"
+            :event="hideEventModal.currentEvent.value"
+            @close="hideEventModal.closeModal"
+            @hide-by-type="handleHideByType"
+            @hide-by-id="handleHideById"
+        />
     </div>
 </template>
 
@@ -57,18 +67,24 @@ import { breakpointsBootstrapV5, useBreakpoints } from '@vueuse/core';
 import { CalendarRange, PanelTop } from 'lucide-vue-next';
 import { onMounted, onUnmounted, watchEffect } from 'vue';
 
+import { useEventFilterToasts } from '@/composables/useEventFilterToasts';
+import { useHideEventModal } from '@/composables/useHideEventModal';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { useEventsStore } from '@/stores/events';
+import type { EventTypeKey } from '@/utils/eventTypes';
 
 import CalendarGrid from '@/components/Calendar/CalendarGrid.vue';
 import CalendarHeader from '@/components/Calendar/CalendarHeader.vue';
 /* import CalendarMobile from '@/components/Calendar/CalendarMobile.vue'; */
 import EventTimeline from '@/components/Calendar/EventTimeline.vue';
+import HideEventModal from '@/components/Calendar/HideEventModal.vue';
 import CalendarOptions from '@/components/CalendarOptions/CalendarOptions.vue';
 import CollapsibleSection from '@/components/CollapsibleSection.vue';
 
 const eventsStore = useEventsStore();
 const calendarSettings = useCalendarSettingsStore();
+const hideEventModal = useHideEventModal();
+const { hideEventTypeWithToast, hideEventByIdWithToast } = useEventFilterToasts();
 
 // responsive breakpoints https://getbootstrap.com/docs/5.0/layout/breakpoints/#available-breakpoints
 const breakpoints = useBreakpoints(breakpointsBootstrapV5);
@@ -83,6 +99,17 @@ const handleCloseOptions = () => {
 const handleBackdropClick = () => {
     calendarSettings.setOptionsExpanded(false);
 };
+
+function handleHideByType(eventType: EventTypeKey) {
+    hideEventTypeWithToast(eventType);
+}
+
+function handleHideById(eventId: string, eventName: string) {
+    const event = hideEventModal.currentEvent.value;
+    if (event) {
+        hideEventByIdWithToast(eventId, eventName, event);
+    }
+}
 
 watchEffect(() => {
     const isModalOpen = calendarSettings.optionsExpanded;

@@ -235,10 +235,12 @@ const calendarEvents = computed(() => {
         // Use the existing grouping logic
         const calendarData = getCalendarEventsForDate(eventsStore.events, props.dayInstance);
 
-        // Filter by enabled event types
-        const filteredSingleDay = calendarData.singleDayEvents.filter(event => eventFilter.isEventTypeEnabled(event.eventType));
-        const filteredMultiDay = calendarData.multiDayEvents.filter(event => eventFilter.isEventTypeEnabled(event.eventType));
-        const filteredGroups = calendarData.eventGroups.filter(group => group.events.some(event => eventFilter.isEventTypeEnabled(event.eventType)));
+        // Filter by enabled event types and individual event IDs
+        const filteredSingleDay = calendarData.singleDayEvents.filter(event => eventFilter.isEventVisible(event.eventType, event.eventID));
+        const filteredMultiDay = calendarData.multiDayEvents.filter(event => eventFilter.isEventVisible(event.eventType, event.eventID));
+        const filteredGroups = calendarData.eventGroups.filter(group =>
+            group.events.some(event => eventFilter.isEventVisible(event.eventType, event.eventID)),
+        );
 
         return {
             singleDayEvents: filteredSingleDay,
@@ -249,8 +251,8 @@ const calendarEvents = computed(() => {
         // No grouping - get individual events for the date
         const eventsForDate = getEventsForDate(eventsStore.events, props.dayInstance);
 
-        // Filter by enabled event types and separate by single/multi-day
-        const enabledEvents = eventsForDate.filter((event: PogoEvent) => eventFilter.isEventTypeEnabled(event.eventType));
+        // Filter by enabled event types and individual event IDs, then separate by single/multi-day
+        const enabledEvents = eventsForDate.filter((event: PogoEvent) => eventFilter.isEventVisible(event.eventType, event.eventID));
         const singleDay = enabledEvents.filter((event: PogoEvent) => isSameDayEvent(event));
         const multiDay = enabledEvents.filter((event: PogoEvent) => !isSameDayEvent(event));
 

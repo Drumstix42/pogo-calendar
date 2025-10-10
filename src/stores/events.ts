@@ -252,6 +252,10 @@ export const useEventsStore = defineStore('events', () => {
         error.value = null;
     }
 
+    function getEventById(eventId: string): PogoEvent | undefined {
+        return events.value.find(event => event.eventID === eventId);
+    }
+
     return {
         // State
         events,
@@ -270,6 +274,7 @@ export const useEventsStore = defineStore('events', () => {
 
         // Actions
         getEventsForDate,
+        getEventById,
         fetchEvents,
         setCurrentMonth,
         navigateToNextMonth,

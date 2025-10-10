@@ -102,8 +102,8 @@ const calendarDays = computed(() => {
 // Get all multi-day events for the calendar view
 const multiDayEventsForCalendar = computed(() => {
     return eventsStore.events.filter(event => {
-        // Filter by enabled event types and multi-day events only
-        if (!eventFilter.isEventTypeEnabled(event.eventType) || isSameDayEvent(event)) {
+        // Filter by enabled event types, individual event IDs, and multi-day events only
+        if (!eventFilter.isEventVisible(event.eventType, event.eventID) || isSameDayEvent(event)) {
             return false;
         }
 

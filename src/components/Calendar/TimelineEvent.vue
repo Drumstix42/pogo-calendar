@@ -16,7 +16,7 @@
                 <span class="event-type">{{ eventTypeName }}</span>
                 <!-- Hide event type button -->
                 <div v-if="props.isActive" class="event-toggle-container">
-                    <EventToggleButton :event-type="event.eventType" @hide="hideEventType" />
+                    <EventToggleButton :event-type="event.eventType" @hide="openHideModal" />
                     <div class="header-action-text">Hide?</div>
                 </div>
                 <component :is="props.isActive ? ChevronsDownUp : ChevronsUpDown" :size="14" class="chevron-icon" />
@@ -53,9 +53,9 @@
 import { ChevronsDownUp, ChevronsUpDown } from 'lucide-vue-next';
 import { computed } from 'vue';
 
-import { useEventFilterToasts } from '@/composables/useEventFilterToasts';
+import { useHideEventModal } from '@/composables/useHideEventModal';
 import { formatEventName } from '@/utils/eventName';
-import { type EventTypeKey, type PogoEvent, getEventTypeInfo } from '@/utils/eventTypes';
+import { type PogoEvent, getEventTypeInfo } from '@/utils/eventTypes';
 
 import EventExtras from './EventExtras.vue';
 import EventTimeDisplay from './EventTimeDisplay.vue';
@@ -73,10 +73,14 @@ interface Emits {
 
 const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
-const { hideEventTypeWithToast } = useEventFilterToasts();
+const hideEventModal = useHideEventModal();
 
 function toggleActive() {
     emit('activate', props.event.eventID);
+}
+
+function openHideModal() {
+    hideEventModal.openModal(props.event);
 }
 
 // Event type color and name
@@ -92,10 +96,6 @@ const eventTypeName = computed(() => {
 const eventColorDark = computed(() => {
     return `color-mix(in srgb, ${eventColor.value} 90%, black)`;
 });
-
-const hideEventType = (eventType: EventTypeKey): void => {
-    hideEventTypeWithToast(eventType);
-};
 </script>
 
 <style lang="scss" scoped>

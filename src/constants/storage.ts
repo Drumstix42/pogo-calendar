@@ -14,6 +14,7 @@ export const STORAGE_KEYS = {
     FILTERS_APPLY_TO_TIMELINE: createStorageKey('filters-apply-to-timeline'),
     FIRST_DAY_OF_WEEK: createStorageKey('first-day-of-week'),
     GROUP_SIMILAR_EVENTS: createStorageKey('group-similar-events'),
+    HIDDEN_EVENT_IDS: createStorageKey('hidden-event-ids'),
     THEME_MODE: createStorageKey('theme-mode'),
     TIMELINE_SIDEBAR_COLLAPSED: createStorageKey('timeline-sidebar-collapsed'),
     USE_ANIMATED_IMAGES: createStorageKey('use-animated-images'),

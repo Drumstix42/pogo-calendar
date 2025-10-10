@@ -8,7 +8,7 @@
             }"
         >
             <span class="event-type-name">{{ getEventTypeName(event) }}</span>
-            <EventToggleButton :event-type="event.eventType" @hide="hideEventType" />
+            <EventToggleButton :event-type="event.eventType" @hide="openHideModal" />
         </div>
 
         <!-- Show individual events if grouped -->
@@ -76,10 +76,10 @@
 <script setup lang="ts">
 import { ExternalLink } from 'lucide-vue-next';
 
-import { useEventFilterToasts } from '@/composables/useEventFilterToasts';
+import { useHideEventModal } from '@/composables/useHideEventModal';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { formatEventName } from '@/utils/eventName';
-import { type EventTypeKey, type PogoEvent, getEventTypeInfo, getGroupedEvents } from '@/utils/eventTypes';
+import { type PogoEvent, getEventTypeInfo, getGroupedEvents } from '@/utils/eventTypes';
 
 import EventExtras from './EventExtras.vue';
 import EventTimeDisplay from './EventTimeDisplay.vue';
@@ -91,16 +91,16 @@ interface Props {
     isSingleDay?: boolean;
 }
 
-withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<Props>(), {
     isSingleDay: false,
 });
 
 const calendarSettings = useCalendarSettingsStore();
-const { hideEventTypeWithToast } = useEventFilterToasts();
+const hideEventModal = useHideEventModal();
 
-const hideEventType = (eventType: EventTypeKey): void => {
-    hideEventTypeWithToast(eventType);
-};
+function openHideModal() {
+    hideEventModal.openModal(props.event);
+}
 
 const getEventColor = (event: PogoEvent): string => {
     return getEventTypeInfo(event.eventType).color;

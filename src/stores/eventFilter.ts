@@ -30,6 +30,23 @@ export const useEventFilterStore = defineStore('eventFilter', () => {
         },
     });
 
+    // Store hidden individual event IDs
+    const hiddenEventIds = useLocalStorage<string[]>(STORAGE_KEYS.HIDDEN_EVENT_IDS, [], {
+        serializer: {
+            read: (value: string) => {
+                try {
+                    const parsed = JSON.parse(value);
+                    return Array.isArray(parsed) ? parsed : [];
+                } catch {
+                    return [];
+                }
+            },
+            write: (value: string[]) => {
+                return JSON.stringify(value);
+            },
+        },
+    });
+
     // Computed getters
     const enabledEventTypeKeys = computed((): EventTypeKey[] =>
         (Object.keys(EVENT_TYPES) as EventTypeKey[]).filter(key => !disabledEventTypes.value.includes(key)),
@@ -77,9 +94,36 @@ export const useEventFilterStore = defineStore('eventFilter', () => {
         return !disabledEventTypes.value.includes(eventType);
     };
 
+    // Individual event filtering actions
+    const hideEventById = (eventId: string) => {
+        if (!hiddenEventIds.value.includes(eventId)) {
+            hiddenEventIds.value = [...hiddenEventIds.value, eventId];
+        }
+    };
+
+    const showEventById = (eventId: string) => {
+        hiddenEventIds.value = hiddenEventIds.value.filter(id => id !== eventId);
+    };
+
+    const isEventHiddenById = (eventId: string): boolean => {
+        return hiddenEventIds.value.includes(eventId);
+    };
+
+    const showAllHiddenEventsById = () => {
+        hiddenEventIds.value = [];
+    };
+
+    const hiddenEventCount = computed(() => hiddenEventIds.value.length);
+
+    // Combined helper to check if an event should be visible (both type and ID checks)
+    const isEventVisible = (eventType: EventTypeKey, eventId: string): boolean => {
+        return isEventTypeEnabled(eventType) && !isEventHiddenById(eventId);
+    };
+
     return {
         // State
         disabledEventTypes,
+        hiddenEventIds,
 
         // Computed getters
         enabledEventTypeKeys,
@@ -89,6 +133,7 @@ export const useEventFilterStore = defineStore('eventFilter', () => {
         noEventTypesEnabled,
         enabledCount,
         totalCount,
+        hiddenEventCount,
 
         // Actions
         toggleEventType,
@@ -97,5 +142,10 @@ export const useEventFilterStore = defineStore('eventFilter', () => {
         enableAllEventTypes,
         disableAllEventTypes,
         isEventTypeEnabled,
+        hideEventById,
+        showEventById,
+        isEventHiddenById,
+        showAllHiddenEventsById,
+        isEventVisible,
     };
 });

@@ -1,6 +1,6 @@
 import { useEventFilterStore } from '@/stores/eventFilter';
 import { useToastsStore } from '@/stores/toasts';
-import { type EventTypeKey, getEventTypeInfo } from '@/utils/eventTypes';
+import { type EventTypeKey, type PogoEvent, getEventTypeInfo } from '@/utils/eventTypes';
 
 export const useEventFilterToasts = () => {
     const eventFilter = useEventFilterStore();
@@ -72,11 +72,57 @@ export const useEventFilterToasts = () => {
         });
     };
 
+    const hideEventByIdWithToast = (eventId: string, eventName: string, event: PogoEvent) => {
+        const eventTypeInfo = getEventTypeInfo(event.eventType);
+        eventFilter.hideEventById(eventId);
+
+        toasts.addEventFilterToast({
+            eventTypeName: eventName,
+            eventTypeColor: eventTypeInfo.color,
+            action: 'hidden',
+            isIndividualEvent: true,
+            undoAction() {
+                eventFilter.showEventById(eventId);
+                toasts.addEventFilterToast({
+                    eventTypeName: eventName,
+                    eventTypeColor: eventTypeInfo.color,
+                    action: 'shown',
+                    isIndividualEvent: true,
+                    duration: 2000,
+                });
+            },
+        });
+    };
+
+    const showEventByIdWithToast = (eventId: string, eventName: string, event: PogoEvent) => {
+        const eventTypeInfo = getEventTypeInfo(event.eventType);
+        eventFilter.showEventById(eventId);
+
+        toasts.addEventFilterToast({
+            eventTypeName: eventName,
+            eventTypeColor: eventTypeInfo.color,
+            action: 'shown',
+            isIndividualEvent: true,
+            undoAction() {
+                eventFilter.hideEventById(eventId);
+                toasts.addEventFilterToast({
+                    eventTypeName: eventName,
+                    eventTypeColor: eventTypeInfo.color,
+                    action: 'hidden',
+                    isIndividualEvent: true,
+                    duration: 2000,
+                });
+            },
+        });
+    };
+
     return {
         hideEventTypeWithToast,
         showEventTypeWithToast,
         toggleEventTypeWithToast,
         hideAllEventTypesWithToast,
         showAllEventTypesWithToast,
+        hideEventByIdWithToast,
+        showEventByIdWithToast,
     };
 };
