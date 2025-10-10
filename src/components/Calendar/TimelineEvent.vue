@@ -3,6 +3,7 @@
         class="timeline-event-card calendar-event"
         :class="{ 'is-active': props.isActive }"
         :data-event-type="event.eventType"
+        :data-timeline-event-id="event.eventID"
         :style="{
             borderColor: eventColor,
             backgroundColor: eventColor,

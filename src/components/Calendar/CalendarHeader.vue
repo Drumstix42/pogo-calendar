@@ -1,15 +1,15 @@
 <template>
     <div class="calendar-header d-flex align-items-center justify-content-between flex-wrap row-gap-2 mb-2">
-        <div class="d-flex align-items-center flex-wrap gap-2">
-            <button
-                class="btn btn-icon-ghost btn-sm"
-                :class="{ 'disabled-subtle': isCurrentMonth }"
-                @click="goToCurrentMonth"
-                :disabled="isCurrentMonth"
-            >
-                <CalendarSync v-if="!isCurrentMonth" :size="22" />
-                <Calendar v-else :size="22" />
-            </button>
+        <div class="d-flex align-items-center flex-wrap gap-1">
+            <VTooltip placement="top" :delay="{ show: 50, hide: 0 }" distance="10" class="ms-auto d-flex align-items-center">
+                <template #popper>
+                    <div class="tooltip-text">Current month</div>
+                </template>
+                <button class="btn btn-icon-ghost btn-sm" :class="{ 'disabled-subtle': isCurrentMonth }" @click="goToCurrentMonth">
+                    <CalendarSync v-if="!isCurrentMonth" :size="22" />
+                    <Calendar v-else :size="22" />
+                </button>
+            </VTooltip>
 
             <div class="d-flex align-items-center">
                 <button class="btn btn-icon-ghost btn-sm me-1" @click="goToPreviousMonth" :disabled="isPreviousDisabled">

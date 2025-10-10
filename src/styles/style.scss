@@ -91,7 +91,13 @@ small,
     padding: 0.25rem 0.25rem;
 }
 
-.btn-icon-ghost:hover:not(:disabled),
+@media (pointer: fine) {
+    .btn-icon-ghost:hover:not(:disabled) {
+        background-color: var(--btn-icon-ghost-hover-bg);
+        color: var(--btn-icon-ghost-hover-color);
+    }
+}
+
 .btn-icon-ghost:active:not(:disabled) {
     background-color: var(--btn-icon-ghost-hover-bg);
     color: var(--btn-icon-ghost-hover-color);

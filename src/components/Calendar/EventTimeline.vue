@@ -61,7 +61,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, nextTick, ref } from 'vue';
 
 import { useCurrentTime } from '@/composables/useCurrentTime';
 import { useEventFilterStore } from '@/stores/eventFilter';
@@ -77,7 +77,21 @@ const { liveMinute } = useCurrentTime();
 const activeEventId = ref<string | null>(null);
 
 const setActiveEvent = (eventId: string): void => {
+    const previousActiveId = activeEventId.value;
     activeEventId.value = activeEventId.value === eventId ? null : eventId;
+
+    // Only scroll if we're activating (not deactivating)
+    if (activeEventId.value && activeEventId.value !== previousActiveId) {
+        // Wait for DOM update and animation
+        setTimeout(() => {
+            nextTick(() => {
+                const element = document.querySelector(`[data-timeline-event-id="${eventId}"]`);
+                if (element) {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            });
+        }, 200);
+    }
 };
 
 // Event categories in order (updated order and descriptions)

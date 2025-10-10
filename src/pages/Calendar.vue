@@ -22,7 +22,7 @@
         </CollapsibleSection>
 
         <!-- Event Timeline Section -->
-        <div class="row mt-3">
+        <div class="row mt-2">
             <div class="col-12">
                 <CollapsibleSection title="Timeline" storage-key="main/timeline-section" class="timeline-section">
                     <template #icon>
