@@ -80,7 +80,7 @@ const setActiveEvent = (eventId: string): void => {
     const previousActiveId = activeEventId.value;
     activeEventId.value = activeEventId.value === eventId ? null : eventId;
 
-    // Only scroll if we're activating (not deactivating)
+    // scrollIntoView if we're expanding an event
     if (activeEventId.value && activeEventId.value !== previousActiveId) {
         // Wait for DOM update and animation
         setTimeout(() => {

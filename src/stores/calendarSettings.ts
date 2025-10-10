@@ -26,7 +26,7 @@ export const useCalendarSettingsStore = defineStore('calendarSettings', () => {
     const useSingleDayEventSprites = useLocalStorage<boolean>(STORAGE_KEYS.USE_SINGLE_DAY_EVENT_SPRITES, true);
 
     // Event bar font size setting - font size for multi-day event bars in pixels
-    const eventBarFontSize = useLocalStorage<number>(STORAGE_KEYS.EVENT_BAR_FONT_SIZE, 11);
+    const eventBarFontSize = useLocalStorage<number>(STORAGE_KEYS.EVENT_BAR_FONT_SIZE, 12);
 
     // Collapsed sections state - only stores sections that are collapsed (expanded is default)
     const collapsedSections = useLocalStorage<Record<string, true>>(STORAGE_KEYS.COLLAPSIBLE_SECTIONS, {});
@@ -68,10 +68,10 @@ export const useCalendarSettingsStore = defineStore('calendarSettings', () => {
         12: 18,
         13: 19,
         14: 20,
-        15: 20,
+        15: 21,
         16: 21,
-        17: 21,
-        18: 22,
+        17: 22,
+        18: 23,
     };
 
     // Computed event bar height based on font size using precise mapping

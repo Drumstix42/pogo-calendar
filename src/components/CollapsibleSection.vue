@@ -72,7 +72,7 @@ const toggleCollapsed = () => {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.3rem 0.8rem;
+    padding: 0.5rem 0.8rem;
     cursor: pointer;
     background-color: var(--bs-tertiary-bg);
     border-bottom: 1px solid var(--bs-border-color);
@@ -99,7 +99,6 @@ const toggleCollapsed = () => {
     font-weight: 600;
     color: var(--bs-body-color);
     font-size: 0.9rem;
-    line-height: 1;
     flex: 1;
 }
 
@@ -134,6 +133,6 @@ const toggleCollapsed = () => {
 .collapse-enter-to,
 .collapse-leave-from {
     opacity: 1;
-    max-height: 1000px; /* Adjust based on your content height */
+    max-height: 100dvh;
 }
 </style>

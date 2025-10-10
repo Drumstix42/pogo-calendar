@@ -1,23 +1,8 @@
 <template>
     <CollapsibleSection title="Event Options" storage-key="calendarSettings/event-options">
-        <div class="form-check form-switch">
-            <input
-                id="groupSimilarEvents"
-                class="form-check-input"
-                type="checkbox"
-                role="switch"
-                :checked="calendarSettings.groupSimilarEvents"
-                @change="handleToggleChange"
-            />
-            <label for="groupSimilarEvents" class="form-check-label">Group similar event bars</label>
-        </div>
-        <small class="text-muted mt-1 d-block"
-            >When enabled, events with identical type and start/times will be grouped into a single bar with a count badge.</small
-        >
-
-        <div class="d-flex flex-column mt-3 event-bar-size-container slider-container">
+        <div class="d-flex flex-column event-bar-size-container slider-container">
             <label for="eventBarFontSize" class="form-label"
-                >Event bar font size: <span class="bar-size--label">{{ localFontSize }}px</span></label
+                >Calendar event bar font size: <span class="bar-size--label">{{ localFontSize }}px</span></label
             >
             <input
                 id="eventBarFontSize"
@@ -34,12 +19,27 @@
                 <small class="text-muted">18</small>
             </div>
         </div>
+
+        <div class="form-check form-switch mt-3">
+            <input
+                id="groupSimilarEvents"
+                class="form-check-input"
+                type="checkbox"
+                role="switch"
+                :checked="calendarSettings.groupSimilarEvents"
+                @change="handleToggleChange"
+            />
+            <label for="groupSimilarEvents" class="form-check-label">Group similar event bars</label>
+        </div>
+        <small class="text-muted mt-1 d-block"
+            >When enabled, events with identical type and start/times will be grouped into a single bar with a count badge.</small
+        >
     </CollapsibleSection>
 </template>
 
 <script setup lang="ts">
 import { useDebounceFn } from '@vueuse/core';
-import { ref, watch } from 'vue';
+import { nextTick, ref, watch } from 'vue';
 
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 
@@ -56,6 +56,25 @@ const debouncedUpdateFontSize = useDebounceFn((size: number) => {
 
 watch(localFontSize, newSize => {
     debouncedUpdateFontSize(newSize);
+
+    // Open calendar section if collapsed to show the changes
+    const wasCollapsed = calendarSettings.isCollapsibleSectionCollapsed('main/calendar-section');
+    if (wasCollapsed) {
+        calendarSettings.setCollapsibleSection('main/calendar-section', false);
+    }
+
+    // Scroll to calendar section after expansion animation completes
+    setTimeout(
+        () => {
+            nextTick(() => {
+                const calendarSection = document.querySelector('.calendar-section');
+                if (calendarSection) {
+                    calendarSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        },
+        wasCollapsed ? 400 : 100,
+    );
 });
 
 watch(
@@ -92,7 +111,7 @@ const handleFontSizeChange = (event: Event) => {
 }
 
 .event-bar-size-container {
-    width: 200px;
+    width: 250px;
     max-width: 100%;
 }
 

@@ -12,22 +12,22 @@
                 <div class="col-12">
                     <!-- Main Calendar Grid -->
                     <CalendarGrid />
-
-                    <!-- Mini Calendar underneath -->
-                    <div class="mt-3">
-                        <CalendarMobile />
-                    </div>
                 </div>
             </div>
         </CollapsibleSection>
 
         <!-- Event Timeline Section -->
-        <div class="row mt-2">
+        <div class="row mt-3">
             <div class="col-12">
                 <CollapsibleSection title="Timeline" storage-key="main/timeline-section" class="timeline-section">
                     <template #icon>
                         <PanelTop :size="18" />
                     </template>
+
+                    <!-- Mini Calendar underneath -->
+                    <div class="mb-3">
+                        <CalendarMobile />
+                    </div>
 
                     <EventTimeline />
                 </CollapsibleSection>
