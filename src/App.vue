@@ -65,15 +65,13 @@ const isScrolled = computed(() => scrollY.value > scrollThreshold);
 .page-header {
     background-color: #343a40;
     border-color: rgba(255, 255, 255, 0.1) !important;
-    height: 56px;
+    height: var(--navbar-height-scrolled);
     display: flex;
     align-items: center;
-    transition:
-        height 0.3s ease,
-        box-shadow 0.3s ease;
+    transition: box-shadow 0.3s ease;
+    padding: 0;
 
     &.navbar-scrolled {
-        height: var(--navbar-height-scrolled);
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
 
@@ -87,7 +85,7 @@ const isScrolled = computed(() => scrollY.value > scrollThreshold);
 }
 
 .main-content {
-    padding-top: 20px;
+    padding-top: 0;
 }
 
 [data-bs-theme='dark'] .page-header {

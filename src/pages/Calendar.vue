@@ -1,5 +1,5 @@
 <template>
-    <div class="container app-container mt-2 mb-4">
+    <div class="container app-container mt-1">
         <div class="page-layout" :class="{ 'sidebar-layout': isXxlScreenSize }">
             <!-- Timeline Sidebar (left at >=1400px, below calendar at <1400px) -->
             <div class="timeline-wrapper" :class="{ 'sidebar-collapsed': isXxlScreenSize && calendarSettings.timelineSidebarCollapsed }">
@@ -10,9 +10,9 @@
                             <PanelTop :size="18" />
                         </template>
 
-                        <div class="mb-3">
+                        <!-- <div class="mb-3">
                             <CalendarMobile />
-                        </div>
+                        </div> -->
 
                         <EventTimeline :is-sidebar-mode="isXxlScreenSize" />
                     </CollapsibleSection>
@@ -195,7 +195,7 @@ onUnmounted(() => {
 @media (min-width: 1400px) {
     .page-layout.sidebar-layout {
         flex-direction: row;
-        gap: 1.5rem;
+        gap: 1rem;
         align-items: flex-start;
         transition: gap 0.3s ease;
     }
@@ -231,7 +231,7 @@ onUnmounted(() => {
         height: calc(100dvh - var(--navbar-height-scrolled) - 1.5rem);
         overflow-y: auto;
         overflow-x: hidden;
-        padding-right: 4px;
+        padding-right: 6px;
     }
 
     /* Custom scrollbar for timeline sidebar */

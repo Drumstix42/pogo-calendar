@@ -6,7 +6,7 @@
         <div v-else class="timeline-events">
             <!-- Loop through categories in order -->
             <div v-for="category in eventCategories" :key="category.key" class="event-category">
-                <div v-if="categorizedEvents[category.key]?.length > 0 || category.key === 'today'" class="category-section">
+                <div v-if="categorizedEvents[category.key]?.length > 0 || category.key === TimelineCategory.TODAY" class="category-section">
                     <!-- Category header with horizontal rule -->
                     <div class="category-header">
                         <div class="category-text d-flex align-items-center gap-2">
@@ -18,7 +18,7 @@
                     <!-- Events in this category -->
                     <div class="category-events">
                         <!-- For today and ongoing, show events directly -->
-                        <template v-if="category.key === 'today' || category.key === 'ongoing'">
+                        <template v-if="category.key === TimelineCategory.TODAY || category.key === TimelineCategory.ONGOING">
                             <TimelineEvent
                                 v-for="event in categorizedEvents[category.key]"
                                 :key="event.eventID"
@@ -28,13 +28,13 @@
                             />
 
                             <!-- Special message for Today section when no events exist -->
-                            <div v-if="category.key === 'today' && totalEventsCounts[category.key] === 0" class="no-events-today">
+                            <div v-if="category.key === TimelineCategory.TODAY && totalEventsCounts[category.key] === 0" class="no-events-today">
                                 <p>No single-day events scheduled today</p>
                             </div>
                         </template>
 
                         <!-- For upcoming and future, group by date -->
-                        <template v-else-if="category.key === 'upcoming' || category.key === 'future'">
+                        <template v-else-if="category.key === TimelineCategory.UPCOMING || category.key === TimelineCategory.FUTURE">
                             <div v-for="dateGroup in groupedByDate[category.key]" :key="dateGroup.dateKey" class="date-group">
                                 <div class="date-divider">
                                     <span class="day-of-week">{{ dateGroup.dayOfWeek }}</span> {{ dateGroup.dateStr }}
@@ -66,7 +66,7 @@ import { computed, nextTick, ref } from 'vue';
 import { useCurrentTime } from '@/composables/useCurrentTime';
 import { useEventFilterStore } from '@/stores/eventFilter';
 import { useEventsStore } from '@/stores/events';
-import { type PogoEvent, sortEventsByTimingAndPriority } from '@/utils/eventTypes';
+import { type PogoEvent, TimelineCategory, type TimelineCategoryKey, sortEventsByTimingAndPriority } from '@/utils/eventTypes';
 
 import TimelineEvent from './TimelineEvent.vue';
 
@@ -102,10 +102,10 @@ const setActiveEvent = (eventId: string): void => {
 
 // Event categories in order (updated order and descriptions)
 const eventCategories = [
-    { key: 'today', title: 'Today Only' },
-    { key: 'ongoing', title: 'Ongoing Events' },
-    { key: 'upcoming', title: 'Upcoming Events (Next 2 Weeks)' },
-    { key: 'future', title: 'Future Events (Beyond 2 Weeks)' },
+    { key: TimelineCategory.TODAY, title: 'Today Only' },
+    { key: TimelineCategory.ONGOING, title: 'Ongoing Events' },
+    { key: TimelineCategory.UPCOMING, title: 'Upcoming Events (Next 2 Weeks)' },
+    { key: TimelineCategory.FUTURE, title: 'Future Events (Beyond 2 Weeks)' },
 ];
 
 // Get filtered events
@@ -137,25 +137,25 @@ const eventData = computed(() => {
     const today = now.startOf('day');
     const twoWeeksFromNow = now.add(2, 'weeks');
 
-    const categories: Record<string, PogoEvent[]> = {
-        today: [],
-        ongoing: [],
-        upcoming: [],
-        future: [],
+    const categories: Record<TimelineCategoryKey, PogoEvent[]> = {
+        [TimelineCategory.TODAY]: [],
+        [TimelineCategory.ONGOING]: [],
+        [TimelineCategory.UPCOMING]: [],
+        [TimelineCategory.FUTURE]: [],
     };
 
-    const totalCounts: Record<string, number> = {
-        today: 0,
-        ongoing: 0,
-        upcoming: 0,
-        future: 0,
+    const totalCounts: Record<TimelineCategoryKey, number> = {
+        [TimelineCategory.TODAY]: 0,
+        [TimelineCategory.ONGOING]: 0,
+        [TimelineCategory.UPCOMING]: 0,
+        [TimelineCategory.FUTURE]: 0,
     };
 
-    const hiddenCounts: Record<string, number> = {
-        today: 0,
-        ongoing: 0,
-        upcoming: 0,
-        future: 0,
+    const hiddenCounts: Record<TimelineCategoryKey, number> = {
+        [TimelineCategory.TODAY]: 0,
+        [TimelineCategory.ONGOING]: 0,
+        [TimelineCategory.UPCOMING]: 0,
+        [TimelineCategory.FUTURE]: 0,
     };
 
     filteredEvents.value.forEach(event => {
@@ -165,22 +165,22 @@ const eventData = computed(() => {
         const eventStartDay = metadata.startDate.startOf('day');
 
         // Determine which category this event belongs to
-        let categoryKey: string;
+        let categoryKey: TimelineCategoryKey;
         if (eventStartDay.isSame(today) && metadata.endDate.isSame(today, 'day')) {
             // Single-day events happening only today
-            categoryKey = 'today';
+            categoryKey = TimelineCategory.TODAY;
         } else if (eventStartDay.isSame(today) && metadata.endDate.isAfter(today, 'day')) {
             // Multi-day events that start today
-            categoryKey = 'ongoing';
+            categoryKey = TimelineCategory.ONGOING;
         } else if (now.isAfter(metadata.startDate) && now.isBefore(metadata.endDate)) {
             // Events that are currently ongoing (started before today, end after today)
-            categoryKey = 'ongoing';
+            categoryKey = TimelineCategory.ONGOING;
         } else if (metadata.startDate.isAfter(now) && metadata.startDate.isBefore(twoWeeksFromNow)) {
             // Events starting in the future within 2 weeks
-            categoryKey = 'upcoming';
+            categoryKey = TimelineCategory.UPCOMING;
         } else if (metadata.startDate.isAfter(now)) {
             // Events starting more than 2 weeks from now
-            categoryKey = 'future';
+            categoryKey = TimelineCategory.FUTURE;
         } else {
             // Past events - don't categorize them (they should be filtered out earlier)
             return; // Skip past events
@@ -198,7 +198,7 @@ const eventData = computed(() => {
     });
 
     // Apply sorting to each category
-    Object.keys(categories).forEach(key => {
+    (Object.keys(categories) as TimelineCategoryKey[]).forEach(key => {
         categories[key] = sortEventsByTimingAndPriority(categories[key], eventsStore.eventMetadata);
     });
 
@@ -211,12 +211,15 @@ const eventData = computed(() => {
 
 // Group upcoming and future events by date
 const groupedByDate = computed(() => {
-    const grouped: Record<string, Array<{ dateKey: string; dayOfWeek: string; dateStr: string; events: PogoEvent[] }>> = {
-        upcoming: [],
-        future: [],
+    type DateGroup = { dateKey: string; dayOfWeek: string; dateStr: string; events: PogoEvent[] };
+    const grouped: Record<TimelineCategoryKey, DateGroup[]> = {
+        [TimelineCategory.TODAY]: [],
+        [TimelineCategory.ONGOING]: [],
+        [TimelineCategory.UPCOMING]: [],
+        [TimelineCategory.FUTURE]: [],
     };
 
-    (['upcoming', 'future'] as const).forEach(categoryKey => {
+    ([TimelineCategory.UPCOMING, TimelineCategory.FUTURE] as const).forEach(categoryKey => {
         const events = categorizedEvents.value[categoryKey] || [];
         const dateGroups = new Map<string, PogoEvent[]>();
 

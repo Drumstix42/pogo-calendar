@@ -302,6 +302,16 @@ export const EVENT_TYPES: Record<string, EventTypeInfo> = {
 // Type for valid event type keys
 export type EventTypeKey = keyof typeof EVENT_TYPES;
 
+// Timeline category constants for EventTimeline component
+export const TimelineCategory = {
+    TODAY: 'today',
+    ONGOING: 'ongoing',
+    UPCOMING: 'upcoming',
+    FUTURE: 'future',
+} as const;
+
+export type TimelineCategoryKey = (typeof TimelineCategory)[keyof typeof TimelineCategory];
+
 // Event types that support sub-typing/categorization
 export const EVENTS_WITH_SUBTYPE = ['raid-battles', 'raid-weekend'] as const;
 export type EventWithSubtype = (typeof EVENTS_WITH_SUBTYPE)[number];
