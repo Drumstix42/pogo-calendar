@@ -91,7 +91,7 @@ const isScrolled = computed(() => scrollY.value > scrollThreshold);
 }
 
 [data-bs-theme='dark'] .page-header {
-    background-color: #1a1919;
+    background-color: #1f2023;
     border-color: rgba(255, 255, 255, 0.08) !important;
 }
 
