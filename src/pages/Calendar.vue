@@ -62,7 +62,7 @@ import { useEventsStore } from '@/stores/events';
 
 import CalendarGrid from '@/components/Calendar/CalendarGrid.vue';
 import CalendarHeader from '@/components/Calendar/CalendarHeader.vue';
-import CalendarMobile from '@/components/Calendar/CalendarMobile.vue';
+/* import CalendarMobile from '@/components/Calendar/CalendarMobile.vue'; */
 import EventTimeline from '@/components/Calendar/EventTimeline.vue';
 import CalendarOptions from '@/components/CalendarOptions/CalendarOptions.vue';
 import CollapsibleSection from '@/components/CollapsibleSection.vue';

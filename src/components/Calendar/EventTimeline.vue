@@ -64,6 +64,7 @@
 import { computed, nextTick, ref } from 'vue';
 
 import { useCurrentTime } from '@/composables/useCurrentTime';
+import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { useEventFilterStore } from '@/stores/eventFilter';
 import { useEventsStore } from '@/stores/events';
 import { type PogoEvent, TimelineCategory, type TimelineCategoryKey, sortEventsByTimingAndPriority } from '@/utils/eventTypes';
@@ -78,6 +79,7 @@ defineProps<Props>();
 
 const eventsStore = useEventsStore();
 const eventFilter = useEventFilterStore();
+const calendarSettings = useCalendarSettingsStore();
 const { liveMinute } = useCurrentTime();
 
 const activeEventId = ref<string | null>(null);
@@ -189,8 +191,11 @@ const eventData = computed(() => {
         // Always count total events
         totalCounts[categoryKey]++;
 
-        // Add to visible events or hidden count based on filter
-        if (eventFilter.isEventTypeEnabled(event.eventType)) {
+        // Add to visible events or hidden count based on filter setting
+        const shouldFilter = calendarSettings.filtersApplyToTimeline;
+        const isVisible = !shouldFilter || eventFilter.isEventTypeEnabled(event.eventType);
+
+        if (isVisible) {
             categories[categoryKey].push(event);
         } else {
             hiddenCounts[categoryKey]++;

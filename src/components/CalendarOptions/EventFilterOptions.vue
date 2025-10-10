@@ -1,5 +1,18 @@
 <template>
     <CollapsibleSection title="Event Type Filters" storage-key="calendarSettings/event-filters" class="flex-grow-section">
+        <!-- Timeline filter toggle -->
+        <div class="form-check form-switch mb-2">
+            <input
+                id="filtersApplyToTimeline"
+                class="form-check-input"
+                type="checkbox"
+                role="switch"
+                :checked="calendarSettings.filtersApplyToTimeline"
+                @change="handleTimelineFilterToggle"
+            />
+            <label for="filtersApplyToTimeline" class="form-check-label">Apply filters to Timeline</label>
+        </div>
+
         <div class="filter-stats mb-2">
             <div class="btn-group btn-group-sm">
                 <button
@@ -23,6 +36,8 @@
             </div>
             <div v-else class="text-muted">{{ eventFilter.enabledCount }} of {{ eventFilter.totalCount }} event types enabled</div>
         </div>
+
+        <small class="text-muted mb-1 d-block">Choose which event types are displayed.</small>
 
         <div ref="filterGridContainer" class="filter-grid-container" @mouseleave="clearHighlight">
             <div class="filter-grid">
@@ -70,6 +85,7 @@
 import { Check } from 'lucide-vue-next';
 import { computed } from 'vue';
 
+import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { useEventFilterStore } from '@/stores/eventFilter';
 import { EVENT_TYPES, getEventTypeInfo } from '@/utils/eventTypes';
 import type { EventTypeKey } from '@/utils/eventTypes';
@@ -77,6 +93,13 @@ import type { EventTypeKey } from '@/utils/eventTypes';
 import CollapsibleSection from '@/components/CollapsibleSection.vue';
 
 const eventFilter = useEventFilterStore();
+const calendarSettings = useCalendarSettingsStore();
+
+// Timeline filter toggle handler
+const handleTimelineFilterToggle = (event: Event) => {
+    const target = event.target as HTMLInputElement;
+    calendarSettings.setFiltersApplyToTimeline(target.checked);
+};
 
 // Event type highlighting functions
 const highlightEventType = (eventTypeKey: EventTypeKey) => {
@@ -294,5 +317,25 @@ const eventGroups = computed(() => {
     padding: 0.25rem 0.75rem;
     font-size: 0.75rem;
     font-weight: 500;
+}
+
+.form-check.form-switch {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.form-check-input {
+    margin-top: 0;
+}
+
+.form-check-input:checked {
+    background-color: var(--bs-success);
+    border-color: var(--bs-success);
+}
+
+.form-check-input:focus {
+    box-shadow: 0 0 0 0.25rem rgba(var(--bs-success-rgb), 0.25);
+    border-color: var(--bs-focus-ring-color);
 }
 </style>

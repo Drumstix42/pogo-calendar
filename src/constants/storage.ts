@@ -11,6 +11,7 @@ export const STORAGE_KEYS = {
     COLLAPSIBLE_SECTIONS: createStorageKey('collapsible-sections'),
     DISABLED_FILTERS: createStorageKey('disabled-filters'),
     EVENT_BAR_FONT_SIZE: createStorageKey('event-bar-font-size'),
+    FILTERS_APPLY_TO_TIMELINE: createStorageKey('filters-apply-to-timeline'),
     FIRST_DAY_OF_WEEK: createStorageKey('first-day-of-week'),
     GROUP_SIMILAR_EVENTS: createStorageKey('group-similar-events'),
     THEME_MODE: createStorageKey('theme-mode'),

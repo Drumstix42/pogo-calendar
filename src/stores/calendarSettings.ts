@@ -25,6 +25,9 @@ export const useCalendarSettingsStore = defineStore('calendarSettings', () => {
     // Single-day event sprites setting - whether to show Pokemon sprites in single-day events
     const useSingleDayEventSprites = useLocalStorage<boolean>(STORAGE_KEYS.USE_SINGLE_DAY_EVENT_SPRITES, true);
 
+    // Filters apply to timeline setting - whether event type filters should apply to EventTimeline
+    const filtersApplyToTimeline = useLocalStorage<boolean>(STORAGE_KEYS.FILTERS_APPLY_TO_TIMELINE, false);
+
     // Event bar font size setting - font size for multi-day event bars in pixels
     const eventBarFontSize = useLocalStorage<number>(STORAGE_KEYS.EVENT_BAR_FONT_SIZE, 12);
 
@@ -101,6 +104,10 @@ export const useCalendarSettingsStore = defineStore('calendarSettings', () => {
         useSingleDayEventSprites.value = enabled;
     };
 
+    const setFiltersApplyToTimeline = (enabled: boolean) => {
+        filtersApplyToTimeline.value = enabled;
+    };
+
     const setEventBarFontSize = (size: number) => {
         eventBarFontSize.value = Math.max(10, Math.min(18, size)); // Clamp between 10-18px
     };
@@ -146,6 +153,7 @@ export const useCalendarSettingsStore = defineStore('calendarSettings', () => {
         useAnimatedImages,
         useMultiDayEventSprites,
         useSingleDayEventSprites,
+        filtersApplyToTimeline,
         eventBarFontSize,
         optionsExpanded,
         timelineSidebarCollapsed,
@@ -162,6 +170,7 @@ export const useCalendarSettingsStore = defineStore('calendarSettings', () => {
         setUseAnimatedImages,
         setUseMultiDayEventSprites,
         setUseSingleDayEventSprites,
+        setFiltersApplyToTimeline,
         setEventBarFontSize,
         toggleOptionsExpanded,
         setOptionsExpanded,

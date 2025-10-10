@@ -6,13 +6,15 @@ import { STORAGE_KEYS } from '../constants/storage';
 import { EVENT_TYPES } from '../utils/eventTypes';
 import type { EventTypeInfo, EventTypeKey } from '../utils/eventTypes';
 
+const defaultFilteredEventTypes: EventTypeKey[] = ['go-battle-league', 'go-pass', 'season'];
+
 /**
  * Pinia store for managing event type filtering with persistent localStorage
  * Stores only disabled event types for efficiency
  */
 export const useEventFilterStore = defineStore('eventFilter', () => {
     // Store only the disabled event types (much more efficient)
-    const disabledEventTypes = useLocalStorage<EventTypeKey[]>(STORAGE_KEYS.DISABLED_FILTERS, [], {
+    const disabledEventTypes = useLocalStorage<EventTypeKey[]>(STORAGE_KEYS.DISABLED_FILTERS, defaultFilteredEventTypes, {
         serializer: {
             read: (value: string) => {
                 try {
