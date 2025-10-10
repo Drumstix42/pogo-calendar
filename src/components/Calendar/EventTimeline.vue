@@ -17,18 +17,37 @@
 
                     <!-- Events in this category -->
                     <div class="category-events">
-                        <TimelineEvent
-                            v-for="event in categorizedEvents[category.key]"
-                            :key="event.eventID"
-                            :event="event"
-                            :is-active="activeEventId === event.eventID"
-                            @activate="setActiveEvent"
-                        />
+                        <!-- For today and ongoing, show events directly -->
+                        <template v-if="category.key === 'today' || category.key === 'ongoing'">
+                            <TimelineEvent
+                                v-for="event in categorizedEvents[category.key]"
+                                :key="event.eventID"
+                                :event="event"
+                                :is-active="activeEventId === event.eventID"
+                                @activate="setActiveEvent"
+                            />
 
-                        <!-- Special message for Today section when no events exist -->
-                        <div v-if="category.key === 'today' && totalEventsCounts[category.key] === 0" class="no-events-today">
-                            <p>No single-day events scheduled today</p>
-                        </div>
+                            <!-- Special message for Today section when no events exist -->
+                            <div v-if="category.key === 'today' && totalEventsCounts[category.key] === 0" class="no-events-today">
+                                <p>No single-day events scheduled today</p>
+                            </div>
+                        </template>
+
+                        <!-- For upcoming and future, group by date -->
+                        <template v-else-if="category.key === 'upcoming' || category.key === 'future'">
+                            <div v-for="dateGroup in groupedByDate[category.key]" :key="dateGroup.dateKey" class="date-group">
+                                <div class="date-divider">
+                                    <span class="day-of-week">{{ dateGroup.dayOfWeek }}</span> {{ dateGroup.dateStr }}
+                                </div>
+                                <TimelineEvent
+                                    v-for="event in dateGroup.events"
+                                    :key="event.eventID"
+                                    :event="event"
+                                    :is-active="activeEventId === event.eventID"
+                                    @activate="setActiveEvent"
+                                />
+                            </div>
+                        </template>
                     </div>
 
                     <!-- Hidden events indicator -->
@@ -92,7 +111,6 @@ const filteredEvents = computed(() => {
         });
 });
 
-// Process all event data in a single pass for efficiency
 const eventData = computed(() => {
     // Use liveMinute to ensure reactivity to time changes
     const now = liveMinute.value;
@@ -171,13 +189,55 @@ const eventData = computed(() => {
     };
 });
 
+// Group upcoming and future events by date
+const groupedByDate = computed(() => {
+    const grouped: Record<string, Array<{ dateKey: string; dayOfWeek: string; dateStr: string; events: PogoEvent[] }>> = {
+        upcoming: [],
+        future: [],
+    };
+
+    (['upcoming', 'future'] as const).forEach(categoryKey => {
+        const events = categorizedEvents.value[categoryKey] || [];
+        const dateGroups = new Map<string, PogoEvent[]>();
+
+        events.forEach(event => {
+            const metadata = eventsStore.eventMetadata[event.eventID];
+            if (!metadata) return;
+
+            const dateKey = metadata.startDate.format('YYYY-MM-DD');
+            if (!dateGroups.has(dateKey)) {
+                dateGroups.set(dateKey, []);
+            }
+            dateGroups.get(dateKey)!.push(event);
+        });
+
+        // Convert map to sorted array
+        const sortedDates = Array.from(dateGroups.keys()).sort();
+        grouped[categoryKey] = sortedDates.map(dateKey => {
+            const firstEvent = dateGroups.get(dateKey)![0];
+            const metadata = eventsStore.eventMetadata[firstEvent.eventID];
+            const dayOfWeek = metadata.startDate.format('dddd').toUpperCase();
+            const dateStr = metadata.startDate.format('MMM D, YYYY');
+
+            return {
+                dateKey,
+                dayOfWeek,
+                dateStr,
+                events: dateGroups.get(dateKey)!,
+            };
+        });
+    });
+
+    return grouped;
+});
+
 // Extract individual computed properties for template convenience
 const categorizedEvents = computed(() => eventData.value.categorizedEvents);
 const totalEventsCounts = computed(() => eventData.value.totalEventsCounts);
 const hiddenEventsCounts = computed(() => eventData.value.hiddenEventsCounts);
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .event-timeline {
     padding: 0;
 }
@@ -242,7 +302,7 @@ const hiddenEventsCounts = computed(() => eventData.value.hiddenEventsCounts);
 }
 
 .hidden-events-indicator {
-    margin: 8px 16px 0 16px;
+    margin: 12px 16px 0 16px;
     padding: 8px 12px;
     font-size: 12px;
     color: var(--bs-secondary-color);
@@ -263,5 +323,29 @@ const hiddenEventsCounts = computed(() => eventData.value.hiddenEventsCounts);
 
 .no-events-today p {
     margin: 0;
+}
+
+.date-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 12px;
+
+    &:last-child {
+        margin-bottom: 0;
+    }
+}
+
+.date-divider {
+    margin: 0 0 2px 0;
+    padding: 0 4px;
+    font-size: 0.8rem;
+    letter-spacing: 0.5px;
+    color: var(--bs-secondary-color);
+    line-height: 1.3;
+
+    .day-of-week {
+        font-weight: 600;
+    }
 }
 </style>

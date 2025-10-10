@@ -2,7 +2,7 @@
     <div class="container app-container mt-2 mb-4">
         <CollapsibleSection title="Calendar" storage-key="main/calendar-section" class="calendar-section">
             <template #icon>
-                <CalendarIcon :size="18" />
+                <CalendarRange :size="18" />
             </template>
             <!-- Month Navigation Header -->
             <CalendarHeader />
@@ -49,7 +49,7 @@
 
 <script setup lang="ts">
 import { breakpointsBootstrapV5, useBreakpoints } from '@vueuse/core';
-import { Calendar as CalendarIcon, PanelTop } from 'lucide-vue-next';
+import { CalendarRange, PanelTop } from 'lucide-vue-next';
 import { onMounted, onUnmounted, watchEffect } from 'vue';
 
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';

@@ -2,12 +2,13 @@
     <div class="calendar-header d-flex align-items-center justify-content-between flex-wrap row-gap-2 mb-2">
         <div class="d-flex align-items-center flex-wrap gap-2">
             <button
-                class="btn btn-sm btn-outline-secondary today-btn"
+                class="btn btn-icon-ghost btn-sm"
                 :class="{ 'disabled-subtle': isCurrentMonth }"
                 @click="goToCurrentMonth"
                 :disabled="isCurrentMonth"
             >
-                Today
+                <CalendarSync v-if="!isCurrentMonth" :size="22" />
+                <Calendar v-else :size="22" />
             </button>
 
             <div class="d-flex align-items-center">
@@ -26,7 +27,7 @@
 
 <script setup lang="ts">
 import dayjs from 'dayjs';
-import { ChevronLeft, ChevronRight } from 'lucide-vue-next';
+import { Calendar, CalendarSync, ChevronLeft, ChevronRight } from 'lucide-vue-next';
 import { computed } from 'vue';
 
 import { useUrlSync } from '@/composables/useUrlSync';
@@ -95,27 +96,12 @@ const goToCurrentMonth = () => {
     transform: rotate(180deg);
 }
 
-.today-btn {
-    color: var(--bs-secondary-color);
-    border-color: var(--bs-border-color);
+.btn-icon-ghost {
+    transition: all 0.2s ease;
 }
 
-.today-btn:hover:not(:disabled) {
-    color: var(--bs-body-color);
-    border-color: var(--bs-secondary);
-    background-color: transparent;
-}
-
-.today-btn.disabled-subtle {
-    opacity: 0.4;
-    border-color: var(--bs-border-color);
-    color: var(--bs-secondary-color);
-    background-color: transparent;
-}
-
-.today-btn.disabled-subtle:hover {
-    border-color: var(--bs-border-color);
-    color: var(--bs-secondary-color);
-    background-color: transparent;
+.disabled-subtle {
+    opacity: 0.2 !important;
+    cursor: not-allowed;
 }
 </style>

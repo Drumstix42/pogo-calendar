@@ -99,7 +99,7 @@ const hideEventType = (eventType: EventTypeKey): void => {
 
 <style lang="scss" scoped>
 .timeline-event-card {
-    border: 2px solid;
+    border: 1px solid;
     border-radius: 8px;
     overflow: hidden;
 
@@ -121,13 +121,14 @@ const hideEventType = (eventType: EventTypeKey): void => {
 
     &.is-active {
         transform: scale(1.02);
+        border-width: 2px;
         border-color: var(--event-color-dark);
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
 }
 
 .event-header {
-    padding: 8px 12px;
+    padding: 10px 12px;
     color: white;
     font-weight: 500;
     font-size: 0.9rem;
@@ -151,6 +152,7 @@ const hideEventType = (eventType: EventTypeKey): void => {
         gap: 8px;
         flex: 1;
         min-width: 0;
+        line-height: 1;
     }
 
     .event-type {
