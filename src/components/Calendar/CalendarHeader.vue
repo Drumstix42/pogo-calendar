@@ -1,7 +1,24 @@
 <template>
-    <div class="calendar-header d-flex align-items-center justify-content-between flex-wrap row-gap-2 mb-2">
-        <div class="d-flex align-items-center flex-wrap gap-1">
-            <VTooltip placement="top" :delay="{ show: 50, hide: 0 }" distance="10" class="ms-auto d-flex align-items-center">
+    <div class="calendar-header d-flex align-items-center justify-content-between flex-wrap row-gap-2 mb-2 px-1">
+        <!-- Left: Timeline toggle (only visible at >=1400px) -->
+        <Transition name="timeline-toggle">
+            <div v-if="isDesktopSidebar" class="timeline-toggle-section">
+                <button
+                    type="button"
+                    class="btn btn-icon-ghost d-flex align-items-center gap-2"
+                    :title="calendarSettings.timelineSidebarCollapsed ? 'Show Timeline' : 'Hide Timeline'"
+                    @click="calendarSettings.toggleTimelineSidebarCollapsed"
+                >
+                    <PanelLeftOpen v-if="calendarSettings.timelineSidebarCollapsed" :size="18" />
+                    <PanelLeftClose v-else :size="18" />
+                    <span class="timeline-toggle-label">{{ calendarSettings.timelineSidebarCollapsed ? 'Show Timeline' : 'Hide Timeline' }}</span>
+                </button>
+            </div>
+        </Transition>
+
+        <!-- Right: Month navigation -->
+        <div class="d-flex align-items-center flex-wrap gap-1" :class="{ 'ms-auto': isDesktopSidebar }">
+            <VTooltip placement="top" :delay="{ show: 50, hide: 0 }" distance="10" class="d-flex align-items-center">
                 <template #popper>
                     <div class="tooltip-text">Current month</div>
                 </template>
@@ -26,14 +43,21 @@
 </template>
 
 <script setup lang="ts">
+import { breakpointsBootstrapV5, useBreakpoints } from '@vueuse/core';
 import dayjs from 'dayjs';
-import { Calendar, CalendarSync, ChevronLeft, ChevronRight } from 'lucide-vue-next';
+import { Calendar, CalendarSync, ChevronLeft, ChevronRight, PanelLeftClose, PanelLeftOpen } from 'lucide-vue-next';
 import { computed } from 'vue';
 
 import { useUrlSync } from '@/composables/useUrlSync';
+import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { DATE_FORMAT } from '@/utils/dateFormat';
 
 const { urlMonth, urlYear } = useUrlSync();
+const calendarSettings = useCalendarSettingsStore();
+
+// Breakpoints
+const breakpoints = useBreakpoints(breakpointsBootstrapV5);
+const isDesktopSidebar = breakpoints.greaterOrEqual('xxl'); // >= 1400px
 
 // Current month display
 const currentMonthDisplay = computed(() => {
@@ -103,5 +127,39 @@ const goToCurrentMonth = () => {
 .disabled-subtle {
     opacity: 0.2 !important;
     cursor: not-allowed;
+}
+
+.timeline-toggle-section {
+    flex-shrink: 0;
+}
+
+.btn-timeline-toggle {
+    padding: 0.375rem 0.75rem;
+    background-color: var(--bs-tertiary-bg);
+    border: 1px solid var(--bs-border-color);
+    color: var(--bs-body-color);
+    transition: all 0.2s ease;
+}
+
+.btn-timeline-toggle:hover {
+    background-color: var(--bs-secondary-bg);
+    border-color: var(--bs-border-color);
+}
+
+.timeline-toggle-label {
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+/* Vue Transition for timeline toggle */
+.timeline-toggle-enter-active,
+.timeline-toggle-leave-active {
+    transition: all 0.3s ease;
+}
+
+.timeline-toggle-enter-from,
+.timeline-toggle-leave-to {
+    opacity: 0;
+    transform: translateX(-10px);
 }
 </style>

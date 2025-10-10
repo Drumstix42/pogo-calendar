@@ -31,6 +31,9 @@ export const useCalendarSettingsStore = defineStore('calendarSettings', () => {
     // Collapsed sections state - only stores sections that are collapsed (expanded is default)
     const collapsedSections = useLocalStorage<Record<string, true>>(STORAGE_KEYS.COLLAPSIBLE_SECTIONS, {});
 
+    // Timeline sidebar collapsed state - separate from vertical layout collapse
+    const timelineSidebarCollapsed = useLocalStorage<boolean>(STORAGE_KEYS.TIMELINE_SIDEBAR_COLLAPSED, true);
+
     const optionsExpanded = ref<boolean>(false);
 
     // Day name constants
@@ -127,6 +130,14 @@ export const useCalendarSettingsStore = defineStore('calendarSettings', () => {
         setCollapsibleSection(key, !currentValue);
     };
 
+    const setTimelineSidebarCollapsed = (collapsed: boolean) => {
+        timelineSidebarCollapsed.value = collapsed;
+    };
+
+    const toggleTimelineSidebarCollapsed = () => {
+        timelineSidebarCollapsed.value = !timelineSidebarCollapsed.value;
+    };
+
     return {
         // State
         firstDayOfWeek,
@@ -137,6 +148,7 @@ export const useCalendarSettingsStore = defineStore('calendarSettings', () => {
         useSingleDayEventSprites,
         eventBarFontSize,
         optionsExpanded,
+        timelineSidebarCollapsed,
 
         // Computed getters
         dayHeaders,
@@ -156,5 +168,7 @@ export const useCalendarSettingsStore = defineStore('calendarSettings', () => {
         isCollapsibleSectionCollapsed,
         setCollapsibleSection,
         toggleCollapsibleSection,
+        setTimelineSidebarCollapsed,
+        toggleTimelineSidebarCollapsed,
     };
 });

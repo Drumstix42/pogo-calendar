@@ -1,5 +1,5 @@
 <template>
-    <div class="event-timeline">
+    <div class="event-timeline" :class="{ 'sidebar-mode': isSidebarMode }">
         <div v-if="Object.keys(categorizedEvents).length === 0" class="no-events">
             <p>No upcoming events found</p>
         </div>
@@ -69,6 +69,12 @@ import { useEventsStore } from '@/stores/events';
 import { type PogoEvent, sortEventsByTimingAndPriority } from '@/utils/eventTypes';
 
 import TimelineEvent from './TimelineEvent.vue';
+
+interface Props {
+    isSidebarMode?: boolean;
+}
+
+defineProps<Props>();
 
 const eventsStore = useEventsStore();
 const eventFilter = useEventFilterStore();
@@ -283,7 +289,7 @@ const hiddenEventsCounts = computed(() => eventData.value.hiddenEventsCounts);
 
 .category-header {
     position: sticky;
-    top: var(--navbar-height-scrolled);
+    top: 0;
     z-index: 10;
     margin: 0;
     padding: 6px 7px;
@@ -291,6 +297,11 @@ const hiddenEventsCounts = computed(() => eventData.value.hiddenEventsCounts);
     background: var(--bs-secondary-bg);
     border-bottom: 1px solid var(--bs-border-color);
     border-radius: 0 0 5px 5px;
+}
+
+/* When not in sidebar mode, stick relative to viewport */
+.event-timeline:not(.sidebar-mode) .category-header {
+    top: var(--navbar-height-scrolled);
 }
 
 .category-text {

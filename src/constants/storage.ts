@@ -14,6 +14,7 @@ export const STORAGE_KEYS = {
     FIRST_DAY_OF_WEEK: createStorageKey('first-day-of-week'),
     GROUP_SIMILAR_EVENTS: createStorageKey('group-similar-events'),
     THEME_MODE: createStorageKey('theme-mode'),
+    TIMELINE_SIDEBAR_COLLAPSED: createStorageKey('timeline-sidebar-collapsed'),
     USE_ANIMATED_IMAGES: createStorageKey('use-animated-images'),
     USE_MULTI_DAY_EVENT_SPRITES: createStorageKey('use-multi-day-event-sprites'),
     USE_SINGLE_DAY_EVENT_SPRITES: createStorageKey('use-single-day-event-sprites'),

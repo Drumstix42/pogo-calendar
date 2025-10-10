@@ -1,6 +1,7 @@
 <template>
     <div class="collapsible-section" :class="{ open: !isCollapsed, closed: isCollapsed }">
         <div
+            v-if="!hideHeader"
             class="section-header"
             @click="toggleCollapsed"
             role="button"
@@ -14,17 +15,26 @@
 
             <div class="section-title">{{ title }}</div>
 
+            <div v-if="$slots.headerActions" class="header-actions" @click.stop>
+                <slot name="headerActions" />
+            </div>
+
             <button class="btn btn-icon-ghost btn-sm collapse-toggle" aria-label="Toggle section">
                 <ChevronDown v-if="isCollapsed" :size="16" class="transition-transform" />
                 <ChevronUp v-else :size="16" class="transition-transform" />
             </button>
         </div>
 
-        <Transition name="collapse">
+        <Transition v-if="!hideHeader" name="collapse">
             <div v-if="!isCollapsed" class="section-content" :class="contentClass">
                 <slot />
             </div>
         </Transition>
+
+        <!-- When hideHeader is true, always show content without transition -->
+        <div v-if="hideHeader" class="section-content" :class="contentClass">
+            <slot />
+        </div>
     </div>
 </template>
 
@@ -38,6 +48,7 @@ interface Props {
     title: string;
     storageKey?: string;
     contentClass?: string;
+    hideHeader?: boolean;
 }
 
 const props = defineProps<Props>();
@@ -100,6 +111,13 @@ const toggleCollapsed = () => {
     color: var(--bs-body-color);
     font-size: 0.9rem;
     flex: 1;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    flex-shrink: 0;
 }
 
 .collapse-toggle {

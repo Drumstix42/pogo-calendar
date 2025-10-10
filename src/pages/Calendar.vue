@@ -1,35 +1,40 @@
 <template>
     <div class="container app-container mt-2 mb-4">
-        <CollapsibleSection title="Calendar" storage-key="main/calendar-section" class="calendar-section">
-            <template #icon>
-                <CalendarRange :size="18" />
-            </template>
-            <!-- Month Navigation Header -->
-            <CalendarHeader />
+        <div class="page-layout" :class="{ 'sidebar-layout': isXxlScreenSize }">
+            <!-- Timeline Sidebar (left at >=1400px, below calendar at <1400px) -->
+            <div class="timeline-wrapper" :class="{ 'sidebar-collapsed': isXxlScreenSize && calendarSettings.timelineSidebarCollapsed }">
+                <!-- Timeline content -->
+                <div v-if="!isXxlScreenSize || !calendarSettings.timelineSidebarCollapsed" class="timeline-content">
+                    <CollapsibleSection title="Timeline" storage-key="main/timeline-section" class="timeline-section" :hide-header="isXxlScreenSize">
+                        <template #icon>
+                            <PanelTop :size="18" />
+                        </template>
 
-            <!-- Calendar Grid Component -->
-            <div class="row">
-                <div class="col-12">
-                    <!-- Main Calendar Grid -->
-                    <CalendarGrid />
+                        <div class="mb-3">
+                            <CalendarMobile />
+                        </div>
+
+                        <EventTimeline :is-sidebar-mode="isXxlScreenSize" />
+                    </CollapsibleSection>
                 </div>
             </div>
-        </CollapsibleSection>
 
-        <!-- Event Timeline Section -->
-        <div class="row mt-3">
-            <div class="col-12">
-                <CollapsibleSection title="Timeline" storage-key="main/timeline-section" class="timeline-section">
+            <!-- Calendar Section -->
+            <div class="calendar-wrapper">
+                <CollapsibleSection title="Calendar" storage-key="main/calendar-section" class="calendar-section" :hide-header="isXxlScreenSize">
                     <template #icon>
-                        <PanelTop :size="18" />
+                        <CalendarRange :size="18" />
                     </template>
+                    <!-- Month Navigation Header -->
+                    <CalendarHeader />
 
-                    <!-- Mini Calendar underneath -->
-                    <div class="mb-3">
-                        <CalendarMobile />
+                    <!-- Calendar Grid Component -->
+                    <div class="row">
+                        <div class="col-12">
+                            <!-- Main Calendar Grid -->
+                            <CalendarGrid />
+                        </div>
                     </div>
-
-                    <EventTimeline />
                 </CollapsibleSection>
             </div>
         </div>
@@ -68,6 +73,7 @@ const calendarSettings = useCalendarSettingsStore();
 // responsive breakpoints https://getbootstrap.com/docs/5.0/layout/breakpoints/#available-breakpoints
 const breakpoints = useBreakpoints(breakpointsBootstrapV5);
 const isMobile = breakpoints.smaller('md'); // < 768px
+const isXxlScreenSize = breakpoints.greaterOrEqual('xxl'); // >= 1400px
 // const isDesktop = breakpoints.greaterOrEqual('md'); // >= 768px
 
 const handleCloseOptions = () => {
@@ -168,5 +174,87 @@ onUnmounted(() => {
 
 .offcanvas-fade-leave-to .calendar-options-offcanvas {
     transform: translateX(100%);
+}
+
+/* Sidebar Layout */
+.page-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+/* In vertical layout, calendar comes first */
+.timeline-wrapper {
+    order: 2;
+}
+
+.calendar-wrapper {
+    order: 1;
+}
+
+@media (min-width: 1400px) {
+    .page-layout.sidebar-layout {
+        flex-direction: row;
+        gap: 1.5rem;
+        align-items: flex-start;
+        transition: gap 0.3s ease;
+    }
+
+    /* Remove gap when timeline is collapsed */
+    .page-layout.sidebar-layout:has(.timeline-wrapper.sidebar-collapsed) {
+        gap: 0;
+    }
+
+    /* In sidebar layout, timeline comes first (left) */
+    .page-layout.sidebar-layout .timeline-wrapper {
+        order: 1;
+    }
+
+    .page-layout.sidebar-layout .calendar-wrapper {
+        order: 2;
+    }
+
+    .timeline-wrapper {
+        flex-shrink: 0;
+        width: 425px;
+        transition: width 0.3s ease;
+        position: sticky;
+        top: var(--navbar-height-scrolled);
+        align-self: flex-start;
+    }
+
+    .timeline-wrapper.sidebar-collapsed {
+        width: 0;
+    }
+
+    .timeline-content {
+        height: calc(100dvh - var(--navbar-height-scrolled) - 1.5rem);
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding-right: 4px;
+    }
+
+    /* Custom scrollbar for timeline sidebar */
+    .timeline-content::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .timeline-content::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .timeline-content::-webkit-scrollbar-thumb {
+        background: var(--bs-border-color);
+        border-radius: 3px;
+    }
+
+    .timeline-content::-webkit-scrollbar-thumb:hover {
+        background: var(--bs-secondary-color);
+    }
+
+    .calendar-wrapper {
+        flex: 1;
+        min-width: 0;
+    }
 }
 </style>
