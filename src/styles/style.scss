@@ -353,7 +353,8 @@ body {
         background-color 0.15s ease,
         box-shadow 0.15s ease !important;
 
-    &:not(:hover) {
+    /* Don't apply highlight styles when hovering, focusing, or has any focus/active within */
+    &:not(:hover):not(:focus-within):not(:has(:focus)):not(:has(:active)) {
         border-color: color-mix(in srgb, var(--event-bg-color) 80%, black);
         background-color: color-mix(in srgb, var(--event-bg-color) 80%, black);
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);

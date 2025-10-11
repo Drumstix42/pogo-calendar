@@ -211,6 +211,7 @@ const eventColorDark = computed(() => {
         flex-shrink: 0;
         color: white;
         margin-left: auto;
+        pointer-events: none;
     }
 
     .header-action-text {
@@ -221,6 +222,7 @@ const eventColorDark = computed(() => {
         flex-shrink: 0;
         white-space: nowrap;
         font-style: italic;
+        pointer-events: none;
     }
 
     .event-toggle-container {
