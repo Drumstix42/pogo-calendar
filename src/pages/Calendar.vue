@@ -42,9 +42,22 @@
         <!-- Footer Disclaimer -->
         <footer class="disclaimer-footer">
             <p class="disclaimer-text">
-                This website is not officially affiliated with Pokémon GO and is intended to fall under Fair Use doctrine, similar to any other
-                informational site such as a wiki. Pokémon and its trademarks are ©1995-2025 Nintendo, Creatures, and GAMEFREAK. All images and names
-                are owned and trademarked by Nintendo, Niantic, The Pokémon Company, and GAMEFREAK and are property of their respective owners.
+                This website is not affiliated with
+                <a class="link-secondary" href="https://pokemongo.com/" target="_blank" rel="noopener noreferrer">Pokémon GO</a> and is intended to
+                fall under Fair Use doctrine, similar to any other informational site such as a wiki. Pokémon and its trademarks are ©1995-2025
+                Nintendo, Creatures, and GAMEFREAK. <br />All images and names are owned and trademarked by Nintendo, Niantic, The Pokémon Company,
+                and GAMEFREAK and are property of their respective owners.
+            </p>
+            <p class="disclaimer-text mt-2">
+                This site does not use cookies, tracking, or advertisements of any kind. All preferences are stored via
+                <a
+                    class="link-secondary"
+                    href="https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    >localStorage</a
+                >
+                directly with your browser.
             </p>
         </footer>
 
