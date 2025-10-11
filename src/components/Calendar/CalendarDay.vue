@@ -21,9 +21,9 @@
                 ></span>
             </div>
 
-            <div class="skeleton-single-day placeholder-glow">
+            <!-- <div class="skeleton-single-day placeholder-glow">
                 <span class="placeholder" style="height: 30px; border-radius: 3px; width: 100%; display: block"></span>
-            </div>
+            </div> -->
         </div>
 
         <!-- Multi-day events (day-spanning bars) -->

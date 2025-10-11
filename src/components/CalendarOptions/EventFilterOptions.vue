@@ -1,7 +1,7 @@
 <template>
     <CollapsibleSection title="Event Type Filters" storage-key="calendarSettings/event-filters" class="flex-grow-section">
         <!-- Timeline filter toggle -->
-        <div class="form-check form-switch mb-4">
+        <div class="form-check form-switch">
             <input
                 id="filtersApplyToTimeline"
                 class="form-check-input"
@@ -12,6 +12,7 @@
             />
             <label for="filtersApplyToTimeline" class="form-check-label">Apply filters to Timeline</label>
         </div>
+        <small class="text-muted d-block mt-2 mb-4">Control whether hidden events are also filtered from the Timeline.</small>
 
         <div class="filter-stats mb-2">
             <div class="btn-group btn-group-sm">

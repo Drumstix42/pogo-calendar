@@ -131,7 +131,7 @@ function hideById() {
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 1055;
+    z-index: 10055;
     backdrop-filter: blur(2px);
 }
 

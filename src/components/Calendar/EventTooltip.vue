@@ -74,7 +74,9 @@
 </template>
 
 <script setup lang="ts">
+import { hideAllPoppers } from 'floating-vue';
 import { ExternalLink } from 'lucide-vue-next';
+import { nextTick } from 'vue';
 
 import { useHideEventModal } from '@/composables/useHideEventModal';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
@@ -100,6 +102,12 @@ const hideEventModal = useHideEventModal();
 
 function openHideModal() {
     hideEventModal.openModal(props.event);
+    // Hide tooltip after a short delay to ensure it closes even with mouse still hovering
+    nextTick(() => {
+        setTimeout(() => {
+            hideAllPoppers();
+        }, 50);
+    });
 }
 
 const getEventColor = (event: PogoEvent): string => {
