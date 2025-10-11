@@ -6,7 +6,7 @@
         <TransitionGroup v-else name="fade" tag="div" class="timeline-events">
             <!-- Loop through categories in order -->
             <div v-for="category in eventCategories" :key="category.key" class="event-category">
-                <div v-if="categorizedEvents[category.key]?.length > 0 || category.key === TimelineCategory.TODAY" class="category-section">
+                <div class="category-section">
                     <!-- Category header with horizontal rule -->
                     <div class="category-header">
                         <div class="category-text d-flex align-items-center gap-2">
