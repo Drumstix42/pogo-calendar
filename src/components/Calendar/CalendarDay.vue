@@ -553,7 +553,7 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
 
 <style scoped>
 .calendar-day {
-    min-height: 60px;
+    min-height: 70px;
     background: var(--calendar-cell-bg);
     min-width: 0;
     overflow: visible;
@@ -665,7 +665,7 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     text-overflow: ellipsis;
     white-space: nowrap;
     font-weight: 400;
-    line-height: 1.3;
+    line-height: 1.2;
     min-width: 28px;
 }
 
@@ -896,7 +896,7 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
 
 .single-day-event {
     position: relative;
-    min-height: 90px;
+    min-height: 40px;
     display: flex;
     align-items: flex-start;
     gap: 5px;

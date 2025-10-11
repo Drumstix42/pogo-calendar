@@ -114,6 +114,7 @@ const getEventTypeName = (event: PogoEvent): string => {
 <style scoped>
 .event-tooltip {
     max-width: 350px;
+    min-width: 180px;
     padding: 0rem;
 }
 

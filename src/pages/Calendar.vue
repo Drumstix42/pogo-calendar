@@ -1,8 +1,8 @@
 <template>
-    <div class="container app-container mt-1">
+    <div class="container app-container">
         <div class="page-layout" :class="{ 'sidebar-layout': isXxlScreenSize }">
             <!-- Timeline Sidebar (left at >=1400px, below calendar at <1400px) -->
-            <div class="timeline-wrapper" :class="{ 'sidebar-collapsed': isXxlScreenSize && calendarSettings.timelineSidebarCollapsed }">
+            <div class="timeline-wrapper pt-1" :class="{ 'sidebar-collapsed': isXxlScreenSize && calendarSettings.timelineSidebarCollapsed }">
                 <!-- Timeline content -->
                 <div v-if="!isXxlScreenSize || !calendarSettings.timelineSidebarCollapsed" class="timeline-content">
                     <CollapsibleSection title="Timeline" storage-key="main/timeline-section" class="timeline-section" :hide-header="isXxlScreenSize">
@@ -20,7 +20,7 @@
             </div>
 
             <!-- Calendar Section -->
-            <div class="calendar-wrapper">
+            <div class="calendar-wrapper pt-1">
                 <CollapsibleSection title="Calendar" storage-key="main/calendar-section" class="calendar-section" :hide-header="isXxlScreenSize">
                     <template #icon>
                         <CalendarRange :size="18" />
@@ -38,6 +38,15 @@
                 </CollapsibleSection>
             </div>
         </div>
+
+        <!-- Footer Disclaimer -->
+        <footer class="disclaimer-footer">
+            <p class="disclaimer-text">
+                This website is not officially affiliated with Pokémon GO and is intended to fall under Fair Use doctrine, similar to any other
+                informational site such as a wiki. Pokémon and its trademarks are ©1995-2025 Nintendo, Creatures, and GAMEFREAK. All images and names
+                are owned and trademarked by Nintendo, Niantic, The Pokémon Company, and GAMEFREAK and are property of their respective owners.
+            </p>
+        </footer>
 
         <!-- Calendar Options Offcanvas -->
         <Teleport to="body">
@@ -255,7 +264,7 @@ onUnmounted(() => {
     }
 
     .timeline-content {
-        height: calc(100dvh - var(--navbar-height-scrolled) - 1.5rem);
+        height: calc(100dvh - var(--navbar-height-scrolled) - 0.5rem);
         overflow-y: auto;
         overflow-x: hidden;
         padding-right: 6px;
@@ -283,5 +292,19 @@ onUnmounted(() => {
         flex: 1;
         min-width: 0;
     }
+}
+
+.disclaimer-footer {
+    margin-top: 2rem;
+    padding: 1.5rem 0;
+    text-align: center;
+    border-top: 1px solid var(--bs-border-color);
+}
+
+.disclaimer-text {
+    margin: 0;
+    font-size: 0.75rem;
+    color: var(--bs-secondary-color);
+    line-height: 1.5;
 }
 </style>

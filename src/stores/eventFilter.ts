@@ -6,7 +6,7 @@ import { STORAGE_KEYS } from '../constants/storage';
 import { EVENT_TYPES } from '../utils/eventTypes';
 import type { EventTypeInfo, EventTypeKey } from '../utils/eventTypes';
 
-const defaultFilteredEventTypes: EventTypeKey[] = ['go-battle-league', 'go-pass', 'season'];
+const defaultFilteredEventTypes: EventTypeKey[] = ['go-pass', 'season'];
 
 /**
  * Pinia store for managing event type filtering with persistent localStorage
