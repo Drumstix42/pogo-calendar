@@ -5,6 +5,11 @@ import { useRoute, useRouter } from 'vue-router';
 /**
  * Composable for synchronizing calendar state with URL query parameters
  * Enables shareable calendar links and browser navigation support
+ *
+ * Manages:
+ * - Calendar navigation (month/year)
+ * - Settings panel state
+ * - Event detail panel state
  */
 export const useUrlSync = () => {
     const route = useRoute();
@@ -84,9 +89,63 @@ export const useUrlSync = () => {
 
     const isCurrentMonthYear = computed(() => isCurrentMonth());
 
+    // ============================================
+    // Settings Panel State
+    // ============================================
+    const settingsOpen = computed(() => route.query.settings === '1');
+
+    function openSettings() {
+        router.push({
+            query: {
+                ...route.query,
+                settings: '1',
+            },
+        });
+    }
+
+    function closeSettings() {
+        const currentQuery = { ...route.query };
+        delete currentQuery.settings;
+        router.replace({ query: currentQuery });
+    }
+
+    // ============================================
+    // Event Detail State
+    // ============================================
+    const selectedEventId = computed(() => {
+        const eventId = route.query.event;
+        return typeof eventId === 'string' ? eventId : undefined;
+    });
+
+    function selectEvent(eventId: string) {
+        router.push({
+            query: {
+                ...route.query,
+                event: eventId,
+            },
+        });
+    }
+
+    function clearEvent() {
+        const currentQuery = { ...route.query };
+        delete currentQuery.event;
+        router.replace({ query: currentQuery });
+    }
+
     return {
+        // Calendar navigation
         urlMonth,
         urlYear,
         isCurrentMonthYear,
+
+        // Settings panel
+        settingsOpen,
+        openSettings,
+        closeSettings,
+
+        // Event detail panel
+        selectedEventId,
+        selectEvent,
+        clearEvent,
     };
 };

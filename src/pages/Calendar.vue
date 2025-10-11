@@ -72,6 +72,17 @@
             </Transition>
         </Teleport>
 
+        <!-- Event Detail Offcanvas (Mobile) -->
+        <Teleport to="body">
+            <Transition name="offcanvas-fade">
+                <div v-if="selectedEventId && isMobile && !eventsStore.loading" class="event-detail-backdrop" @click="handleEventDetailBackdropClick">
+                    <div class="offcanvas offcanvas-bottom show event-detail-offcanvas" @click.stop>
+                        <EventDetailOffcanvas :event="selectedEvent" :is-single-day="selectedEventIsSingleDay" @close="handleCloseEventDetail" />
+                    </div>
+                </div>
+            </Transition>
+        </Teleport>
+
         <!-- Hide Event Modal -->
         <HideEventModal
             v-if="hideEventModal.currentEvent.value"
@@ -87,16 +98,18 @@
 <script setup lang="ts">
 import { breakpointsBootstrapV5, useBreakpoints } from '@vueuse/core';
 import { CalendarRange, PanelTop } from 'lucide-vue-next';
-import { onMounted, onUnmounted, watchEffect } from 'vue';
+import { computed, onMounted, onUnmounted, watch, watchEffect } from 'vue';
 
 import { useEventFilterToasts } from '@/composables/useEventFilterToasts';
 import { useHideEventModal } from '@/composables/useHideEventModal';
+import { useUrlSync } from '@/composables/useUrlSync';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { useEventsStore } from '@/stores/events';
-import type { EventTypeKey } from '@/utils/eventTypes';
+import { type EventTypeKey, isSameDayEvent } from '@/utils/eventTypes';
 
 import CalendarGrid from '@/components/Calendar/CalendarGrid.vue';
 import CalendarHeader from '@/components/Calendar/CalendarHeader.vue';
+import EventDetailOffcanvas from '@/components/Calendar/EventDetailOffcanvas.vue';
 /* import CalendarMobile from '@/components/Calendar/CalendarMobile.vue'; */
 import EventTimeline from '@/components/Calendar/EventTimeline.vue';
 import HideEventModal from '@/components/Calendar/HideEventModal.vue';
@@ -107,6 +120,7 @@ const eventsStore = useEventsStore();
 const calendarSettings = useCalendarSettingsStore();
 const hideEventModal = useHideEventModal();
 const { hideEventTypeWithToast, hideEventByIdWithToast } = useEventFilterToasts();
+const { settingsOpen, openSettings, closeSettings, selectedEventId, clearEvent } = useUrlSync();
 
 // responsive breakpoints https://getbootstrap.com/docs/5.0/layout/breakpoints/#available-breakpoints
 const breakpoints = useBreakpoints(breakpointsBootstrapV5);
@@ -114,12 +128,48 @@ const isMobile = breakpoints.smaller('md'); // < 768px
 const isXxlScreenSize = breakpoints.greaterOrEqual('xxl'); // >= 1400px
 // const isDesktop = breakpoints.greaterOrEqual('md'); // >= 768px
 
+// Sync settings with URL
+watch(settingsOpen, isOpen => {
+    calendarSettings.setOptionsExpanded(isOpen);
+});
+
+// Sync store changes back to URL (for programmatic opens)
+watch(
+    () => calendarSettings.optionsExpanded,
+    isExpanded => {
+        if (isExpanded && !settingsOpen.value) {
+            openSettings();
+        } else if (!isExpanded && settingsOpen.value) {
+            closeSettings();
+        }
+    },
+);
+
+// Get selected event details
+const selectedEvent = computed(() => {
+    if (!selectedEventId.value) return undefined;
+    return eventsStore.events.find(e => e.eventID === selectedEventId.value);
+});
+
+const selectedEventIsSingleDay = computed(() => {
+    if (!selectedEvent.value) return false;
+    return isSameDayEvent(selectedEvent.value);
+});
+
 const handleCloseOptions = () => {
-    calendarSettings.setOptionsExpanded(false);
+    closeSettings();
 };
 
 const handleBackdropClick = () => {
-    calendarSettings.setOptionsExpanded(false);
+    closeSettings();
+};
+
+const handleCloseEventDetail = () => {
+    clearEvent();
+};
+
+const handleEventDetailBackdropClick = () => {
+    clearEvent();
 };
 
 function handleHideByType(eventType: EventTypeKey) {
@@ -134,10 +184,11 @@ function handleHideById(eventId: string, eventName: string) {
 }
 
 watchEffect(() => {
-    const isModalOpen = calendarSettings.optionsExpanded;
+    const isOptionsOpen = calendarSettings.optionsExpanded;
+    const isEventDetailOpen = !!selectedEventId.value;
     const isMobileSize = isMobile.value;
 
-    if (isModalOpen && isMobileSize) {
+    if ((isOptionsOpen || isEventDetailOpen) && isMobileSize) {
         document.body.style.overflow = 'hidden';
     } else {
         document.body.style.overflow = '';
@@ -223,6 +274,60 @@ onUnmounted(() => {
 
 .offcanvas-fade-leave-to .calendar-options-offcanvas {
     transform: translateX(100%);
+}
+
+/* Event Detail Offcanvas (Bottom Drawer) */
+.event-detail-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1070;
+    display: flex;
+    align-items: flex-end;
+    backdrop-filter: blur(2px);
+}
+
+.event-detail-offcanvas {
+    position: relative;
+    width: 100%;
+    min-height: min(max(310px, 45vh), 80vh);
+    border: none;
+    border-top-left-radius: 16px;
+    border-top-right-radius: 16px;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+    background-color: var(--bs-body-bg);
+    display: flex;
+    flex-direction: column;
+    /* iOS safe area support */
+    padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Bottom offcanvas slide-up animation */
+.offcanvas-fade-enter-active .event-detail-offcanvas {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.offcanvas-fade-enter-from .event-detail-offcanvas {
+    transform: translateY(100%);
+}
+
+.offcanvas-fade-enter-to .event-detail-offcanvas {
+    transform: translateY(0);
+}
+
+.offcanvas-fade-leave-active .event-detail-offcanvas {
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.6, 1);
+}
+
+.offcanvas-fade-leave-from .event-detail-offcanvas {
+    transform: translateY(0);
+}
+
+.offcanvas-fade-leave-to .event-detail-offcanvas {
+    transform: translateY(100%);
 }
 
 /* Sidebar Layout */

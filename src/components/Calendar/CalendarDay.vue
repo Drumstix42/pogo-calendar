@@ -66,12 +66,16 @@
                         :data-debug="`Event: ${event.name} | ID: ${event.eventID} | Slot: ${getEventSlotData(event)?.slotIndex} | Grouped: ${(event as any)._isGrouped || false}`"
                         @mouseenter="debouncedHighlightEventID(event.eventID)"
                         @mouseleave="debouncedClearEventIDHighlight"
+                        @click="handleEventClick(event)"
                     >
                         <VMenu
+                            :disabled="isMobile"
                             placement="top"
                             :delay="tooltipOptionsDefaults.delay"
                             :distance="tooltipOptionsDefaults.distance"
                             :auto-hide="tooltipOptionsDefaults.autoHide"
+                            @apply-show="handleMenuShow(event)"
+                            @apply-hide="handleMenuHide(event)"
                         >
                             <div class="multi-day-event-bar--inner">
                                 <!-- Show Pokemon images for grouped or individual events -->
@@ -113,10 +117,13 @@
                 <VMenu
                     v-for="event in singleDayEvents"
                     :key="`single-${getEventKey(event)}`"
+                    :disabled="isMobile"
                     placement="top"
                     :delay="tooltipOptionsDefaults.delay"
                     :distance="tooltipOptionsDefaults.distance"
                     :auto-hide="tooltipOptionsDefaults.autoHide"
+                    @apply-show="handleMenuShow(event)"
+                    @apply-hide="handleMenuHide(event)"
                 >
                     <div
                         class="single-day-event calendar-event"
@@ -128,6 +135,7 @@
                         :data-event-id="event.eventID"
                         @mouseenter="debouncedHighlightEventID(event.eventID)"
                         @mouseleave="debouncedClearEventIDHighlight"
+                        @click="handleEventClick(event)"
                     >
                         <div class="event-dot" :style="{ backgroundColor: eventsStore.eventMetadata[event.eventID]?.color }"></div>
                         <div class="event-content">
@@ -164,6 +172,7 @@ import { type Dayjs } from 'dayjs';
 import { computed } from 'vue';
 
 import { useDeviceDetection } from '@/composables/useDeviceDetection';
+import { useUrlSync } from '@/composables/useUrlSync';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { useEventFilterStore } from '@/stores/eventFilter';
 import { useEventHighlightStore } from '@/stores/eventHighlight';
@@ -209,9 +218,11 @@ const eventsStore = useEventsStore();
 const calendarSettings = useCalendarSettingsStore();
 const eventHighlight = useEventHighlightStore();
 const { isTouchDevice } = useDeviceDetection();
+const { selectEvent, clearEvent, selectedEventId } = useUrlSync();
 
 // Breakpoints
 const breakpoints = useBreakpoints(breakpointsBootstrapV5);
+const isMobile = breakpoints.smaller('md'); // < 768px
 
 // Reactive values for multi-day event bar sizing
 const multiDayEventBarHeight = computed(() => calendarSettings.eventBarHeight);
@@ -428,6 +439,24 @@ const debouncedClearEventIDHighlight = (): void => {
 
     clearEventIDHighlight();
 };
+
+// Mobile: opens drawer on tap
+function handleEventClick(event: PogoEvent) {
+    if (!isMobile.value) return;
+    selectEvent(event.eventID);
+}
+
+// Desktop: updates URL when tooltip shows
+function handleMenuShow(event: PogoEvent) {
+    selectEvent(event.eventID);
+}
+
+// Clears URL when tooltip closes
+function handleMenuHide(event: PogoEvent) {
+    if (selectedEventId.value === event.eventID) {
+        clearEvent();
+    }
+}
 
 const getMultiDayEventBarClass = (event: PogoEvent, currentDay: Dayjs): string => {
     const slotData = getEventSlotData(event);
