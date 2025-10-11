@@ -120,9 +120,14 @@
                 >
                     <div
                         class="single-day-event calendar-event"
-                        :class="{ 'event-past': eventsStore.eventMetadata[event.eventID]?.isPastEvent }"
+                        :class="{
+                            'event-past': eventsStore.eventMetadata[event.eventID]?.isPastEvent,
+                            'event-id-highlighted': eventHighlight.hoveredEventID === event.eventID,
+                        }"
                         :data-event-type="event.eventType"
                         :data-event-id="event.eventID"
+                        @mouseenter="debouncedHighlightEventID(event.eventID)"
+                        @mouseleave="debouncedClearEventIDHighlight"
                     >
                         <div class="event-dot" :style="{ backgroundColor: eventsStore.eventMetadata[event.eventID]?.color }"></div>
                         <div class="event-content">
@@ -138,7 +143,7 @@
                                 v-if="calendarSettings.useSingleDayEventSprites"
                                 :event="event"
                                 :event-name="getEventDisplayName(event)"
-                                :height="40"
+                                :height="singleDayPokemonHeight"
                                 :show-placeholder="true"
                             />
                         </div>
@@ -154,6 +159,7 @@
 </template>
 
 <script setup lang="ts">
+import { breakpointsBootstrapV5, useBreakpoints } from '@vueuse/core';
 import { type Dayjs } from 'dayjs';
 import { computed } from 'vue';
 
@@ -204,9 +210,22 @@ const calendarSettings = useCalendarSettingsStore();
 const eventHighlight = useEventHighlightStore();
 const { isTouchDevice } = useDeviceDetection();
 
+// Breakpoints
+const breakpoints = useBreakpoints(breakpointsBootstrapV5);
+
 // Reactive values for multi-day event bar sizing
 const multiDayEventBarHeight = computed(() => calendarSettings.eventBarHeight);
 const multiDayEventIconHeight = computed(() => multiDayEventBarHeight.value - 2);
+
+// Single-day event Pokemon image height based on breakpoint
+const singleDayPokemonHeight = computed(() => {
+    if (breakpoints.greaterOrEqual('xxl').value) {
+        return 50; // >= 1400px
+    } else if (breakpoints.greaterOrEqual('xl').value) {
+        return 45; // >= 1200px
+    }
+    return 40; // < 1200px
+});
 
 const tooltipOptionsDefaults = computed(() => ({
     autoHide: isTouchDevice.value,
@@ -618,7 +637,7 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
 
 .multi-day-event-bar:hover {
     color: #ffffff;
-    background-color: color-mix(in srgb, var(--event-bg-color) 85%, #fefefe) !important;
+    background-color: color-mix(in srgb, var(--event-bg-color) 80%, black) !important;
 }
 
 .multi-day-event-bar--inner {

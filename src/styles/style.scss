@@ -320,22 +320,54 @@ body {
 
 /* Event ID Hover Highlighting */
 .calendar-event.event-id-highlighted {
+    &:not(:hover) {
+        outline: 1px dashed rgba(243, 240, 75, 0.5);
+        outline-offset: -1px;
+    }
+
     &.multi-day-event-bar {
         transition:
             background-color 0.5s ease,
             filter 0.5s ease !important;
 
         &:not(:hover) {
-            background-color: color-mix(in srgb, var(--event-bg-color) 80%, white) !important;
+            background-color: color-mix(in srgb, var(--event-bg-color) 80%, black) !important;
             .event-name {
                 font-weight: 500;
             }
         }
     }
-    /* .event-name {
-        font-weight: 700;
-        animation: letter-spacing-pulse 0.4s ease-out infinite alternate;
-    } */
+
+    &.single-day-event {
+        &:not(:hover) {
+            background-color: var(--bs-secondary-bg);
+        }
+    }
+}
+
+.timeline-event.event-id-highlighted {
+    /* Override parent transition to exclude outline */
+    transition:
+        transform 0.15s ease,
+        border-color 0.15s ease,
+        background-color 0.15s ease,
+        box-shadow 0.15s ease !important;
+
+    &:not(:hover) {
+        border-color: color-mix(in srgb, var(--event-bg-color) 80%, black);
+        background-color: color-mix(in srgb, var(--event-bg-color) 80%, black);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        outline: 2px dashed rgba(243, 240, 75, 0.5);
+        outline-offset: 1px;
+
+        .event-header {
+            background-color: color-mix(in srgb, var(--event-bg-color) 80%, black) !important;
+        }
+        .event-body {
+            transition: background-color 0.5s ease;
+            background-color: color-mix(in srgb, var(--calendar-cell-bg) 99%, white) !important;
+        }
+    }
 }
 
 /* Vue Transition Animations for Calendar Events */

@@ -437,9 +437,9 @@ const hiddenEventsCounts = computed(() => eventData.value.hiddenEventsCounts);
 }
 
 /* Prevent date-group from animating height changes that cause sliding */
-.date-group {
+/* .date-group {
     overflow: hidden;
-}
+} */
 
 .date-events .fade-enter-active {
     /* Override to ensure no transform/position changes during enter */

@@ -1,14 +1,20 @@
 <template>
     <div
         class="timeline-event-card timeline-event"
-        :class="{ 'is-active': props.isActive }"
+        :class="{
+            'is-active': props.isActive,
+            'event-id-highlighted': eventHighlight.hoveredEventID === props.event.eventID,
+        }"
         :data-event-type="event.eventType"
         :data-timeline-event-id="event.eventID"
         :style="{
             borderColor: eventColor,
             backgroundColor: eventColor,
             '--event-color-dark': eventColorDark,
+            '--event-bg-color': eventColor,
         }"
+        @mouseenter="debouncedHighlightEventID(props.event.eventID)"
+        @mouseleave="debouncedClearEventIDHighlight"
     >
         <!-- Colored header with event type -->
         <div class="event-header" :style="{ backgroundColor: eventColor }" @click="toggleActive">
@@ -54,6 +60,7 @@ import { ChevronsDownUp, ChevronsUpDown } from 'lucide-vue-next';
 import { computed } from 'vue';
 
 import { useHideEventModal } from '@/composables/useHideEventModal';
+import { useEventHighlightStore } from '@/stores/eventHighlight';
 import { formatEventName } from '@/utils/eventName';
 import { type PogoEvent, getEventTypeInfo } from '@/utils/eventTypes';
 
@@ -74,6 +81,7 @@ interface Emits {
 const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
 const hideEventModal = useHideEventModal();
+const eventHighlight = useEventHighlightStore();
 
 function toggleActive() {
     emit('activate', props.event.eventID);
@@ -81,6 +89,28 @@ function toggleActive() {
 
 function openHideModal() {
     hideEventModal.openModal(props.event);
+}
+
+let highlightTimeout: number | null = null;
+
+function debouncedHighlightEventID(eventID: string) {
+    if (highlightTimeout) {
+        clearTimeout(highlightTimeout);
+    }
+
+    highlightTimeout = setTimeout(() => {
+        eventHighlight.highlightEventID(eventID);
+        highlightTimeout = null;
+    }, 200);
+}
+
+function debouncedClearEventIDHighlight() {
+    if (highlightTimeout) {
+        clearTimeout(highlightTimeout);
+        highlightTimeout = null;
+    }
+
+    eventHighlight.clearEventIDHighlight();
 }
 
 // Event type color and name
@@ -114,8 +144,12 @@ const eventColorDark = computed(() => {
             background-color: var(--event-color-dark);
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 
-            .event-header {
-                background-color: var(--event-color-dark) !important;
+            /* .event-body {
+                background-color: color-mix(in srgb, var(--calendar-cell-bg) 92%, black);
+            } */
+
+            .chevron-icon {
+                opacity: 0.8;
             }
         }
     }
@@ -140,10 +174,16 @@ const eventColorDark = computed(() => {
     align-items: center;
     gap: 6px;
     cursor: pointer;
+    transition: background-color 0.5s ease;
 
     @media (pointer: fine) {
         &:hover {
             font-weight: 600;
+            background-color: var(--event-color-dark) !important;
+
+            .chevron-icon {
+                transform: scale(1.1);
+            }
         }
     }
 
@@ -165,7 +205,9 @@ const eventColorDark = computed(() => {
 
     .chevron-icon {
         opacity: 0.6;
-        transition: opacity 0.2s ease;
+        transition:
+            opacity 0.2s ease,
+            transform 0.2s ease;
         flex-shrink: 0;
         color: white;
         margin-left: auto;
@@ -191,7 +233,7 @@ const eventColorDark = computed(() => {
 
 .event-body {
     background: var(--calendar-cell-bg);
-    padding: 12px 12px;
+    padding: 10px 12px;
     text-align: left;
 
     .event-name {
