@@ -1,6 +1,6 @@
 <template>
     <div
-        class="timeline-event-card calendar-event"
+        class="timeline-event-card timeline-event"
         :class="{ 'is-active': props.isActive }"
         :data-event-type="event.eventType"
         :data-timeline-event-id="event.eventID"
@@ -122,7 +122,7 @@ const eventColorDark = computed(() => {
 
     &.is-active {
         transform: scale(1.02);
-        border-width: 2px;
+        border-width: 1px;
         border-color: var(--event-color-dark);
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }

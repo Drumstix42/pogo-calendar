@@ -30,7 +30,7 @@
                 :href="event.link"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="link-secondary link-underline-opacity-0 link-underline-opacity-100-hover d-inline-flex align-items-center gap-1"
+                class="link-neutral link-underline-opacity-0 link-underline-opacity-100-hover d-inline-flex align-items-center gap-1"
                 style="font-size: 0.75rem"
             >
                 View on LeekDuck <ExternalLink :size="12" />

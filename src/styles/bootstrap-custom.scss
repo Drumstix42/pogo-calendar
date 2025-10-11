@@ -111,6 +111,10 @@ $font-family-sans-serif:
     --btn-icon-ghost-dark-hover-bg: rgba(255, 255, 255, 0.1);
     --btn-icon-ghost-dark-hover-color: rgba(255, 255, 255, 0.85);
     --btn-icon-ghost-dark-active-bg: rgba(255, 255, 255, 0.15);
+
+    // Custom link colors
+    --link-neutral-color: #534657;
+    --link-neutral-hover-color: #2a222c;
 }
 
 [data-bs-theme='dark'] {
@@ -147,6 +151,10 @@ $font-family-sans-serif:
     --btn-icon-ghost-dark-hover-bg: rgba(255, 255, 255, 0.1);
     --btn-icon-ghost-dark-hover-color: rgba(255, 255, 255, 0.85);
     --btn-icon-ghost-dark-active-bg: rgba(255, 255, 255, 0.15);
+
+    // Custom link colors
+    --link-neutral-color: #d2c9da;
+    --link-neutral-hover-color: #f1e6f5;
 }
 
 // Responsive overrides for custom variables

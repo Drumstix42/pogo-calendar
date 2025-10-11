@@ -136,6 +136,17 @@ small,
     cursor: not-allowed;
 }
 
+/* Link styles */
+.link-neutral {
+    color: var(--link-neutral-color);
+    text-decoration: none;
+
+    &:hover,
+    &:focus {
+        color: var(--link-neutral-hover-color);
+    }
+}
+
 /* Form styles */
 .form-check-input {
     cursor: pointer;

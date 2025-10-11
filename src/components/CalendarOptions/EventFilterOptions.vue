@@ -202,7 +202,7 @@ const hiddenEvents = computed(() => {
 
             return {
                 id: eventId,
-                name: metadata?.displayName || event.name,
+                name: metadata?.displayName || event.name || event.eventID,
                 typeName: typeInfo.name,
                 color: typeInfo.color,
                 event,

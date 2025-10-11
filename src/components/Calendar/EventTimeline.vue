@@ -3,7 +3,7 @@
         <div v-if="Object.keys(categorizedEvents).length === 0" class="no-events">
             <p>No upcoming events found</p>
         </div>
-        <div v-else class="timeline-events">
+        <TransitionGroup v-else name="fade" tag="div" class="timeline-events">
             <!-- Loop through categories in order -->
             <div v-for="category in eventCategories" :key="category.key" class="event-category">
                 <div v-if="categorizedEvents[category.key]?.length > 0 || category.key === TimelineCategory.TODAY" class="category-section">
@@ -16,29 +16,45 @@
                     </div>
 
                     <!-- Events in this category -->
-                    <div class="category-events">
-                        <!-- For today and ongoing, show events directly -->
-                        <template v-if="category.key === TimelineCategory.TODAY || category.key === TimelineCategory.ONGOING">
-                            <TimelineEvent
-                                v-for="event in categorizedEvents[category.key]"
-                                :key="event.eventID"
-                                :event="event"
-                                :is-active="activeEventId === event.eventID"
-                                @activate="setActiveEvent"
-                            />
+                    <!-- For today and ongoing, show events directly -->
+                    <TransitionGroup
+                        v-if="category.key === TimelineCategory.TODAY || category.key === TimelineCategory.ONGOING"
+                        name="fade"
+                        tag="div"
+                        class="category-events"
+                        :key="`${category.key}-simple`"
+                    >
+                        <TimelineEvent
+                            v-for="event in categorizedEvents[category.key]"
+                            :key="event.eventID"
+                            :event="event"
+                            :is-active="activeEventId === event.eventID"
+                            @activate="setActiveEvent"
+                        />
 
-                            <!-- Special message for Today section when no events exist -->
-                            <div v-if="category.key === TimelineCategory.TODAY && totalEventsCounts[category.key] === 0" class="no-events-today">
-                                <p>No single-day events scheduled today</p>
+                        <!-- Special message for Today section when no events exist -->
+                        <div
+                            v-if="category.key === TimelineCategory.TODAY && totalEventsCounts[category.key] === 0"
+                            key="no-events-today"
+                            class="no-events-today"
+                        >
+                            <p>No single-day events scheduled today</p>
+                        </div>
+                    </TransitionGroup>
+
+                    <!-- For upcoming and future, group by date -->
+                    <TransitionGroup
+                        v-else-if="category.key === TimelineCategory.UPCOMING || category.key === TimelineCategory.FUTURE"
+                        name="fade"
+                        tag="div"
+                        class="category-events"
+                        :key="`${category.key}-grouped`"
+                    >
+                        <div v-for="dateGroup in groupedByDate[category.key]" :key="dateGroup.dateKey" class="date-group">
+                            <div class="date-divider">
+                                <span class="day-of-week">{{ dateGroup.dayOfWeek }}</span> {{ dateGroup.dateStr }}
                             </div>
-                        </template>
-
-                        <!-- For upcoming and future, group by date -->
-                        <template v-else-if="category.key === TimelineCategory.UPCOMING || category.key === TimelineCategory.FUTURE">
-                            <div v-for="dateGroup in groupedByDate[category.key]" :key="dateGroup.dateKey" class="date-group">
-                                <div class="date-divider">
-                                    <span class="day-of-week">{{ dateGroup.dayOfWeek }}</span> {{ dateGroup.dateStr }}
-                                </div>
+                            <TransitionGroup name="fade" tag="div" :key="dateGroup.dateKey" class="date-events">
                                 <TimelineEvent
                                     v-for="event in dateGroup.events"
                                     :key="event.eventID"
@@ -46,9 +62,9 @@
                                     :is-active="activeEventId === event.eventID"
                                     @activate="setActiveEvent"
                                 />
-                            </div>
-                        </template>
-                    </div>
+                            </TransitionGroup>
+                        </div>
+                    </TransitionGroup>
 
                     <!-- Hidden events indicator -->
                     <div v-if="hiddenEventsCounts[category.key] > 0" class="hidden-events-indicator">
@@ -56,7 +72,7 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </TransitionGroup>
     </div>
 </template>
 
@@ -334,6 +350,12 @@ const hiddenEventsCounts = computed(() => eventData.value.hiddenEventsCounts);
     padding: 0 4px;
 }
 
+.date-events {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
 .hidden-events-indicator {
     margin: 12px 16px 0 16px;
     padding: 8px 12px;
@@ -363,6 +385,7 @@ const hiddenEventsCounts = computed(() => eventData.value.hiddenEventsCounts);
     flex-direction: column;
     gap: 6px;
     margin-bottom: 12px;
+    transition: all 0.3s ease;
 
     &:last-child {
         margin-bottom: 0;
@@ -376,9 +399,51 @@ const hiddenEventsCounts = computed(() => eventData.value.hiddenEventsCounts);
     letter-spacing: 0.5px;
     color: var(--bs-secondary-color);
     line-height: 1.3;
+    transition: all 0.3s ease;
 
     .day-of-week {
         font-weight: 600;
     }
+}
+
+/* Improve fade transitions for timeline events */
+.category-events > *,
+.date-events > * {
+    transition: all 0.3s ease;
+}
+
+.category-events,
+.date-events {
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+/* Ensure fade-in happens at final position without sliding */
+.category-events .fade-enter-active,
+.date-events .fade-enter-active {
+    transition: opacity 0.3s ease;
+}
+
+.category-events .fade-enter-from,
+.date-events .fade-enter-from {
+    opacity: 0;
+}
+
+/* Use absolute positioning during leave to prevent layout shift */
+.category-events .fade-leave-active,
+.date-events .fade-leave-active {
+    position: absolute;
+    width: 100%;
+}
+
+/* Prevent date-group from animating height changes that cause sliding */
+.date-group {
+    overflow: hidden;
+}
+
+.date-events .fade-enter-active {
+    /* Override to ensure no transform/position changes during enter */
+    transition: opacity 0.3s ease !important;
+    transform: none !important;
 }
 </style>
