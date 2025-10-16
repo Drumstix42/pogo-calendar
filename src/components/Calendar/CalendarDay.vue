@@ -679,14 +679,14 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     bottom: 0;
     gap: 4px;
     transform: translate3d(0, 0, 0); /* Fixes some rendering issues in Chrome */
-
-    @media (min-width: 425px) {
-        padding-left: 4px;
-    }
 }
 
 .start-cap .multi-day-event-bar--inner {
     padding-left: 3px;
+
+    @media (min-width: 76px) {
+        padding-left: 4px;
+    }
 }
 
 .end-cap .multi-day-event-bar--inner {
