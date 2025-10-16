@@ -1,23 +1,7 @@
 <template>
     <div class="calendar-header d-flex align-items-center justify-content-between flex-wrap row-gap-2 mb-2 px-1">
-        <!-- Left: Timeline toggle (only visible at >=1400px) -->
-        <Transition name="timeline-toggle">
-            <div v-if="isDesktopSidebar" class="timeline-toggle-section">
-                <button
-                    type="button"
-                    class="btn btn-icon-ghost d-flex align-items-center gap-2"
-                    :title="calendarSettings.timelineSidebarCollapsed ? 'Show Timeline' : 'Hide Timeline'"
-                    @click="calendarSettings.toggleTimelineSidebarCollapsed"
-                >
-                    <PanelLeftOpen v-if="calendarSettings.timelineSidebarCollapsed" :size="18" />
-                    <PanelLeftClose v-else :size="18" />
-                    <span class="timeline-toggle-label">{{ calendarSettings.timelineSidebarCollapsed ? 'Show Timeline' : 'Hide Timeline' }}</span>
-                </button>
-            </div>
-        </Transition>
-
-        <!-- Right: Month navigation -->
-        <div class="d-flex align-items-center flex-wrap gap-1" :class="{ 'ms-auto': isDesktopSidebar, 'flex-grow-1': !isDesktopSidebar }">
+        <!-- Left: Month navigation -->
+        <div class="d-flex align-items-center flex-wrap gap-1" :class="{ 'flex-grow-1': !isDesktopSidebar }">
             <span class="month-label flex-grow-1">{{ currentMonthDisplay }}</span>
 
             <VTooltip v-if="!isCurrentMonth" placement="top" :delay="{ show: 50, hide: 0 }" distance="10" class="d-flex align-items-center ms-1">
@@ -39,13 +23,29 @@
                 </button>
             </div>
         </div>
+
+        <!-- Right: Timeline toggle (only visible at >=1400px) -->
+        <Transition name="timeline-toggle">
+            <div v-if="isDesktopSidebar" class="timeline-toggle-section">
+                <button
+                    type="button"
+                    class="btn btn-icon-ghost d-flex align-items-center gap-2"
+                    :title="calendarSettings.timelineSidebarCollapsed ? 'Show Timeline' : 'Hide Timeline'"
+                    @click="calendarSettings.toggleTimelineSidebarCollapsed"
+                >
+                    <span class="timeline-toggle-label">{{ calendarSettings.timelineSidebarCollapsed ? 'Show Timeline' : 'Hide Timeline' }}</span>
+                    <PanelRightOpen v-if="calendarSettings.timelineSidebarCollapsed" :size="18" />
+                    <PanelRightClose v-else :size="18" />
+                </button>
+            </div>
+        </Transition>
     </div>
 </template>
 
 <script setup lang="ts">
 import { breakpointsBootstrapV5, useBreakpoints } from '@vueuse/core';
 import dayjs from 'dayjs';
-import { Calendar, ChevronLeft, ChevronRight, PanelLeftClose, PanelLeftOpen, Undo2 } from 'lucide-vue-next';
+import { Calendar, ChevronLeft, ChevronRight, PanelRightClose, PanelRightOpen, Undo2 } from 'lucide-vue-next';
 import { computed } from 'vue';
 
 import { useUrlSync } from '@/composables/useUrlSync';
@@ -165,6 +165,6 @@ const goToCurrentMonth = () => {
 .timeline-toggle-enter-from,
 .timeline-toggle-leave-to {
     opacity: 0;
-    transform: translateX(-10px);
+    transform: translateX(10px);
 }
 </style>

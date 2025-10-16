@@ -1,7 +1,22 @@
 <template>
     <div class="container app-container">
         <div class="page-layout" :class="{ 'sidebar-layout': isXxlScreenSize }">
-            <!-- Timeline Sidebar (left at >=1400px, below calendar at <1400px) -->
+            <!-- Calendar Section -->
+            <div class="calendar-wrapper pt-1">
+                <CollapsibleSection title="Calendar" storage-key="main/calendar-section" class="calendar-section" :hide-header="isXxlScreenSize">
+                    <template #icon>
+                        <CalendarRange :size="18" />
+                    </template>
+                    <!-- Month Navigation Header -->
+                    <CalendarHeader />
+
+                    <!-- Calendar Grid Component -->
+                    <!-- Main Calendar Grid -->
+                    <CalendarGrid />
+                </CollapsibleSection>
+            </div>
+
+            <!-- Timeline Sidebar (right at >=1400px, below calendar at <1400px) -->
             <div class="timeline-wrapper pt-1" :class="{ 'sidebar-collapsed': isXxlScreenSize && calendarSettings.timelineSidebarCollapsed }">
                 <!-- Timeline content -->
                 <div v-if="!isXxlScreenSize || !calendarSettings.timelineSidebarCollapsed" class="timeline-content">
@@ -17,21 +32,6 @@
                         <EventTimeline :is-sidebar-mode="isXxlScreenSize" />
                     </CollapsibleSection>
                 </div>
-            </div>
-
-            <!-- Calendar Section -->
-            <div class="calendar-wrapper pt-1">
-                <CollapsibleSection title="Calendar" storage-key="main/calendar-section" class="calendar-section" :hide-header="isXxlScreenSize">
-                    <template #icon>
-                        <CalendarRange :size="18" />
-                    </template>
-                    <!-- Month Navigation Header -->
-                    <CalendarHeader />
-
-                    <!-- Calendar Grid Component -->
-                    <!-- Main Calendar Grid -->
-                    <CalendarGrid />
-                </CollapsibleSection>
             </div>
         </div>
 
@@ -362,12 +362,12 @@ onUnmounted(() => {
         gap: 0;
     }
 
-    /* In sidebar layout, timeline comes first (left) */
-    .page-layout.sidebar-layout .timeline-wrapper {
+    /* In sidebar layout, calendar comes first (left), timeline second (right) */
+    .page-layout.sidebar-layout .calendar-wrapper {
         order: 1;
     }
 
-    .page-layout.sidebar-layout .calendar-wrapper {
+    .page-layout.sidebar-layout .timeline-wrapper {
         order: 2;
     }
 
