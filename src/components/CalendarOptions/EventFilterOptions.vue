@@ -198,27 +198,40 @@ const eventGroups = computed(() => {
 
 // Hidden events management
 const hiddenEvents = computed(() => {
-    return eventFilter.hiddenEventIds
-        .map(eventId => {
-            const event = eventsStore.getEventById(eventId);
-            if (!event) return null;
+    return eventFilter.hiddenEventIds.map(eventId => {
+        const event = eventsStore.getEventById(eventId);
 
-            const typeInfo = getEventTypeInfo(event.eventType);
-            const metadata = eventsStore.eventMetadata[eventId];
-
+        if (!event) {
+            // Event no longer exists in data - show fallback card with ID
             return {
                 id: eventId,
-                name: metadata?.displayName || event.name || event.eventID,
-                typeName: typeInfo.name,
-                color: typeInfo.color,
-                event,
+                name: eventId,
+                typeName: 'old/missing event data',
+                color: '#6c757d', // Bootstrap secondary gray
+                event: null,
             };
-        })
-        .filter((item): item is NonNullable<typeof item> => item !== null);
+        }
+
+        const typeInfo = getEventTypeInfo(event.eventType);
+        const metadata = eventsStore.eventMetadata[eventId];
+
+        return {
+            id: eventId,
+            name: metadata?.displayName || event.name || event.eventID,
+            typeName: typeInfo.name,
+            color: typeInfo.color,
+            event,
+        };
+    });
 });
 
 function showHiddenEvent(eventId: string, eventName: string, event: any) {
-    showEventByIdWithToast(eventId, eventName, event);
+    if (event) {
+        showEventByIdWithToast(eventId, eventName, event);
+    } else {
+        // Event no longer exists, just remove from hidden list without toast
+        eventFilter.showEventById(eventId);
+    }
 }
 </script>
 
