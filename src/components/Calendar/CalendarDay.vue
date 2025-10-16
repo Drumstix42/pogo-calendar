@@ -146,7 +146,10 @@
                                     <EventToggleButton :event-type="event.eventType" @hide="hideEventType" />
                                 </div> -->
                             </div>
-                            <div v-if="getEventTime(event)" class="event-time">{{ getEventTime(event) }}</div>
+                            <div class="event-time">
+                                {{ formatEventTime(event.start) }}
+                                <span v-if="isToday && eventsStore.eventMetadata[event.eventID]?.isPastEvent" class="event-ended-label">Ended</span>
+                            </div>
                             <PokemonImages
                                 v-if="calendarSettings.useSingleDayEventSprites"
                                 :event="event"
@@ -394,17 +397,6 @@ const shouldShowBadge = (event: PogoEvent): boolean => {
 /* const getEventColor = (event: PogoEvent): string => {
     return getEventTypeInfo(event.eventType).color;
 }; */
-
-const getEventTime = (event: PogoEvent): string => {
-    // Check if this is a multi-day event
-    if (!isSameDayEvent(event)) {
-        // For multi-day events, don't show time
-        return '';
-    }
-
-    // For single-day events, show the start time
-    return formatEventTime(event.start);
-};
 
 /* const hideEventType = (eventType: EventTypeKey): void => {
     hideEventTypeWithToast(eventType);
@@ -999,6 +991,14 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
 
 [data-bs-theme='dark'] .single-day-event .event-time {
     color: #adb5bd;
+}
+
+.event-ended-label {
+    margin-left: 3px;
+    font-size: 0.65rem;
+    font-weight: 500;
+    color: color-mix(in srgb, var(--bs-secondary-color) 70%, var(--bs-danger) 50%);
+    font-style: italic;
 }
 
 .event-name-container {

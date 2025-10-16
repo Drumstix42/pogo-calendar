@@ -180,6 +180,7 @@ export const useEventsStore = defineStore('events', () => {
 
         try {
             const response = await fetch(SCRAPED_EVENTS_URL);
+            // const response = await fetch('/planning/events2.json');
 
             if (!response.ok) {
                 throw new Error(`Failed to fetch events: ${response.status} ${response.statusText}`);
