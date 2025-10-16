@@ -712,7 +712,7 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     &:not(:hover) {
         .event-content {
             opacity: 0.6;
-            filter: grayscale(30%);
+            filter: grayscale(50%);
 
             .event-name {
                 text-shadow: none;
@@ -722,6 +722,11 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
 }
 
 .multi-day-event-bar.event-past {
+    .pokemon-images {
+        transition:
+            opacity 0.3s ease,
+            filter 0.3s ease;
+    }
     .event-name {
         transition:
             opacity 0.3s ease,
@@ -735,7 +740,7 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
         }
         .pokemon-images {
             opacity: 0.9;
-            filter: grayscale(100%);
+            filter: grayscale(80%);
         }
     }
 }
