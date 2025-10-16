@@ -6,8 +6,8 @@
             @click="toggleCollapsed"
             role="button"
             tabindex="0"
-            @keydown.enter="toggleCollapsed"
-            @keydown.space="toggleCollapsed"
+            @keydown.enter.prevent="toggleCollapsed"
+            @keydown.space.prevent="toggleCollapsed"
         >
             <div v-if="$slots.icon" class="section-icon">
                 <slot name="icon" />
