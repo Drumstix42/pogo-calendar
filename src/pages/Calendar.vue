@@ -29,12 +29,8 @@
                     <CalendarHeader />
 
                     <!-- Calendar Grid Component -->
-                    <div class="row">
-                        <div class="col-12">
-                            <!-- Main Calendar Grid -->
-                            <CalendarGrid />
-                        </div>
-                    </div>
+                    <!-- Main Calendar Grid -->
+                    <CalendarGrid />
                 </CollapsibleSection>
             </div>
         </div>
@@ -48,8 +44,15 @@
                 Nintendo, Creatures, and GAMEFREAK. <br />All images and names are owned and trademarked by Nintendo, Niantic, The Pokémon Company,
                 and GAMEFREAK and are property of their respective owners.
             </p>
+
             <p class="disclaimer-text mt-2">
-                This site does not use cookies, tracking, or advertisements of any kind. All preferences are stored via
+                Event data is powered by
+                <a class="link-secondary" href="https://leekduck.com/" target="_blank" rel="noopener noreferrer">Leekduck</a> via
+                <a class="link-secondary" href="https://github.com/bigfoott/ScrapedDuck" target="_blank" rel="noopener noreferrer">ScrapedDuck</a>.
+            </p>
+
+            <p class="disclaimer-text mt-2">
+                This site does not use cookies, tracking, or advertisements of any kind. All preferences are stored with
                 <a
                     class="link-secondary"
                     href="https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage"
@@ -57,7 +60,7 @@
                     rel="noopener noreferrer"
                     >localStorage</a
                 >
-                directly with your browser.
+                via your browser.
             </p>
         </footer>
 
@@ -334,7 +337,7 @@ onUnmounted(() => {
 .page-layout {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 0.25rem;
 }
 
 /* In vertical layout, calendar comes first */

@@ -9,7 +9,7 @@ export interface PokemonImageOptions {
 
 export interface PokemonImageData {
     name: string;
-    imageUrl: string;
+    imageUrl: string | null;
 }
 
 function extractPokemonNamesFromRaidHour(eventName: string): string[] {
@@ -210,15 +210,11 @@ export function getEventPokemonImages(event: PogoEvent, options?: PokemonImageOp
                         spriteUrl = getSpriteUrl(parsedData.pokemonName, undefined, options);
                     }
 
-                    if (spriteUrl) {
-                        images.push({ name: boss.name, imageUrl: spriteUrl });
-                    } else if (boss.image) {
-                        // Fallback to API image if sprite generation fails
-                        images.push({ name: boss.name, imageUrl: boss.image });
-                    }
-                } else if (boss.image) {
-                    // If we can't parse the boss name, use the API image
-                    images.push({ name: boss.name, imageUrl: boss.image });
+                    // Always add to images array, even if spriteUrl is null
+                    images.push({ name: boss.name, imageUrl: spriteUrl });
+                } else {
+                    // If we can't parse the boss name, try API image or use null
+                    images.push({ name: boss.name, imageUrl: boss.image || null });
                 }
             }
 
@@ -233,16 +229,14 @@ export function getEventPokemonImages(event: PogoEvent, options?: PokemonImageOp
             const isMega = getRaidSubType(event) === 'mega-raids';
             const suffix = isMega ? '-mega' : undefined;
             const spriteUrl = getSpriteUrl(pokemonName, suffix, options);
-            if (spriteUrl) {
-                return [{ name: pokemonName, imageUrl: spriteUrl }];
-            }
+            return [{ name: pokemonName, imageUrl: spriteUrl }];
         }
 
         // Final fallback to LeetDuck's provided images
         if (event.extraData?.raidbattles?.bosses) {
             const bosses = event.extraData.raidbattles.bosses;
             if (bosses.length > 0) {
-                return bosses.map(boss => ({ name: boss.name, imageUrl: boss.image })).filter(item => item.imageUrl);
+                return bosses.map(boss => ({ name: boss.name, imageUrl: boss.image || null }));
             }
         }
     }
@@ -265,9 +259,8 @@ export function getEventPokemonImages(event: PogoEvent, options?: PokemonImageOp
                         spriteUrl = getSpriteUrl(parsedData.pokemonName, undefined, options);
                     }
 
-                    if (spriteUrl) {
-                        images.push({ name: pokemonNameString, imageUrl: spriteUrl });
-                    }
+                    // Always add to images array, even if spriteUrl is null
+                    images.push({ name: pokemonNameString, imageUrl: spriteUrl });
                 }
             }
 
@@ -296,9 +289,8 @@ export function getEventPokemonImages(event: PogoEvent, options?: PokemonImageOp
                     spriteUrl = getSpriteUrl(parsedData.pokemonName, undefined, options);
                 }
 
-                if (spriteUrl) {
-                    return [{ name: pokemonNameString, imageUrl: spriteUrl }];
-                }
+                // Always return, even if spriteUrl is null
+                return [{ name: pokemonNameString, imageUrl: spriteUrl }];
             }
         }
     }
@@ -308,14 +300,8 @@ export function getEventPokemonImages(event: PogoEvent, options?: PokemonImageOp
         const pokemonName = extractPokemonNameFromMaxMonday(formatEventName(event.name));
         if (pokemonName) {
             const spriteUrl = getSpriteUrl(pokemonName, undefined, options);
-            if (spriteUrl) {
-                return [{ name: pokemonName, imageUrl: spriteUrl }];
-            } else {
-                // If sprite generation fails, fall back to event image
-                if (event.image) {
-                    return [{ name: pokemonName, imageUrl: event.image }];
-                }
-            }
+            // Always return, even if spriteUrl is null (let component handle placeholder)
+            return [{ name: pokemonName, imageUrl: spriteUrl }];
         }
     }
 
@@ -328,22 +314,14 @@ export function getEventPokemonImages(event: PogoEvent, options?: PokemonImageOp
             // Handle multiple Pokémon (like Plusle and Minun)
             for (const pokemon of event.extraData.spotlight.list) {
                 const spriteUrl = getSpriteUrl(pokemon.name, undefined, options);
-                if (spriteUrl) {
-                    images.push({ name: pokemon.name, imageUrl: spriteUrl });
-                } else if (pokemon.image) {
-                    // Fallback to API image if sprite generation fails
-                    images.push({ name: pokemon.name, imageUrl: pokemon.image });
-                }
+                // Always add to images array, even if spriteUrl is null
+                images.push({ name: pokemon.name, imageUrl: spriteUrl });
             }
         } else if (event.extraData.spotlight.name) {
             // Handle single Pokémon
             const spriteUrl = getSpriteUrl(event.extraData.spotlight.name, undefined, options);
-            if (spriteUrl) {
-                images.push({ name: event.extraData.spotlight.name, imageUrl: spriteUrl });
-            } else if (event.extraData.spotlight.image) {
-                // Fallback to API image
-                images.push({ name: event.extraData.spotlight.name, imageUrl: event.extraData.spotlight.image });
-            }
+            // Always add to images array, even if spriteUrl is null
+            images.push({ name: event.extraData.spotlight.name, imageUrl: spriteUrl });
         } else if (event.extraData.spotlight.image) {
             // Last fallback - just use the API image (we may not have the name in this case)
             images.push({ name: 'Spotlight Pokemon', imageUrl: event.extraData.spotlight.image });
@@ -362,12 +340,8 @@ export function getEventPokemonImages(event: PogoEvent, options?: PokemonImageOp
         for (const spawn of spawns) {
             if (spawn.name) {
                 const spriteUrl = getSpriteUrl(spawn.name, undefined, options);
-                if (spriteUrl) {
-                    images.push({ name: spawn.name, imageUrl: spriteUrl });
-                } else if (spawn.image) {
-                    // Fallback to API image if sprite generation fails
-                    images.push({ name: spawn.name, imageUrl: spawn.image });
-                }
+                // Always add to images array, even if spriteUrl is null
+                images.push({ name: spawn.name, imageUrl: spriteUrl });
             }
         }
 
@@ -404,7 +378,12 @@ export function getEventPokemonImages(event: PogoEvent, options?: PokemonImageOp
             const commaParts = pokemonNameString.split(',').map(part => part.trim());
 
             for (let i = 0; i < commaParts.length; i++) {
-                const part = commaParts[i];
+                let part = commaParts[i];
+
+                // Strip leading "and " if present
+                if (part.toLowerCase().startsWith('and ')) {
+                    part = part.substring(4).trim();
+                }
 
                 if (i === commaParts.length - 1 && part.includes(' and ')) {
                     // Last part might contain "and" - split it
@@ -442,9 +421,9 @@ export function getEventPokemonImages(event: PogoEvent, options?: PokemonImageOp
                         spriteUrl = getSpriteUrl(parsedData.pokemonName, undefined, options);
                     }
 
-                    if (spriteUrl) {
-                        images.push({ name: name, imageUrl: spriteUrl });
-                    }
+                    // Always add to images array, even if spriteUrl is null
+                    // This ensures all Pokemon from the event name are represented
+                    images.push({ name: name, imageUrl: spriteUrl });
                 }
             }
 

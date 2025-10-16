@@ -3,6 +3,7 @@
         <div v-if="Object.keys(categorizedEvents).length === 0" class="no-events">
             <p>No upcoming events found</p>
         </div>
+
         <TransitionGroup v-else name="fade" tag="div" class="timeline-events">
             <!-- Loop through categories in order -->
             <div v-for="category in eventCategories" :key="category.key" class="event-category">

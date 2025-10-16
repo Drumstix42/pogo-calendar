@@ -20,8 +20,8 @@
             </div>
 
             <button class="btn btn-icon-ghost btn-sm collapse-toggle" aria-label="Toggle section">
-                <ChevronDown v-if="isCollapsed" :size="16" class="transition-transform" />
-                <ChevronUp v-else :size="16" class="transition-transform" />
+                <ChevronDown v-if="isCollapsed" :size="20" class="transition-transform" />
+                <ChevronUp v-else :size="20" class="transition-transform" />
             </button>
         </div>
 
@@ -83,7 +83,7 @@ const toggleCollapsed = () => {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.5rem 0.8rem;
+    padding: 0.3rem 0.8rem;
     cursor: pointer;
     background-color: var(--bs-tertiary-bg);
     border-bottom: 1px solid var(--bs-border-color);
@@ -137,7 +137,7 @@ const toggleCollapsed = () => {
 .collapse-enter-active,
 .collapse-leave-active {
     transition: all 0.3s ease;
-    overflow: hidden;
+    /* overflow: hidden; */
 }
 
 .collapse-enter-from,

@@ -15,6 +15,7 @@
                         :class="{
                             'has-dynamax-overlay': showDynamaxOverlay,
                             'has-shadow-effect': showShadowEffect,
+                            'placeholder-container': !pokemonData.imageUrl,
                         }"
                     >
                         <div v-if="showDynamaxOverlay" class="dynamax-overlay">
@@ -24,17 +25,19 @@
                             <img src="/images/overlay/shadow-fire.svg" alt="Shadow effect" class="shadow-fire" />
                         </div>
                         <img
+                            v-if="pokemonData.imageUrl && !pokemonData.hasError"
                             :src="pokemonData.imageUrl"
                             :alt="`${eventName} Pokemon ${index + 1}`"
                             class="pokemon-icon"
                             :style="{ height: `${height}px`, width: `${height}px` }"
-                            @error="handleImageError"
+                            @error="() => handleImageError(index)"
                         />
+                        <BadgeQuestionMark v-else class="placeholder-icon" :size="height" />
                     </div>
 
                     <template #popper>
                         <div class="tooltip-text">
-                            {{ pokemonData.name }}
+                            {{ pokemonData.name }}{{ !pokemonData.imageUrl || pokemonData.hasError ? ' (missing sprite)' : '' }}
                         </div>
                     </template>
                 </VTooltip>
@@ -62,17 +65,17 @@
             </div>
 
             <template #popper>
-                <div class="tooltip-text">Missing sprite</div>
+                <div class="tooltip-text">Unknown pokemon</div>
             </template>
         </VTooltip>
     </div>
 </template>
 
 <script setup lang="ts">
-import { CircleHelpIcon } from 'lucide-vue-next';
-import { computed } from 'vue';
+import { BadgeQuestionMark, CircleHelpIcon } from 'lucide-vue-next';
+import { computed, ref } from 'vue';
 
-import { getEventPokemonImages } from '@/utils/eventPokemon';
+import { type PokemonImageData, getEventPokemonImages } from '@/utils/eventPokemon';
 import { type PogoEvent, getRaidSubType } from '@/utils/eventTypes';
 
 interface Props {
@@ -93,13 +96,20 @@ const props = withDefaults(defineProps<Props>(), {
     showTooltips: false,
 });
 
-const pokemonImages = computed(() => getEventPokemonImages(props.event, { useAnimated: props.useAnimated }));
+interface ExtendedPokemonImageData extends PokemonImageData {
+    hasError?: boolean;
+}
 
-const displayedImages = computed(() => {
-    if (props.limit === undefined || props.limit <= 0) {
-        return pokemonImages.value;
-    }
-    return pokemonImages.value.slice(0, props.limit);
+const pokemonImages = computed(() => getEventPokemonImages(props.event, { useAnimated: props.useAnimated }));
+const imageErrors = ref<Set<number>>(new Set());
+
+const displayedImages = computed((): ExtendedPokemonImageData[] => {
+    const images = props.limit === undefined || props.limit <= 0 ? pokemonImages.value : pokemonImages.value.slice(0, props.limit);
+
+    return images.map((img, index) => ({
+        ...img,
+        hasError: imageErrors.value.has(index),
+    }));
 });
 
 const shouldShowMoreIndicator = computed(() => {
@@ -125,12 +135,9 @@ const shouldShowPlaceholder = computed(() => {
 const showDynamaxOverlay = computed(() => props.event.eventType === 'max-mondays');
 const showShadowEffect = computed(() => getRaidSubType(props.event) === 'shadow-raids');
 
-const handleImageError = (event: Event): void => {
-    const target = event.target as HTMLImageElement;
-    if (target) {
-        target.style.display = 'none';
-    }
-};
+function handleImageError(index: number): void {
+    imageErrors.value.add(index);
+}
 </script>
 
 <style scoped>

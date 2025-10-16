@@ -1,5 +1,5 @@
 <template>
-    <div class="calendar-grid">
+    <div class="calendar-grid mb-2">
         <!-- Calendar Grid -->
         <div class="calendar-grid-container" ref="calendarGridRef">
             <!-- Day Headers -->
