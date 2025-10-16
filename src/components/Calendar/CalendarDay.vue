@@ -137,7 +137,7 @@
                         @mouseleave="debouncedClearEventIDHighlight"
                         @click="handleEventClick(event)"
                     >
-                        <div class="event-dot" :style="{ backgroundColor: eventsStore.eventMetadata[event.eventID]?.color }"></div>
+                        <!-- <div class="event-dot" :style="{ backgroundColor: eventsStore.eventMetadata[event.eventID]?.color }"></div> -->
                         <div class="event-content">
                             <div class="event-name-container">
                                 <div class="event-name">{{ getEventDisplayName(event) }}</div>
@@ -147,6 +147,7 @@
                                 </div> -->
                             </div>
                             <div class="event-time">
+                                <div class="event-dot" :style="{ backgroundColor: eventsStore.eventMetadata[event.eventID]?.color }"></div>
                                 {{ formatEventTime(event.start) }}
                                 <span v-if="isToday && eventsStore.eventMetadata[event.eventID]?.isPastEvent" class="event-ended-label">Ended</span>
                             </div>
@@ -538,11 +539,14 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     let endPositionPercentage: number;
     const spanDays = actualEndDay.diff(today, 'day') + 1;
 
-    // If the event ends on the last day we're spanning to, check if it ends at a specific time
+    // Calculate end position based on whether event ends within this week
     if (eventEndDay.isSame(actualEndDay, 'day') && eventEndDay.isSameOrBefore(weekEndDay, 'day')) {
-        // Event ends on the final day - calculate end position as total hours from rendering start
-        const totalHours = eventEnd.diff(today, 'hour', true);
-        endPositionPercentage = (totalHours / 24) * 100;
+        // Event ends on the final day within this week - calculate precise position
+        // Use calendar day difference to avoid DST issues when crossing time zone transitions
+        const daysDiff = eventEndDay.diff(today, 'day');
+        const hoursIntoFinalDay = eventEnd.hour() + eventEnd.minute() / 60;
+        const totalDays = daysDiff + hoursIntoFinalDay / 24;
+        endPositionPercentage = totalDays * 100;
     } else {
         // Event continues beyond the week or ends at day boundary
         endPositionPercentage = spanDays * 100;
@@ -666,7 +670,7 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     align-items: center;
     width: 100%;
     height: 100%;
-    padding-left: 4px;
+    padding-left: 2px;
     padding-right: 2px;
     position: absolute;
     top: 0;
@@ -675,6 +679,18 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     bottom: 0;
     gap: 4px;
     transform: translate3d(0, 0, 0); /* Fixes some rendering issues in Chrome */
+
+    @media (min-width: 425px) {
+        padding-left: 4px;
+    }
+}
+
+.start-cap .multi-day-event-bar--inner {
+    padding-left: 3px;
+}
+
+.end-cap .multi-day-event-bar--inner {
+    padding-right: 3px;
 }
 
 :deep(.multi-day-event-bar--inner .pokemon-images) {
@@ -683,11 +699,15 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
 
 .multi-day-event-bar .event-name {
     overflow: hidden;
-    text-overflow: ellipsis;
+    text-overflow: clip;
     white-space: nowrap;
     font-weight: 400;
     line-height: 1.2;
-    min-width: 28px;
+    min-width: min(28px, 100%);
+
+    @media (min-width: 768px) {
+        text-overflow: ellipsis;
+    }
 }
 
 .multi-day-event-bar:hover {
@@ -751,7 +771,7 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     justify-content: center;
     flex-shrink: 1;
     min-width: 15px;
-    height: 15px;
+    height: 14px;
     padding: 0 4px;
     margin-left: -2px;
     font-size: 0.65rem;
@@ -925,24 +945,48 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     min-height: 40px;
     display: flex;
     align-items: flex-start;
-    gap: 5px;
-    padding: 2px 1px 2px 3px;
+    /* gap: 2px; */
+    padding: 2px 0 2px 1px;
     border-radius: 3px;
     cursor: pointer;
     min-width: 0;
     overflow: hidden;
+
+    @media (min-width: 375px) {
+        /* gap: 4px; */
+        padding: 2px 1px 2px 1px;
+    }
+
+    @media (min-width: 425px) {
+        /* gap: 4px; */
+        padding: 2px 1px 2px 2px;
+    }
+
+    @media (min-width: 768px) {
+        /* gap: 4px; */
+        padding: 2px 1px 2px 4px;
+    }
 }
 
 .single-day-event:hover {
     background-color: var(--calendar-hover-bg);
 }
 
+.single-day-event :deep(.pokemon-images.wrap-multiple) {
+    min-width: max(80px, 100%);
+}
+
 .event-dot {
+    margin-top: 3px;
     width: 8px;
     height: 8px;
     border-radius: 50%;
     flex-shrink: 0;
-    margin-top: 4px; /* Align with first line of text */
+
+    @media (min-width: 425px) {
+        width: 9px;
+        height: 9px;
+    }
 }
 
 .event-content {
@@ -955,14 +999,22 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
 }
 
 .event-content :deep(.pokemon-images) {
-    margin-left: -6px;
+    margin-left: 0;
+    max-height: 40px;
 }
 
-/* @media (min-width: 768px) {
+@media (min-width: 375px) {
     .event-content :deep(.pokemon-images) {
-        margin-left: -6px;
+        margin-left: 2px;
     }
-} */
+}
+
+@media (min-width: 576px) {
+    .event-content :deep(.pokemon-images) {
+        margin-left: 2px;
+        max-height: none;
+    }
+}
 
 .single-day-event .event-name {
     font-size: 0.7rem;
@@ -984,14 +1036,38 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
 
 .single-day-event .event-time {
     flex-shrink: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    column-gap: 1px;
+    row-gap: 3px;
     font-size: 0.7rem;
     font-weight: 600;
     color: #444;
     line-height: 0.8rem;
     overflow: hidden;
     text-overflow: ellipsis;
-    white-space: nowrap;
-    margin-bottom: 8px;
+    margin-top: 1px;
+    margin-bottom: 7px;
+
+    @media (min-width: 375px) {
+        column-gap: 2px;
+    }
+
+    @media (min-width: 576px) {
+        column-gap: 3px;
+    }
+
+    .event-dot {
+        display: inline-flex;
+        margin-top: -1px;
+        margin-right: 1px;
+        margin-left: 1px;
+
+        @media (min-width: 375px) {
+            margin-left: 1px;
+        }
+    }
 }
 
 [data-bs-theme='dark'] .single-day-event .event-time {
@@ -1001,6 +1077,7 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
 .event-ended-label {
     margin-left: 3px;
     font-size: 0.65rem;
+    line-height: 1;
     font-weight: 500;
     color: color-mix(in srgb, var(--bs-secondary-color) 70%, var(--bs-danger) 50%);
     font-style: italic;

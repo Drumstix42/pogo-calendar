@@ -35,9 +35,9 @@ export function decodeHtmlEntities(text: string): string {
     return decoded;
 }
 
-/** Removes "Pokémon GO " or "Pokemon GO " prefix from event names */
+/** Removes "Pokémon " or "Pokemon " prefix from event names */
 function removePokemonGoPrefix(text: string): string {
-    return text.replace(/^(pokémon go |pokemon go )/i, '');
+    return text.replace(/^(pokémon |pokemon )/i, '');
 }
 
 export function formatEventName(text: string) {

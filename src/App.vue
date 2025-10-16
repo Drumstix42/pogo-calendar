@@ -3,7 +3,7 @@
         <div class="navbar-wrapper">
             <nav class="navbar navbar-expand-lg border-bottom page-header">
                 <div class="container app-container" style="max-width: none">
-                    <a class="navbar-brand" href="#">
+                    <a class="navbar-brand" href="#" @click.prevent="goHome">
                         <img src="/favicon.svg" alt="Calendar" width="24" height="24" class="me-2" />
                         <strong>PoGO Event Calendar</strong>
                     </a>
@@ -33,8 +33,10 @@
 </template>
 
 <script setup lang="ts">
+import dayjs from 'dayjs';
 import { Settings } from 'lucide-vue-next';
 
+import { useUrlSync } from '@/composables/useUrlSync';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { useThemeStore } from '@/stores/theme';
 
@@ -44,6 +46,14 @@ import ToastContainer from '@/components/Toast/ToastContainer.vue';
 useThemeStore();
 
 const calendarSettings = useCalendarSettingsStore();
+const { urlMonth, urlYear } = useUrlSync();
+
+function goHome() {
+    const now = dayjs();
+    urlMonth.value = now.month();
+    urlYear.value = now.year();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
 </script>
 
 <style scoped>
@@ -117,8 +127,17 @@ const calendarSettings = useCalendarSettingsStore();
         font-size 0.3s ease;
 }
 
-.navbar-brand:hover {
+.navbar-brand:active {
     color: #e74c3c !important;
+}
+
+@media (pointer: fine) {
+    .navbar-brand:hover {
+        color: #e74c3c !important;
+    }
+    .navbar-brand:active {
+        color: #cf4030 !important;
+    }
 }
 
 .btn-options-toggle {

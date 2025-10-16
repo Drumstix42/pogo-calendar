@@ -194,7 +194,7 @@ function handleImageError(index: number): void {
 .dynamax-overlay,
 .shadow-overlay {
     position: absolute;
-    top: 0;
+    top: -2px;
     left: 0;
     right: 0;
     /* bottom: 0; */
@@ -269,9 +269,9 @@ function handleImageError(index: number): void {
     width: auto; /* Let width be automatic based on aspect ratio */
 }
 
-.has-dynamax-overlay .pokemon-icon {
+/* .has-dynamax-overlay .pokemon-icon {
     margin-top: 4px;
-}
+} */
 
 .placeholder-container {
     opacity: 0.6;
@@ -283,7 +283,7 @@ function handleImageError(index: number): void {
     z-index: 2;
 }
 
-.has-dynamax-overlay .placeholder-icon {
+/* .has-dynamax-overlay .placeholder-icon {
     margin-top: 4px;
-}
+} */
 </style>
