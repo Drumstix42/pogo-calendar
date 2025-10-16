@@ -13,6 +13,31 @@
                     <!-- Calendar Grid Component -->
                     <!-- Main Calendar Grid -->
                     <CalendarGrid />
+
+                    <!-- Filter Summary Button -->
+                    <div v-if="eventFilter.disabledEventTypeKeys.length > 0 || eventFilter.hiddenEventIds.length > 0" class="filter-summary">
+                        <VTooltip placement="top" :delay="{ show: 50, hide: 0 }" distance="10" class="d-flex align-items-center ms-1">
+                            <template #popper>
+                                <div class="tooltip-text">Click to open Settings</div>
+                            </template>
+                            <button class="btn btn-icon-ghost" @click="openSettingsAndScrollToFilters" aria-label="Open settings to modify filters">
+                                <EyeOff :size="12" class="me-2" />
+                                <span class="filter-summary-text">
+                                    <span v-if="eventFilter.disabledEventTypeKeys.length > 0">
+                                        {{ eventFilter.disabledEventTypeKeys.length }} event type{{
+                                            eventFilter.disabledEventTypeKeys.length === 1 ? '' : 's'
+                                        }}
+                                        hidden
+                                    </span>
+                                    <span v-if="eventFilter.disabledEventTypeKeys.length > 0 && eventFilter.hiddenEventIds.length > 0"> • </span>
+                                    <span v-if="eventFilter.hiddenEventIds.length > 0">
+                                        {{ eventFilter.hiddenEventIds.length }} specific event{{ eventFilter.hiddenEventIds.length === 1 ? '' : 's' }}
+                                        hidden
+                                    </span>
+                                </span>
+                            </button>
+                        </VTooltip>
+                    </div>
                 </CollapsibleSection>
             </div>
 
@@ -52,7 +77,7 @@
             </p>
 
             <p class="disclaimer-text mt-2">
-                This site does not use cookies, tracking, or advertisements of any kind. All preferences are stored with
+                This site does not use cookies, tracking, or advertisements of any kind. All preferences are stored within
                 <a
                     class="link-secondary"
                     href="https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage"
@@ -60,7 +85,7 @@
                     rel="noopener noreferrer"
                     >localStorage</a
                 >
-                via your browser.
+                in your browser.
             </p>
         </footer>
 
@@ -100,13 +125,14 @@
 
 <script setup lang="ts">
 import { breakpointsBootstrapV5, useBreakpoints } from '@vueuse/core';
-import { CalendarRange, PanelTop } from 'lucide-vue-next';
-import { computed, onMounted, onUnmounted, watch, watchEffect } from 'vue';
+import { CalendarRange, EyeOff, PanelTop } from 'lucide-vue-next';
+import { computed, nextTick, onMounted, onUnmounted, watch, watchEffect } from 'vue';
 
 import { useEventFilterToasts } from '@/composables/useEventFilterToasts';
 import { useHideEventModal } from '@/composables/useHideEventModal';
 import { useUrlSync } from '@/composables/useUrlSync';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
+import { useEventFilterStore } from '@/stores/eventFilter';
 import { useEventsStore } from '@/stores/events';
 import { type EventTypeKey, isSameDayEvent } from '@/utils/eventTypes';
 
@@ -121,6 +147,7 @@ import CollapsibleSection from '@/components/CollapsibleSection.vue';
 
 const eventsStore = useEventsStore();
 const calendarSettings = useCalendarSettingsStore();
+const eventFilter = useEventFilterStore();
 const hideEventModal = useHideEventModal();
 const { hideEventTypeWithToast, hideEventByIdWithToast } = useEventFilterToasts();
 const { settingsOpen, openSettings, closeSettings, selectedEventId, clearEvent } = useUrlSync();
@@ -158,6 +185,31 @@ const selectedEventIsSingleDay = computed(() => {
     if (!selectedEvent.value) return false;
     return isSameDayEvent(selectedEvent.value);
 });
+
+function openSettingsAndScrollToFilters() {
+    const storageKey = 'calendarSettings/event-filters';
+
+    openSettings();
+
+    // Wait for the offcanvas to be rendered and animated
+    nextTick(() => {
+        setTimeout(() => {
+            // Check if section is collapsed and expand it first
+            if (calendarSettings.isCollapsibleSectionCollapsed(storageKey)) {
+                calendarSettings.toggleCollapsibleSection(storageKey);
+                // Wait for the expand animation to complete
+                setTimeout(() => {
+                    const element = document.getElementById('event-type-filters-section');
+                    element?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 300);
+            } else {
+                // Already expanded, just scroll
+                const element = document.getElementById('event-type-filters-section');
+                element?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }, 350); // Wait for offcanvas slide-in animation (300ms + buffer)
+    });
+}
 
 const handleCloseOptions = () => {
     closeSettings();
@@ -413,6 +465,18 @@ onUnmounted(() => {
         flex: 1;
         min-width: 0;
     }
+}
+
+.filter-summary {
+    display: flex;
+    justify-content: center;
+    margin-top: 0.5rem;
+}
+
+.filter-summary-text {
+    font-size: 0.7rem;
+    font-style: italic;
+    color: var(--bs-secondary-color);
 }
 
 .disclaimer-footer {

@@ -1,5 +1,10 @@
 <template>
-    <CollapsibleSection title="Event Type Filters" storage-key="calendarSettings/event-filters" class="flex-grow-section">
+    <CollapsibleSection
+        id="event-type-filters-section"
+        title="Event Type Filters"
+        storage-key="calendarSettings/event-filters"
+        class="flex-grow-section"
+    >
         <!-- Timeline filter toggle -->
         <div class="form-check form-switch">
             <input

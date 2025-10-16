@@ -15,12 +15,22 @@
             </VTooltip>
 
             <div class="d-flex align-items-center">
-                <button class="btn btn-icon-ghost btn-sm me-1" @click="goToPreviousMonth" :disabled="isPreviousDisabled">
-                    <ChevronLeft :size="24" />
-                </button>
-                <button class="btn btn-icon-ghost btn-sm" @click="goToNextMonth" :disabled="isNextDisabled">
-                    <ChevronRight :size="24" />
-                </button>
+                <VTooltip placement="top" :delay="{ show: 50, hide: 0 }" distance="10" class="d-flex align-items-center ms-1">
+                    <template #popper>
+                        <div class="tooltip-text">Previous month</div>
+                    </template>
+                    <button class="btn btn-icon-ghost btn-sm me-1" @click="goToPreviousMonth" :disabled="isPreviousDisabled">
+                        <ChevronLeft :size="24" />
+                    </button>
+                </VTooltip>
+                <VTooltip placement="top" :delay="{ show: 50, hide: 0 }" distance="10" class="d-flex align-items-center ms-1">
+                    <template #popper>
+                        <div class="tooltip-text">Next month</div>
+                    </template>
+                    <button class="btn btn-icon-ghost btn-sm" @click="goToNextMonth" :disabled="isNextDisabled">
+                        <ChevronRight :size="24" />
+                    </button>
+                </VTooltip>
             </div>
         </div>
 
