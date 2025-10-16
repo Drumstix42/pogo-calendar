@@ -367,13 +367,13 @@ const hasConflictInSlot = (event: PogoEvent, slotIndex: number, existingSlots: E
 .calendar-day-header {
     padding: 0.25rem;
     text-align: center;
-    font-weight: 600;
+    font-weight: 500;
     font-size: 0.875rem;
-    color: #495057;
+    color: #5a6169;
 }
 
 [data-bs-theme='dark'] .calendar-day-header {
-    color: #e9ecef;
+    color: #b7b9bb;
 }
 
 .calendar-day-header:nth-child(7n) {

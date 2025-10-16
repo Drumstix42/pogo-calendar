@@ -1,7 +1,7 @@
 <template>
     <div id="app">
         <div class="navbar-wrapper">
-            <nav class="navbar navbar-expand-lg border-bottom page-header" :class="{ 'navbar-scrolled': isScrolled }">
+            <nav class="navbar navbar-expand-lg border-bottom page-header">
                 <div class="container app-container" style="max-width: none">
                     <a class="navbar-brand" href="#">
                         <img src="/favicon.svg" alt="Calendar" width="24" height="24" class="me-2" />
@@ -33,9 +33,7 @@
 </template>
 
 <script setup lang="ts">
-import { useWindowScroll } from '@vueuse/core';
 import { Settings } from 'lucide-vue-next';
-import { computed } from 'vue';
 
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { useThemeStore } from '@/stores/theme';
@@ -46,11 +44,6 @@ import ToastContainer from '@/components/Toast/ToastContainer.vue';
 useThemeStore();
 
 const calendarSettings = useCalendarSettingsStore();
-
-const { y: scrollY } = useWindowScroll();
-const scrollThreshold = 10;
-
-const isScrolled = computed(() => scrollY.value > scrollThreshold);
 </script>
 
 <style scoped>
@@ -70,10 +63,7 @@ const isScrolled = computed(() => scrollY.value > scrollThreshold);
     align-items: center;
     transition: box-shadow 0.3s ease;
     padding: 0;
-
-    &.navbar-scrolled {
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 
     .container {
         display: flex;
@@ -93,7 +83,7 @@ const isScrolled = computed(() => scrollY.value > scrollThreshold);
     border-color: rgba(255, 255, 255, 0.08) !important;
 }
 
-[data-bs-theme='dark'] .page-header.navbar-scrolled {
+[data-bs-theme='dark'] .page-header {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
@@ -116,20 +106,15 @@ const isScrolled = computed(() => scrollY.value > scrollThreshold);
 
 .navbar-brand {
     color: var(--bs-navbar-brand-color, var(--bs-body-color));
-    font-size: 1rem;
+    font-size: 0.85rem;
+    font-weight: 500;
     line-height: 1;
-    font-weight: 600;
     display: flex;
     margin: 0;
     align-items: center;
     transition:
         color 0.2s ease,
         font-size 0.3s ease;
-}
-
-.navbar-scrolled .navbar-brand {
-    font-size: 0.85rem;
-    font-weight: 500;
 }
 
 .navbar-brand:hover {

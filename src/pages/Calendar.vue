@@ -158,10 +158,24 @@ const isMobile = breakpoints.smaller('md'); // < 768px
 const isXxlScreenSize = breakpoints.greaterOrEqual('xxl'); // >= 1400px
 // const isDesktop = breakpoints.greaterOrEqual('md'); // >= 768px
 
-// Sync settings with URL
-watch(settingsOpen, isOpen => {
-    calendarSettings.setOptionsExpanded(isOpen);
-});
+// Sync settings with URL - delay initial sync to allow animation
+let isInitialSync = true;
+watch(
+    settingsOpen,
+    isOpen => {
+        if (isInitialSync && isOpen) {
+            // Delay opening settings on page load to show animation
+            setTimeout(() => {
+                calendarSettings.setOptionsExpanded(isOpen);
+            }, 100);
+            isInitialSync = false;
+        } else {
+            calendarSettings.setOptionsExpanded(isOpen);
+            isInitialSync = false;
+        }
+    },
+    { immediate: true },
+);
 
 // Sync store changes back to URL (for programmatic opens)
 watch(
@@ -189,24 +203,16 @@ const selectedEventIsSingleDay = computed(() => {
 function openSettingsAndScrollToFilters() {
     const storageKey = 'calendarSettings/event-filters';
 
+    if (calendarSettings.isCollapsibleSectionCollapsed(storageKey)) {
+        calendarSettings.toggleCollapsibleSection(storageKey);
+    }
+
     openSettings();
 
-    // Wait for the offcanvas to be rendered and animated
     nextTick(() => {
         setTimeout(() => {
-            // Check if section is collapsed and expand it first
-            if (calendarSettings.isCollapsibleSectionCollapsed(storageKey)) {
-                calendarSettings.toggleCollapsibleSection(storageKey);
-                // Wait for the expand animation to complete
-                setTimeout(() => {
-                    const element = document.getElementById('event-type-filters-section');
-                    element?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }, 300);
-            } else {
-                // Already expanded, just scroll
-                const element = document.getElementById('event-type-filters-section');
-                element?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }
+            const element = document.getElementById('event-type-filters-section');
+            element?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }, 350); // Wait for offcanvas slide-in animation (300ms + buffer)
     });
 }
