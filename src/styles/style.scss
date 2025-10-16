@@ -75,6 +75,15 @@ small,
     font-size: 0.75em;
 }
 
+.tooltip-text {
+    font-size: 0.75rem;
+    line-height: 1.2;
+
+    &.white-space-nowrap {
+        white-space: nowrap;
+    }
+}
+
 /* Button styles */
 .btn {
     text-decoration: none;

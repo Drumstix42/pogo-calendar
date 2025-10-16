@@ -36,7 +36,7 @@
                     </div>
 
                     <template #popper>
-                        <div class="tooltip-text">
+                        <div class="tooltip-text white-space-nowrap">
                             {{ pokemonData.name }}{{ !pokemonData.imageUrl || pokemonData.hasError ? ' (missing sprite)' : '' }}
                         </div>
                     </template>
@@ -285,11 +285,5 @@ function handleImageError(index: number): void {
 
 .has-dynamax-overlay .placeholder-icon {
     margin-top: 4px;
-}
-
-.tooltip-text {
-    font-size: 0.75rem;
-    line-height: 1.2;
-    white-space: nowrap;
 }
 </style>

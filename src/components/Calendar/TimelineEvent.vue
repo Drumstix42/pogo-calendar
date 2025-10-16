@@ -56,6 +56,7 @@
 </template>
 
 <script setup lang="ts">
+import { breakpointsBootstrapV5, useBreakpoints } from '@vueuse/core';
 import { ChevronsDownUp, ChevronsUpDown } from 'lucide-vue-next';
 import { computed } from 'vue';
 
@@ -83,6 +84,9 @@ const emit = defineEmits<Emits>();
 const hideEventModal = useHideEventModal();
 const eventHighlight = useEventHighlightStore();
 
+const breakpoints = useBreakpoints(breakpointsBootstrapV5);
+const isDesktopSidebar = breakpoints.greaterOrEqual('xxl'); // >= 1400px
+
 function toggleActive() {
     emit('activate', props.event.eventID);
 }
@@ -99,7 +103,10 @@ function debouncedHighlightEventID(eventID: string) {
     }
 
     highlightTimeout = setTimeout(() => {
-        eventHighlight.highlightEventID(eventID);
+        // Only highlight calendar events when desktop sidebar is visible
+        if (isDesktopSidebar.value) {
+            eventHighlight.highlightEventID(eventID);
+        }
         highlightTimeout = null;
     }, 200);
 }
@@ -110,7 +117,10 @@ function debouncedClearEventIDHighlight() {
         highlightTimeout = null;
     }
 
-    eventHighlight.clearEventIDHighlight();
+    // Only clear calendar highlights when desktop sidebar is visible
+    if (isDesktopSidebar.value) {
+        eventHighlight.clearEventIDHighlight();
+    }
 }
 
 // Event type color and name

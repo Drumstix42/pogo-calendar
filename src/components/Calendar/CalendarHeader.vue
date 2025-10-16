@@ -17,13 +17,15 @@
         </Transition>
 
         <!-- Right: Month navigation -->
-        <div class="d-flex align-items-center flex-wrap gap-1" :class="{ 'ms-auto': isDesktopSidebar }">
-            <VTooltip placement="top" :delay="{ show: 50, hide: 0 }" distance="10" class="d-flex align-items-center">
+        <div class="d-flex align-items-center flex-wrap gap-1" :class="{ 'ms-auto': isDesktopSidebar, 'flex-grow-1': !isDesktopSidebar }">
+            <span class="month-label flex-grow-1">{{ currentMonthDisplay }}</span>
+
+            <VTooltip v-if="!isCurrentMonth" placement="top" :delay="{ show: 50, hide: 0 }" distance="10" class="d-flex align-items-center ms-1">
                 <template #popper>
-                    <div class="tooltip-text">Current month</div>
+                    <div class="tooltip-text">Go to current month</div>
                 </template>
                 <button class="btn btn-icon-ghost btn-sm" :class="{ 'disabled-subtle': isCurrentMonth }" @click="goToCurrentMonth">
-                    <CalendarSync v-if="!isCurrentMonth" :size="22" />
+                    <Undo2 v-if="!isCurrentMonth" :size="22" class="calendar-reset-icon" />
                     <Calendar v-else :size="22" />
                 </button>
             </VTooltip>
@@ -36,8 +38,6 @@
                     <ChevronRight :size="24" />
                 </button>
             </div>
-
-            <span class="month-label text-center">{{ currentMonthDisplay }}</span>
         </div>
     </div>
 </template>
@@ -45,7 +45,7 @@
 <script setup lang="ts">
 import { breakpointsBootstrapV5, useBreakpoints } from '@vueuse/core';
 import dayjs from 'dayjs';
-import { Calendar, CalendarSync, ChevronLeft, ChevronRight, PanelLeftClose, PanelLeftOpen } from 'lucide-vue-next';
+import { Calendar, ChevronLeft, ChevronRight, PanelLeftClose, PanelLeftOpen, Undo2 } from 'lucide-vue-next';
 import { computed } from 'vue';
 
 import { useUrlSync } from '@/composables/useUrlSync';
@@ -149,6 +149,11 @@ const goToCurrentMonth = () => {
 .timeline-toggle-label {
     font-size: 0.85rem;
     font-weight: 500;
+}
+
+.calendar-reset-icon {
+    /* subtle undo light blue color using rgba */
+    color: rgba(91, 192, 222, 0.7);
 }
 
 /* Vue Transition for timeline toggle */

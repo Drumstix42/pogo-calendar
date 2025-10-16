@@ -53,9 +53,4 @@ const eventTypeName = computed(() => getEventTypeInfo(props.eventType).name);
     background-color: rgba(0, 0, 0, 0.6);
     color: rgba(255, 255, 255, 0.9);
 }
-
-.tooltip-text {
-    font-size: 0.75rem;
-    line-height: 1.2;
-}
 </style>
