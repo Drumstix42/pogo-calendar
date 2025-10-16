@@ -71,17 +71,32 @@ export function getPokemonSpriteUrl(pokemonNameOrId: string | number, suffix?: s
         urlName += suffix;
     }
 
-    // Check if this static sprite exists before generating the URL
-    if (!isValidStaticSprite(urlName)) {
-        // Only log if we haven't seen this missing sprite before
-        if (!loggedMissingStaticSprites.has(urlName)) {
-            console.info('Could not find static sprite for:', pokemonNameOrId);
-            loggedMissingStaticSprites.add(urlName);
-        }
-        return null;
+    // Check if this static sprite exists in primary source
+    if (isValidStaticSprite(urlName)) {
+        return `https://raw.githubusercontent.com/mgrann03/pokemon-resources/refs/heads/main/graphics/pogo/${urlName}.png`;
     }
 
-    return `https://raw.githubusercontent.com/mgrann03/pokemon-resources/refs/heads/main/graphics/pogo/${urlName}.png`;
+    // Fallback to PokeMiners for base forms only (no suffixes)
+    if (!suffix && typeof pokemonNameOrId !== 'string') {
+        // We have a numeric ID, try PokeMiners as fallback
+        return `https://raw.githubusercontent.com/PokeMiners/pogo_assets/master/Images/Pokemon/Addressable%20Assets/pm${pokemonNameOrId}.icon.png`;
+    }
+
+    // If we have a name, try to get the ID for PokeMiners fallback
+    if (!suffix && typeof pokemonNameOrId === 'string') {
+        const pokemonId = getPokemonId(pokemonNameOrId);
+        if (pokemonId) {
+            return `https://raw.githubusercontent.com/PokeMiners/pogo_assets/master/Images/Pokemon/Addressable%20Assets/pm${pokemonId}.icon.png`;
+        }
+    }
+
+    // Only log if we haven't seen this missing sprite before
+    if (!loggedMissingStaticSprites.has(urlName)) {
+        console.info('Could not find static sprite for:', pokemonNameOrId);
+        loggedMissingStaticSprites.add(urlName);
+    }
+
+    return null;
 
     /* const baseUrl = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other';
 
@@ -122,17 +137,32 @@ export function getPokemonAnimatedUrl(pokemonNameOrId: string | number, suffix?:
         urlName += suffix;
     }
 
-    // Check if this animated sprite exists before generating the URL
-    if (!isValidAnimatedSprite(urlName)) {
-        // Only log if we haven't seen this missing sprite before
-        if (!loggedMissingAnimatedSprites.has(urlName)) {
-            console.info('Could not find animated sprite for:', pokemonNameOrId);
-            loggedMissingAnimatedSprites.add(urlName);
-        }
-        return null;
+    // Check if this animated sprite exists in primary source
+    if (isValidAnimatedSprite(urlName)) {
+        return `https://raw.githubusercontent.com/mgrann03/pokemon-resources/main/graphics/ani/${urlName}.gif`;
     }
 
-    return `https://raw.githubusercontent.com/mgrann03/pokemon-resources/main/graphics/ani/${urlName}.gif`;
+    // Fallback to PokeMiners for base forms only (no suffixes) - note: these are static PNGs, not animated
+    if (!suffix && typeof pokemonNameOrId !== 'string') {
+        // We have a numeric ID, try PokeMiners as fallback (will be static, not animated)
+        return `https://raw.githubusercontent.com/PokeMiners/pogo_assets/master/Images/Pokemon/Addressable%20Assets/pm${pokemonNameOrId}.icon.png`;
+    }
+
+    // If we have a name, try to get the ID for PokeMiners fallback
+    if (!suffix && typeof pokemonNameOrId === 'string') {
+        const pokemonId = getPokemonId(pokemonNameOrId);
+        if (pokemonId) {
+            return `https://raw.githubusercontent.com/PokeMiners/pogo_assets/master/Images/Pokemon/Addressable%20Assets/pm${pokemonId}.icon.png`;
+        }
+    }
+
+    // Only log if we haven't seen this missing sprite before
+    if (!loggedMissingAnimatedSprites.has(urlName)) {
+        console.info('Could not find animated sprite for:', pokemonNameOrId);
+        loggedMissingAnimatedSprites.add(urlName);
+    }
+
+    return null;
 }
 
 export function getAllPokemonNames(): PokemonName[] {
