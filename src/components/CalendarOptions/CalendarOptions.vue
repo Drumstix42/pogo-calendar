@@ -1,7 +1,7 @@
 <template>
     <div class="offcanvas-header">
         <h5 class="offcanvas-title mb-0 d-flex align-items-center gap-2">
-            <Settings :size="16" class="flex-grow-0" />
+            <Settings :size="18" class="flex-grow-0" />
             Settings
         </h5>
         <button class="btn btn-icon-ghost btn-sm" @click="$emit('close')" aria-label="Close options">

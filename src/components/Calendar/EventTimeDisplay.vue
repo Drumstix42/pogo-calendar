@@ -30,7 +30,7 @@
         <!-- Status line for relative timing -->
         <div v-if="showStatus && statusInfo" class="status-line">
             <span v-if="statusInfo.prefix" class="status-prefix">
-                <CalendarClock v-if="!isSameDayEvent(event)" :size="11" class="duration-icon" />{{ statusInfo.prefix }}
+                <ArrowLeftRight v-if="!isSameDayEvent(event)" :size="11" class="duration-icon" />{{ statusInfo.prefix }}
             </span>
             <span :class="`status-label status-${statusInfo.type}`">{{ statusInfo.text }}</span>
         </div>
@@ -38,7 +38,7 @@
 </template>
 
 <script setup lang="ts">
-import { CalendarClock } from 'lucide-vue-next';
+import { ArrowLeftRight } from 'lucide-vue-next';
 import { computed } from 'vue';
 
 import { useCurrentTime } from '@/composables/useCurrentTime';

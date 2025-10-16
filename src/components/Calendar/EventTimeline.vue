@@ -6,73 +6,77 @@
 
         <TransitionGroup v-else name="fade" tag="div" class="timeline-events">
             <!-- Loop through categories in order -->
-            <div v-for="category in eventCategories" :key="category.key" class="event-category">
-                <div class="category-section">
-                    <!-- Category header with horizontal rule -->
-                    <div class="category-header">
-                        <div class="category-text d-flex align-items-center gap-2">
-                            <span class="badge rounded-pill bg-secondary">{{ totalEventsCounts[category.key] }}</span>
-                            <span class="category-title">{{ category.title }}</span>
-                        </div>
+            <CollapsibleSection
+                v-for="category in eventCategories"
+                :key="category.key"
+                :storage-key="`timeline/category-${category.key}`"
+                header-class="timeline-category-header"
+                content-class="category-section-content"
+                class="event-category"
+            >
+                <template #title>
+                    <div class="category-text d-flex align-items-center gap-2">
+                        <span class="badge rounded-pill bg-secondary">{{ totalEventsCounts[category.key] }}</span>
+                        <span class="category-title">{{ category.title }}</span>
                     </div>
+                </template>
 
-                    <!-- Events in this category -->
-                    <!-- For today and ongoing, show events directly -->
-                    <TransitionGroup
-                        v-if="category.key === TimelineCategory.TODAY || category.key === TimelineCategory.ONGOING"
-                        name="fade"
-                        tag="div"
-                        class="category-events"
-                        :key="`${category.key}-simple`"
+                <!-- Events in this category -->
+                <!-- For today and ongoing, show events directly -->
+                <TransitionGroup
+                    v-if="category.key === TimelineCategory.TODAY || category.key === TimelineCategory.ONGOING"
+                    name="fade"
+                    tag="div"
+                    class="category-events"
+                    :key="`${category.key}-simple`"
+                >
+                    <TimelineEvent
+                        v-for="event in categorizedEvents[category.key]"
+                        :key="event.eventID"
+                        :event="event"
+                        :is-active="activeEventId === event.eventID"
+                        @activate="setActiveEvent"
+                    />
+
+                    <!-- Special message for Today section when no events exist -->
+                    <div
+                        v-if="category.key === TimelineCategory.TODAY && totalEventsCounts[category.key] === 0"
+                        key="no-events-today"
+                        class="no-events-today"
                     >
-                        <TimelineEvent
-                            v-for="event in categorizedEvents[category.key]"
-                            :key="event.eventID"
-                            :event="event"
-                            :is-active="activeEventId === event.eventID"
-                            @activate="setActiveEvent"
-                        />
-
-                        <!-- Special message for Today section when no events exist -->
-                        <div
-                            v-if="category.key === TimelineCategory.TODAY && totalEventsCounts[category.key] === 0"
-                            key="no-events-today"
-                            class="no-events-today"
-                        >
-                            <p>No single-day events scheduled today</p>
-                        </div>
-                    </TransitionGroup>
-
-                    <!-- For upcoming and future, group by date -->
-                    <TransitionGroup
-                        v-else-if="category.key === TimelineCategory.UPCOMING || category.key === TimelineCategory.FUTURE"
-                        name="fade"
-                        tag="div"
-                        class="category-events"
-                        :key="`${category.key}-grouped`"
-                    >
-                        <div v-for="dateGroup in groupedByDate[category.key]" :key="dateGroup.dateKey" class="date-group">
-                            <div class="date-divider">
-                                <span class="day-of-week">{{ dateGroup.dayOfWeek }}</span> {{ dateGroup.dateStr }}
-                            </div>
-                            <TransitionGroup name="fade" tag="div" :key="dateGroup.dateKey" class="date-events">
-                                <TimelineEvent
-                                    v-for="event in dateGroup.events"
-                                    :key="event.eventID"
-                                    :event="event"
-                                    :is-active="activeEventId === event.eventID"
-                                    @activate="setActiveEvent"
-                                />
-                            </TransitionGroup>
-                        </div>
-                    </TransitionGroup>
-
-                    <!-- Hidden events indicator -->
-                    <div v-if="hiddenEventsCounts[category.key] > 0" class="hidden-events-indicator">
-                        {{ hiddenEventsCounts[category.key] }} event{{ hiddenEventsCounts[category.key] === 1 ? '' : 's' }} hidden by filters
+                        <p>No single-day events scheduled today</p>
                     </div>
+                </TransitionGroup>
+
+                <!-- For upcoming and future, group by date -->
+                <TransitionGroup
+                    v-else-if="category.key === TimelineCategory.UPCOMING || category.key === TimelineCategory.FUTURE"
+                    name="fade"
+                    tag="div"
+                    class="category-events"
+                    :key="`${category.key}-grouped`"
+                >
+                    <div v-for="dateGroup in groupedByDate[category.key]" :key="dateGroup.dateKey" class="date-group">
+                        <div class="date-divider">
+                            <span class="day-of-week">{{ dateGroup.dayOfWeek }}</span> {{ dateGroup.dateStr }}
+                        </div>
+                        <TransitionGroup name="fade" tag="div" :key="dateGroup.dateKey" class="date-events">
+                            <TimelineEvent
+                                v-for="event in dateGroup.events"
+                                :key="event.eventID"
+                                :event="event"
+                                :is-active="activeEventId === event.eventID"
+                                @activate="setActiveEvent"
+                            />
+                        </TransitionGroup>
+                    </div>
+                </TransitionGroup>
+
+                <!-- Hidden events indicator -->
+                <div v-if="hiddenEventsCounts[category.key] > 0" class="hidden-events-indicator">
+                    {{ hiddenEventsCounts[category.key] }} event{{ hiddenEventsCounts[category.key] === 1 ? '' : 's' }} hidden by filters
                 </div>
-            </div>
+            </CollapsibleSection>
         </TransitionGroup>
     </div>
 </template>
@@ -87,6 +91,7 @@ import { useEventsStore } from '@/stores/events';
 import { type PogoEvent, TimelineCategory, type TimelineCategoryKey, sortEventsByTimingAndPriority } from '@/utils/eventTypes';
 
 import TimelineEvent from './TimelineEvent.vue';
+import CollapsibleSection from '@/components/CollapsibleSection.vue';
 
 interface Props {
     isSidebarMode?: boolean;
@@ -304,35 +309,61 @@ const hiddenEventsCounts = computed(() => eventData.value.hiddenEventsCounts);
     gap: 0;
 }
 
-.category-section {
+.event-category {
     margin-bottom: 1rem;
 }
 
-.event-category:last-child .category-section {
+.event-category:last-child {
     margin-bottom: 0;
 }
 
-.category-header {
+/* Override CollapsibleSection styles for timeline categories */
+.event-category :deep(.section-content) {
+    padding: 0;
+}
+
+.event-category :deep(.timeline-category-header) {
     position: sticky;
     top: 0;
     z-index: 10;
     margin: 0;
-    padding: 6px 7px;
+    padding: 0 0.8rem;
     line-height: 1;
     background: var(--bs-secondary-bg);
     border-bottom: 1px solid var(--bs-border-color);
     border-radius: 0 0 5px 5px;
 }
 
+.event-category :deep(.timeline-category-header:hover) {
+    background: var(--bs-tertiary-bg);
+}
+
 /* When not in sidebar mode, stick relative to viewport */
-.event-timeline:not(.sidebar-mode) .category-header {
+.event-timeline:not(.sidebar-mode) .event-category :deep(.timeline-category-header) {
     top: var(--navbar-height-scrolled);
+}
+
+.event-category :deep(.section-title) {
+    flex: 1;
+}
+
+.event-category :deep(.collapse-toggle) {
+    margin-left: auto;
+}
+
+.event-category :deep(.collapsible-section.closed .timeline-category-header) {
+    border-bottom: 1px solid var(--bs-border-color);
+}
+
+.category-section-content {
+    padding: 0 !important;
 }
 
 .category-text {
     flex-shrink: 0;
-    font-size: 14px;
-    font-weight: 600;
+    font-size: 0.85rem;
+    line-height: 1.25rem;
+    font-weight: 500;
     color: var(--bs-body-color);
     white-space: nowrap;
 

@@ -3,20 +3,19 @@
         <div
             v-if="!hideHeader"
             class="section-header"
+            :class="headerClass"
             @click="toggleCollapsed"
             role="button"
             tabindex="0"
-            @keydown.enter.prevent="toggleCollapsed"
-            @keydown.space.prevent="toggleCollapsed"
+            @keydown.enter="toggleCollapsed"
+            @keydown.space="toggleCollapsed"
         >
             <div v-if="$slots.icon" class="section-icon">
                 <slot name="icon" />
             </div>
 
-            <div class="section-title">{{ title }}</div>
-
-            <div v-if="$slots.headerActions" class="header-actions" @click.stop>
-                <slot name="headerActions" />
+            <div class="section-title">
+                <slot name="title">{{ title }}</slot>
             </div>
 
             <button class="btn btn-icon-ghost btn-sm collapse-toggle" aria-label="Toggle section">
@@ -45,9 +44,10 @@ import { computed } from 'vue';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 
 interface Props {
-    title: string;
+    title?: string;
     storageKey?: string;
     contentClass?: string;
+    headerClass?: string;
     hideHeader?: boolean;
 }
 
@@ -111,13 +111,6 @@ const toggleCollapsed = () => {
     color: var(--bs-body-color);
     font-size: 0.9rem;
     flex: 1;
-}
-
-.header-actions {
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-    flex-shrink: 0;
 }
 
 .collapse-toggle {

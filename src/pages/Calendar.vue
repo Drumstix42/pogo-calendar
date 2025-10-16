@@ -443,7 +443,7 @@ onUnmounted(() => {
     }
 
     .timeline-content {
-        height: calc(100dvh - var(--navbar-height-scrolled) - 0.5rem);
+        height: calc(100dvh - var(--navbar-height-scrolled) - 0.3rem);
         overflow-y: auto;
         overflow-x: hidden;
         padding-right: 6px;
