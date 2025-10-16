@@ -18,11 +18,11 @@
                             'placeholder-container': !pokemonData.imageUrl,
                         }"
                     >
-                        <div v-if="showDynamaxOverlay" class="dynamax-overlay">
+                        <div v-if="showDynamaxOverlay" class="dynamax-overlay" :class="{ animated: useAnimated }">
                             <img src="/images/overlay/dynamax-clouds.png" alt="Dynamax effect" class="dynamax-clouds" />
                         </div>
-                        <div v-if="showShadowEffect" class="shadow-overlay">
-                            <img src="/images/overlay/shadow-fire.svg" alt="Shadow effect" class="shadow-fire" />
+                        <div v-if="showShadowEffect" class="shadow-overlay" :class="{ animated: useAnimated }">
+                            <img src="/images/overlay/shadow-aura.png" alt="Shadow effect" class="shadow-aura" />
                         </div>
                         <img
                             v-if="pokemonData.imageUrl && !pokemonData.hasError"
@@ -55,11 +55,11 @@
                     'has-shadow-effect': showShadowEffect,
                 }"
             >
-                <div v-if="showDynamaxOverlay" class="dynamax-overlay">
+                <div v-if="showDynamaxOverlay" class="dynamax-overlay" :class="{ animated: useAnimated }">
                     <img src="/images/overlay/dynamax-clouds.png" alt="Dynamax effect" class="dynamax-clouds" />
                 </div>
-                <div v-if="showShadowEffect" class="shadow-overlay">
-                    <img src="/images/overlay/shadow-fire.svg" alt="Shadow effect" class="shadow-fire" />
+                <div v-if="showShadowEffect" class="shadow-overlay" :class="{ animated: useAnimated }">
+                    <img src="/images/overlay/shadow-aura.png" alt="Shadow effect" class="shadow-aura" />
                 </div>
                 <CircleHelpIcon class="placeholder-icon" :size="height" />
             </div>
@@ -140,7 +140,7 @@ function handleImageError(index: number): void {
 }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .pokemon-images {
     display: flex;
     align-items: center;
@@ -204,10 +204,60 @@ function handleImageError(index: number): void {
 }
 
 .dynamax-clouds,
-.shadow-fire {
+.shadow-aura {
     width: 100%;
     height: 100%;
     object-fit: contain;
+}
+
+.dynamax-overlay.animated .dynamax-clouds {
+    will-change: transform, opacity;
+    animation: dynamaxClouds 6s ease-in-out infinite;
+}
+
+.shadow-aura {
+    transform: scale(1.3);
+    will-change: transform, opacity;
+}
+
+.shadow-overlay.animated .shadow-aura {
+    animation: shadowAura 8s ease-in-out infinite;
+}
+
+@keyframes dynamaxClouds {
+    /* just floats up  and down, no scale rotation changes*/
+    0% {
+        transform: translateY(-1px);
+    }
+    50% {
+        transform: translateY(1px);
+    }
+    100% {
+        transform: translateY(-1px);
+    }
+}
+
+@keyframes shadowAura {
+    0% {
+        opacity: 0.8;
+        transform: scale(1.25) translate(1px, 0.5px) rotate(-1deg);
+    }
+    25% {
+        opacity: 0.9;
+        transform: scale(1.38) translate(0px, -0.5px) rotate(0.5deg);
+    }
+    50% {
+        opacity: 0.95;
+        transform: scale(1.3) translate(-1px, 0.5px) rotate(1deg);
+    }
+    75% {
+        opacity: 0.9;
+        transform: scale(1.38) translate(0px, -0.5px) rotate(0.5deg);
+    }
+    100% {
+        opacity: 0.8;
+        transform: scale(1.25) translate(1px, 0.5px) rotate(-1deg);
+    }
 }
 
 .pokemon-icon {

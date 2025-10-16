@@ -163,7 +163,7 @@ function parsePokemonNameAndSuffix(pokemonNameString: string): { pokemonName: st
     return { pokemonName: pokemonNameString.trim() };
 }
 
-function getSpriteUrl(pokemonName: string, suffix?: string, options?: PokemonImageOptions) {
+function getSpriteUrl(pokemonName: string, suffix?: string, options?: PokemonImageOptions, fallbackUrl?: string | null) {
     // Use provided suffix or derive from options
     const finalSuffix = suffix ?? (options?.isMega ? '-mega' : undefined);
 
@@ -179,13 +179,22 @@ function getSpriteUrl(pokemonName: string, suffix?: string, options?: PokemonIma
         // If animated fails, fall back to static sprite
     }
 
-    // Default to static sprite
+    // Try static sprite
     try {
-        return getPokemonSpriteUrl(pokemonName, finalSuffix);
+        const staticUrl = getPokemonSpriteUrl(pokemonName, finalSuffix);
+        if (staticUrl) {
+            return staticUrl;
+        }
     } catch (error) {
         console.warn(`Failed to generate sprite for ${pokemonName}:`, error);
-        return null;
     }
+
+    // If our sprite generation failed, try the fallback URL from event data
+    if (fallbackUrl) {
+        return fallbackUrl;
+    }
+
+    return null;
 }
 
 export function getEventPokemonImages(event: PogoEvent, options?: PokemonImageOptions): PokemonImageData[] {
@@ -205,12 +214,12 @@ export function getEventPokemonImages(event: PogoEvent, options?: PokemonImageOp
 
                     // If we have a custom suffix (like -megax, -megay), use it directly
                     if (parsedData.suffix) {
-                        spriteUrl = getSpriteUrl(parsedData.pokemonName, parsedData.suffix, options);
+                        spriteUrl = getSpriteUrl(parsedData.pokemonName, parsedData.suffix, options, boss.image);
                     } else {
-                        spriteUrl = getSpriteUrl(parsedData.pokemonName, undefined, options);
+                        spriteUrl = getSpriteUrl(parsedData.pokemonName, undefined, options, boss.image);
                     }
 
-                    // Always add to images array, even if spriteUrl is null
+                    // Always add to images array, fallback handled by getSpriteUrl
                     images.push({ name: boss.name, imageUrl: spriteUrl });
                 } else {
                     // If we can't parse the boss name, try API image or use null
@@ -313,14 +322,13 @@ export function getEventPokemonImages(event: PogoEvent, options?: PokemonImageOp
         if (event.extraData.spotlight.list && event.extraData.spotlight.list.length > 0) {
             // Handle multiple Pokémon (like Plusle and Minun)
             for (const pokemon of event.extraData.spotlight.list) {
-                const spriteUrl = getSpriteUrl(pokemon.name, undefined, options);
-                // Always add to images array, even if spriteUrl is null
+                const spriteUrl = getSpriteUrl(pokemon.name, undefined, options, pokemon.image);
                 images.push({ name: pokemon.name, imageUrl: spriteUrl });
             }
         } else if (event.extraData.spotlight.name) {
             // Handle single Pokémon
-            const spriteUrl = getSpriteUrl(event.extraData.spotlight.name, undefined, options);
-            // Always add to images array, even if spriteUrl is null
+            const fallbackImage = event.extraData.spotlight.image || null;
+            const spriteUrl = getSpriteUrl(event.extraData.spotlight.name, undefined, options, fallbackImage);
             images.push({ name: event.extraData.spotlight.name, imageUrl: spriteUrl });
         } else if (event.extraData.spotlight.image) {
             // Last fallback - just use the API image (we may not have the name in this case)
@@ -339,8 +347,8 @@ export function getEventPokemonImages(event: PogoEvent, options?: PokemonImageOp
 
         for (const spawn of spawns) {
             if (spawn.name) {
-                const spriteUrl = getSpriteUrl(spawn.name, undefined, options);
-                // Always add to images array, even if spriteUrl is null
+                const fallbackImage = spawn.image || null;
+                const spriteUrl = getSpriteUrl(spawn.name, undefined, options, fallbackImage);
                 images.push({ name: spawn.name, imageUrl: spriteUrl });
             }
         }
