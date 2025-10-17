@@ -24,7 +24,41 @@
         </div>
 
         <main class="main-content">
-            <router-view />
+            <div class="container app-container">
+                <UserMessageBanner />
+                <router-view />
+
+                <!-- Footer Disclaimer -->
+                <footer class="disclaimer-footer">
+                    <p class="disclaimer-text">
+                        This website is not affiliated with
+                        <a class="link-secondary" href="https://pokemongo.com/" target="_blank" rel="noopener noreferrer">Pokémon GO</a> and is
+                        intended to fall under Fair Use doctrine, similar to any other informational site such as a wiki. Pokémon and its trademarks
+                        are ©1995-2025 Nintendo, Creatures, and GAMEFREAK. <br />All images and names are owned and trademarked by Nintendo, Niantic,
+                        The Pokémon Company, and GAMEFREAK and are property of their respective owners.
+                    </p>
+
+                    <p class="disclaimer-text mt-2">
+                        Event data is powered by
+                        <a class="link-secondary" href="https://leekduck.com/" target="_blank" rel="noopener noreferrer">Leekduck</a> via
+                        <a class="link-secondary" href="https://github.com/bigfoott/ScrapedDuck" target="_blank" rel="noopener noreferrer"
+                            >ScrapedDuck</a
+                        >.
+                    </p>
+
+                    <p class="disclaimer-text mt-2">
+                        This site does not use cookies, tracking, or advertisements of any kind. All preferences are stored within
+                        <a
+                            class="link-secondary"
+                            href="https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            >localStorage</a
+                        >
+                        in your browser.
+                    </p>
+                </footer>
+            </div>
         </main>
 
         <!-- Toast notifications -->
@@ -42,6 +76,7 @@ import { useThemeStore } from '@/stores/theme';
 
 import ThemeSelector from '@/components/ThemeSelector.vue';
 import ToastContainer from '@/components/Toast/ToastContainer.vue';
+import UserMessageBanner from '@/components/UserMessages/UserMessageBanner.vue';
 
 useThemeStore();
 
@@ -142,5 +177,19 @@ function goHome() {
 
 .btn-options-toggle {
     padding: 0.375rem 0.5rem;
+}
+
+.disclaimer-footer {
+    margin-top: 2rem;
+    padding: 1.5rem 0;
+    text-align: center;
+    border-top: 1px solid var(--bs-border-color);
+}
+
+.disclaimer-text {
+    margin: 0;
+    font-size: 0.75rem;
+    color: var(--bs-secondary-color);
+    line-height: 1.5;
 }
 </style>

@@ -1,126 +1,95 @@
 <template>
-    <div class="container app-container">
-        <div class="page-layout" :class="{ 'sidebar-layout': isXxlScreenSize }">
-            <!-- Calendar Section -->
-            <div class="calendar-wrapper pt-1">
-                <CollapsibleSection title="Calendar" storage-key="main/calendar-section" class="calendar-section" :hide-header="isXxlScreenSize">
-                    <template #icon>
-                        <CalendarRange :size="18" />
-                    </template>
-                    <!-- Month Navigation Header -->
-                    <CalendarHeader />
+    <div class="page-layout" :class="{ 'sidebar-layout': isXxlScreenSize }">
+        <!-- Calendar Section -->
+        <div class="calendar-wrapper pt-1">
+            <CollapsibleSection title="Calendar" storage-key="main/calendar-section" class="calendar-section" :hide-header="isXxlScreenSize">
+                <template #icon>
+                    <CalendarRange :size="18" />
+                </template>
+                <!-- Month Navigation Header -->
+                <CalendarHeader />
 
-                    <!-- Calendar Grid Component -->
-                    <!-- Main Calendar Grid -->
-                    <CalendarGrid />
+                <!-- Calendar Grid Component -->
+                <!-- Main Calendar Grid -->
+                <CalendarGrid />
 
-                    <!-- Filter Summary Button -->
-                    <div v-if="eventFilter.disabledEventTypeKeys.length > 0 || eventFilter.hiddenEventIds.length > 0" class="filter-summary">
-                        <VTooltip placement="top" :delay="{ show: 50, hide: 0 }" distance="10" class="d-flex align-items-center ms-1">
-                            <template #popper>
-                                <div class="tooltip-text">Click to open Settings</div>
-                            </template>
-                            <button class="btn btn-icon-ghost" @click="openSettingsAndScrollToFilters" aria-label="Open settings to modify filters">
-                                <EyeOff :size="12" class="me-2" />
-                                <span class="filter-summary-text">
-                                    <span v-if="eventFilter.disabledEventTypeKeys.length > 0">
-                                        {{ eventFilter.disabledEventTypeKeys.length }} event type{{
-                                            eventFilter.disabledEventTypeKeys.length === 1 ? '' : 's'
-                                        }}
-                                        hidden
-                                    </span>
-                                    <span v-if="eventFilter.disabledEventTypeKeys.length > 0 && eventFilter.hiddenEventIds.length > 0"> • </span>
-                                    <span v-if="eventFilter.hiddenEventIds.length > 0">
-                                        {{ eventFilter.hiddenEventIds.length }} specific event{{ eventFilter.hiddenEventIds.length === 1 ? '' : 's' }}
-                                        hidden
-                                    </span>
-                                </span>
-                            </button>
-                        </VTooltip>
-                    </div>
-                </CollapsibleSection>
-            </div>
-
-            <!-- Timeline Sidebar (right at >=1400px, below calendar at <1400px) -->
-            <div class="timeline-wrapper pt-1" :class="{ 'sidebar-collapsed': isXxlScreenSize && calendarSettings.timelineSidebarCollapsed }">
-                <!-- Timeline content -->
-                <div v-if="!isXxlScreenSize || !calendarSettings.timelineSidebarCollapsed" class="timeline-content">
-                    <CollapsibleSection title="Timeline" storage-key="main/timeline-section" class="timeline-section" :hide-header="isXxlScreenSize">
-                        <template #icon>
-                            <PanelTop :size="18" />
+                <!-- Filter Summary Button -->
+                <div v-if="eventFilter.disabledEventTypeKeys.length > 0 || eventFilter.hiddenEventIds.length > 0" class="filter-summary">
+                    <VTooltip placement="top" :delay="{ show: 50, hide: 0 }" distance="10" class="d-flex align-items-center ms-1">
+                        <template #popper>
+                            <div class="tooltip-text">Click to open Settings</div>
                         </template>
+                        <button class="btn btn-icon-ghost" @click="openSettingsAndScrollToFilters" aria-label="Open settings to modify filters">
+                            <EyeOff :size="12" class="me-2" />
+                            <span class="filter-summary-text">
+                                <span v-if="eventFilter.disabledEventTypeKeys.length > 0">
+                                    {{ eventFilter.disabledEventTypeKeys.length }} event type{{
+                                        eventFilter.disabledEventTypeKeys.length === 1 ? '' : 's'
+                                    }}
+                                    hidden
+                                </span>
+                                <span v-if="eventFilter.disabledEventTypeKeys.length > 0 && eventFilter.hiddenEventIds.length > 0"> • </span>
+                                <span v-if="eventFilter.hiddenEventIds.length > 0">
+                                    {{ eventFilter.hiddenEventIds.length }} specific event{{ eventFilter.hiddenEventIds.length === 1 ? '' : 's' }}
+                                    hidden
+                                </span>
+                            </span>
+                        </button>
+                    </VTooltip>
+                </div>
+            </CollapsibleSection>
+        </div>
 
-                        <!-- <div class="mb-3">
+        <!-- Timeline Sidebar (right at >=1400px, below calendar at <1400px) -->
+        <div class="timeline-wrapper pt-1" :class="{ 'sidebar-collapsed': isXxlScreenSize && calendarSettings.timelineSidebarCollapsed }">
+            <!-- Timeline content -->
+            <div v-if="!isXxlScreenSize || !calendarSettings.timelineSidebarCollapsed" class="timeline-content">
+                <CollapsibleSection title="Timeline" storage-key="main/timeline-section" class="timeline-section" :hide-header="isXxlScreenSize">
+                    <template #icon>
+                        <PanelTop :size="18" />
+                    </template>
+
+                    <!-- <div class="mb-3">
                             <CalendarMobile />
                         </div> -->
 
-                        <EventTimeline :is-sidebar-mode="isXxlScreenSize" />
-                    </CollapsibleSection>
-                </div>
+                    <EventTimeline :is-sidebar-mode="isXxlScreenSize" />
+                </CollapsibleSection>
             </div>
         </div>
-
-        <!-- Footer Disclaimer -->
-        <footer class="disclaimer-footer">
-            <p class="disclaimer-text">
-                This website is not affiliated with
-                <a class="link-secondary" href="https://pokemongo.com/" target="_blank" rel="noopener noreferrer">Pokémon GO</a> and is intended to
-                fall under Fair Use doctrine, similar to any other informational site such as a wiki. Pokémon and its trademarks are ©1995-2025
-                Nintendo, Creatures, and GAMEFREAK. <br />All images and names are owned and trademarked by Nintendo, Niantic, The Pokémon Company,
-                and GAMEFREAK and are property of their respective owners.
-            </p>
-
-            <p class="disclaimer-text mt-2">
-                Event data is powered by
-                <a class="link-secondary" href="https://leekduck.com/" target="_blank" rel="noopener noreferrer">Leekduck</a> via
-                <a class="link-secondary" href="https://github.com/bigfoott/ScrapedDuck" target="_blank" rel="noopener noreferrer">ScrapedDuck</a>.
-            </p>
-
-            <p class="disclaimer-text mt-2">
-                This site does not use cookies, tracking, or advertisements of any kind. All preferences are stored within
-                <a
-                    class="link-secondary"
-                    href="https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    >localStorage</a
-                >
-                in your browser.
-            </p>
-        </footer>
-
-        <!-- Calendar Options Offcanvas -->
-        <Teleport to="body">
-            <Transition name="offcanvas-fade">
-                <div v-if="calendarSettings.optionsExpanded" class="calendar-options-backdrop" @click="handleBackdropClick">
-                    <div class="offcanvas offcanvas-end show calendar-options-offcanvas" @click.stop>
-                        <CalendarOptions @close="handleCloseOptions" />
-                    </div>
-                </div>
-            </Transition>
-        </Teleport>
-
-        <!-- Event Detail Offcanvas (Mobile) -->
-        <Teleport to="body">
-            <Transition name="offcanvas-fade">
-                <div v-if="selectedEventId && isMobile && !eventsStore.loading" class="event-detail-backdrop" @click="handleEventDetailBackdropClick">
-                    <div class="offcanvas offcanvas-bottom show event-detail-offcanvas" @click.stop>
-                        <EventDetailOffcanvas :event="selectedEvent" :is-single-day="selectedEventIsSingleDay" @close="handleCloseEventDetail" />
-                    </div>
-                </div>
-            </Transition>
-        </Teleport>
-
-        <!-- Hide Event Modal -->
-        <HideEventModal
-            v-if="hideEventModal.currentEvent.value"
-            :show="hideEventModal.showModal.value"
-            :event="hideEventModal.currentEvent.value"
-            @close="hideEventModal.closeModal"
-            @hide-by-type="handleHideByType"
-            @hide-by-id="handleHideById"
-        />
     </div>
+
+    <!-- Calendar Options Offcanvas -->
+    <Teleport to="body">
+        <Transition name="offcanvas-fade">
+            <div v-if="calendarSettings.optionsExpanded" class="calendar-options-backdrop" @click="handleBackdropClick">
+                <div class="offcanvas offcanvas-end show calendar-options-offcanvas" @click.stop>
+                    <CalendarOptions @close="handleCloseOptions" />
+                </div>
+            </div>
+        </Transition>
+    </Teleport>
+
+    <!-- Event Detail Offcanvas (Mobile) -->
+    <Teleport to="body">
+        <Transition name="offcanvas-fade">
+            <div v-if="selectedEventId && isMobile && !eventsStore.loading" class="event-detail-backdrop" @click="handleEventDetailBackdropClick">
+                <div class="offcanvas offcanvas-bottom show event-detail-offcanvas" @click.stop>
+                    <EventDetailOffcanvas :event="selectedEvent" :is-single-day="selectedEventIsSingleDay" @close="handleCloseEventDetail" />
+                </div>
+            </div>
+        </Transition>
+    </Teleport>
+
+    <!-- Hide Event Modal -->
+    <HideEventModal
+        v-if="hideEventModal.currentEvent.value"
+        :show="hideEventModal.showModal.value"
+        :event="hideEventModal.currentEvent.value"
+        @close="hideEventModal.closeModal"
+        @hide-by-type="handleHideByType"
+        @hide-by-id="handleHideById"
+    />
 </template>
 
 <script setup lang="ts">
@@ -483,19 +452,5 @@ onUnmounted(() => {
     font-size: 0.7rem;
     font-style: italic;
     color: var(--bs-secondary-color);
-}
-
-.disclaimer-footer {
-    margin-top: 2rem;
-    padding: 1.5rem 0;
-    text-align: center;
-    border-top: 1px solid var(--bs-border-color);
-}
-
-.disclaimer-text {
-    margin: 0;
-    font-size: 0.75rem;
-    color: var(--bs-secondary-color);
-    line-height: 1.5;
 }
 </style>
