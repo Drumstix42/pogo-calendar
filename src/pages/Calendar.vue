@@ -15,11 +15,21 @@
 
                 <!-- Filter Summary Button -->
                 <div v-if="eventFilter.disabledEventTypeKeys.length > 0 || eventFilter.hiddenEventIds.length > 0" class="filter-summary">
-                    <VTooltip placement="top" :delay="{ show: 50, hide: 0 }" distance="10" class="d-flex align-items-center ms-1">
+                    <VTooltip
+                        :disabled="isTouchDevice"
+                        placement="top"
+                        :delay="{ show: 50, hide: 0 }"
+                        distance="10"
+                        class="d-flex align-items-center ms-1"
+                    >
                         <template #popper>
                             <div class="tooltip-text">Click to open Settings</div>
                         </template>
-                        <button class="btn btn-icon-ghost" @click="openSettingsAndScrollToFilters" aria-label="Open settings to modify filters">
+                        <button
+                            class="btn btn-icon-ghost filter-summary-btn"
+                            @click="openSettingsAndScrollToFilters"
+                            aria-label="Open settings to modify filters"
+                        >
                             <EyeOff :size="12" class="me-2" />
                             <span class="filter-summary-text">
                                 <span v-if="eventFilter.disabledEventTypeKeys.length > 0">
@@ -36,6 +46,7 @@
                             </span>
                         </button>
                     </VTooltip>
+                    <div v-if="isTouchDevice" class="touch-device-message">Tap to open Settings</div>
                 </div>
             </CollapsibleSection>
         </div>
@@ -97,6 +108,7 @@ import { breakpointsBootstrapV5, useBreakpoints } from '@vueuse/core';
 import { CalendarRange, EyeOff, PanelTop } from 'lucide-vue-next';
 import { computed, nextTick, onMounted, onUnmounted, watch, watchEffect } from 'vue';
 
+import { useDeviceDetection } from '@/composables/useDeviceDetection';
 import { useEventFilterToasts } from '@/composables/useEventFilterToasts';
 import { useHideEventModal } from '@/composables/useHideEventModal';
 import { useUrlSync } from '@/composables/useUrlSync';
@@ -120,6 +132,7 @@ const eventFilter = useEventFilterStore();
 const hideEventModal = useHideEventModal();
 const { hideEventTypeWithToast, hideEventByIdWithToast } = useEventFilterToasts();
 const { settingsOpen, openSettings, closeSettings, selectedEventId, clearEvent } = useUrlSync();
+const { isTouchDevice } = useDeviceDetection();
 
 // responsive breakpoints https://getbootstrap.com/docs/5.0/layout/breakpoints/#available-breakpoints
 const breakpoints = useBreakpoints(breakpointsBootstrapV5);
@@ -444,13 +457,24 @@ onUnmounted(() => {
 
 .filter-summary {
     display: flex;
+    flex-direction: column;
+    align-items: center;
     justify-content: center;
     margin-top: 0.5rem;
-}
 
-.filter-summary-text {
-    font-size: 0.7rem;
-    font-style: italic;
-    color: var(--bs-secondary-color);
+    .filter-summary-text {
+        font-size: 0.7rem;
+        font-weight: 500;
+        line-height: 1.3;
+        /* font-style: italic; */
+        color: var(--bs-secondary-color);
+    }
+
+    .touch-device-message {
+        font-size: 0.6rem;
+        margin-top: -2px;
+        font-style: italic;
+        color: var(--bs-secondary-color);
+    }
 }
 </style>
