@@ -127,6 +127,7 @@ const eventSlots = computed((): EventSlot[] => {
     // Conditionally group events with identical start/end times based on setting
     let representativeEvents: PogoEvent[];
 
+    // TODO: pre-compute grouped event properties and metadata
     if (calendarSettings.groupSimilarEvents) {
         // Group events with identical start/end times
         const eventGroups = new Map<string, PogoEvent[]>();

@@ -41,7 +41,7 @@ export interface EventMetadata {
     color: string;
 
     // Display helpers
-    formattedTime: string;
+    formattedStartTime: string;
     displayName: string;
 
     // Grouping metadata (for when grouping is enabled)
@@ -52,7 +52,7 @@ export interface EventMetadata {
 
 const SCRAPED_EVENTS_URL = 'https://raw.githubusercontent.com/bigfoott/ScrapedDuck/data/events.min.json';
 
-export const useEventsStore = defineStore('events', () => {
+export const useEventsStore = defineStore('eventsStore', () => {
     // State
     const events = ref<PogoEvent[]>([]);
     const loading = ref(false);
@@ -145,7 +145,7 @@ export const useEventsStore = defineStore('events', () => {
                 endDate,
                 typeInfo,
                 color: typeInfo.color,
-                formattedTime: isMultiDay ? '' : formatEventTime(event.start),
+                formattedStartTime: formatEventTime(event.start),
                 isMultiDayEvent: isMultiDay,
                 isPastEvent: endDate.isBefore(now),
                 isFutureEvent: startDate.isAfter(now),
@@ -259,7 +259,7 @@ export const useEventsStore = defineStore('events', () => {
 
     return {
         // State
-        events,
+        events: events,
         loading,
         error,
         lastFetched,
@@ -271,7 +271,7 @@ export const useEventsStore = defineStore('events', () => {
         eventsByDate,
         hasFreshData,
         currentMonthName,
-        eventMetadata,
+        eventMetadata: eventMetadata,
 
         // Actions
         getEventsForDate,

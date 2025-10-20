@@ -31,7 +31,7 @@
             <TransitionGroup name="fade" tag="div">
                 <div
                     v-for="event in multiDayEvents"
-                    :key="`multi-${getEventKey(event)}`"
+                    :key="`multi-${event.eventID}`"
                     class="multi-day-event-slot"
                     :style="{
                         position: 'absolute',
@@ -74,6 +74,7 @@
                             :delay="tooltipOptionsDefaults.delay"
                             :distance="tooltipOptionsDefaults.distance"
                             :auto-hide="tooltipOptionsDefaults.autoHide"
+                            :show-group="`multi-${event.eventID}`"
                             @apply-show="handleMenuShow(event)"
                             @apply-hide="handleMenuHide(event)"
                         >
@@ -116,12 +117,13 @@
             <TransitionGroup name="fade" tag="div" class="single-day-events">
                 <VMenu
                     v-for="event in singleDayEvents"
-                    :key="`single-${getEventKey(event)}`"
+                    :key="`single-${event.eventID}`"
                     :disabled="isMobile"
                     placement="top"
                     :delay="tooltipOptionsDefaults.delay"
                     :distance="tooltipOptionsDefaults.distance"
                     :auto-hide="tooltipOptionsDefaults.autoHide"
+                    :show-group="`single-${event.eventID}`"
                     @apply-show="handleMenuShow(event)"
                     @apply-hide="handleMenuHide(event)"
                 >
@@ -148,7 +150,7 @@
                             </div>
                             <div class="event-time">
                                 <div class="event-dot" :style="{ backgroundColor: eventsStore.eventMetadata[event.eventID]?.color }"></div>
-                                {{ formatEventTime(event.start) }}
+                                {{ eventsStore.eventMetadata[event.eventID]?.formattedStartTime }}
                                 <span v-if="isToday && eventsStore.eventMetadata[event.eventID]?.isPastEvent" class="event-ended-label">Ended</span>
                             </div>
                             <PokemonImages
@@ -184,7 +186,6 @@ import { useEventsStore } from '@/stores/events';
 import { formatEventName } from '@/utils/eventName';
 import {
     type PogoEvent,
-    formatEventTime,
     getCalendarEventsForDate,
     getEventsForDate,
     getGroupedEventsCount,
@@ -372,11 +373,7 @@ const multiDayEventsHeight = computed(() => {
     return (maxCompactIndex + 1) * (multiDayEventBarHeight.value + MULTI_DAY_EVENT_BAR_MARGIN);
 });
 
-// Helper functions for template
-const getEventKey = (event: PogoEvent): string => {
-    return event.eventID;
-};
-
+// Helper functions
 const getEventDisplayName = (event: PogoEvent): string => {
     // Check if this event has a custom display name (from grouping)
     if ((event as any)._displayName) {
