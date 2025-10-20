@@ -179,8 +179,8 @@ export const useEventsStore = defineStore('eventsStore', () => {
         error.value = null;
 
         try {
-            const response = await fetch(SCRAPED_EVENTS_URL);
-            // const response = await fetch('/planning/events2.json');
+            //const response = await fetch(SCRAPED_EVENTS_URL);
+            const response = await fetch('/planning/events3.json');
 
             if (!response.ok) {
                 throw new Error(`Failed to fetch events: ${response.status} ${response.statusText}`);

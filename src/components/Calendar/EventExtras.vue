@@ -1,6 +1,12 @@
 <template>
     <div class="event-extras">
-        <div v-if="spotlightBonus" class="spotlight-bonus"><strong>Bonus:</strong> {{ spotlightBonus }}</div>
+        <div v-if="spotlightBonus" class="spotlight-bonus">
+            <strong>Bonus:</strong>
+            <div class="bonus-content">
+                <img v-if="spotlightBonusIcon" :src="spotlightBonusIcon" :alt="spotlightBonus" class="spotlight-bonus-icon" />
+                <span>{{ spotlightBonus }}</span>
+            </div>
+        </div>
 
         <!-- Bonuses for community day events -->
         <div v-if="communityDayBonuses" class="community-day-bonuses">
@@ -72,6 +78,24 @@ const spotlightBonus = computed(() => {
     return null;
 });
 
+const spotlightBonusIcon = computed(() => {
+    if (!spotlightBonus.value) return null;
+
+    const bonus = spotlightBonus.value;
+
+    if (/xp/i.test(bonus)) {
+        return 'https://cdn.leekduck.com/assets/img/events/bonuses/xp.png';
+    }
+    if (/stardust/i.test(bonus)) {
+        return 'https://cdn.leekduck.com/assets/img/events/bonuses/stardust2x.png';
+    }
+    if (/candy/i.test(bonus)) {
+        return 'https://cdn.leekduck.com/assets/img/events/bonuses/candy.png';
+    }
+
+    return null;
+});
+
 const communityDayBonuses = computed(() => {
     if (props.event.eventType === 'community-day' && props.event.extraData?.communityday?.bonuses) {
         return props.event.extraData.communityday.bonuses;
@@ -97,20 +121,42 @@ onMounted(() => {
 .spotlight-bonus {
     font-size: 12px;
     color: color-mix(in srgb, var(--bs-body-color) 80%, transparent);
-    padding-right: 0.5rem;
-    margin-top: 0.2rem;
+    padding: 0.3rem 0.6rem;
+    margin: 0.1rem 0 0.1rem 0;
+    background-color: color-mix(in srgb, var(--bs-body-color) 3%, transparent);
+    border: 1px solid color-mix(in srgb, var(--bs-body-color) 12%, transparent);
+    border-left: 3px solid color-mix(in srgb, var(--bs-body-color) 25%, transparent);
+    border-radius: 0.25rem;
+}
+
+.bonus-content {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.spotlight-bonus-icon {
+    width: 15px;
+    height: 15px;
+    flex-shrink: 0;
+    object-fit: contain;
 }
 
 .community-day-bonuses {
-    margin-top: 0.3rem;
+    margin: 0.1rem 0 0.1rem 0;
+    padding: 0.4rem 0.6rem 0.1rem 0.6rem;
+    background-color: color-mix(in srgb, var(--bs-body-color) 3%, transparent);
+    border: 1px solid color-mix(in srgb, var(--bs-body-color) 12%, transparent);
+    border-left: 3px solid color-mix(in srgb, var(--bs-body-color) 25%, transparent);
+    border-radius: 0.25rem;
 }
 
 .bonus-header {
     font-size: 12px;
     line-height: 1;
     color: color-mix(in srgb, var(--bs-body-color) 80%, transparent);
-    font-weight: 00;
-    padding: 0 0.6rem 0.2rem 0;
+    font-weight: 500;
+    padding: 0 0.6rem 0.3rem 0;
 }
 
 .bonus-list-container {
@@ -118,9 +164,9 @@ onMounted(() => {
 }
 
 .bonus-list {
-    max-height: 107px;
+    max-height: 97px;
     overflow-y: auto;
-    padding: 0 0.6rem 0.3rem 0.2rem;
+    padding: 0 0.2rem 0 0.2rem;
 }
 
 .bonus-item {
