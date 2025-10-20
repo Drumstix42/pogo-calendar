@@ -15,6 +15,7 @@
         "type-check": "vue-tsc --noEmit"
     },
     "dependencies": {
+        "@jaames/iro": "~5.5.2",
         "@vueuse/core": "~13.9.0",
         "@vueuse/router": "~13.9.0",
         "bootstrap": "~5.3.8",
