@@ -11,6 +11,19 @@ export type SpriteType = 'dream-world' | 'official-artwork' | 'home';
 const loggedMissingStaticSprites = new Set<string>();
 const loggedMissingAnimatedSprites = new Set<string>();
 
+// Special handling for Pokemon with non-standard forms
+// Maps Pokemon ID to their default static sprite URL from PokeMiners
+const SPECIAL_STATIC_SPRITE_RULES: Record<number, string> = {
+    849: 'https://raw.githubusercontent.com/PokeMiners/pogo_assets/master/Images/Pokemon/Addressable%20Assets/pm849.fAMPED.icon.png', // Toxtricity - defaults to Amped form
+};
+
+// Form-specific URLs for Pokemon with multiple forms
+const FORM_SPECIFIC_STATIC_SPRITES: Record<string, string> = {
+    'toxtricity-amped': 'https://raw.githubusercontent.com/PokeMiners/pogo_assets/master/Images/Pokemon/Addressable%20Assets/pm849.fAMPED.icon.png',
+    'toxtricity-low-key':
+        'https://raw.githubusercontent.com/PokeMiners/pogo_assets/master/Images/Pokemon/Addressable%20Assets/pm849.fLOW_KEY.icon.png',
+};
+
 // Normalize Pokemon names for matching - smart Unicode normalization + gender symbols
 function normalizePokemonName(name: string): string {
     return name
@@ -48,10 +61,11 @@ export function isValidStaticSprite(spriteName: string): boolean {
 
 export function getPokemonSpriteUrl(pokemonNameOrId: string | number, suffix?: string): string | null {
     let pokemonName: string;
+    let pokemonId: number | null = null;
 
     if (typeof pokemonNameOrId === 'string') {
         // Validate that the Pokemon name exists
-        const pokemonId = getPokemonId(pokemonNameOrId);
+        pokemonId = getPokemonId(pokemonNameOrId);
         if (!pokemonId) return null;
         pokemonName = pokemonNameOrId;
     } else if (typeof pokemonNameOrId === 'number') {
@@ -59,6 +73,7 @@ export function getPokemonSpriteUrl(pokemonNameOrId: string | number, suffix?: s
         const foundName = Object.entries(POKEMON_NAME_TO_ID).find(([, id]) => id === pokemonNameOrId);
         if (!foundName) return null;
         pokemonName = foundName[0];
+        pokemonId = pokemonNameOrId;
     } else {
         return null;
     }
@@ -66,9 +81,15 @@ export function getPokemonSpriteUrl(pokemonNameOrId: string | number, suffix?: s
     // Clean Pokemon name for URL: use normalization + remove non-alphanumeric
     let urlName = normalizePokemonName(pokemonName).replace(/[^a-z0-9]/g, ''); // Remove all non-alphanumeric characters (spaces, hyphens, apostrophes, etc.)
 
-    // Add suffix if provided
+    // Add suffix if provided (for form variations)
     if (suffix) {
         urlName += suffix;
+    }
+
+    // Check for form-specific special rules first
+    const formKey = suffix ? `${urlName}` : null;
+    if (formKey && FORM_SPECIFIC_STATIC_SPRITES[formKey]) {
+        return FORM_SPECIFIC_STATIC_SPRITES[formKey];
     }
 
     // Check if this static sprite exists in primary source
@@ -76,18 +97,14 @@ export function getPokemonSpriteUrl(pokemonNameOrId: string | number, suffix?: s
         return `https://raw.githubusercontent.com/mgrann03/pokemon-resources/refs/heads/main/graphics/pogo/${urlName}.png`;
     }
 
-    // Fallback to PokeMiners for base forms only (no suffixes)
-    if (!suffix && typeof pokemonNameOrId !== 'string') {
-        // We have a numeric ID, try PokeMiners as fallback
-        return `https://raw.githubusercontent.com/PokeMiners/pogo_assets/master/Images/Pokemon/Addressable%20Assets/pm${pokemonNameOrId}.icon.png`;
+    // Check for special static sprite rules (base form with no suffix)
+    if (!suffix && pokemonId && SPECIAL_STATIC_SPRITE_RULES[pokemonId]) {
+        return SPECIAL_STATIC_SPRITE_RULES[pokemonId];
     }
 
-    // If we have a name, try to get the ID for PokeMiners fallback
-    if (!suffix && typeof pokemonNameOrId === 'string') {
-        const pokemonId = getPokemonId(pokemonNameOrId);
-        if (pokemonId) {
-            return `https://raw.githubusercontent.com/PokeMiners/pogo_assets/master/Images/Pokemon/Addressable%20Assets/pm${pokemonId}.icon.png`;
-        }
+    // Fallback to PokeMiners for base forms only (no suffixes)
+    if (!suffix && pokemonId) {
+        return `https://raw.githubusercontent.com/PokeMiners/pogo_assets/master/Images/Pokemon/Addressable%20Assets/pm${pokemonId}.icon.png`;
     }
 
     // Only log if we haven't seen this missing sprite before
