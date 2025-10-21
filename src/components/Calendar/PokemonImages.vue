@@ -15,6 +15,7 @@
                         :class="{
                             'has-dynamax-overlay': showDynamaxOverlay,
                             'has-shadow-effect': showShadowEffect,
+                            'has-gigantamax-effect': showGigantamaxEffect,
                             'placeholder-container': !pokemonData.imageUrl,
                         }"
                     >
@@ -132,8 +133,15 @@ const shouldShowPlaceholder = computed(() => {
     return pokemonImages.value.length === 0 && relevantEventTypes.includes(props.event.eventType);
 });
 
-const showDynamaxOverlay = computed(() => props.event.eventType === 'max-mondays');
+const showDynamaxOverlay = computed(() => props.event.eventType === 'max-mondays' /*  || props.event.eventType === 'max-battles' */);
 const showShadowEffect = computed(() => getRaidSubType(props.event) === 'shadow-raids');
+const showGigantamaxEffect = computed(() => {
+    if (props.event.eventType !== 'max-battles') return false;
+
+    const eventName = props.eventName;
+    const gigantamaxMatch = eventName.match(/^Gigantamax\s+(.+?)\s+Max\s+Battle\s+Day$/i);
+    return gigantamaxMatch !== null;
+});
 
 function handleImageError(index: number): void {
     imageErrors.value.add(index);
@@ -194,7 +202,7 @@ function handleImageError(index: number): void {
 .dynamax-overlay,
 .shadow-overlay {
     position: absolute;
-    top: -2px;
+    top: -3px;
     left: 0;
     right: 0;
     /* bottom: 0; */
@@ -269,9 +277,22 @@ function handleImageError(index: number): void {
     width: auto; /* Let width be automatic based on aspect ratio */
 }
 
-/* .has-dynamax-overlay .pokemon-icon {
-    margin-top: 4px;
-} */
+.has-dynamax-overlay {
+    .pokemon-icon {
+        /* margin-top: 4px; */
+        filter: drop-shadow(0 -1px 1px rgba(0, 0, 0, 0.25));
+    }
+    /* .dynamax-overlay {
+        opacity: 0.5;
+    } */
+}
+
+.has-gigantamax-effect {
+    .pokemon-icon {
+        /* red glow effect */
+        filter: drop-shadow(0 -1px 4px rgba(200, 0, 0, 0.2));
+    }
+}
 
 .placeholder-container {
     opacity: 0.6;

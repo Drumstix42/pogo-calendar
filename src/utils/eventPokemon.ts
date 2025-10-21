@@ -1,6 +1,7 @@
 import { formatEventName } from './eventName.ts';
 import { type PogoEvent, getRaidSubType } from './eventTypes';
-import { getPokemonAnimatedUrl, getPokemonSpriteUrl } from './pokemonMapper.ts';
+import { getPokemonAnimatedUrl, getPokemonId, getPokemonSpriteUrl } from './pokemonMapper.ts';
+import { GIGANTAMAX_POKEMON_IDS } from '@/constants/validGigantamaxSprites.ts';
 
 export interface PokemonImageOptions {
     useAnimated?: boolean;
@@ -11,6 +12,26 @@ export interface PokemonImageData {
     name: string;
     imageUrl: string | null;
 }
+
+// Special Gigantamax forms for Pokemon with multiple variants
+// Maps Pokemon ID to default form filename and pattern-based form filenames
+// TODO: migrate mapping to pokemonMapper.ts
+const GMAX_FORM_VARIANTS: Record<number, { default: string; patterns: Record<string, string> }> = {
+    849: {
+        // Toxtricity - "Gigantamax Toxtricity" → Amped, "Gigantamax Toxtricity Low Key" → Low Key
+        default: '849-Amped-Gmax.png',
+        patterns: {
+            'low-key': '849-Low-Key-Gmax.png',
+        },
+    },
+    892: {
+        // Urshifu - "Gigantamax Urshifu" → Rapid Strike, "Gigantamax Urshifu Single Strike" → Single Strike
+        default: '892-Single-Strike-Gmax.png',
+        patterns: {
+            'rapid-strike': '892-Rapid-Strike-Gmax.png',
+        },
+    },
+};
 
 function extractPokemonNamesFromRaidHour(eventName: string): string[] {
     // Decode HTML entities first
@@ -368,6 +389,54 @@ export function getEventPokemonImages(event: PogoEvent, options?: PokemonImageOp
 
     // Handle max battles - use the main event image
     if (event.eventType === 'max-battles') {
+        const eventName = formatEventName(event.name);
+
+        // Check for Gigantamax Pokemon pattern: "Gigantamax <Pokemon Name> Max Battle Day"
+        const gigantamaxMatch = eventName.match(/^Gigantamax\s+(.+?)\s+Max\s+Battle\s+Day$/i);
+        if (gigantamaxMatch) {
+            const pokemonName = gigantamaxMatch[1].trim();
+
+            // Extract base Pokemon name for ID lookup (e.g., "Toxtricity Low Key" → "Toxtricity")
+            // Try to match known form patterns first
+            const normalizedName = pokemonName.toLowerCase().replace(/\s+/g, '-');
+            let basePokemonName = pokemonName;
+            let matchedFormFilename: string | null = null;
+
+            // Check each Pokemon with form variants
+            for (const formVariant of Object.values(GMAX_FORM_VARIANTS)) {
+                const matchedForm = Object.entries(formVariant.patterns).find(([pattern]) => normalizedName.includes(pattern));
+
+                if (matchedForm) {
+                    // Found a form match - extract base name by removing the form text
+                    // Handle various formats: "Toxtricity Low Key", "Toxtricity (Low Key)", "Toxtricity (Low Key Form)"
+                    basePokemonName = pokemonName
+                        .replace(/[\s(]+(low[\s-]?key|single[\s-]?strike|rapid[\s-]?strike)[\s)]*(?:form)?[\s)]*/gi, '')
+                        .trim();
+                    matchedFormFilename = matchedForm[1];
+                    break;
+                }
+            }
+
+            const pokemonId = getPokemonId(basePokemonName);
+
+            // Check if we have a Gigantamax sprite for this Pokemon
+            if (pokemonId && GIGANTAMAX_POKEMON_IDS.has(pokemonId)) {
+                let gmaxFilename: string;
+
+                // Use the matched form filename if found, otherwise check for default form
+                if (matchedFormFilename) {
+                    gmaxFilename = matchedFormFilename;
+                } else {
+                    const formVariant = GMAX_FORM_VARIANTS[pokemonId];
+                    gmaxFilename = formVariant ? formVariant.default : `${String(pokemonId).padStart(3, '0')}-Gmax.png`;
+                }
+
+                const gmaxUrl = `https://raw.githubusercontent.com/HybridShivam/Pokemon/master/assets/images/${gmaxFilename}`;
+                return [{ name: `Gigantamax ${pokemonName}`, imageUrl: gmaxUrl }];
+            }
+        }
+
+        // Fallback to event image if available
         if (event.image) {
             return [{ name: 'Max Battle', imageUrl: event.image }];
         }
