@@ -38,26 +38,34 @@ function extractPokemonNamesFromRaidHour(eventName: string): string[] {
     // Examples: "Mega Latias and Mega Latios", "Pokemon A, Pokemon B, and Pokemon C"
     const pokemonNames: string[] = [];
 
-    // First split on commas, then handle "and" in the last part
+    // First check if we have commas
     const commaParts = pokemonPart.split(',').map(part => part.trim());
 
-    for (let i = 0; i < commaParts.length; i++) {
-        const part = commaParts[i];
+    if (commaParts.length > 1) {
+        // Multiple comma-separated parts
+        for (let i = 0; i < commaParts.length; i++) {
+            let part = commaParts[i];
 
-        if (i === commaParts.length - 1 && part.includes(' and ')) {
-            // Last part might contain "and" - split it
-            const andParts = part.split(' and ').map(p => p.trim());
-            pokemonNames.push(...andParts);
-        } else {
-            pokemonNames.push(part);
+            // Strip leading "and " if present
+            if (part.toLowerCase().startsWith('and ')) {
+                part = part.substring(4).trim();
+            }
+
+            if (i === commaParts.length - 1 && part.includes(' and ')) {
+                // Last part might contain "and" - split it
+                const andParts = part.split(' and ').map(p => p.trim());
+                pokemonNames.push(...andParts);
+            } else {
+                pokemonNames.push(part);
+            }
         }
-    }
-
-    // If no commas were found, just split on "and"
-    if (commaParts.length === 1 && pokemonPart.includes(' and ')) {
-        pokemonNames.length = 0; // Clear the array
+    } else if (pokemonPart.includes(' and ')) {
+        // No commas, just split on "and"
         const andParts = pokemonPart.split(' and ').map(p => p.trim());
         pokemonNames.push(...andParts);
+    } else {
+        // Single Pokemon name
+        pokemonNames.push(pokemonPart);
     }
 
     return pokemonNames.filter(name => name.length > 0);
