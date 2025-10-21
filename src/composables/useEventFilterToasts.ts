@@ -1,9 +1,11 @@
 import { useEventFilterStore } from '@/stores/eventFilter';
+import { useEventTypeColorsStore } from '@/stores/eventTypeColors';
 import { useToastsStore } from '@/stores/toasts';
 import { type EventTypeKey, type PogoEvent, getEventTypeInfo } from '@/utils/eventTypes';
 
 export const useEventFilterToasts = () => {
     const eventFilter = useEventFilterStore();
+    const eventTypeColorsStore = useEventTypeColorsStore();
     const toasts = useToastsStore();
 
     const hideEventTypeWithToast = (eventType: EventTypeKey) => {
@@ -12,13 +14,13 @@ export const useEventFilterToasts = () => {
 
         toasts.addEventFilterToast({
             eventTypeName: eventTypeInfo.name,
-            eventTypeColor: eventTypeInfo.color,
+            eventTypeColor: eventTypeColorsStore.getEventTypeColor(eventType),
             action: 'hidden',
             undoAction() {
                 eventFilter.enableEventType(eventType);
                 toasts.addEventFilterToast({
                     eventTypeName: eventTypeInfo.name,
-                    eventTypeColor: eventTypeInfo.color,
+                    eventTypeColor: eventTypeColorsStore.getEventTypeColor(eventType),
                     action: 'shown',
                     duration: 2000,
                 });
@@ -32,13 +34,13 @@ export const useEventFilterToasts = () => {
 
         toasts.addEventFilterToast({
             eventTypeName: eventTypeInfo.name,
-            eventTypeColor: eventTypeInfo.color,
+            eventTypeColor: eventTypeColorsStore.getEventTypeColor(eventType),
             action: 'shown',
             undoAction() {
                 eventFilter.disableEventType(eventType);
                 toasts.addEventFilterToast({
                     eventTypeName: eventTypeInfo.name,
-                    eventTypeColor: eventTypeInfo.color,
+                    eventTypeColor: eventTypeColorsStore.getEventTypeColor(eventType),
                     action: 'hidden',
                     duration: 2000,
                 });
@@ -73,19 +75,18 @@ export const useEventFilterToasts = () => {
     };
 
     const hideEventByIdWithToast = (eventId: string, eventName: string, event: PogoEvent) => {
-        const eventTypeInfo = getEventTypeInfo(event.eventType);
         eventFilter.hideEventById(eventId);
 
         toasts.addEventFilterToast({
             eventTypeName: eventName,
-            eventTypeColor: eventTypeInfo.color,
+            eventTypeColor: eventTypeColorsStore.getEventTypeColor(event.eventType),
             action: 'hidden',
             isIndividualEvent: true,
             undoAction() {
                 eventFilter.showEventById(eventId);
                 toasts.addEventFilterToast({
                     eventTypeName: eventName,
-                    eventTypeColor: eventTypeInfo.color,
+                    eventTypeColor: eventTypeColorsStore.getEventTypeColor(event.eventType),
                     action: 'shown',
                     isIndividualEvent: true,
                     duration: 2000,
@@ -95,19 +96,18 @@ export const useEventFilterToasts = () => {
     };
 
     const showEventByIdWithToast = (eventId: string, eventName: string, event: PogoEvent) => {
-        const eventTypeInfo = getEventTypeInfo(event.eventType);
         eventFilter.showEventById(eventId);
 
         toasts.addEventFilterToast({
             eventTypeName: eventName,
-            eventTypeColor: eventTypeInfo.color,
+            eventTypeColor: eventTypeColorsStore.getEventTypeColor(event.eventType),
             action: 'shown',
             isIndividualEvent: true,
             undoAction() {
                 eventFilter.hideEventById(eventId);
                 toasts.addEventFilterToast({
                     eventTypeName: eventName,
-                    eventTypeColor: eventTypeInfo.color,
+                    eventTypeColor: eventTypeColorsStore.getEventTypeColor(event.eventType),
                     action: 'hidden',
                     isIndividualEvent: true,
                     duration: 2000,

@@ -69,7 +69,7 @@
                         @click="handleEventClick(event)"
                     >
                         <VMenu
-                            :disabled="isMobile"
+                            :disabled="isTouchDevice"
                             placement="top"
                             :delay="tooltipOptionsDefaults.delay"
                             :distance="tooltipOptionsDefaults.distance"
@@ -96,11 +96,6 @@
 
                                 <span class="event-name">{{ getEventDisplayName(event) }}</span>
                                 <span v-if="shouldShowBadge(event)" class="event-badge">{{ getEventCount(event) }}</span>
-
-                                <!-- Toggle event type button (shows on hover) (hide on touch devices) -->
-                                <!-- <div v-if="!isTouchDevice" class="ms-auto d-flex align-items-center">
-                                    <EventToggleButton :event-type="event.eventType" @hide="hideEventType" />
-                                </div> -->
                             </div>
 
                             <template #popper>
@@ -118,7 +113,7 @@
                 <VMenu
                     v-for="event in singleDayEvents"
                     :key="`single-${event.eventID}`"
-                    :disabled="isMobile"
+                    :disabled="isTouchDevice"
                     placement="top"
                     :delay="tooltipOptionsDefaults.delay"
                     :distance="tooltipOptionsDefaults.distance"
@@ -143,10 +138,6 @@
                         <div class="event-content">
                             <div class="event-name-container">
                                 <div class="event-name">{{ getEventDisplayName(event) }}</div>
-                                <!-- Toggle event type button (shows on hover) (hide on touch devices) -->
-                                <!-- <div v-if="!isTouchDevice" class="ms-auto d-flex align-items-center">
-                                    <EventToggleButton :event-type="event.eventType" @hide="hideEventType" />
-                                </div> -->
                             </div>
                             <div class="event-time">
                                 <div class="event-dot" :style="{ backgroundColor: eventsStore.eventMetadata[event.eventID]?.color }"></div>
@@ -227,7 +218,6 @@ const { selectEvent, clearEvent, selectedEventId } = useUrlSync();
 
 // Breakpoints
 const breakpoints = useBreakpoints(breakpointsBootstrapV5);
-const isMobile = breakpoints.smaller('md'); // < 768px
 
 // Reactive values for multi-day event bar sizing
 const multiDayEventBarHeight = computed(() => calendarSettings.eventBarHeight);
@@ -392,14 +382,6 @@ const shouldShowBadge = (event: PogoEvent): boolean => {
     return getEventCount(event) > 1;
 };
 
-/* const getEventColor = (event: PogoEvent): string => {
-    return getEventTypeInfo(event.eventType).color;
-}; */
-
-/* const hideEventType = (eventType: EventTypeKey): void => {
-    hideEventTypeWithToast(eventType);
-}; */
-
 const highlightEventID = (eventID: string): void => {
     eventHighlight.highlightEventID(eventID);
 };
@@ -432,7 +414,7 @@ const debouncedClearEventIDHighlight = (): void => {
 
 // Mobile: opens drawer on tap
 function handleEventClick(event: PogoEvent) {
-    if (!isMobile.value) return;
+    if (!isTouchDevice.value) return;
     selectEvent(event.eventID);
 }
 

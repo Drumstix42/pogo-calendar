@@ -58,6 +58,11 @@
                                 </div>
                                 <small class="text-muted d-block mt-1">Control whether hidden events are also filtered from the timeline</small>
                             </div>
+
+                            <!-- Cancel Button -->
+                            <div class="d-flex gap-2 mt-3 pt-3 border-top">
+                                <button type="button" class="btn btn-secondary flex-grow-1" @click="closeModal">Cancel</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -71,6 +76,7 @@ import { X } from 'lucide-vue-next';
 import { computed } from 'vue';
 
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
+import { useEventsStore } from '@/stores/events';
 import { formatEventName } from '@/utils/eventName';
 import { type EventTypeKey, type PogoEvent, getEventTypeInfo } from '@/utils/eventTypes';
 
@@ -89,10 +95,11 @@ const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
 
 const calendarSettings = useCalendarSettingsStore();
+const eventsStore = useEventsStore();
 
 const eventName = computed(() => formatEventName(props.event.name));
 const eventTypeName = computed(() => getEventTypeInfo(props.event.eventType).name);
-const eventColor = computed(() => getEventTypeInfo(props.event.eventType).color);
+const eventColor = computed(() => eventsStore.eventMetadata[props.event.eventID]?.color);
 const eventColorDark = computed(() => `color-mix(in srgb, ${eventColor.value} 70%, black)`);
 
 function closeModal() {
@@ -161,7 +168,7 @@ function hideById() {
 
 .modal-title {
     margin: 0;
-    font-size: 1.25rem;
+    font-size: 1.1rem;
     font-weight: 500;
     color: var(--bs-body-color);
 }

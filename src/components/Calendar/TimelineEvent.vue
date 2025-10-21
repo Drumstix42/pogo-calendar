@@ -8,22 +8,36 @@
         :data-event-type="event.eventType"
         :data-timeline-event-id="event.eventID"
         :style="{
-            borderColor: eventColor,
-            backgroundColor: eventColor,
-            '--event-color-dark': eventColorDark,
             '--event-bg-color': eventColor,
         }"
         @mouseenter="debouncedHighlightEventID(props.event.eventID)"
         @mouseleave="debouncedClearEventIDHighlight"
     >
         <!-- Colored header with event type -->
-        <div class="event-header" :style="{ backgroundColor: eventColor }" @click="toggleActive">
+        <div class="event-header" @click="toggleActive">
             <div class="header-content">
                 <span class="event-type">{{ eventTypeName }}</span>
+                <!-- Color customization button -->
+                <VTooltip
+                    v-if="props.isActive"
+                    :disabled="isTouchDevice"
+                    placement="top"
+                    :delay="{ show: 50, hide: 0 }"
+                    distance="10"
+                    class="d-flex align-items-center"
+                >
+                    <template #popper>
+                        <div class="tooltip-text">Customize event type color</div>
+                    </template>
+
+                    <button type="button" class="timeline-color-edit-btn" @click.stop="openColorModal">
+                        <Palette :size="13" />
+                    </button>
+                </VTooltip>
                 <!-- Hide event type button -->
                 <div v-if="props.isActive" class="event-toggle-container">
                     <EventToggleButton :event-type="event.eventType" @hide="openHideModal" />
-                    <div class="header-action-text">Hide?</div>
+                    <!-- <div class="header-action-text">Hide?</div> -->
                 </div>
                 <component :is="props.isActive ? ChevronsDownUp : ChevronsUpDown" :size="14" class="chevron-icon" />
             </div>
@@ -57,11 +71,14 @@
 
 <script setup lang="ts">
 import { breakpointsBootstrapV5, useBreakpoints } from '@vueuse/core';
-import { ChevronsDownUp, ChevronsUpDown } from 'lucide-vue-next';
+import { ChevronsDownUp, ChevronsUpDown, Palette } from 'lucide-vue-next';
 import { computed } from 'vue';
 
+import { useDeviceDetection } from '@/composables/useDeviceDetection';
+import { useEditColorModal } from '@/composables/useEditColorModal';
 import { useHideEventModal } from '@/composables/useHideEventModal';
 import { useEventHighlightStore } from '@/stores/eventHighlight';
+import { useEventsStore } from '@/stores/events';
 import { formatEventName } from '@/utils/eventName';
 import { type PogoEvent, getEventTypeInfo } from '@/utils/eventTypes';
 
@@ -81,11 +98,19 @@ interface Emits {
 
 const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
+
 const hideEventModal = useHideEventModal();
+const editColorModal = useEditColorModal();
+const eventsStore = useEventsStore();
 const eventHighlight = useEventHighlightStore();
+const { isTouchDevice } = useDeviceDetection();
 
 const breakpoints = useBreakpoints(breakpointsBootstrapV5);
 const isDesktopSidebar = breakpoints.greaterOrEqual('xxl'); // >= 1400px
+
+function openColorModal() {
+    editColorModal.openModal(props.event.eventType);
+}
 
 function toggleActive() {
     emit('activate', props.event.eventID);
@@ -125,16 +150,11 @@ function debouncedClearEventIDHighlight() {
 
 // Event type color and name
 const eventColor = computed(() => {
-    return getEventTypeInfo(props.event.eventType).color;
+    return eventsStore.eventMetadata[props.event.eventID]?.color;
 });
 
 const eventTypeName = computed(() => {
     return getEventTypeInfo(props.event.eventType).name;
-});
-
-// Darker color for active state
-const eventColorDark = computed(() => {
-    return `color-mix(in srgb, ${eventColor.value} 90%, black)`;
 });
 </script>
 
@@ -143,6 +163,8 @@ const eventColorDark = computed(() => {
     border: 1px solid;
     border-radius: 8px;
     overflow: hidden;
+    border-color: var(--event-bg-color);
+    background-color: var(--event-bg-color);
 
     transition:
         transform 0.15s ease,
@@ -150,8 +172,7 @@ const eventColorDark = computed(() => {
 
     @media (pointer: fine) {
         &:hover {
-            border-color: var(--event-color-dark);
-            background-color: var(--event-color-dark);
+            border-color: color-mix(in srgb, var(--event-bg-color) 90%, black);
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 
             /* .event-body {
@@ -167,8 +188,18 @@ const eventColorDark = computed(() => {
     &.is-active {
         transform: scale(1.02);
         border-width: 1px;
-        border-color: var(--event-color-dark);
+        border-color: color-mix(in srgb, var(--event-bg-color) 90%, black);
+        background-color: color-mix(in srgb, var(--event-bg-color) 90%, black);
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+        .event-header {
+            background-color: color-mix(in srgb, var(--event-bg-color) 90%, black);
+            @media (pointer: fine) {
+                &:hover {
+                    background-color: color-mix(in srgb, var(--event-bg-color) 80%, black) !important;
+                }
+            }
+        }
     }
 }
 
@@ -183,13 +214,14 @@ const eventColorDark = computed(() => {
     justify-content: space-between;
     align-items: center;
     gap: 6px;
+    background-color: var(--event-bg-color);
     cursor: pointer;
     transition: background-color 0.5s ease;
 
     @media (pointer: fine) {
         &:hover {
             font-weight: 600;
-            background-color: var(--event-color-dark) !important;
+            background-color: color-mix(in srgb, var(--event-bg-color) 90%, black) !important;
 
             .chevron-icon {
                 transform: scale(1.1);
@@ -240,6 +272,30 @@ const eventColorDark = computed(() => {
         display: flex;
         align-items: center;
         gap: 4px;
+    }
+
+    .timeline-color-edit-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 3px;
+        height: 20px;
+        border: none;
+        border-radius: 3px;
+        background-color: rgba(255, 255, 255, 0.2);
+        color: white;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        flex-shrink: 0;
+    }
+
+    .timeline-color-edit-btn:hover {
+        background-color: rgba(255, 255, 255, 0.3);
+        transform: scale(1.05);
+    }
+
+    .timeline-color-edit-btn:active {
+        transform: scale(0.95);
     }
 }
 

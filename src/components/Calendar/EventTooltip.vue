@@ -3,11 +3,19 @@
         <div
             class="event-tooltip-type"
             :style="{
-                backgroundColor: getEventColor(event),
-                borderLeftColor: `color-mix(in srgb, ${getEventColor(event)} 70%, black)`,
+                backgroundColor: eventsStore.eventMetadata[event.eventID]?.color,
+                borderLeftColor: `color-mix(in srgb, ${eventsStore.eventMetadata[event.eventID]?.color} 70%, black)`,
             }"
         >
             <span class="event-type-name">{{ getEventTypeName(event) }}</span>
+            <VTooltip :disabled="isTouchDevice" placement="top" :delay="{ show: 50, hide: 0 }" distance="10" class="d-flex align-items-center">
+                <template #popper>
+                    <div class="tooltip-text">Customize event type color</div>
+                </template>
+                <button type="button" class="tooltip-color-edit-btn" :title="`Customize ${getEventTypeName(event)} color`" @click="openColorModal">
+                    <Palette :size="13" />
+                </button>
+            </VTooltip>
             <EventToggleButton :event-type="event.eventType" @hide="openHideModal" />
         </div>
 
@@ -75,11 +83,14 @@
 
 <script setup lang="ts">
 import { hideAllPoppers } from 'floating-vue';
-import { ExternalLink } from 'lucide-vue-next';
+import { ExternalLink, Palette } from 'lucide-vue-next';
 import { nextTick } from 'vue';
 
+import { useDeviceDetection } from '@/composables/useDeviceDetection';
+import { useEditColorModal } from '@/composables/useEditColorModal';
 import { useHideEventModal } from '@/composables/useHideEventModal';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
+import { useEventsStore } from '@/stores/events';
 import { formatEventName } from '@/utils/eventName';
 import { type PogoEvent, getEventTypeInfo, getGroupedEvents } from '@/utils/eventTypes';
 
@@ -99,6 +110,13 @@ const props = withDefaults(defineProps<Props>(), {
 
 const calendarSettings = useCalendarSettingsStore();
 const hideEventModal = useHideEventModal();
+const editColorModal = useEditColorModal();
+const eventsStore = useEventsStore();
+const { isTouchDevice } = useDeviceDetection();
+
+function openColorModal() {
+    editColorModal.openModal(props.event.eventType);
+}
 
 function openHideModal() {
     hideEventModal.openModal(props.event);
@@ -109,10 +127,6 @@ function openHideModal() {
         }, 50);
     });
 }
-
-const getEventColor = (event: PogoEvent): string => {
-    return getEventTypeInfo(event.eventType).color;
-};
 
 const getEventTypeName = (event: PogoEvent): string => {
     return getEventTypeInfo(event.eventType).name;
@@ -138,11 +152,30 @@ const getEventTypeName = (event: PogoEvent): string => {
     text-shadow: 1px 2px 2px rgba(0, 0, 0, 0.3);
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    gap: 8px;
 }
 
-.event-type-name {
-    flex: 1;
+.tooltip-color-edit-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3px;
+    border: none;
+    border-radius: 3px;
+    background-color: rgba(255, 255, 255, 0.2);
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.tooltip-color-edit-btn:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+    transform: scale(1.05);
+}
+
+.tooltip-color-edit-btn:active {
+    transform: scale(0.95);
 }
 
 .event-time-info {

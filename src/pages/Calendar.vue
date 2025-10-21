@@ -84,7 +84,11 @@
     <!-- Event Detail Offcanvas (Mobile) -->
     <Teleport to="body">
         <Transition name="offcanvas-fade">
-            <div v-if="selectedEventId && isMobile && !eventsStore.loading" class="event-detail-backdrop" @click="handleEventDetailBackdropClick">
+            <div
+                v-if="selectedEventId && isTouchDevice && !eventsStore.loading"
+                class="event-detail-backdrop"
+                @click="handleEventDetailBackdropClick"
+            >
                 <div class="offcanvas offcanvas-bottom show event-detail-offcanvas" @click.stop>
                     <EventDetailOffcanvas :event="selectedEvent" :is-single-day="selectedEventIsSingleDay" @close="handleCloseEventDetail" />
                 </div>
@@ -101,6 +105,13 @@
         @hide-by-type="handleHideByType"
         @hide-by-id="handleHideById"
     />
+
+    <!-- Edit Event Color Modal -->
+    <EditEventColorModal
+        :show="editColorModal.showModal.value"
+        :event-type-key="editColorModal.currentEventTypeKey.value"
+        @close="editColorModal.closeModal"
+    />
 </template>
 
 <script setup lang="ts">
@@ -109,6 +120,7 @@ import { CalendarRange, EyeOff, PanelTop } from 'lucide-vue-next';
 import { computed, nextTick, onMounted, onUnmounted, watch, watchEffect } from 'vue';
 
 import { useDeviceDetection } from '@/composables/useDeviceDetection';
+import { useEditColorModal } from '@/composables/useEditColorModal';
 import { useEventFilterToasts } from '@/composables/useEventFilterToasts';
 import { useHideEventModal } from '@/composables/useHideEventModal';
 import { useUrlSync } from '@/composables/useUrlSync';
@@ -119,6 +131,7 @@ import { type EventTypeKey, isSameDayEvent } from '@/utils/eventTypes';
 
 import CalendarGrid from '@/components/Calendar/CalendarGrid.vue';
 import CalendarHeader from '@/components/Calendar/CalendarHeader.vue';
+import EditEventColorModal from '@/components/Calendar/EditEventColorModal.vue';
 import EventDetailOffcanvas from '@/components/Calendar/EventDetailOffcanvas.vue';
 /* import CalendarMobile from '@/components/Calendar/CalendarMobile.vue'; */
 import EventTimeline from '@/components/Calendar/EventTimeline.vue';
@@ -130,13 +143,13 @@ const eventsStore = useEventsStore();
 const calendarSettings = useCalendarSettingsStore();
 const eventFilter = useEventFilterStore();
 const hideEventModal = useHideEventModal();
+const editColorModal = useEditColorModal();
 const { hideEventTypeWithToast, hideEventByIdWithToast } = useEventFilterToasts();
 const { settingsOpen, openSettings, closeSettings, selectedEventId, clearEvent } = useUrlSync();
 const { isTouchDevice } = useDeviceDetection();
 
 // responsive breakpoints https://getbootstrap.com/docs/5.0/layout/breakpoints/#available-breakpoints
 const breakpoints = useBreakpoints(breakpointsBootstrapV5);
-const isMobile = breakpoints.smaller('md'); // < 768px
 const isXxlScreenSize = breakpoints.greaterOrEqual('xxl'); // >= 1400px
 // const isDesktop = breakpoints.greaterOrEqual('md'); // >= 768px
 
@@ -229,9 +242,8 @@ function handleHideById(eventId: string, eventName: string) {
 watchEffect(() => {
     const isOptionsOpen = calendarSettings.optionsExpanded;
     const isEventDetailOpen = !!selectedEventId.value;
-    const isMobileSize = isMobile.value;
 
-    if ((isOptionsOpen || isEventDetailOpen) && isMobileSize) {
+    if ((isOptionsOpen || isEventDetailOpen) && isTouchDevice.value) {
         document.body.style.overflow = 'hidden';
     } else {
         document.body.style.overflow = '';

@@ -1,131 +1,144 @@
 <template>
-    <CollapsibleSection
-        id="event-type-filters-section"
-        title="Event Type Filters"
-        storage-key="calendarSettings/event-filters"
-        class="flex-grow-section"
-    >
-        <!-- Timeline filter toggle -->
-        <div class="form-check form-switch">
-            <input
-                id="filtersApplyToTimeline"
-                class="form-check-input"
-                type="checkbox"
-                role="switch"
-                :checked="calendarSettings.filtersApplyToTimeline"
-                @change="handleTimelineFilterToggle"
-            />
-            <label for="filtersApplyToTimeline" class="form-check-label">Apply filters to Timeline</label>
-        </div>
-        <small class="text-muted d-block mt-2 mb-4">Control whether hidden events are also filtered from the Timeline.</small>
-
-        <div class="filter-stats mb-2">
-            <div class="btn-group btn-group-sm">
-                <button
-                    :class="eventFilter.allEventTypesEnabled ? 'btn btn-secondary' : 'btn btn-outline-secondary'"
-                    @click="eventFilter.enableAllEventTypes()"
-                >
-                    All
-                </button>
-                <button
-                    :class="eventFilter.noEventTypesEnabled ? 'btn btn-secondary' : 'btn btn-outline-secondary'"
-                    @click="eventFilter.disableAllEventTypes()"
-                >
-                    None
-                </button>
-            </div>
-            <div v-if="eventFilter.enabledCount === eventFilter.totalCount" class="text-muted">
-                All {{ eventFilter.totalCount }} event types enabled
-            </div>
-            <div v-else-if="eventFilter.enabledCount === 0" class="text-muted">
-                <i>All {{ eventFilter.totalCount }} event types disabled</i>
-            </div>
-            <div v-else class="text-muted">{{ eventFilter.enabledCount }} of {{ eventFilter.totalCount }} event types enabled</div>
-        </div>
-
-        <small class="text-muted d-block">Choose which event types are displayed.</small>
-        <small v-if="hiddenEvents.length > 0" class="text-muted d-block"
-            ><span class="fw-bold">{{ hiddenEvents.length }} specific event(s) hidden</span> (see bottom of list).</small
+    <div>
+        <CollapsibleSection
+            id="event-type-filters-section"
+            title="Event Type Filters"
+            storage-key="calendarSettings/event-filters"
+            class="flex-grow-section"
         >
-
-        <div ref="filterGridContainer" class="filter-grid-container" @mouseleave="clearHighlight">
-            <div class="filter-grid mt-1">
-                <div v-for="group in eventGroups" :key="group.title" class="filter-group">
-                    <h6 class="filter-group-title">{{ group.title }}</h6>
-                    <div class="filter-group-items">
-                        <label
-                            v-for="eventTypeKey in group.eventTypes"
-                            :key="eventTypeKey"
-                            class="filter-item"
-                            :class="{ 'filter-item--enabled': eventFilter.isEventTypeEnabled(eventTypeKey) }"
-                            @mouseenter="highlightEventType(eventTypeKey)"
-                            @mouseleave="clearHighlight"
-                        >
-                            <input
-                                :id="`filter-option-${eventTypeKey}`"
-                                class="filter-checkbox"
-                                type="checkbox"
-                                :checked="eventFilter.isEventTypeEnabled(eventTypeKey)"
-                                @change="eventFilter.toggleEventType(eventTypeKey)"
-                            />
-                            <div class="filter-layout">
-                                <div
-                                    class="filter-checkbox-area"
-                                    :class="{ 'filter-checkbox-area--checked': eventFilter.isEventTypeEnabled(eventTypeKey) }"
-                                >
-                                    <Check
-                                        :size="22"
-                                        class="checkbox-icon"
-                                        :class="{ 'checkbox-icon--checked': eventFilter.isEventTypeEnabled(eventTypeKey) }"
-                                    />
-                                </div>
-                                <div class="filter-content" :style="{ backgroundColor: getEventTypeInfo(eventTypeKey).color }">
-                                    <span class="event-name">{{ getEventTypeInfo(eventTypeKey).name }}</span>
-                                </div>
-                            </div>
-                        </label>
-                    </div>
-                </div>
+            <!-- Timeline filter toggle -->
+            <div class="form-check form-switch">
+                <input
+                    id="filtersApplyToTimeline"
+                    class="form-check-input"
+                    type="checkbox"
+                    role="switch"
+                    :checked="calendarSettings.filtersApplyToTimeline"
+                    @change="handleTimelineFilterToggle"
+                />
+                <label for="filtersApplyToTimeline" class="form-check-label">Apply filters to Timeline</label>
             </div>
-        </div>
+            <small class="text-muted d-block mt-2 mb-4">Control whether hidden events are also filtered from the Timeline.</small>
 
-        <!-- Hidden Events Section -->
-        <div class="hidden-events-section mt-3">
-            <small class="text-muted mb-2 d-block">Individually hidden events will appear here.</small>
-
-            <div v-if="hiddenEvents.length === 0" class="text-muted text-center py-2" style="font-size: 0.85rem; font-style: italic">
-                No events hidden yet!
-            </div>
-
-            <div v-else class="hidden-events-list">
-                <div v-for="hiddenEvent in hiddenEvents" :key="hiddenEvent.id" class="hidden-event-item">
-                    <div class="hidden-event-content">
-                        <div class="hidden-event-color-bar" :style="{ backgroundColor: hiddenEvent.color }" :title="hiddenEvent.typeName"></div>
-                        <div class="hidden-event-text">
-                            <div class="hidden-event-name">{{ hiddenEvent.name }}</div>
-                            <div class="hidden-event-type">{{ hiddenEvent.typeName }}</div>
-                        </div>
-                    </div>
+            <div class="filter-stats mb-2">
+                <div class="btn-group btn-group-sm">
                     <button
-                        type="button"
-                        class="btn btn-icon-ghost btn-sm hidden-event-remove"
-                        :title="`Show ${hiddenEvent.name}`"
-                        @click="showHiddenEvent(hiddenEvent.id, hiddenEvent.name, hiddenEvent.event)"
+                        :class="eventFilter.allEventTypesEnabled ? 'btn btn-secondary' : 'btn btn-outline-secondary'"
+                        @click="eventFilter.enableAllEventTypes()"
                     >
-                        <X :size="16" />
+                        All
+                    </button>
+                    <button
+                        :class="eventFilter.noEventTypesEnabled ? 'btn btn-secondary' : 'btn btn-outline-secondary'"
+                        @click="eventFilter.disableAllEventTypes()"
+                    >
+                        None
                     </button>
                 </div>
+                <div v-if="eventFilter.enabledCount === eventFilter.totalCount" class="text-muted">
+                    All {{ eventFilter.totalCount }} event types enabled
+                </div>
+                <div v-else-if="eventFilter.enabledCount === 0" class="text-muted">
+                    <i>All {{ eventFilter.totalCount }} event types disabled</i>
+                </div>
+                <div v-else class="text-muted">{{ eventFilter.enabledCount }} of {{ eventFilter.totalCount }} event types enabled</div>
             </div>
-        </div>
-    </CollapsibleSection>
+
+            <small class="text-muted d-block">Choose which event types are displayed.</small>
+            <small v-if="hiddenEvents.length > 0" class="text-muted d-block"
+                ><span class="fw-bold">{{ hiddenEvents.length }} specific event(s) hidden</span> (see bottom of list).</small
+            >
+
+            <div ref="filterGridContainer" class="filter-grid-container" @mouseleave="clearHighlight">
+                <div class="filter-grid mt-1">
+                    <div v-for="group in eventGroups" :key="group.title" class="filter-group">
+                        <h6 class="filter-group-title">{{ group.title }}</h6>
+                        <div class="filter-group-items">
+                            <label
+                                v-for="eventTypeKey in group.eventTypes"
+                                :key="eventTypeKey"
+                                class="filter-item"
+                                :class="{ 'filter-item--enabled': eventFilter.isEventTypeEnabled(eventTypeKey) }"
+                                @mouseenter="highlightEventType(eventTypeKey)"
+                                @mouseleave="clearHighlight"
+                            >
+                                <input
+                                    :id="`filter-option-${eventTypeKey}`"
+                                    class="filter-checkbox"
+                                    type="checkbox"
+                                    :checked="eventFilter.isEventTypeEnabled(eventTypeKey)"
+                                    @change="eventFilter.toggleEventType(eventTypeKey)"
+                                />
+                                <div class="filter-layout">
+                                    <div
+                                        class="filter-checkbox-area"
+                                        :class="{ 'filter-checkbox-area--checked': eventFilter.isEventTypeEnabled(eventTypeKey) }"
+                                    >
+                                        <Check
+                                            :size="22"
+                                            class="checkbox-icon"
+                                            :class="{ 'checkbox-icon--checked': eventFilter.isEventTypeEnabled(eventTypeKey) }"
+                                        />
+                                    </div>
+                                    <div class="filter-content" :style="{ backgroundColor: eventTypeColorsStore.getEventTypeColor(eventTypeKey) }">
+                                        <span class="event-name">{{ getEventTypeInfo(eventTypeKey).name }}</span>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        class="filter-color-edit-btn"
+                                        :class="{ 'has-custom-color': eventTypeColorsStore.hasCustomColor(eventTypeKey) }"
+                                        :title="`Customize ${getEventTypeInfo(eventTypeKey).name} color`"
+                                        @click.prevent.stop="openColorModal(eventTypeKey)"
+                                    >
+                                        <Palette :size="16" />
+                                    </button>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hidden Events Section -->
+            <div class="hidden-events-section mt-3">
+                <small class="text-muted mb-2 d-block">Individually hidden events will appear here.</small>
+
+                <div v-if="hiddenEvents.length === 0" class="text-muted text-center py-2" style="font-size: 0.85rem; font-style: italic">
+                    No events hidden yet!
+                </div>
+
+                <div v-else class="hidden-events-list">
+                    <div v-for="hiddenEvent in hiddenEvents" :key="hiddenEvent.id" class="hidden-event-item">
+                        <div class="hidden-event-content">
+                            <div class="hidden-event-color-bar" :style="{ backgroundColor: hiddenEvent.color }" :title="hiddenEvent.typeName"></div>
+                            <div class="hidden-event-text">
+                                <div class="hidden-event-name">{{ hiddenEvent.name }}</div>
+                                <div class="hidden-event-type">{{ hiddenEvent.typeName }}</div>
+                            </div>
+                        </div>
+                        <button
+                            type="button"
+                            class="btn btn-icon-ghost btn-sm hidden-event-remove"
+                            :title="`Show ${hiddenEvent.name}`"
+                            @click="showHiddenEvent(hiddenEvent.id, hiddenEvent.name, hiddenEvent.event)"
+                        >
+                            <X :size="16" />
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </CollapsibleSection>
+    </div>
 </template>
 <script setup lang="ts">
-import { Check, X } from 'lucide-vue-next';
+import { Check, Palette, X } from 'lucide-vue-next';
 import { computed } from 'vue';
 
+import { useEditColorModal } from '@/composables/useEditColorModal';
 import { useEventFilterToasts } from '@/composables/useEventFilterToasts';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { useEventFilterStore } from '@/stores/eventFilter';
+import { useEventTypeColorsStore } from '@/stores/eventTypeColors';
 import { useEventsStore } from '@/stores/events';
 import { EVENT_TYPES, getEventTypeInfo } from '@/utils/eventTypes';
 import type { EventTypeKey } from '@/utils/eventTypes';
@@ -135,7 +148,13 @@ import CollapsibleSection from '@/components/CollapsibleSection.vue';
 const eventFilter = useEventFilterStore();
 const calendarSettings = useCalendarSettingsStore();
 const eventsStore = useEventsStore();
+const eventTypeColorsStore = useEventTypeColorsStore();
+const editColorModal = useEditColorModal();
 const { showEventByIdWithToast } = useEventFilterToasts();
+
+function openColorModal(eventTypeKey: EventTypeKey) {
+    editColorModal.openModal(eventTypeKey);
+}
 
 // Timeline filter toggle handler
 const handleTimelineFilterToggle = (event: Event) => {
@@ -219,7 +238,7 @@ const hiddenEvents = computed(() => {
             id: eventId,
             name: metadata?.displayName || event.name || event.eventID,
             typeName: typeInfo.name,
-            color: typeInfo.color,
+            color: eventsStore.eventMetadata[eventId]?.color,
             event,
         };
     });
@@ -357,8 +376,7 @@ function showHiddenEvent(eventId: string, eventName: string, event: any) {
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
     flex: 1;
     border: 1px solid rgba(0, 0, 0, 0.1);
-    border-top-right-radius: 5px;
-    border-bottom-right-radius: 5px;
+    border-right: none;
     transition: all 0.2s ease;
 }
 
@@ -382,6 +400,71 @@ function showHiddenEvent(eventId: string, eventName: string, event: any) {
     font-size: 0.8rem;
     font-weight: 500;
     line-height: 1.1;
+}
+
+/* Color Edit Button */
+.filter-color-edit-btn {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    min-width: 30px;
+    background-color: rgba(255, 255, 255, 0.16);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-top-right-radius: 5px;
+    border-bottom-right-radius: 5px;
+    color: var(--bs-dark);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    padding: 0;
+    opacity: 0.8;
+
+    &.has-custom-color {
+        opacity: 1;
+    }
+}
+
+[data-bs-theme='dark'] .filter-color-edit-btn {
+    color: var(--bs-light);
+}
+
+.filter-color-edit-btn:hover {
+    background-color: rgba(255, 255, 255, 0.25);
+    color: var(--bs-emphasis-color);
+    transform: scale(1.05);
+}
+
+.filter-color-edit-btn:active {
+    transform: scale(0.95);
+}
+
+/* .filter-color-edit-btn.has-custom-color {
+    background-color: rgba(255, 255, 255, 0.3);
+} */
+
+.filter-color-edit-btn.has-custom-color::after {
+    content: '';
+    position: absolute;
+    bottom: 3px;
+    right: 3px;
+    width: 5px;
+    height: 5px;
+    background-color: var(--bs-dark);
+    border-radius: 50%;
+    box-shadow: 0 0 2px rgba(0, 0, 0, 0.3);
+    opacity: 0.85;
+}
+[data-bs-theme='dark'] .filter-color-edit-btn.has-custom-color::after {
+    background-color: var(--bs-light);
+}
+
+.filter-item:not(.filter-item--enabled) .filter-color-edit-btn {
+    opacity: 0.5;
+}
+
+.filter-item:not(.filter-item--enabled):hover .filter-color-edit-btn {
+    opacity: 0.7;
 }
 
 .filter-stats {

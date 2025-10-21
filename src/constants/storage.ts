@@ -9,6 +9,7 @@ export const createStorageKey = (key: string): string => `${STORAGE_PREFIX}-${ke
 
 export const STORAGE_KEYS = {
     COLLAPSIBLE_SECTIONS: createStorageKey('collapsible-sections'),
+    CUSTOM_EVENT_TYPE_COLORS: createStorageKey('custom-event-type-colors'),
     DISABLED_FILTERS: createStorageKey('disabled-filters'),
     DISMISSED_MESSAGE_VERSIONS: createStorageKey('dismissed-message-versions'),
     EVENT_BAR_FONT_SIZE: createStorageKey('event-bar-font-size'),

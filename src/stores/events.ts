@@ -8,7 +8,7 @@ import { computed, ref } from 'vue';
 import { DATE_FORMAT } from '../utils/dateFormat';
 import { formatEventName } from '../utils/eventName';
 import {
-    type EventTypeInfo,
+    EventTypeInfoWithoutColor,
     type PogoEvent,
     formatEventTime,
     getEventTypeInfo,
@@ -16,6 +16,7 @@ import {
     parseEventDate,
     sortEventsByPriority,
 } from '../utils/eventTypes';
+import { useEventTypeColorsStore } from '@/stores/eventTypeColors';
 
 // Day.js plugins - extend adds functionality to the core library
 dayjs.extend(utc); // Adds UTC timezone support for parsing/converting dates
@@ -23,7 +24,7 @@ dayjs.extend(isSameOrBefore); // Adds comparison method for date <= checks
 dayjs.extend(isSameOrAfter); // Adds comparison method for date >= checks
 
 interface EventWithTypeInfo extends PogoEvent {
-    typeInfo: EventTypeInfo;
+    typeInfo: EventTypeInfoWithoutColor;
 }
 
 export interface EventMetadata {
@@ -37,7 +38,7 @@ export interface EventMetadata {
     isFutureEvent: boolean;
 
     // Type information
-    typeInfo: EventTypeInfo;
+    typeInfo: EventTypeInfoWithoutColor;
     color: string;
 
     // Display helpers
@@ -132,6 +133,7 @@ export const useEventsStore = defineStore('eventsStore', () => {
     const eventMetadata = computed((): Record<string, EventMetadata> => {
         const metadata: Record<string, EventMetadata> = {};
         const now = dayjs();
+        const eventTypeColorsStore = useEventTypeColorsStore();
 
         events.value.forEach(event => {
             const startDate = parseEventDate(event.start);
@@ -144,7 +146,7 @@ export const useEventsStore = defineStore('eventsStore', () => {
                 startDate,
                 endDate,
                 typeInfo,
-                color: typeInfo.color,
+                color: eventTypeColorsStore.getEventTypeColor(event.eventType),
                 formattedStartTime: formatEventTime(event.start),
                 isMultiDayEvent: isMultiDay,
                 isPastEvent: endDate.isBefore(now),
@@ -179,8 +181,8 @@ export const useEventsStore = defineStore('eventsStore', () => {
         error.value = null;
 
         try {
-            //const response = await fetch(SCRAPED_EVENTS_URL);
-            const response = await fetch('/planning/events3.json');
+            const response = await fetch(SCRAPED_EVENTS_URL);
+            // const response = await fetch('/planning/events3.json');
 
             if (!response.ok) {
                 throw new Error(`Failed to fetch events: ${response.status} ${response.statusText}`);

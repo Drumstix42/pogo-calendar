@@ -3,6 +3,7 @@ import utc from 'dayjs/plugin/utc';
 
 import { DATE_FORMAT } from './dateFormat';
 import { formatEventName } from './eventName';
+import { useEventTypeColorsStore } from '@/stores/eventTypeColors';
 
 dayjs.extend(utc);
 
@@ -12,6 +13,8 @@ export interface EventTypeInfo {
     priority: number;
     category: 'community-and-raids' | 'research' | 'seasonal-and-premium' | 'events-and-misc';
 }
+
+export type EventTypeInfoWithoutColor = Omit<EventTypeInfo, 'color'>;
 
 export interface PokemonBoss {
     name: string;
@@ -357,15 +360,20 @@ export function getRaidSubTypePriority(event: PogoEvent): number {
     }
 }
 
-export const getEventTypeInfo = (eventType: string): EventTypeInfo => {
-    return (
-        EVENT_TYPES[eventType] || {
-            // replaces dashes with spaces and capitalizes each word
-            name: eventType.replace(/-/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()),
-            color: '#757575', // Default grey
-            priority: 5,
-        }
-    );
+export const getEventTypeInfo = (eventType: string): EventTypeInfoWithoutColor => {
+    const info = EVENT_TYPES[eventType] || {
+        // replaces dashes with spaces and capitalizes each word
+        name: eventType.replace(/-/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()),
+        color: '#757575', // Default grey
+        priority: 5,
+        category: 'events-and-misc',
+    };
+
+    return {
+        name: info.name,
+        priority: info.priority,
+        category: info.category,
+    };
 };
 
 // Sort events by priority (higher number = higher priority)
@@ -477,6 +485,7 @@ export const shouldGroupEvents = (events: PogoEvent[]): boolean => {
 };
 
 export const groupEventsByType = (events: PogoEvent[]): EventGroup[] => {
+    const eventTypeColorsStore = useEventTypeColorsStore();
     const groups = new Map<string, PogoEvent[]>();
 
     // First, group by event type
@@ -498,7 +507,7 @@ export const groupEventsByType = (events: PogoEvent[]): EventGroup[] => {
                 eventType,
                 events: [event],
                 displayName: formatEventName(event.name), // Use actual event name for single events
-                color: getEventTypeInfo(eventType).color,
+                color: eventTypeColorsStore.getEventTypeColor(eventType),
                 isMultiDay: isMultiDayEvent(event),
                 startDate: parseEventDate(event.start),
                 endDate: parseEventDate(event.end),
@@ -529,7 +538,7 @@ export const groupEventsByType = (events: PogoEvent[]): EventGroup[] => {
                             eventType,
                             events: [event],
                             displayName: formatEventName(event.name),
-                            color: getEventTypeInfo(eventType).color,
+                            color: eventTypeColorsStore.getEventTypeColor(eventType),
                             isMultiDay: false,
                             startDate: parseEventDate(event.start),
                             endDate: parseEventDate(event.end),
@@ -540,7 +549,7 @@ export const groupEventsByType = (events: PogoEvent[]): EventGroup[] => {
                             eventType,
                             events: timeEvents,
                             displayName: getEventTypeInfo(eventType).name, // Use type name for grouped events
-                            color: getEventTypeInfo(eventType).color,
+                            color: eventTypeColorsStore.getEventTypeColor(eventType),
                             isMultiDay: false,
                             startDate: parseEventDate(timeEvents[0].start),
                             endDate: parseEventDate(timeEvents[timeEvents.length - 1].end),
@@ -569,7 +578,7 @@ export const groupEventsByType = (events: PogoEvent[]): EventGroup[] => {
                             eventType,
                             events: [event],
                             displayName: formatEventName(event.name),
-                            color: getEventTypeInfo(eventType).color,
+                            color: eventTypeColorsStore.getEventTypeColor(eventType),
                             isMultiDay: true,
                             startDate: parseEventDate(event.start),
                             endDate: parseEventDate(event.end),
@@ -580,7 +589,7 @@ export const groupEventsByType = (events: PogoEvent[]): EventGroup[] => {
                             eventType,
                             events: timeEvents,
                             displayName: getEventTypeInfo(eventType).name, // Use type name for grouped events
-                            color: getEventTypeInfo(eventType).color,
+                            color: eventTypeColorsStore.getEventTypeColor(eventType),
                             isMultiDay: true,
                             startDate: parseEventDate(timeEvents[0].start),
                             endDate: parseEventDate(timeEvents[timeEvents.length - 1].end),
