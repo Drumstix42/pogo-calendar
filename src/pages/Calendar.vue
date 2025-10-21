@@ -116,9 +116,11 @@
 
 <script setup lang="ts">
 import { breakpointsBootstrapV5, useBreakpoints } from '@vueuse/core';
+import { useWindowFocus } from '@vueuse/core';
 import { CalendarRange, EyeOff, PanelTop } from 'lucide-vue-next';
 import { computed, nextTick, onMounted, onUnmounted, watch, watchEffect } from 'vue';
 
+import { useCurrentTime } from '@/composables/useCurrentTime';
 import { useDeviceDetection } from '@/composables/useDeviceDetection';
 import { useEditColorModal } from '@/composables/useEditColorModal';
 import { useEventFilterToasts } from '@/composables/useEventFilterToasts';
@@ -147,6 +149,8 @@ const editColorModal = useEditColorModal();
 const { hideEventTypeWithToast, hideEventByIdWithToast } = useEventFilterToasts();
 const { settingsOpen, openSettings, closeSettings, selectedEventId, clearEvent } = useUrlSync();
 const { isTouchDevice } = useDeviceDetection();
+const { liveHour } = useCurrentTime();
+const windowFocused = useWindowFocus();
 
 // responsive breakpoints https://getbootstrap.com/docs/5.0/layout/breakpoints/#available-breakpoints
 const breakpoints = useBreakpoints(breakpointsBootstrapV5);
@@ -258,6 +262,19 @@ onMounted(async () => {
     // Auto-load events when the page mounts
     // only fetch if we don't have fresh data
     if (!eventsStore.hasFreshData) {
+        await eventsStore.fetchEvents();
+    }
+});
+
+// Watch for hour changes and refetch events (only when window is focused)
+watch(liveHour, async () => {
+    if (!windowFocused.value) return; // Skip if window is not focused
+    await eventsStore.fetchEvents();
+});
+
+// Refetch events when window regains focus (in case hours passed while unfocused)
+watch(windowFocused, async focused => {
+    if (focused) {
         await eventsStore.fetchEvents();
     }
 });

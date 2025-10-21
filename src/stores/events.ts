@@ -60,7 +60,7 @@ export const useEventsStore = defineStore('eventsStore', () => {
     const events = ref<PogoEvent[]>([]);
     const loading = ref(false);
     const error = ref<string | null>(null);
-    const lastFetched = ref<number | null>(null);
+    const lastFetched = ref<dayjs.Dayjs | null>(null);
     const currentMonth = ref(dayjs().month());
     const currentYear = ref(dayjs().year());
 
@@ -123,11 +123,10 @@ export const useEventsStore = defineStore('eventsStore', () => {
         return grouped;
     });
 
-    // Check if we have fresh data (less than 1 hour old)
+    // Check if we have fresh data (less than 10 minutes old)
     const hasFreshData = computed((): boolean => {
         if (!lastFetched.value) return false;
-        const oneHour = 60 * 60 * 1000;
-        return Date.now() - lastFetched.value < oneHour;
+        return dayjs().diff(lastFetched.value, 'minute') < 10;
     });
 
     const currentMonthName = computed((): string => {
@@ -179,6 +178,7 @@ export const useEventsStore = defineStore('eventsStore', () => {
     }
 
     async function fetchEvents(force: boolean = false): Promise<void> {
+        // Fetch data every hour, but consider it fresh for 10 minutes to avoid excessive requests
         // Skip if we have fresh data and not forcing
         if (!force && hasFreshData.value) {
             return;
@@ -198,7 +198,7 @@ export const useEventsStore = defineStore('eventsStore', () => {
             const fetchedEvents: PogoEvent[] = await response.json();
 
             events.value = fetchedEvents;
-            lastFetched.value = Date.now();
+            lastFetched.value = dayjs();
             error.value = null;
 
             console.log(`Loaded ${fetchedEvents.length} events from ScrapedDuck`);

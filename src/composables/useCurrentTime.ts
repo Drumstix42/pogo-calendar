@@ -3,6 +3,7 @@ import { onMounted, onUnmounted, ref } from 'vue';
 
 // state shared across all instances
 const globalLiveMinute = ref(dayjs());
+const globalLiveHour = ref(dayjs().startOf('hour'));
 const globalLiveDay = ref(dayjs().startOf('day'));
 let intervalId: number | null = null;
 let subscriberCount = 0;
@@ -15,6 +16,12 @@ function scheduleNextUpdate() {
     intervalId = window.setTimeout(() => {
         const newNow = dayjs();
         globalLiveMinute.value = newNow;
+
+        // update hour only when it changes
+        const newHour = newNow.startOf('hour');
+        if (!globalLiveHour.value.isSame(newHour, 'hour')) {
+            globalLiveHour.value = newHour;
+        }
 
         // update day only when it changes
         const newDay = newNow.startOf('day');
@@ -31,6 +38,7 @@ function startGlobalTimer() {
         return;
     }
     globalLiveMinute.value = dayjs();
+    globalLiveHour.value = dayjs().startOf('hour');
     globalLiveDay.value = dayjs().startOf('day');
     scheduleNextUpdate();
 }
@@ -57,5 +65,5 @@ export const useCurrentTime = () => {
         }
     });
 
-    return { liveMinute: globalLiveMinute, liveDay: globalLiveDay };
+    return { liveMinute: globalLiveMinute, liveHour: globalLiveHour, liveDay: globalLiveDay };
 };
