@@ -3,6 +3,7 @@ import { onMounted, onUnmounted, ref } from 'vue';
 
 // state shared across all instances
 const globalLiveMinute = ref(dayjs());
+const globalLiveDay = ref(dayjs().startOf('day'));
 let intervalId: number | null = null;
 let subscriberCount = 0;
 
@@ -12,7 +13,15 @@ function scheduleNextUpdate() {
     const msUntilNextMinute = (60 - now.second()) * 1000 - now.millisecond();
 
     intervalId = window.setTimeout(() => {
-        globalLiveMinute.value = dayjs();
+        const newNow = dayjs();
+        globalLiveMinute.value = newNow;
+
+        // update day only when it changes
+        const newDay = newNow.startOf('day');
+        if (!globalLiveDay.value.isSame(newDay, 'day')) {
+            globalLiveDay.value = newDay;
+        }
+
         scheduleNextUpdate(); // recursively schedule the next update
     }, msUntilNextMinute);
 }
@@ -22,6 +31,7 @@ function startGlobalTimer() {
         return;
     }
     globalLiveMinute.value = dayjs();
+    globalLiveDay.value = dayjs().startOf('day');
     scheduleNextUpdate();
 }
 
@@ -47,5 +57,5 @@ export const useCurrentTime = () => {
         }
     });
 
-    return { liveMinute: globalLiveMinute };
+    return { liveMinute: globalLiveMinute, liveDay: globalLiveDay };
 };

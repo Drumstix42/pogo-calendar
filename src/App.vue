@@ -67,9 +67,9 @@
 </template>
 
 <script setup lang="ts">
-import dayjs from 'dayjs';
 import { Settings } from 'lucide-vue-next';
 
+import { useCurrentTime } from '@/composables/useCurrentTime';
 import { useUrlSync } from '@/composables/useUrlSync';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { useThemeStore } from '@/stores/theme';
@@ -82,9 +82,10 @@ useThemeStore();
 
 const calendarSettings = useCalendarSettingsStore();
 const { urlMonth, urlYear } = useUrlSync();
+const { liveDay } = useCurrentTime();
 
 function goHome() {
-    const now = dayjs();
+    const now = liveDay.value;
     urlMonth.value = now.month();
     urlYear.value = now.year();
     window.scrollTo({ top: 0, behavior: 'smooth' });

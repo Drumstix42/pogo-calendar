@@ -32,6 +32,7 @@
 import dayjs from 'dayjs';
 import { computed } from 'vue';
 
+import { useCurrentTime } from '@/composables/useCurrentTime';
 import { useUrlSync } from '@/composables/useUrlSync';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { useEventFilterStore } from '@/stores/eventFilter';
@@ -46,6 +47,7 @@ const { urlMonth, urlYear } = useUrlSync();
 const calendarSettings = useCalendarSettingsStore();
 const eventFilter = useEventFilterStore();
 const eventsStore = useEventsStore();
+const { liveDay } = useCurrentTime();
 
 // Types for slot-based layout
 interface EventSlot {
@@ -61,7 +63,9 @@ const dayHeaders = computed(() => calendarSettings.dayHeaders);
 
 // Calendar days calculation
 const calendarDays = computed(() => {
-    const currentDate = dayjs().year(urlYear.value).month(urlMonth.value);
+    // Use liveDay to ensure reactivity to day changes (updates at midnight)
+    const now = liveDay.value;
+    const currentDate = now.year(urlYear.value).month(urlMonth.value);
     const startOfMonth = currentDate.startOf('month');
     const endOfMonth = currentDate.endOf('month');
 
@@ -90,7 +94,7 @@ const calendarDays = computed(() => {
             month: day.month(),
             year: day.year(),
             isCurrentMonth: day.isSame(currentDate, 'month'),
-            isToday: day.isSame(dayjs(), 'day'),
+            isToday: day.isSame(now, 'day'),
             dayInstance: day,
         });
         day = day.add(1, 'day');

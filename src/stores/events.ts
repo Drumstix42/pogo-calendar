@@ -16,6 +16,7 @@ import {
     parseEventDate,
     sortEventsByPriority,
 } from '../utils/eventTypes';
+import { useCurrentTime } from '@/composables/useCurrentTime';
 import { useEventTypeColorsStore } from '@/stores/eventTypeColors';
 
 // Day.js plugins - extend adds functionality to the core library
@@ -62,6 +63,9 @@ export const useEventsStore = defineStore('eventsStore', () => {
     const lastFetched = ref<number | null>(null);
     const currentMonth = ref(dayjs().month());
     const currentYear = ref(dayjs().year());
+
+    // Get reactive current time for event status calculations
+    const { liveMinute } = useCurrentTime();
 
     // Getters (computed)
     const currentMonthEvents = computed((): PogoEvent[] => {
@@ -133,7 +137,8 @@ export const useEventsStore = defineStore('eventsStore', () => {
     /** Event metadata with precomputed values for performance */
     const eventMetadata = computed((): Record<string, EventMetadata> => {
         const metadata: Record<string, EventMetadata> = {};
-        const now = dayjs();
+        // Use liveMinute for reactive event status that updates every minute
+        const now = liveMinute.value;
         const eventTypeColorsStore = useEventTypeColorsStore();
 
         events.value.forEach(event => {
