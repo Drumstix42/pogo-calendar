@@ -38,7 +38,7 @@ import { useEventFilterStore } from '@/stores/eventFilter';
 import { useEventsStore } from '@/stores/events';
 import { formatEventName } from '@/utils/eventName';
 import { getRaidSubType, getRaidSubTypePriority, isEventWithSubtype } from '@/utils/eventTypes';
-import { type PogoEvent, getEventTypeInfo, isSameDayEvent, parseEventDate } from '@/utils/eventTypes';
+import { type PogoEvent, getEventTypeInfo, parseEventDate } from '@/utils/eventTypes';
 
 import CalendarDay from './CalendarDay.vue';
 
@@ -103,12 +103,15 @@ const calendarDays = computed(() => {
 const multiDayEventsForCalendar = computed(() => {
     return eventsStore.events.filter(event => {
         // Filter by enabled event types, individual event IDs, and multi-day events only
-        if (!eventFilter.isEventVisible(event.eventType, event.eventID) || isSameDayEvent(event)) {
+        const metadata = eventsStore.eventMetadata[event.eventID];
+        const isSingleDay = metadata?.isSingleDayEvent ?? false;
+
+        if (!eventFilter.isEventVisible(event.eventType, event.eventID) || isSingleDay) {
             return false;
         }
 
-        const eventStart = parseEventDate(event.start).startOf('day');
-        const eventEnd = parseEventDate(event.end).startOf('day');
+        const eventStart = metadata?.startDate.startOf('day') ?? parseEventDate(event.start).startOf('day');
+        const eventEnd = metadata?.endDate.startOf('day') ?? parseEventDate(event.end).startOf('day');
         const calendarStart = calendarDays.value[0]?.dayInstance.startOf('day');
         const calendarEnd = calendarDays.value[calendarDays.value.length - 1]?.dayInstance.startOf('day');
 

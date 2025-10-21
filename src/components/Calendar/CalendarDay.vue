@@ -181,7 +181,6 @@ import {
     getEventsForDate,
     getGroupedEventsCount,
     hasGroupedEvents,
-    isSameDayEvent,
     parseEventDate,
     sortEventsByPriority,
 } from '@/utils/eventTypes';
@@ -278,8 +277,12 @@ const calendarEvents = computed(() => {
 
         // Filter by enabled event types and individual event IDs, then separate by single/multi-day
         const enabledEvents = eventsForDate.filter((event: PogoEvent) => eventFilter.isEventVisible(event.eventType, event.eventID));
-        const singleDay = enabledEvents.filter((event: PogoEvent) => isSameDayEvent(event));
-        const multiDay = enabledEvents.filter((event: PogoEvent) => !isSameDayEvent(event));
+        const singleDay = enabledEvents.filter((event: PogoEvent) => {
+            return eventsStore.eventMetadata[event.eventID]?.isSingleDayEvent ?? false;
+        });
+        const multiDay = enabledEvents.filter((event: PogoEvent) => {
+            return eventsStore.eventMetadata[event.eventID]?.isMultiDayEvent ?? true;
+        });
 
         return {
             singleDayEvents: sortEventsByPriority(singleDay),

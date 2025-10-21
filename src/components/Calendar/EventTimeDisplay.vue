@@ -30,7 +30,7 @@
         <!-- Status line for relative timing -->
         <div v-if="showStatus && statusInfo" class="status-line">
             <span v-if="statusInfo.prefix" class="status-prefix">
-                <ArrowLeftRight v-if="!isSameDayEvent(event)" :size="11" class="duration-icon" />{{ statusInfo.prefix }}
+                <ArrowLeftRight v-if="!isSingleDay" :size="11" class="duration-icon" />{{ statusInfo.prefix }}
             </span>
             <span :class="`status-label status-${statusInfo.type}`">{{ statusInfo.text }}</span>
         </div>
@@ -42,7 +42,8 @@ import { ArrowLeftRight } from 'lucide-vue-next';
 import { computed } from 'vue';
 
 import { useCurrentTime } from '@/composables/useCurrentTime';
-import { type PogoEvent, formatEventTime, isSameDayEvent, parseEventDate } from '@/utils/eventTypes';
+import { useEventsStore } from '@/stores/events';
+import { type PogoEvent, formatEventTime, parseEventDate } from '@/utils/eventTypes';
 
 interface Props {
     event: PogoEvent;
@@ -53,8 +54,14 @@ const props = withDefaults(defineProps<Props>(), {
     showStatus: true,
 });
 
+const eventsStore = useEventsStore();
+
 // Get reactive current time that updates every minute
 const { liveMinute } = useCurrentTime();
+
+const isSingleDay = computed(() => {
+    return eventsStore.eventMetadata[props.event.eventID]?.isSingleDayEvent ?? false;
+});
 
 const formatSingleDayTimes = (startDateStr: string, endDateStr: string) => {
     const startTime = formatEventTime(startDateStr);
@@ -84,18 +91,19 @@ const formatSingleDayTimes = (startDateStr: string, endDateStr: string) => {
 };
 
 const timeDisplayParts = computed(() => {
-    const startDate = parseEventDate(props.event.start);
-    const endDate = parseEventDate(props.event.end);
     const currentTime = liveMinute.value;
+    const metadata = eventsStore.eventMetadata[props.event.eventID];
+    const startDate = metadata?.startDate ?? parseEventDate(props.event.start);
+    const endDate = metadata?.endDate ?? parseEventDate(props.event.end);
 
-    if (isSameDayEvent(props.event)) {
+    if (isSingleDay.value) {
         // Single day: "Tue Oct 7 • 6–7pm"
         const dayOfWeek = startDate.format('ddd');
         const dateStr = startDate.format('MMM D');
         const datePrefix = `${dayOfWeek} ${dateStr} • `;
 
-        const eventStart = parseEventDate(props.event.start);
-        const eventEnd = parseEventDate(props.event.end);
+        const eventStart = startDate;
+        const eventEnd = endDate;
 
         // Get formatted times with smart AM/PM handling
         const { startTime, endTime } = formatSingleDayTimes(props.event.start, props.event.end);
@@ -148,8 +156,8 @@ const timeDisplayParts = computed(() => {
         const startDateStr = startDate.format('MMM D, h:mma').replace(':00', '');
         const endDateStr = endDate.format('MMM D, h:mma').replace(':00', '');
 
-        const eventStart = parseEventDate(props.event.start);
-        const eventEnd = parseEventDate(props.event.end);
+        const eventStart = startDate;
+        const eventEnd = endDate;
 
         if (currentTime.isAfter(eventEnd)) {
             // Event is completely over - both times are past
@@ -200,12 +208,13 @@ const timeDisplayParts = computed(() => {
 // Status text for relative timing info
 const statusInfo = computed(() => {
     const currentTime = liveMinute.value;
-    const eventStart = parseEventDate(props.event.start);
-    const eventEnd = parseEventDate(props.event.end);
+    const metadata = eventsStore.eventMetadata[props.event.eventID];
+    const eventStart = metadata?.startDate ?? parseEventDate(props.event.start);
+    const eventEnd = metadata?.endDate ?? parseEventDate(props.event.end);
+    const isSingleDay = metadata?.isSingleDayEvent ?? false;
 
     // Check if event is completely over
     if (currentTime.isAfter(eventEnd)) {
-        const isSingleDay = isSameDayEvent(props.event);
         const totalDays = isSingleDay ? null : eventEnd.diff(eventStart, 'day') + 1;
         const prefix = totalDays ? `${totalDays} day${totalDays > 1 ? 's' : ''} • ` : null;
         const text = isSingleDay ? 'Event ended' : 'event ended';
@@ -214,7 +223,6 @@ const statusInfo = computed(() => {
     // Check if event hasn't started yet
     else if (eventStart.isAfter(currentTime)) {
         const daysUntilStart = eventStart.startOf('day').diff(currentTime.startOf('day'), 'day');
-        const isSingleDay = isSameDayEvent(props.event);
         const totalDays = isSingleDay ? null : eventEnd.diff(eventStart, 'day') + 1;
         const prefix = totalDays ? `${totalDays} day${totalDays > 1 ? 's' : ''} • ` : null;
 
@@ -241,7 +249,6 @@ const statusInfo = computed(() => {
     // Check if event is currently live
     else if (currentTime.isAfter(eventStart) && currentTime.isBefore(eventEnd)) {
         const daysUntilEnd = eventEnd.startOf('day').diff(currentTime.startOf('day'), 'day');
-        const isSingleDay = isSameDayEvent(props.event);
 
         // Calculate total days for multi-day events
         const totalDays = isSingleDay ? null : eventEnd.diff(eventStart, 'day') + 1;

@@ -484,6 +484,7 @@ export const shouldGroupEvents = (events: PogoEvent[]): boolean => {
     });
 };
 
+// TODO: migrate to events store, since we're utilizing pinia store here. Also `getCalendarEventsForDate` method.
 export const groupEventsByType = (events: PogoEvent[]): EventGroup[] => {
     const eventTypeColorsStore = useEventTypeColorsStore();
     const groups = new Map<string, PogoEvent[]>();

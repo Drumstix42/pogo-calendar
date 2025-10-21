@@ -127,7 +127,7 @@ import { useUrlSync } from '@/composables/useUrlSync';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { useEventFilterStore } from '@/stores/eventFilter';
 import { useEventsStore } from '@/stores/events';
-import { type EventTypeKey, isSameDayEvent } from '@/utils/eventTypes';
+import { type EventTypeKey } from '@/utils/eventTypes';
 
 import CalendarGrid from '@/components/Calendar/CalendarGrid.vue';
 import CalendarHeader from '@/components/Calendar/CalendarHeader.vue';
@@ -186,13 +186,17 @@ watch(
 
 // Get selected event details
 const selectedEvent = computed(() => {
-    if (!selectedEventId.value) return undefined;
+    if (!selectedEventId.value) {
+        return undefined;
+    }
     return eventsStore.events.find(e => e.eventID === selectedEventId.value);
 });
 
 const selectedEventIsSingleDay = computed(() => {
-    if (!selectedEvent.value) return false;
-    return isSameDayEvent(selectedEvent.value);
+    if (!selectedEvent.value) {
+        return false;
+    }
+    return eventsStore.eventMetadata[selectedEvent.value.eventID]?.isSingleDayEvent ?? false;
 });
 
 function openSettingsAndScrollToFilters() {

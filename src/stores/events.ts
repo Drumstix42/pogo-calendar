@@ -34,6 +34,7 @@ export interface EventMetadata {
 
     // Classifications
     isMultiDayEvent: boolean;
+    isSingleDayEvent: boolean;
     isPastEvent: boolean;
     isFutureEvent: boolean;
 
@@ -149,6 +150,7 @@ export const useEventsStore = defineStore('eventsStore', () => {
                 color: eventTypeColorsStore.getEventTypeColor(event.eventType),
                 formattedStartTime: formatEventTime(event.start),
                 isMultiDayEvent: isMultiDay,
+                isSingleDayEvent: !isMultiDay,
                 isPastEvent: endDate.isBefore(now),
                 isFutureEvent: startDate.isAfter(now),
             };
@@ -273,7 +275,7 @@ export const useEventsStore = defineStore('eventsStore', () => {
         eventsByDate,
         hasFreshData,
         currentMonthName,
-        eventMetadata: eventMetadata,
+        eventMetadata,
 
         // Actions
         getEventsForDate,
