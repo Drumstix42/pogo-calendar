@@ -50,14 +50,31 @@
             <div class="event-content">
                 <EventTimeDisplay :event="event" />
 
-                <PokemonImages
-                    :event="event"
-                    :event-name="formatEventName(event.name)"
-                    :height="40"
-                    :use-animated="props.isActive ? true : false"
-                    :show-placeholder="true"
-                    :show-tooltips="true"
-                />
+                <div class="flex-grow-1 d-flex gap-1 align-items-start justify-content-end">
+                    <!-- Spotlight bonus icons -->
+                    <div v-if="eventsStore.eventMetadata[event.eventID]?.spotlightBonus" class="spotlight-bonus-icons">
+                        <EvolveIcon
+                            v-if="eventsStore.eventMetadata[event.eventID]?.spotlightBonus?.category === 'evolve'"
+                            :size="15"
+                            class="evolve-icon"
+                        />
+                        <TransferIcon v-else-if="eventsStore.eventMetadata[event.eventID]?.spotlightBonus?.category === 'transfer'" :size="15" />
+                        <img
+                            v-if="eventsStore.eventMetadata[event.eventID]?.spotlightBonusIconUrl"
+                            :src="eventsStore.eventMetadata[event.eventID]!.spotlightBonusIconUrl!"
+                            class="bonus-type-icon"
+                        />
+                    </div>
+
+                    <PokemonImages
+                        :event="event"
+                        :event-name="formatEventName(event.name)"
+                        :height="40"
+                        :use-animated="props.isActive ? true : false"
+                        :show-placeholder="true"
+                        :show-tooltips="true"
+                    />
+                </div>
             </div>
 
             <div class="event-extras-wrapper">
@@ -82,6 +99,8 @@ import { useEventsStore } from '@/stores/events';
 import { formatEventName } from '@/utils/eventName';
 import { type PogoEvent, getEventTypeInfo } from '@/utils/eventTypes';
 
+import EvolveIcon from '../Icons/EvolveIcon.vue';
+import TransferIcon from '../Icons/TransferIcon.vue';
 import EventExtras from './EventExtras.vue';
 import EventTimeDisplay from './EventTimeDisplay.vue';
 import EventToggleButton from './EventToggleButton.vue';
@@ -322,7 +341,6 @@ const eventTypeName = computed(() => {
             justify-content: end;
             flex-grow: 0;
             flex-shrink: 1;
-            margin-left: auto;
             flex-wrap: nowrap;
         }
     }
@@ -346,6 +364,38 @@ const eventTypeName = computed(() => {
             margin-top: 1rem;
         }
     }
+}
+
+.spotlight-bonus-icons {
+    position: relative;
+    top: 2px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 0;
+    flex-shrink: 0;
+    filter: grayscale(20%);
+}
+
+.evolve-icon {
+    color: #aa403a;
+}
+
+[data-bs-theme='dark'] .evolve-icon {
+    color: #ee726e;
+}
+
+.spotlight-bonus-icons > svg {
+    flex-shrink: 0;
+}
+
+.spotlight-bonus-icons .bonus-type-icon {
+    width: 15px;
+    height: 15px;
+    flex-shrink: 0;
+    object-fit: contain;
+    filter: drop-shadow(1px 1px 1px color-mix(in srgb, black 40%, transparent));
 }
 
 .timeline-event-card.is-active {
