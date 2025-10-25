@@ -127,6 +127,7 @@
                         :class="{
                             'event-past': eventsStore.eventMetadata[event.eventID]?.isPastEvent,
                             'event-id-highlighted': eventHighlight.hoveredEventID === event.eventID,
+                            'has-bonus-icons': calendarSettings.useSingleDayEventSprites && eventsStore.eventMetadata[event.eventID]?.spotlightBonus,
                         }"
                         :data-event-type="event.eventType"
                         :data-event-id="event.eventID"
@@ -136,13 +137,38 @@
                     >
                         <!-- <div class="event-dot" :style="{ backgroundColor: eventsStore.eventMetadata[event.eventID]?.color }"></div> -->
                         <div class="event-content">
-                            <div class="event-name-container">
-                                <div class="event-name">{{ getEventDisplayName(event) }}</div>
-                            </div>
-                            <div class="event-time">
-                                <div class="event-dot" :style="{ backgroundColor: eventsStore.eventMetadata[event.eventID]?.color }"></div>
-                                {{ eventsStore.eventMetadata[event.eventID]?.formattedStartTime }}
-                                <span v-if="isToday && eventsStore.eventMetadata[event.eventID]?.isPastEvent" class="event-ended-label">Ended</span>
+                            <div class="event-text-wrap d-flex align-items-start gap-2">
+                                <div class="event-text-content flex-shrink-1 overflow-hidden">
+                                    <div class="event-name-container">
+                                        <div class="event-name">{{ getEventDisplayName(event) }}</div>
+                                    </div>
+                                    <div class="event-time">
+                                        <div class="event-dot" :style="{ backgroundColor: eventsStore.eventMetadata[event.eventID]?.color }"></div>
+                                        {{ eventsStore.eventMetadata[event.eventID]?.formattedStartTime }}
+                                        <span v-if="isToday && eventsStore.eventMetadata[event.eventID]?.isPastEvent" class="event-ended-label"
+                                            >Ended</span
+                                        >
+                                    </div>
+                                </div>
+
+                                <!-- Spotlight bonus icons -->
+                                <div v-if="eventsStore.eventMetadata[event.eventID]?.spotlightBonus" class="spotlight-bonus-icons">
+                                    <!-- <CatchIcon v-if="eventsStore.eventMetadata[event.eventID]?.spotlightBonus?.category === 'catch'" :size="13" /> -->
+                                    <EvolveIcon
+                                        v-if="eventsStore.eventMetadata[event.eventID]?.spotlightBonus?.category === 'evolve'"
+                                        :size="13"
+                                        class="evolve-icon"
+                                    />
+                                    <TransferIcon
+                                        v-else-if="eventsStore.eventMetadata[event.eventID]?.spotlightBonus?.category === 'transfer'"
+                                        :size="13"
+                                    />
+                                    <img
+                                        v-if="eventsStore.eventMetadata[event.eventID]?.spotlightBonusIconUrl"
+                                        :src="eventsStore.eventMetadata[event.eventID]!.spotlightBonusIconUrl!"
+                                        class="bonus-type-icon"
+                                    />
+                                </div>
                             </div>
                             <PokemonImages
                                 v-if="calendarSettings.useSingleDayEventSprites"
@@ -185,6 +211,9 @@ import {
     sortEventsByPriority,
 } from '@/utils/eventTypes';
 
+/* import CatchIcon from '../Icons/CatchIcon.vue'; */
+import EvolveIcon from '../Icons/EvolveIcon.vue';
+import TransferIcon from '../Icons/TransferIcon.vue';
 import EventTooltip from './EventTooltip.vue';
 import PokemonImages from './PokemonImages.vue';
 
@@ -666,8 +695,8 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
 .start-cap .multi-day-event-bar--inner {
     padding-left: 3px;
 
-    @media (min-width: 76px) {
-        padding-left: 4px;
+    @media (min-width: 768px) {
+        padding-left: 5px;
     }
 }
 
@@ -711,6 +740,12 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
             opacity 0.3s ease;
     }
 
+    .spotlight-bonus-icons {
+        transition:
+            filter 0.3s ease,
+            opacity 0.3s ease;
+    }
+
     &:not(:hover) {
         .event-content {
             opacity: 0.6;
@@ -719,6 +754,11 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
             .event-name {
                 text-shadow: none;
             }
+        }
+
+        .spotlight-bonus-icons {
+            opacity: 0.6;
+            filter: grayscale(100%);
         }
     }
 }
@@ -745,6 +785,14 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
             filter: grayscale(80%);
         }
     }
+}
+
+.evolve-icon {
+    color: #aa403a;
+}
+
+[data-bs-theme='dark'] .evolve-icon {
+    color: #ee726e;
 }
 
 .event-badge {
@@ -986,7 +1034,7 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
 }
 
 @media (min-width: 375px) {
-    .event-content :deep(.pokemon-images) {
+    .single-day-event:not(.has-bonus-icons) .event-content :deep(.pokemon-images) {
         margin-left: 2px;
     }
 }
@@ -994,6 +1042,11 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
 @media (min-width: 576px) {
     .event-content :deep(.pokemon-images) {
         margin-left: 2px;
+    }
+}
+
+@media (min-width: 768px) {
+    .event-content :deep(.pokemon-images) {
         max-height: none;
     }
 }
@@ -1032,12 +1085,19 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     margin-top: 1px;
     margin-bottom: 7px;
 
+    &:has(.event-ended-label) {
+        margin-bottom: 2px;
+    }
+
     @media (min-width: 375px) {
         column-gap: 2px;
     }
 
     @media (min-width: 576px) {
         column-gap: 3px;
+        &:has(.event-ended-label) {
+            margin-bottom: 7px;
+        }
     }
 
     .event-dot {
@@ -1084,6 +1144,62 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     min-width: 14px;
     height: 14px;
     padding: 0 3px;
+}
+
+.spotlight-bonus-icons {
+    z-index: 10;
+    pointer-events: none;
+    position: absolute;
+    right: 0;
+    bottom: 2px;
+    color: var(--bs-body-color);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    padding: 0 1px;
+    background-color: color-mix(in srgb, var(--calendar-cell-bg) 90%, transparent);
+    border-radius: 8px;
+    filter: grayscale(20%);
+
+    @media (min-width: 576px) {
+        right: 2px;
+        bottom: 3px;
+    }
+
+    @media (min-width: 992px) {
+        position: relative;
+        top: 2px;
+        right: auto;
+        bottom: auto;
+        gap: 3px;
+    }
+
+    @media (min-width: 1200px) {
+        flex-direction: row;
+    }
+}
+
+.calendar-day.today {
+    .spotlight-bonus-icons {
+        background-color: color-mix(in srgb, var(--calendar-today-bg) 90%, transparent);
+    }
+}
+
+.spotlight-bonus-icons > svg {
+    flex-shrink: 0;
+    background-color: color-mix(in srgb, var(--calendar-cell-bg) 50%, transparent);
+    border-radius: 50%;
+}
+
+.spotlight-bonus-icons .bonus-type-icon {
+    width: 13px;
+    height: 13px;
+    flex-shrink: 0;
+    object-fit: contain;
+    /* background-color: color-mix(in srgb, var(--calendar-cell-bg) 50%, transparent);
+    border-radius: 50%; */
+    filter: drop-shadow(1px 1px 1px color-mix(in srgb, black 40%, transparent));
 }
 
 .calendar-day-border-overlay {

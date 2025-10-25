@@ -84,13 +84,13 @@ const spotlightBonusIcon = computed(() => {
     const bonus = spotlightBonus.value;
 
     if (/xp/i.test(bonus)) {
-        return 'https://cdn.leekduck.com/assets/img/events/bonuses/xp.png';
+        return '/images/icons/xp.png';
     }
     if (/stardust/i.test(bonus)) {
-        return 'https://cdn.leekduck.com/assets/img/events/bonuses/stardust2x.png';
+        return '/images/icons/stardust.png';
     }
     if (/candy/i.test(bonus)) {
-        return 'https://cdn.leekduck.com/assets/img/events/bonuses/candy.png';
+        return '/images/icons/candy.png';
     }
 
     return null;
@@ -133,6 +133,7 @@ onMounted(() => {
     display: flex;
     align-items: center;
     gap: 0.4rem;
+    line-height: 1.2rem;
 }
 
 .spotlight-bonus-icon {

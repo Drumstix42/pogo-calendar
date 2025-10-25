@@ -16,6 +16,7 @@ import {
     parseEventDate,
     sortEventsByPriority,
 } from '../utils/eventTypes';
+import { type SpotlightBonusInfo, getSpotlightBonusInfo, getSpotlightBonusTypeIcon } from '../utils/spotlightBonus';
 import { useCurrentTime } from '@/composables/useCurrentTime';
 import { useEventTypeColorsStore } from '@/stores/eventTypeColors';
 
@@ -46,6 +47,10 @@ export interface EventMetadata {
     // Display helpers
     formattedStartTime: string;
     displayName: string;
+
+    // Spotlight bonus (for spotlight hour events)
+    spotlightBonus?: SpotlightBonusInfo | null;
+    spotlightBonusIconUrl?: string | null;
 
     // Grouping metadata (for when grouping is enabled)
     isGrouped?: boolean;
@@ -145,6 +150,7 @@ export const useEventsStore = defineStore('eventsStore', () => {
             const endDate = parseEventDate(event.end);
             const typeInfo = getEventTypeInfo(event.eventType);
             const isMultiDay = isMultiDayEvent(event);
+            const spotlightBonus = getSpotlightBonusInfo(event);
 
             metadata[event.eventID] = {
                 displayName: formatEventName(event.name), // Can be enhanced with grouping logic later
@@ -157,6 +163,8 @@ export const useEventsStore = defineStore('eventsStore', () => {
                 isSingleDayEvent: !isMultiDay,
                 isPastEvent: endDate.isBefore(now),
                 isFutureEvent: startDate.isAfter(now),
+                spotlightBonus,
+                spotlightBonusIconUrl: spotlightBonus ? getSpotlightBonusTypeIcon(spotlightBonus.bonusType) : null,
             };
         });
 
