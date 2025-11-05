@@ -966,7 +966,7 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     display: flex;
     flex-direction: column;
     min-height: 5px; /* leave empty space below multi-day events, for better perceived margin before next visible week */
-    gap: 3px;
+    gap: 5px;
     margin: 0.25rem 0.1rem 0.1rem 0.1rem;
 }
 

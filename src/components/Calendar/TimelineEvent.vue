@@ -337,7 +337,7 @@ const parentEventName = computed(() => {
         font-weight: 500;
         color: color-mix(in srgb, var(--bs-body-color) 90%, transparent);
         line-height: 1.3;
-        margin-bottom: 3px;
+        margin-bottom: 5px;
     }
 
     .parent-event-name {

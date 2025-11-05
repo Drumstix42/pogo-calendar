@@ -8,6 +8,14 @@
             </div>
         </div>
 
+        <!-- Bonuses for raid hour sub-events -->
+        <div v-if="raidHourBonuses" class="raid-hour-bonuses">
+            <strong>Bonus:</strong>
+            <div v-for="bonus in raidHourBonuses" :key="bonus" class="bonus-content">
+                <span>{{ bonus }}</span>
+            </div>
+        </div>
+
         <!-- Bonuses for community day events -->
         <div v-if="communityDayBonuses" class="community-day-bonuses">
             <div class="bonus-header"><strong>Bonuses:</strong></div>
@@ -78,6 +86,13 @@ const spotlightBonus = computed(() => {
     return null;
 });
 
+const raidHourBonuses = computed(() => {
+    if (props.event.extraData?.isRaidHourSubEvent && props.event.extraData?.bonuses) {
+        return props.event.extraData.bonuses;
+    }
+    return null;
+});
+
 const spotlightBonusIcon = computed(() => {
     if (!spotlightBonus.value) return null;
 
@@ -129,11 +144,22 @@ onMounted(() => {
     border-radius: 0.25rem;
 }
 
+.raid-hour-bonuses {
+    font-size: 12px;
+    color: color-mix(in srgb, var(--bs-body-color) 80%, transparent);
+    padding: 0.3rem 0.6rem;
+    margin: 0.1rem 0 0.1rem 0;
+    background-color: color-mix(in srgb, var(--bs-body-color) 3%, transparent);
+    border: 1px solid color-mix(in srgb, var(--bs-body-color) 12%, transparent);
+    border-left: 3px solid color-mix(in srgb, var(--bs-body-color) 25%, transparent);
+    border-radius: 0.25rem;
+}
+
 .bonus-content {
     display: flex;
     align-items: center;
     gap: 0.4rem;
-    line-height: 1.2rem;
+    line-height: 1.1rem;
 }
 
 .spotlight-bonus-icon {
