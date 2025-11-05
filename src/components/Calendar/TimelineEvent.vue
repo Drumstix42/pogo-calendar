@@ -45,6 +45,7 @@
 
         <!-- Event body with event name and details -->
         <div class="event-body">
+            <div v-if="event.extraData?.parentEventId" class="parent-event-name">{{ parentEventName }}</div>
             <div class="event-name">{{ formatEventName(event.name) }}</div>
 
             <div class="event-content">
@@ -174,6 +175,14 @@ const eventColor = computed(() => {
 
 const eventTypeName = computed(() => {
     return getEventTypeInfo(props.event.eventType).name;
+});
+
+const parentEventName = computed(() => {
+    const parentId = props.event.extraData?.parentEventId;
+    if (!parentId) return null;
+
+    const parentEvent = eventsStore.getEventById(parentId);
+    return parentEvent ? `${formatEventName(parentEvent.name)} /` : null;
 });
 </script>
 
@@ -329,6 +338,15 @@ const eventTypeName = computed(() => {
         color: color-mix(in srgb, var(--bs-body-color) 90%, transparent);
         line-height: 1.3;
         margin-bottom: 3px;
+    }
+
+    .parent-event-name {
+        font-size: 0.7rem;
+        font-weight: 600;
+        font-style: italic;
+        color: color-mix(in srgb, var(--bs-body-color) 60%, transparent);
+        line-height: 1.1;
+        margin-bottom: 2px;
     }
 
     .event-content {

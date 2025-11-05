@@ -48,6 +48,15 @@ export interface MaxBattlesData {
     featured: PokemonBoss | PokemonBoss[];
 }
 
+export interface RaidScheduleEntry {
+    date: string;
+    raidType: string;
+    bosses: PokemonBoss[];
+    hasRaidHour: boolean;
+    raidHourTime?: string;
+    bonuses?: string[];
+}
+
 export interface PogoEvent {
     eventID: string;
     name: string;
@@ -63,6 +72,7 @@ export interface PogoEvent {
             hasFieldResearchTasks: boolean;
         };
         raidbattles?: RaidBattlesData;
+        raidSchedule?: RaidScheduleEntry[];
         spotlight?: SpotlightData;
         communityday?: CommunityDayData;
         maxbattles?: MaxBattlesData;
@@ -81,7 +91,7 @@ export const EVENT_TYPES: Record<string, EventTypeInfo> = {
     'pokemon-spotlight-hour': {
         name: 'Spotlight Hour',
         color: '#ae6318', // orange
-        priority: 63,
+        priority: 43,
         category: 'community-and-raids',
     },
 
@@ -89,7 +99,7 @@ export const EVENT_TYPES: Record<string, EventTypeInfo> = {
     'raid-hour': {
         name: 'Raid Hour',
         color: '#c0392b', // red
-        priority: 68,
+        priority: 48,
         category: 'community-and-raids',
     },
     'raid-day': {
@@ -127,7 +137,7 @@ export const EVENT_TYPES: Record<string, EventTypeInfo> = {
     'max-mondays': {
         name: 'Max Monday',
         color: '#690342', // darker purple
-        priority: 65,
+        priority: 45,
         category: 'community-and-raids',
     },
 

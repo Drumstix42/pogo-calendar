@@ -25,6 +25,7 @@
                 <div class="event-content">
                     <!-- Event text content -->
                     <div class="event-text">
+                        <div v-if="groupedEvent.extraData?.parentEventId" class="parent-event-name">{{ getParentEventName(groupedEvent) }}</div>
                         <div class="grouped-event-name">{{ formatEventName(groupedEvent.name) }}</div>
                         <EventTimeDisplay :event="groupedEvent" />
                         <div v-if="groupedEvent.link" class="lh-1">
@@ -58,6 +59,7 @@
                 <div class="event-content">
                     <!-- Event text content -->
                     <div class="event-text">
+                        <div v-if="event.extraData?.parentEventId" class="parent-event-name">{{ parentEventName }}</div>
                         <div class="grouped-event-name">{{ formatEventName(event.name) }}</div>
                         <EventTimeDisplay :event="event" />
                     </div>
@@ -84,7 +86,7 @@
 <script setup lang="ts">
 import { hideAllPoppers } from 'floating-vue';
 import { ExternalLink, Palette } from 'lucide-vue-next';
-import { nextTick } from 'vue';
+import { computed, nextTick } from 'vue';
 
 import { useDeviceDetection } from '@/composables/useDeviceDetection';
 import { useEditColorModal } from '@/composables/useEditColorModal';
@@ -131,6 +133,20 @@ function openHideModal() {
 const getEventTypeName = (event: PogoEvent): string => {
     return getEventTypeInfo(event.eventType).name;
 };
+
+function lookupParentEventName(event: PogoEvent): string | null {
+    const parentId = event.extraData?.parentEventId;
+    if (!parentId) return null;
+
+    const parentEvent = eventsStore.getEventById(parentId);
+    return parentEvent ? `${formatEventName(parentEvent.name)} /` : null;
+}
+
+const parentEventName = computed(() => lookupParentEventName(props.event));
+
+function getParentEventName(event: PogoEvent): string | null {
+    return lookupParentEventName(event);
+}
 </script>
 
 <style scoped>
@@ -209,7 +225,16 @@ const getEventTypeName = (event: PogoEvent): string => {
     font-weight: 400;
     line-height: 1.3;
     color: color-mix(in srgb, var(--bs-body-color) 90%, transparent);
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.7rem;
+}
+
+.parent-event-name {
+    font-size: 0.7rem;
+    font-weight: 600;
+    font-style: italic;
+    color: color-mix(in srgb, var(--bs-body-color) 60%, transparent);
+    line-height: 1.1;
+    margin-bottom: 2px;
 }
 
 .event-extras-wrapper {

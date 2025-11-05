@@ -308,6 +308,38 @@ export function getEventPokemonImages(event: PogoEvent, options?: PokemonImageOp
         }
     }
 
+    // Handle event raid hour sub-events - use bosses data from extraData
+    if (event.eventType === 'event' && event.extraData?.isRaidHourSubEvent) {
+        if (event.extraData?.raidbattles?.bosses && event.extraData.raidbattles.bosses.length > 0) {
+            const bosses = event.extraData.raidbattles.bosses;
+            const images: PokemonImageData[] = [];
+
+            for (const boss of bosses) {
+                const parsedData = parsePokemonNameAndSuffix(boss.name);
+                if (parsedData) {
+                    let spriteUrl: string | null = null;
+
+                    // If we have a custom suffix (like -megax, -megay), use it directly
+                    if (parsedData.suffix) {
+                        spriteUrl = getSpriteUrl(parsedData.pokemonName, parsedData.suffix, options, boss.image);
+                    } else {
+                        spriteUrl = getSpriteUrl(parsedData.pokemonName, undefined, options, boss.image);
+                    }
+
+                    // Always add to images array, fallback handled by getSpriteUrl
+                    images.push({ name: boss.name, imageUrl: spriteUrl });
+                } else {
+                    // If we can't parse the boss name, try API image or use null
+                    images.push({ name: boss.name, imageUrl: boss.image || null });
+                }
+            }
+
+            if (images.length > 0) {
+                return images;
+            }
+        }
+    }
+
     // Handle raid-day events - parse Pokemon name from title and generate sprite URL
     if (event.eventType === 'raid-day') {
         const eventName = formatEventName(event.name);

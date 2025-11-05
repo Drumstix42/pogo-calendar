@@ -7,6 +7,7 @@ import { computed, ref } from 'vue';
 
 import { DATE_FORMAT } from '../utils/dateFormat';
 import { formatEventName } from '../utils/eventName';
+import { generateEventRaidHourSubEvents } from '../utils/eventRaidHours';
 import {
     EventTypeInfoWithoutColor,
     type PogoEvent,
@@ -58,7 +59,8 @@ export interface EventMetadata {
     groupCount?: number;
 }
 
-const SCRAPED_EVENTS_URL = 'https://raw.githubusercontent.com/bigfoott/ScrapedDuck/data/events.min.json';
+//const SCRAPED_EVENTS_URL = 'https://raw.githubusercontent.com/bigfoott/ScrapedDuck/data/events.min.json';
+const SCRAPED_EVENTS_URL = 'https://raw.githubusercontent.com/Drumstix42/ScrapedDuck/refs/heads/data/events.min.json';
 
 export const useEventsStore = defineStore('eventsStore', () => {
     // State
@@ -205,11 +207,22 @@ export const useEventsStore = defineStore('eventsStore', () => {
 
             const fetchedEvents: PogoEvent[] = await response.json();
 
-            events.value = fetchedEvents;
+            // Generate pseudo raid hour events from events with raidSchedule
+            const raidHourEvents: PogoEvent[] = [];
+            fetchedEvents.forEach(event => {
+                const pseudoEvents = generateEventRaidHourSubEvents(event);
+                raidHourEvents.push(...pseudoEvents);
+            });
+
+            // Combine original events with generated raid hour events
+            events.value = [...fetchedEvents, ...raidHourEvents];
             lastFetched.value = dayjs();
             error.value = null;
 
             console.log(`Loaded ${fetchedEvents.length} events from ScrapedDuck`);
+            if (raidHourEvents.length > 0) {
+                console.log(`Parsed ${raidHourEvents.length} Raid Hour pseudo sub-events`);
+            }
 
             // Log some sample events and date analysis
             if (fetchedEvents.length > 0) {
