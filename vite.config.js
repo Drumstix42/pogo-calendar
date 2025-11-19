@@ -30,7 +30,7 @@ function versionPlugin() {
             const timestamp = Date.now();
             const date = new Date(timestamp);
 
-            // format: MM/DD/YYYY, HH:MM:SS AM/PM
+            // format: MM/DD/YYYY, HH:MM:SS AM/PM TIMEZONE
             const hours = date.getHours();
             const minutes = date.getMinutes().toString().padStart(2, '0');
             const seconds = date.getSeconds().toString().padStart(2, '0');
@@ -41,7 +41,15 @@ function versionPlugin() {
             const day = date.getDate().toString().padStart(2, '0');
             const year = date.getFullYear();
 
-            const humanReadable = `${month}/${day}/${year}, ${displayHours}:${minutes}:${seconds} ${ampm}`;
+            // get timezone abbreviation (e.g., EST, UTC, PST)
+            const timezone =
+                new Intl.DateTimeFormat('en-US', {
+                    timeZoneName: 'short',
+                })
+                    .formatToParts(date)
+                    .find(part => part.type === 'timeZoneName')?.value || 'UTC';
+
+            const humanReadable = `${month}/${day}/${year}, ${displayHours}:${minutes}:${seconds} ${ampm} ${timezone}`;
 
             const versionData = {
                 timestamp: timestamp,
