@@ -25,7 +25,7 @@ const FORM_SPECIFIC_STATIC_SPRITES: Record<string, string> = {
 };
 
 // Normalize Pokemon names for matching - smart Unicode normalization + gender symbols
-function normalizePokemonName(name: string): string {
+export function normalizePokemonName(name: string): string {
     return name
         .toLowerCase()
         .replace(/♀/g, 'f') // Female symbol → f

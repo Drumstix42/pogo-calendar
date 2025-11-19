@@ -19,6 +19,7 @@
             >
             <span class="time-separator">{{ timeDisplayParts.separator }}</span>
             <span
+                class="text-nowrap"
                 :class="{
                     'time-focused': timeDisplayParts.focusEnd,
                     'time-dimmed': timeDisplayParts.endIsPast,
@@ -305,6 +306,7 @@ const statusInfo = computed(() => {
 <style lang="scss" scoped>
 .event-time-display {
     --transition--time-text: color 0.3s ease, opacity 0.3s ease;
+    min-width: 140px;
 
     .time-row {
         font-size: 0.9rem;

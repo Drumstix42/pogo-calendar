@@ -41,13 +41,13 @@
                         </div>
                     </div>
 
-                    <!-- Pokemon images -->
                     <PokemonImages
                         :event="groupedEvent"
                         :event-name="formatEventName(groupedEvent.name)"
                         :height="50"
                         :use-animated="calendarSettings.useAnimatedImages"
                         :show-tooltips="true"
+                        :show-c-p="true"
                     />
                 </div>
             </div>
@@ -64,7 +64,6 @@
                         <EventTimeDisplay :event="event" />
                     </div>
 
-                    <!-- Pokemon images -->
                     <PokemonImages
                         :event="event"
                         :event-name="formatEventName(event.name)"
@@ -72,6 +71,7 @@
                         :use-animated="calendarSettings.useAnimatedImages"
                         :show-placeholder="isSingleDay"
                         :show-tooltips="true"
+                        :show-c-p="true"
                     />
                 </div>
             </div>

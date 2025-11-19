@@ -46,27 +46,32 @@
         <!-- Event body with event name and details -->
         <div class="event-body">
             <div v-if="event.extraData?.parentEventId" class="parent-event-name">{{ parentEventName }}</div>
-            <div class="event-name">{{ formatEventName(event.name) }}</div>
+            <div class="event-name-row">
+                <div class="event-name">{{ formatEventName(event.name) }}</div>
+                <!-- Spotlight bonus icons -->
+                <div v-if="eventsStore.eventMetadata[event.eventID]?.spotlightBonus" class="spotlight-bonus-icons">
+                    <EvolveIcon
+                        v-if="eventsStore.eventMetadata[event.eventID]?.spotlightBonus?.category === 'evolve'"
+                        :size="15"
+                        class="evolve-icon"
+                    />
+                    <TransferIcon v-else-if="eventsStore.eventMetadata[event.eventID]?.spotlightBonus?.category === 'transfer'" :size="15" />
+                    <img
+                        v-if="eventsStore.eventMetadata[event.eventID]?.spotlightBonusIconUrl"
+                        :src="eventsStore.eventMetadata[event.eventID]!.spotlightBonusIconUrl!"
+                        class="bonus-type-icon"
+                    />
+                </div>
+            </div>
 
-            <div class="event-content">
+            <div class="event-content" :class="{ 'flex-column gap-2': props.isActive || pokemonCount > 6 }">
                 <EventTimeDisplay :event="event" />
 
-                <div class="flex-grow-1 d-flex gap-1 align-items-start justify-content-end">
-                    <!-- Spotlight bonus icons -->
-                    <div v-if="eventsStore.eventMetadata[event.eventID]?.spotlightBonus" class="spotlight-bonus-icons">
-                        <EvolveIcon
-                            v-if="eventsStore.eventMetadata[event.eventID]?.spotlightBonus?.category === 'evolve'"
-                            :size="15"
-                            class="evolve-icon"
-                        />
-                        <TransferIcon v-else-if="eventsStore.eventMetadata[event.eventID]?.spotlightBonus?.category === 'transfer'" :size="15" />
-                        <img
-                            v-if="eventsStore.eventMetadata[event.eventID]?.spotlightBonusIconUrl"
-                            :src="eventsStore.eventMetadata[event.eventID]!.spotlightBonusIconUrl!"
-                            class="bonus-type-icon"
-                        />
-                    </div>
-
+                <div
+                    v-if="hasPokemon"
+                    class="flex-grow-1 d-flex gap-1 align-items-start justify-content-end"
+                    :class="[props.isActive || pokemonCount > 6 ? 'w-100' : 'w-50']"
+                >
                     <PokemonImages
                         :event="event"
                         :event-name="formatEventName(event.name)"
@@ -74,6 +79,7 @@
                         :use-animated="props.isActive ? true : false"
                         :show-placeholder="true"
                         :show-tooltips="true"
+                        :show-c-p="props.isActive"
                     />
                 </div>
             </div>
@@ -98,6 +104,7 @@ import { useHideEventModal } from '@/composables/useHideEventModal';
 import { useEventHighlightStore } from '@/stores/eventHighlight';
 import { useEventsStore } from '@/stores/events';
 import { formatEventName } from '@/utils/eventName';
+import { getEventPokemonImages } from '@/utils/eventPokemon';
 import { type PogoEvent, getEventTypeInfo } from '@/utils/eventTypes';
 
 import EvolveIcon from '../Icons/EvolveIcon.vue';
@@ -183,6 +190,14 @@ const parentEventName = computed(() => {
 
     const parentEvent = eventsStore.getEventById(parentId);
     return parentEvent ? `${formatEventName(parentEvent.name)} /` : null;
+});
+
+const pokemonCount = computed(() => {
+    return getEventPokemonImages(props.event).length;
+});
+
+const hasPokemon = computed(() => {
+    return pokemonCount.value > 0;
 });
 </script>
 
@@ -332,12 +347,18 @@ const parentEventName = computed(() => {
     padding: 10px 12px;
     text-align: left;
 
+    .event-name-row {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 5px;
+    }
+
     .event-name {
         font-size: 0.85rem;
         font-weight: 500;
         color: color-mix(in srgb, var(--bs-body-color) 90%, transparent);
         line-height: 1.3;
-        margin-bottom: 5px;
     }
 
     .parent-event-name {
@@ -357,9 +378,8 @@ const parentEventName = computed(() => {
 
         :deep(.pokemon-images) {
             justify-content: end;
-            flex-grow: 0;
+            flex-grow: 1;
             flex-shrink: 1;
-            flex-wrap: nowrap;
         }
     }
 
@@ -385,13 +405,9 @@ const parentEventName = computed(() => {
 }
 
 .spotlight-bonus-icons {
-    position: relative;
-    top: 2px;
-    display: flex;
-    flex-direction: column;
+    display: inline-flex;
     align-items: center;
     gap: 3px;
-    padding: 0;
     flex-shrink: 0;
     filter: grayscale(20%);
 }

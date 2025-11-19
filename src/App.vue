@@ -72,6 +72,7 @@ import { Settings } from 'lucide-vue-next';
 import { useCurrentTime } from '@/composables/useCurrentTime';
 import { useUrlSync } from '@/composables/useUrlSync';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
+import { usePokemonDataStore } from '@/stores/pokemonData';
 import { useThemeStore } from '@/stores/theme';
 
 import ThemeSelector from '@/components/ThemeSelector.vue';
@@ -79,6 +80,10 @@ import ToastContainer from '@/components/Toast/ToastContainer.vue';
 import UserMessageBanner from '@/components/UserMessages/UserMessageBanner.vue';
 
 useThemeStore();
+
+// Preload Pokemon data for CP calculations (non-blocking)
+const pokemonDataStore = usePokemonDataStore();
+pokemonDataStore.preloadData();
 
 const calendarSettings = useCalendarSettingsStore();
 const { urlMonth, urlYear } = useUrlSync();
