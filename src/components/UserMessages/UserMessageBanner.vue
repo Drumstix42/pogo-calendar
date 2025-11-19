@@ -27,15 +27,15 @@
 
 <script setup lang="ts">
 import { AlertCircle, AlertTriangle, CheckCircle2, Info } from 'lucide-vue-next';
-import { nextTick, onMounted, ref } from 'vue';
+import { nextTick, ref, watch } from 'vue';
 
 import { useUserMessagesStore } from '@/stores/userMessages';
 
 const userMessages = useUserMessagesStore();
 const showMessages = ref(false);
 
-onMounted(async () => {
-    if (userMessages.activeMessages.length > 0) {
+async function handleMessagesAppear() {
+    if (userMessages.activeMessages.length > 0 && !showMessages.value) {
         let scrollRestoration: ScrollRestoration;
 
         // bypass auto scrolling.
@@ -57,7 +57,20 @@ onMounted(async () => {
             }
         }, 500);
     }
-});
+}
+
+// watch for messages being added reactively
+watch(
+    () => userMessages.activeMessages.length,
+    newLength => {
+        if (newLength > 0) {
+            handleMessagesAppear();
+        } else {
+            showMessages.value = false;
+        }
+    },
+    { immediate: true },
+);
 
 function handleDismiss(id: string, version: string) {
     userMessages.dismissMessage(id, version);

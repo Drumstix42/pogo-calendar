@@ -1,5 +1,7 @@
 import vue from '@vitejs/plugin-vue';
 import { execSync } from 'child_process';
+import { writeFileSync } from 'fs';
+import { resolve } from 'path';
 import { defineConfig } from 'vite';
 
 function buildInfoPlugin() {
@@ -21,9 +23,42 @@ function buildInfoPlugin() {
     };
 }
 
+function versionPlugin() {
+    return {
+        name: 'version-generator',
+        buildStart() {
+            const timestamp = Date.now();
+            const date = new Date(timestamp);
+
+            // format: MM/DD/YYYY, HH:MM:SS AM/PM
+            const hours = date.getHours();
+            const minutes = date.getMinutes().toString().padStart(2, '0');
+            const seconds = date.getSeconds().toString().padStart(2, '0');
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            const displayHours = hours % 12 || 12;
+
+            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+            const day = date.getDate().toString().padStart(2, '0');
+            const year = date.getFullYear();
+
+            const humanReadable = `${month}/${day}/${year}, ${displayHours}:${minutes}:${seconds} ${ampm}`;
+
+            const versionData = {
+                timestamp: timestamp,
+                timestampFormatted: humanReadable,
+            };
+
+            const versionPath = resolve(__dirname, 'public', 'version.json');
+            writeFileSync(versionPath, JSON.stringify(versionData, null, 2));
+
+            console.log(`Generated version.json: ${humanReadable}`);
+        },
+    };
+}
+
 // https://vite.dev/config/
 export default defineConfig({
-    plugins: [vue(), buildInfoPlugin()],
+    plugins: [vue(), buildInfoPlugin(), versionPlugin()],
     server: {
         hmr: {
             //overlay: false,

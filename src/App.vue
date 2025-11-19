@@ -68,9 +68,11 @@
 
 <script setup lang="ts">
 import { Settings } from 'lucide-vue-next';
+import { watch } from 'vue';
 
 import { useCurrentTime } from '@/composables/useCurrentTime';
 import { useUrlSync } from '@/composables/useUrlSync';
+import { useAppStore } from '@/stores/app';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { usePokemonDataStore } from '@/stores/pokemonData';
 import { useThemeStore } from '@/stores/theme';
@@ -85,9 +87,18 @@ useThemeStore();
 const pokemonDataStore = usePokemonDataStore();
 pokemonDataStore.preloadData();
 
+// Initialize version checking
+const appStore = useAppStore();
+appStore.loadVersion(); // initial load
+
 const calendarSettings = useCalendarSettingsStore();
 const { urlMonth, urlYear } = useUrlSync();
-const { liveDay } = useCurrentTime();
+const { liveDay, liveHour } = useCurrentTime();
+
+// Check for app updates hourly
+watch(liveHour, () => {
+    appStore.loadVersion();
+});
 
 function goHome() {
     const now = liveDay.value;

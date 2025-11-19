@@ -33,3 +33,6 @@ Thumbs.db
 
 # AI Planning folder
 planning/
+
+# Build-time generated files
+public/version.json
