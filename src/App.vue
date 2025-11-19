@@ -68,7 +68,7 @@
 
 <script setup lang="ts">
 import { Settings } from 'lucide-vue-next';
-import { watch } from 'vue';
+import { onMounted, watch } from 'vue';
 
 import { useCurrentTime } from '@/composables/useCurrentTime';
 import { useUrlSync } from '@/composables/useUrlSync';
@@ -89,15 +89,20 @@ pokemonDataStore.preloadData();
 
 // Initialize version checking
 const appStore = useAppStore();
-appStore.loadVersion(); // initial load
 
 const calendarSettings = useCalendarSettingsStore();
 const { urlMonth, urlYear } = useUrlSync();
 const { liveDay, liveHour } = useCurrentTime();
 
-// Check for app updates hourly
-watch(liveHour, () => {
-    appStore.loadVersion();
+// Check for app updates on mount and hourly
+onMounted(() => {
+    watch(
+        liveHour,
+        () => {
+            appStore.loadVersion();
+        },
+        { immediate: true },
+    );
 });
 
 function goHome() {
