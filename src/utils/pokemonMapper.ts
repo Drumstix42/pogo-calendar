@@ -1,4 +1,5 @@
 import { POKEMON_NAME_TO_ID } from '@/constants/pokemonEntries';
+import { POKEMON_FORM_MAP } from '@/constants/pokemonFormMap';
 import { VALID_ANIMATED_SPRITES } from '@/constants/validAnimatedSprites';
 import { VALID_STATIC_SPRITES } from '@/constants/validStaticSprites';
 
@@ -10,19 +11,6 @@ export type SpriteType = 'dream-world' | 'official-artwork' | 'home';
 // track logged missing sprites (to avoid spam)
 const loggedMissingStaticSprites = new Set<string>();
 const loggedMissingAnimatedSprites = new Set<string>();
-
-// Special handling for Pokemon with non-standard forms
-// Maps Pokemon ID to their default static sprite URL from PokeMiners
-const SPECIAL_STATIC_SPRITE_RULES: Record<number, string> = {
-    849: 'https://raw.githubusercontent.com/PokeMiners/pogo_assets/master/Images/Pokemon/Addressable%20Assets/pm849.fAMPED.icon.png', // Toxtricity - defaults to Amped form
-};
-
-// Form-specific URLs for Pokemon with multiple forms
-const FORM_SPECIFIC_STATIC_SPRITES: Record<string, string> = {
-    'toxtricity-amped': 'https://raw.githubusercontent.com/PokeMiners/pogo_assets/master/Images/Pokemon/Addressable%20Assets/pm849.fAMPED.icon.png',
-    'toxtricity-low-key':
-        'https://raw.githubusercontent.com/PokeMiners/pogo_assets/master/Images/Pokemon/Addressable%20Assets/pm849.fLOW_KEY.icon.png',
-};
 
 // Normalize Pokemon names for matching - smart Unicode normalization + gender symbols
 export function normalizePokemonName(name: string): string {
@@ -59,6 +47,69 @@ export function isValidStaticSprite(spriteName: string): boolean {
     return VALID_STATIC_SPRITES.has(spriteName.toLowerCase());
 }
 
+// Get PokeMiners asset URL for a Pokemon using the form mapping
+function getPokeMinersSpriteUrl(pokemonId: number, formSuffix?: string, shiny = false): string | null {
+    const pokemon = POKEMON_FORM_MAP[pokemonId.toString()];
+
+    if (pokemon === undefined) {
+        return null;
+    }
+
+    let suffix = '';
+
+    if (pokemon === null) {
+        // Base form only
+        suffix = '';
+    } else if (formSuffix) {
+        // Validate the form exists
+        const normalizedForm = formSuffix.toUpperCase();
+        const hasForm = pokemon.forms.some((f: string) => {
+            const formWithoutF = f.substring(1);
+            return formWithoutF === normalizedForm || f.toUpperCase() === normalizedForm;
+        });
+
+        if (hasForm) {
+            // Ensure form starts with 'f'
+            suffix = `.${formSuffix.startsWith('f') ? formSuffix : 'f' + formSuffix}`;
+        } else {
+            // Form not found, use default
+            suffix = pokemon.default ? `.${pokemon.default}` : '';
+        }
+    } else {
+        // No form specified, use default
+        suffix = pokemon.default ? `.${pokemon.default}` : '';
+    }
+
+    const shinyPart = shiny ? '.s' : '';
+    const filename = `pm${pokemonId}${suffix}${shinyPart}.icon.png`;
+
+    return `https://raw.githubusercontent.com/PokeMiners/pogo_assets/master/Images/Pokemon/Addressable%20Assets/${filename}`;
+}
+
+// Get available PokeMiners form suffixes for a Pokemon
+export function getPokeMinersForms(pokemonId: number): string[] {
+    const pokemon = POKEMON_FORM_MAP[pokemonId.toString()];
+    if (!pokemon || pokemon === null) {
+        return [];
+    }
+    return pokemon.forms || [];
+}
+
+// Check if a Pokemon has multiple PokeMiners forms
+export function hasPokeMinersMultipleForms(pokemonId: number): boolean {
+    const pokemon = POKEMON_FORM_MAP[pokemonId.toString()];
+    return pokemon !== null && pokemon !== undefined && pokemon.forms && pokemon.forms.length > 0;
+}
+
+// Get the default PokeMiners form suffix for a Pokemon
+export function getPokeMinersDefaultFormSuffix(pokemonId: number): string | null {
+    const pokemon = POKEMON_FORM_MAP[pokemonId.toString()];
+    if (!pokemon || pokemon === null) {
+        return null;
+    }
+    return pokemon.default || null;
+}
+
 export function getPokemonSpriteUrl(pokemonNameOrId: string | number, suffix?: string): string | null {
     let pokemonName: string;
     let pokemonId: number | null = null;
@@ -86,25 +137,17 @@ export function getPokemonSpriteUrl(pokemonNameOrId: string | number, suffix?: s
         urlName += suffix;
     }
 
-    // Check for form-specific special rules first
-    const formKey = suffix ? `${urlName}` : null;
-    if (formKey && FORM_SPECIFIC_STATIC_SPRITES[formKey]) {
-        return FORM_SPECIFIC_STATIC_SPRITES[formKey];
-    }
-
     // Check if this static sprite exists in primary source
     if (isValidStaticSprite(urlName)) {
         return `https://raw.githubusercontent.com/mgrann03/pokemon-resources/refs/heads/main/graphics/pogo/${urlName}.png`;
     }
 
-    // Check for special static sprite rules (base form with no suffix)
-    if (!suffix && pokemonId && SPECIAL_STATIC_SPRITE_RULES[pokemonId]) {
-        return SPECIAL_STATIC_SPRITE_RULES[pokemonId];
-    }
-
-    // Fallback to PokeMiners for base forms only (no suffixes)
-    if (!suffix && pokemonId) {
-        return `https://raw.githubusercontent.com/PokeMiners/pogo_assets/master/Images/Pokemon/Addressable%20Assets/pm${pokemonId}.icon.png`;
+    // Fallback to PokeMiners using the form mapping
+    if (pokemonId) {
+        const pokeminersUrl = getPokeMinersSpriteUrl(pokemonId, suffix);
+        if (pokeminersUrl) {
+            return pokeminersUrl;
+        }
     }
 
     // Only log if we haven't seen this missing sprite before
@@ -159,17 +202,12 @@ export function getPokemonAnimatedUrl(pokemonNameOrId: string | number, suffix?:
         return `https://raw.githubusercontent.com/mgrann03/pokemon-resources/main/graphics/ani/${urlName}.gif`;
     }
 
-    // Fallback to PokeMiners for base forms only (no suffixes) - note: these are static PNGs, not animated
-    if (!suffix && typeof pokemonNameOrId !== 'string') {
-        // We have a numeric ID, try PokeMiners as fallback (will be static, not animated)
-        return `https://raw.githubusercontent.com/PokeMiners/pogo_assets/master/Images/Pokemon/Addressable%20Assets/pm${pokemonNameOrId}.icon.png`;
-    }
-
-    // If we have a name, try to get the ID for PokeMiners fallback
-    if (!suffix && typeof pokemonNameOrId === 'string') {
-        const pokemonId = getPokemonId(pokemonNameOrId);
-        if (pokemonId) {
-            return `https://raw.githubusercontent.com/PokeMiners/pogo_assets/master/Images/Pokemon/Addressable%20Assets/pm${pokemonId}.icon.png`;
+    // Fallback to PokeMiners using the form mapping (note: these are static PNGs, not animated)
+    const pokemonId = typeof pokemonNameOrId === 'number' ? pokemonNameOrId : getPokemonId(pokemonNameOrId);
+    if (pokemonId) {
+        const pokeminersUrl = getPokeMinersSpriteUrl(pokemonId, suffix);
+        if (pokeminersUrl) {
+            return pokeminersUrl;
         }
     }
 
