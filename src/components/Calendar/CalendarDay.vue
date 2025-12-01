@@ -658,7 +658,7 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     font-size: 11px;
     line-height: 1.2;
     color: #f2f2f2;
-    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.3);
     cursor: pointer;
     height: 100%;
     min-width: 0;
@@ -726,7 +726,7 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     min-width: min(28px, 100%);
     padding-right: 1px;
 
-    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.55);
+    /* text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.55); */ /* already a subtle shadow on the parent */
     box-shadow: inset 1px 1px 9px 4px var(--event-bg-color);
 
     @media (min-width: 768px) {
