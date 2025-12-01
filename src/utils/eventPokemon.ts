@@ -468,7 +468,15 @@ export function getEventPokemonImages(event: PogoEvent, options?: PokemonImageOp
             }
         }
 
-        // Fallback to event image if available
+        // Check for regular Dynamax pattern: "Dynamax <Pokemon> Max Battle Weekend/Day"
+        const dynamaxMatch = eventName.match(/^Dynamax\s+(.+?)\s+Max\s+Battle\s+(?:Weekend|Day)$/i);
+        if (dynamaxMatch) {
+            const pokemonName = dynamaxMatch[1].trim();
+            const spriteUrl = getSpriteUrl(pokemonName, undefined, options);
+            return [{ name: pokemonName, imageUrl: spriteUrl }];
+        }
+
+        // Fallback to event image if available (e.g., "Max Battle Weekend" with no specific Pokemon)
         if (event.image) {
             return [{ name: 'Max Battle', imageUrl: event.image }];
         }

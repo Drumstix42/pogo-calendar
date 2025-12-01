@@ -674,6 +674,10 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
 .multi-day-event-bar:hover {
     color: #ffffff;
     background-color: color-mix(in srgb, var(--event-bg-color) 80%, black) !important;
+
+    .event-name {
+        box-shadow: inset 1px 1px 9px 4px color-mix(in srgb, var(--event-bg-color) 80%, black);
+    }
 }
 
 .multi-day-event-bar--inner {
@@ -682,7 +686,7 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     width: 100%;
     height: 100%;
     padding-left: 2px;
-    padding-right: 2px;
+    padding-right: 0; /* apply padding to the text instead, so any kind of floating/transparent BG can render all the way to the edge */
     position: absolute;
     top: 0;
     left: 0;
@@ -700,21 +704,30 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     }
 }
 
-.end-cap .multi-day-event-bar--inner {
+/* .end-cap .multi-day-event-bar--inner {
     padding-right: 3px;
-}
+} */
 
 :deep(.multi-day-event-bar--inner .pokemon-images) {
     flex-shrink: 0;
+    gap: 1px;
+    max-width: 50px;
+    overflow: visible;
+    flex-wrap: nowrap;
 }
 
 .multi-day-event-bar .event-name {
+    z-index: 2;
     overflow: hidden;
     text-overflow: clip;
     white-space: nowrap;
     font-weight: 400;
-    line-height: 1.2;
+    line-height: 1.5;
     min-width: min(28px, 100%);
+    padding-right: 1px;
+
+    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.55);
+    box-shadow: inset 1px 1px 9px 4px var(--event-bg-color);
 
     @media (min-width: 768px) {
         text-overflow: ellipsis;

@@ -138,7 +138,20 @@ const shouldShowPlaceholder = computed(() => {
     return pokemonImages.value.length === 0 && relevantEventTypes.includes(props.event.eventType);
 });
 
-const showDynamaxOverlay = computed(() => props.event.eventType === 'max-mondays' /*  || props.event.eventType === 'max-battles' */);
+const showDynamaxOverlay = computed(() => {
+    // Always show for max-mondays
+    if (props.event.eventType === 'max-mondays') return true;
+
+    // For max-battles, only show if it's a regular Dynamax (not Gigantamax)
+    if (props.event.eventType === 'max-battles') {
+        const eventName = props.eventName;
+        const gigantamaxMatch = eventName.match(/^Gigantamax\s+(.+?)\s+Max\s+Battle\s+Day$/i);
+        const dynamaxMatch = eventName.match(/^Dynamax\s+(.+?)\s+Max\s+Battle\s+(?:Weekend|Day)$/i);
+        return dynamaxMatch !== null && gigantamaxMatch === null;
+    }
+
+    return false;
+});
 const showShadowEffect = computed(() => getRaidSubType(props.event) === 'shadow-raids');
 const showGigantamaxEffect = computed(() => {
     if (props.event.eventType !== 'max-battles') return false;
@@ -210,7 +223,7 @@ function handleImageError(index: number): void {
 .dynamax-overlay,
 .shadow-overlay {
     position: absolute;
-    top: -3px;
+    top: -1px;
     left: 0;
     right: 0;
     /* bottom: 0; */
@@ -243,13 +256,13 @@ function handleImageError(index: number): void {
 @keyframes dynamaxClouds {
     /* just floats up  and down, no scale rotation changes*/
     0% {
-        transform: translateY(-1px);
+        transform: translateY(-2px);
     }
     50% {
         transform: translateY(1px);
     }
     100% {
-        transform: translateY(-1px);
+        transform: translateY(-2px);
     }
 }
 
