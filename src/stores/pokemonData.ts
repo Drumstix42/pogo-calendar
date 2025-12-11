@@ -59,7 +59,7 @@ export const usePokemonDataStore = defineStore('pokemonData', () => {
     }
 
     /**
-     * Search for a catchable Pokemon by name, stripping Mega/Primal prefixes
+     * Search for a catchable Pokemon by name, stripping battle form prefixes
      * Returns the base form that can actually be caught/encountered
      */
     function searchCatchablePokemon(pokemonName: string): PokemonData | null {
@@ -67,12 +67,18 @@ export const usePokemonDataStore = defineStore('pokemonData', () => {
             return null;
         }
 
-        // Strip Mega/Primal prefixes - these forms can't be caught, only base forms
+        // Strip all battle form prefixes - these forms can't be caught, only base forms
         let searchName = pokemonName;
-        if (searchName.startsWith('Mega ')) {
+        if (searchName.startsWith('Gigantamax ')) {
+            searchName = searchName.substring(11); // Remove "Gigantamax "
+        } else if (searchName.startsWith('Dynamax ')) {
+            searchName = searchName.substring(8); // Remove "Dynamax "
+        } else if (searchName.startsWith('Mega ')) {
             searchName = searchName.substring(5); // Remove "Mega "
         } else if (searchName.startsWith('Primal ')) {
             searchName = searchName.substring(7); // Remove "Primal "
+        } else if (searchName.startsWith('Shadow ')) {
+            searchName = searchName.substring(7); // Remove "Shadow "
         }
 
         // Normalize the search name using our existing mapper normalization
