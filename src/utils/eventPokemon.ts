@@ -33,34 +33,25 @@ const GMAX_FORM_VARIANTS: Record<number, { default: string; patterns: Record<str
     },
 };
 
-function extractPokemonNamesFromRaidHour(eventName: string): string[] {
-    // Decode HTML entities first
-    const decodedEventName = formatEventName(eventName);
-
-    // Pattern: "<Pokemon Name(s)> Raid Hour"
-    const match = decodedEventName.match(/^(.+?)\s+Raid\s+Hour$/i);
-    if (!match) {
-        return [];
-    }
-
-    const pokemonPart = match[1].trim();
-
-    // Handle special case: Pokemon with forms in parentheses
+// Parse multiple Pokemon names from event title text separated by commas and "and"
+// Examples: "Mega Latias and Mega Latios" → ["Mega Latias", "Mega Latios"]
+//           "Pokemon A, Pokemon B, and Pokemon C" → ["Pokemon A", "Pokemon B", "Pokemon C"]
+//           "Genesect (Burn Drive), Genesect (Chill Drive)" → ["Genesect (Burn Drive)", "Genesect (Chill Drive)"]
+function parseEventPokemonNames(pokemonString: string): string[] {
+    // Handle special case: Pokemon with forms in parentheses separated by &
     // Example: "Deoxys (Attack & Speed Forme)" should become ["Deoxys (Attack Forme)", "Deoxys (Speed Forme)"]
-    const formeParenthesesMatch = pokemonPart.match(/^(.+?)\s+\((.+?)\s+&\s+(.+?)\s+forme?\)$/i);
-    if (formeParenthesesMatch) {
-        const baseName = formeParenthesesMatch[1].trim();
-        const form1 = formeParenthesesMatch[2].trim();
-        const form2 = formeParenthesesMatch[3].trim();
+    const pokemonFormParenthesesMatch = pokemonString.match(/^(.+?)\s+\((.+?)\s+&\s+(.+?)\s+forme?\)$/i);
+    if (pokemonFormParenthesesMatch) {
+        const baseName = pokemonFormParenthesesMatch[1].trim();
+        const form1 = pokemonFormParenthesesMatch[2].trim();
+        const form2 = pokemonFormParenthesesMatch[3].trim();
         return [`${baseName} (${form1} Forme)`, `${baseName} (${form2} Forme)`];
     }
 
-    // Split on "and" and also handle potential commas for 3+ Pokemon
-    // Examples: "Mega Latias and Mega Latios", "Pokemon A, Pokemon B, and Pokemon C"
     const pokemonNames: string[] = [];
 
     // First check if we have commas
-    const commaParts = pokemonPart.split(',').map(part => part.trim());
+    const commaParts = pokemonString.split(',').map(part => part.trim());
 
     if (commaParts.length > 1) {
         // Multiple comma-separated parts
@@ -80,16 +71,30 @@ function extractPokemonNamesFromRaidHour(eventName: string): string[] {
                 pokemonNames.push(part);
             }
         }
-    } else if (pokemonPart.includes(' and ')) {
+    } else if (pokemonString.includes(' and ')) {
         // No commas, just split on "and"
-        const andParts = pokemonPart.split(' and ').map(p => p.trim());
+        const andParts = pokemonString.split(' and ').map(p => p.trim());
         pokemonNames.push(...andParts);
     } else {
         // Single Pokemon name
-        pokemonNames.push(pokemonPart);
+        pokemonNames.push(pokemonString);
     }
 
     return pokemonNames.filter(name => name.length > 0);
+}
+
+function extractPokemonNamesFromRaidHour(eventName: string): string[] {
+    // Decode HTML entities first
+    const decodedEventName = formatEventName(eventName);
+
+    // Pattern: "<Pokemon Name(s)> Raid Hour"
+    const match = decodedEventName.match(/^(.+?)\s+Raid\s+Hour$/i);
+    if (!match) {
+        return [];
+    }
+
+    const pokemonPart = match[1].trim();
+    return parseEventPokemonNames(pokemonPart);
 }
 
 function extractPokemonNameFromMaxMonday(eventName: string): string | null {
@@ -171,17 +176,23 @@ function parsePokemonNameAndSuffix(pokemonNameString: string): { pokemonName: st
     // Handle Pokemon with special forms in parentheses
     // Examples: "Palkia (Origin Forme)" → "palkia-origin", "Landorus (Therian Form)" → "landorus-therian"
     // Also handles: "Deoxys (Normal)" → no suffix, "Deoxys (Attack)" → "deoxys-attack"
-    const formeMatch = pokemonNameString.match(/^(.+?)\s+\((.+?)(?:\s+forme?)?\)$/i);
-    if (formeMatch) {
-        const baseName = formeMatch[1].trim();
-        const formeName = formeMatch[2].trim().toLowerCase();
+    // Special case: "Genesect (Burn Drive)" → "genesect-burn"
+    const pokemonFormMatch = pokemonNameString.match(/^(.+?)\s+\((.+?)(?:\s+forme?)?\)$/i);
+    if (pokemonFormMatch) {
+        const baseName = pokemonFormMatch[1].trim();
+        let pokemonFormName = pokemonFormMatch[2].trim().toLowerCase();
 
         // Special handling for Deoxys Normal form - no suffix needed
-        if (baseName.toLowerCase() === 'deoxys' && formeName === 'normal') {
+        if (baseName.toLowerCase() === 'deoxys' && pokemonFormName === 'normal') {
             return { pokemonName: baseName };
         }
 
-        return { pokemonName: baseName, suffix: `-${formeName}` };
+        // Special handling for Genesect Drives - strip " drive" suffix
+        if (baseName.toLowerCase() === 'genesect' && pokemonFormName.endsWith(' drive')) {
+            pokemonFormName = pokemonFormName.replace(/\s+drive$/i, '');
+        }
+
+        return { pokemonName: baseName, suffix: `-${pokemonFormName}` };
     }
 
     // Special case: Genesect without form specified defaults to "normal" form for static sprites
@@ -266,9 +277,29 @@ export function getEventPokemonImages(event: PogoEvent, options?: PokemonImageOp
         const pokemonName = extractPokemonNameFromRaidBattle(event);
         if (pokemonName) {
             const isMega = getRaidSubType(event) === 'mega-raids';
-            const suffix = isMega ? '-mega' : undefined;
-            const spriteUrl = getSpriteUrl(pokemonName, suffix, options);
-            return [{ name: pokemonName, imageUrl: spriteUrl }];
+            const pokemonNames = parseEventPokemonNames(pokemonName);
+            const images: PokemonImageData[] = [];
+
+            for (const name of pokemonNames) {
+                const parsedData = parsePokemonNameAndSuffix(name);
+                if (parsedData) {
+                    let spriteUrl: string | null = null;
+
+                    // If we have a custom suffix (like -mega), use it directly
+                    if (parsedData.suffix) {
+                        spriteUrl = getSpriteUrl(parsedData.pokemonName, parsedData.suffix, options);
+                    } else {
+                        const suffix = isMega ? '-mega' : undefined;
+                        spriteUrl = getSpriteUrl(parsedData.pokemonName, suffix, options);
+                    }
+
+                    images.push({ name: name, imageUrl: spriteUrl });
+                }
+            }
+
+            if (images.length > 0) {
+                return images;
+            }
         }
 
         // Final fallback to LeetDuck's provided images
@@ -504,42 +535,7 @@ export function getEventPokemonImages(event: PogoEvent, options?: PokemonImageOp
                 return [];
             }
 
-            // Handle multiple Pokemon separated by commas and "and"
-            const pokemonNames: string[] = [];
-
-            // First split on commas, then handle "and" in the last part
-            const commaParts = pokemonNameString.split(',').map(part => part.trim());
-
-            for (let i = 0; i < commaParts.length; i++) {
-                let part = commaParts[i];
-
-                // Strip leading "and " if present
-                if (part.toLowerCase().startsWith('and ')) {
-                    part = part.substring(4).trim();
-                }
-
-                if (i === commaParts.length - 1 && part.includes(' and ')) {
-                    // Last part might contain "and" - split it
-                    const andParts = part.split(' and ').map(p => p.trim());
-                    pokemonNames.push(...andParts);
-                } else {
-                    pokemonNames.push(part);
-                }
-            }
-
-            // If no commas were found, just split on "and"
-            if (commaParts.length === 1 && pokemonNameString.includes(' and ')) {
-                pokemonNames.length = 0; // Clear the array
-                const andParts = pokemonNameString.split(' and ').map(p => p.trim());
-                pokemonNames.push(...andParts);
-            }
-
-            // If still no multiple Pokemon found, treat as single Pokemon
-            if (pokemonNames.length <= 1) {
-                pokemonNames.length = 0;
-                pokemonNames.push(pokemonNameString);
-            }
-
+            const pokemonNames = parseEventPokemonNames(pokemonNameString);
             const images: PokemonImageData[] = [];
 
             for (const name of pokemonNames) {

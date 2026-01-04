@@ -61,18 +61,24 @@ function getPokeMinersSpriteUrl(pokemonId: number, formSuffix?: string, shiny = 
         // Base form only
         suffix = '';
     } else if (formSuffix) {
-        // Validate the form exists
-        const normalizedForm = formSuffix.toUpperCase();
+        // Convert our suffix format to PokeMiners format
+        // Our suffixes come from eventPokemon.ts as "-burn", "-chill", etc.
+        // PokeMiners expects uppercase without hyphen: "BURN", "CHILL" (stored as "fBURN", "fCHILL" in form map)
+        const cleanedSuffix = formSuffix.startsWith('-') ? formSuffix.substring(1) : formSuffix;
+        const normalizedForm = cleanedSuffix.toUpperCase();
+
+        // Check if this form exists in PokeMiners form map
+        // Forms are stored with 'f' prefix (e.g., "fBURN"), so we check both with and without it
         const hasForm = pokemon.forms.some((f: string) => {
-            const formWithoutF = f.substring(1);
+            const formWithoutF = f.substring(1); // "fBURN" → "BURN"
             return formWithoutF === normalizedForm || f.toUpperCase() === normalizedForm;
         });
 
         if (hasForm) {
-            // Ensure form starts with 'f'
-            suffix = `.${formSuffix.startsWith('f') ? formSuffix : 'f' + formSuffix}`;
+            // PokeMiners filenames require the 'f' prefix: "pm649.fBURN.icon.png"
+            suffix = `.${cleanedSuffix.startsWith('f') ? cleanedSuffix : 'f' + normalizedForm}`;
         } else {
-            // Form not found, use default
+            // Form not found in PokeMiners, use default (e.g., Genesect defaults to "fNORMAL")
             suffix = pokemon.default ? `.${pokemon.default}` : '';
         }
     } else {
@@ -132,7 +138,7 @@ export function getPokemonSpriteUrl(pokemonNameOrId: string | number, suffix?: s
     // Clean Pokemon name for URL: use normalization + remove non-alphanumeric
     let urlName = normalizePokemonName(pokemonName).replace(/[^a-z0-9]/g, ''); // Remove all non-alphanumeric characters (spaces, hyphens, apostrophes, etc.)
 
-    // Add suffix if provided (for form variations)
+    // Add suffix if provided (for form variations) - preserve hyphens in suffix
     if (suffix) {
         urlName += suffix;
     }
@@ -192,7 +198,7 @@ export function getPokemonAnimatedUrl(pokemonNameOrId: string | number, suffix?:
     // Clean Pokemon name for URL: use normalization + remove non-alphanumeric
     let urlName = normalizePokemonName(pokemonName).replace(/[^a-z0-9]/g, ''); // Remove all non-alphanumeric characters (spaces, hyphens, apostrophes, etc.)
 
-    // Add suffix if provided
+    // Add suffix if provided - preserve hyphens in suffix
     if (suffix) {
         urlName += suffix;
     }
