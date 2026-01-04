@@ -125,13 +125,14 @@ function extractPokemonNameFromRaidBattle(event: PogoEvent): string | null {
         }
         case 'raid-battles':
         case 'raid-weekend': {
-            // Pattern: "<Pokemon> in <tier>-star Raid battles" or "<Pokemon> Raid Weekend"
+            // Pattern: "<Pokemon> in <tier>-star Raid battles" or "<Pokemon> [Special Type] Raid Weekend"
+            // Special types can be: "Fusion", etc.
             const raidBattles = eventName.match(/^(.+?)\s+in\s+(\d+)-star\s+Raid\s+battles$/i);
             if (raidBattles) {
                 return raidBattles[1].trim();
             }
 
-            const raidWeekend = eventName.match(/^(.+?)\s+Raid\s+Weekend$/i);
+            const raidWeekend = eventName.match(/^(.+?)\s+(?:Fusion\s+)?Raid\s+Weekend$/i);
             if (raidWeekend) {
                 return raidWeekend[1].trim();
             }
@@ -344,10 +345,17 @@ export function getEventPokemonImages(event: PogoEvent, options?: PokemonImageOp
     if (event.eventType === 'raid-day') {
         const eventName = formatEventName(event.name);
 
-        // Pattern: "<Pokemon Name> Raid Day"
-        const match = eventName.match(/^(.+?)\s+Raid\s+Day$/i);
+        // Pattern: "<Pokemon Name> [Special Type] Raid Day" or "<Pokemon Name> Raid Day"
+        // Special types can be: "Fusion", "Shadow", etc.
+        const match = eventName.match(/^(.+?)\s+(?:Fusion\s+)?Raid\s+Day$/i);
         if (match) {
             const pokemonNameString = match[1].trim();
+
+            // Skip generic raid days without a Pokemon name (e.g. future events without complete data)
+            if (pokemonNameString.toLowerCase() === 'shadow' || pokemonNameString.toLowerCase() === 'raid') {
+                return [];
+            }
+
             const parsedData = parsePokemonNameAndSuffix(pokemonNameString);
             if (parsedData) {
                 let spriteUrl: string | null = null;
