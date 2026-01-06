@@ -8,46 +8,49 @@
         :data-event-type="event.eventType"
         :data-timeline-event-id="event.eventID"
         :style="{
-            '--event-bg-color': eventColor,
+            '--event-color': eventColor,
         }"
         @mouseenter="debouncedHighlightEventID(props.event.eventID)"
         @mouseleave="debouncedClearEventIDHighlight"
     >
-        <!-- Colored header with event type -->
-        <div class="event-header" @click="toggleActive">
-            <div class="header-content">
-                <span class="event-type">{{ eventTypeName }}</span>
-                <!-- Color customization button -->
-                <VTooltip
-                    v-if="props.isActive"
-                    :disabled="isTouchDevice"
-                    placement="top"
-                    :delay="{ show: 50, hide: 0 }"
-                    distance="10"
-                    class="d-flex align-items-center"
-                >
-                    <template #popper>
-                        <div class="tooltip-text">Customize event type color</div>
-                    </template>
-
-                    <button type="button" class="timeline-color-edit-btn" @click.stop="openColorModal">
-                        <Palette :size="13" />
-                    </button>
-                </VTooltip>
-                <!-- Hide event type button -->
-                <div v-if="props.isActive" class="event-toggle-container">
-                    <EventToggleButton :event-type="event.eventType" @hide="openHideModal" />
-                    <!-- <div class="header-action-text">Hide?</div> -->
+        <!-- Event type badge, actions, and toggle (clickable header) -->
+        <div class="event-header-bar" @click="toggleActive">
+            <div class="event-header-actions">
+                <div class="event-type-badge">
+                    {{ eventTypeName }}
                 </div>
-                <component :is="props.isActive ? ChevronsDownUp : ChevronsUpDown" :size="14" class="chevron-icon" />
+
+                <!-- Action buttons (when expanded) -->
+                <template v-if="props.isActive">
+                    <VTooltip :disabled="isTouchDevice" placement="top" :delay="{ show: 50, hide: 0 }" distance="10">
+                        <template #popper>
+                            <div class="tooltip-text">Customize event type color</div>
+                        </template>
+                        <button type="button" class="timeline-color-edit-btn" @click.stop="openColorModal">
+                            <Palette :size="13" />
+                        </button>
+                    </VTooltip>
+
+                    <div @click.stop>
+                        <EventToggleButton :event-type="event.eventType" @hide="openHideModal" />
+                    </div>
+                </template>
             </div>
+
+            <!-- Expand/collapse button (top-right) -->
+            <button type="button" class="expand-toggle" @click.stop="toggleActive">
+                <component :is="props.isActive ? ChevronsDownUp : ChevronsUpDown" :size="16" />
+            </button>
         </div>
 
-        <!-- Event body with event name and details -->
+        <!-- Event body -->
         <div class="event-body">
             <div v-if="event.extraData?.parentEventId" class="parent-event-name">{{ parentEventName }}</div>
-            <div class="event-name-row">
-                <div class="event-name">{{ formatEventName(event.name) }}</div>
+
+            <div class="event-header-row" @click="toggleActive">
+                <span class="event-name" :class="{ 'text-truncate': !props.isActive }">
+                    {{ formatEventName(event.name) }}
+                </span>
                 <!-- Spotlight bonus icons -->
                 <div v-if="eventsStore.eventMetadata[event.eventID]?.spotlightBonus" class="spotlight-bonus-icons">
                     <EvolveIcon
@@ -203,118 +206,67 @@ const hasPokemon = computed(() => {
 
 <style lang="scss" scoped>
 .timeline-event-card {
-    border: 1px solid;
+    position: relative;
+    border: 1px solid color-mix(in srgb, var(--event-color) 42%, var(--bs-border-color));
     border-radius: 8px;
     overflow: hidden;
-    border-color: var(--event-bg-color);
-    background-color: var(--event-bg-color);
-
+    background-color: color-mix(in srgb, var(--event-color) 5%, var(--calendar-cell-bg));
     transition:
         transform 0.15s ease,
+        box-shadow 0.15s ease,
+        background-color 0.15s ease,
         border-color 0.15s ease;
+    -webkit-font-smoothing: antialiased;
 
     @media (pointer: fine) {
         &:hover {
-            border-color: color-mix(in srgb, var(--event-bg-color) 90%, black);
+            background-color: color-mix(in srgb, var(--event-color) 10%, var(--calendar-cell-bg));
+            border-color: color-mix(in srgb, var(--event-color) 65%, var(--bs-border-color));
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 
-            /* .event-body {
-                background-color: color-mix(in srgb, var(--calendar-cell-bg) 92%, black);
-            } */
-
-            .chevron-icon {
+            .expand-toggle {
                 opacity: 0.8;
             }
         }
     }
 
     &.is-active {
-        transform: scale(1.02);
-        border-width: 1px;
-        border-color: color-mix(in srgb, var(--event-bg-color) 90%, black);
-        background-color: color-mix(in srgb, var(--event-bg-color) 90%, black);
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        transform: scale3d(1.02, 1.02, 1);
 
-        .event-header {
-            background-color: color-mix(in srgb, var(--event-bg-color) 90%, black);
-            @media (pointer: fine) {
-                &:hover {
-                    background-color: color-mix(in srgb, var(--event-bg-color) 80%, black) !important;
-                }
-            }
-        }
+        background-color: color-mix(in srgb, var(--event-color) 10%, var(--calendar-cell-bg));
+        border-color: color-mix(in srgb, var(--event-color) 65%, var(--bs-border-color));
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
     }
 }
 
-.event-header {
-    padding: 8px 12px;
-    color: white;
-    font-weight: 500;
-    font-size: 0.9rem;
-    line-height: 1.2rem;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+.event-header-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    gap: 6px;
-    background-color: var(--event-bg-color);
+    padding: 4px 4px;
     cursor: pointer;
-    transition: background-color 0.5s ease;
+    z-index: 1;
 
-    @media (pointer: fine) {
-        &:hover {
-            font-weight: 600;
-            background-color: color-mix(in srgb, var(--event-bg-color) 90%, black) !important;
-
-            .chevron-icon {
-                transform: scale(1.1);
-            }
-        }
-    }
-
-    .header-content {
+    .event-header-actions {
         display: flex;
         align-items: center;
-        gap: 8px;
-        flex: 1;
-        min-width: 0;
-        line-height: 1rem;
+        gap: 6px;
     }
 
-    .event-type {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        min-width: 0;
-    }
-
-    .chevron-icon {
-        opacity: 0.6;
-        transition:
-            opacity 0.2s ease,
-            transform 0.2s ease;
-        flex-shrink: 0;
-        color: white;
-        margin-left: auto;
-        pointer-events: none;
-    }
-
-    .header-action-text {
-        font-size: 11px;
-        font-weight: 400;
+    .event-type-badge {
+        padding: 3px 8px;
+        margin-left: 4px;
+        font-size: 0.7rem;
+        font-weight: 500;
         line-height: 1;
-        opacity: 0.8;
-        flex-shrink: 0;
+        color: white;
+        background-color: var(--event-color);
+        border-radius: 4px;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
         white-space: nowrap;
-        font-style: italic;
-        pointer-events: none;
-    }
-
-    .event-toggle-container {
-        flex-shrink: 0;
-        display: flex;
-        align-items: center;
-        gap: 4px;
     }
 
     .timeline-color-edit-btn {
@@ -325,41 +277,56 @@ const hasPokemon = computed(() => {
         height: 20px;
         border: none;
         border-radius: 3px;
-        background-color: rgba(255, 255, 255, 0.2);
-        color: white;
+        background-color: color-mix(in srgb, var(--bs-body-color) 15%, transparent);
+        color: var(--bs-body-color);
         cursor: pointer;
         transition: all 0.2s ease;
         flex-shrink: 0;
+
+        &:hover {
+            background-color: color-mix(in srgb, var(--bs-body-color) 20%, transparent);
+            transform: scale(1.05);
+        }
+
+        &:active {
+            transform: scale(0.95);
+        }
     }
 
-    .timeline-color-edit-btn:hover {
-        background-color: rgba(255, 255, 255, 0.3);
-        transform: scale(1.05);
-    }
+    .expand-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2px 3px;
+        border: none;
+        border-radius: 4px;
+        background-color: color-mix(in srgb, var(--bs-body-color) 8%, transparent);
+        color: var(--bs-body-color);
+        cursor: pointer;
+        opacity: 0.5;
+        transition:
+            opacity 0.2s ease,
+            transform 0.2s ease,
+            background-color 0.2s ease;
 
-    .timeline-color-edit-btn:active {
-        transform: scale(0.95);
+        @media (pointer: fine) {
+            &:hover {
+                opacity: 1;
+                background-color: color-mix(in srgb, var(--bs-body-color) 15%, transparent);
+                transform: scale(1.05);
+            }
+        }
+
+        &:active {
+            transform: scale(0.95);
+        }
     }
 }
 
 .event-body {
-    background: var(--calendar-cell-bg);
-    padding: 10px 12px;
+    padding: 12px 10px 5px 10px;
+    padding-top: 32px;
     text-align: left;
-
-    .event-name-row {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        margin-bottom: 5px;
-    }
-
-    .event-name {
-        font-size: 0.85rem;
-        font-weight: 500;
-        color: color-mix(in srgb, var(--bs-body-color) 90%, transparent);
-        line-height: 1.3;
-    }
 
     .parent-event-name {
         font-size: 0.7rem;
@@ -367,26 +334,57 @@ const hasPokemon = computed(() => {
         font-style: italic;
         color: color-mix(in srgb, var(--bs-body-color) 60%, transparent);
         line-height: 1.1;
-        margin-bottom: 2px;
+        margin-bottom: 4px;
+    }
+
+    .event-header-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 6px;
+        margin: -5px -4px 2px -4px;
+        padding: 4px;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.15s ease;
+
+        @media (pointer: fine) {
+            &:hover {
+                background-color: color-mix(in srgb, var(--bs-body-color) 3%, transparent);
+            }
+
+            &:hover .event-name {
+                color: var(--bs-body-color);
+            }
+        }
+
+        &:active {
+            background-color: color-mix(in srgb, var(--bs-body-color) 5%, transparent);
+        }
+    }
+
+    .event-name {
+        flex: 1;
+        font-size: 0.975rem;
+        font-weight: 300;
+        color: color-mix(in srgb, var(--bs-body-color) 90%, transparent);
+        line-height: 1.3;
+        transition: color 0.2s ease;
     }
 
     .event-content {
         display: flex;
         gap: 0px;
         align-items: flex-start;
-        /* flex-wrap: wrap; */
+
+        :deep(.event-time-display) {
+            font-size: 0.75rem;
+        }
 
         :deep(.pokemon-images) {
             justify-content: end;
             flex-grow: 1;
             flex-shrink: 1;
         }
-    }
-
-    .event-details {
-        flex-grow: 1;
-        flex-shrink: 0;
-        margin-top: 4px;
     }
 
     .event-extras-wrapper {
@@ -409,6 +407,7 @@ const hasPokemon = computed(() => {
     align-items: center;
     gap: 3px;
     flex-shrink: 0;
+    margin-top: 1px;
     filter: grayscale(20%);
 }
 

@@ -313,8 +313,8 @@ const statusInfo = computed(() => {
         font-size: 0.9rem;
         font-weight: 500;
         color: color-mix(in srgb, var(--bs-body-color) 85%, transparent);
-        line-height: 1.3;
-        margin-bottom: 3px;
+        line-height: 1.4;
+        margin-bottom: 2px;
         transition: var(--transition--time-text);
 
         &.is-completed {
@@ -324,15 +324,16 @@ const statusInfo = computed(() => {
         }
 
         .time-focused {
-            font-weight: 600;
-            color: color-mix(in srgb, var(--bs-body-color) 95%, transparent);
+            font-weight: 500;
+            color: color-mix(in srgb, var(--bs-body-color) 100%, transparent);
             transition: var(--transition--time-text);
         }
 
         .time-dimmed {
             opacity: 0.8;
+            font-size: 0.8rem;
             color: var(--bs-secondary-color);
-            font-weight: 400;
+            font-weight: 300;
             transition: var(--transition--time-text);
         }
 

@@ -307,6 +307,8 @@ const hiddenEventsCounts = computed(() => eventData.value.hiddenEventsCounts);
     display: flex;
     flex-direction: column;
     gap: 0;
+    margin: 0 auto 1rem auto;
+    max-width: 800px;
 }
 
 .event-category {
@@ -378,7 +380,7 @@ const hiddenEventsCounts = computed(() => eventData.value.hiddenEventsCounts);
     display: flex;
     flex-direction: column;
     gap: 6px;
-    margin-top: 12px;
+    margin-top: 8px;
     padding: 0 4px;
 }
 
@@ -425,9 +427,9 @@ const hiddenEventsCounts = computed(() => eventData.value.hiddenEventsCounts);
 }
 
 .date-divider {
-    margin: 0 0 2px 0;
+    margin: 4px 0 1px 0;
     padding: 0 4px;
-    font-size: 0.8rem;
+    font-size: 0.85rem;
     letter-spacing: 0.5px;
     color: var(--bs-secondary-color);
     line-height: 1.3;
