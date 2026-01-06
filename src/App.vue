@@ -30,33 +30,61 @@
 
                 <!-- Footer Disclaimer -->
                 <footer class="disclaimer-footer">
-                    <p class="disclaimer-text">
-                        This website is not affiliated with
-                        <a class="link-secondary" href="https://pokemongo.com/" target="_blank" rel="noopener noreferrer">Pokémon GO</a> and is
-                        intended to fall under Fair Use doctrine, similar to any other informational site such as a wiki. Pokémon and its trademarks
-                        are ©1995-2025 Nintendo, Creatures, and GAMEFREAK. <br />All images and names are owned and trademarked by Nintendo, Niantic,
-                        The Pokémon Company, and GAMEFREAK and are property of their respective owners.
-                    </p>
+                    <div class="footer-section">
+                        <p class="footer-heading">About</p>
+                        <p class="disclaimer-text">
+                            Created by
+                            <a class="link-secondary" href="https://github.com/Drumstix42" target="_blank" rel="noopener noreferrer">Drumstix42</a>
+                        </p>
+                        <p class="disclaimer-text small opacity-75">
+                            Built with
+                            <a class="link-secondary" href="https://vuejs.org/" target="_blank" rel="noopener noreferrer" title="vuejs.org">
+                                <img
+                                    src="/images/icons/vue.svg"
+                                    alt="Vue"
+                                    width="16.8"
+                                    height="14"
+                                    style="vertical-align: text-bottom; margin: 0 2px"
+                                />
+                            </a>
+                            Vue 3
+                        </p>
+                    </div>
 
-                    <p class="disclaimer-text mt-2">
-                        Event data is powered by
-                        <a class="link-secondary" href="https://leekduck.com/" target="_blank" rel="noopener noreferrer">Leekduck</a> via
-                        <a class="link-secondary" href="https://github.com/bigfoott/ScrapedDuck" target="_blank" rel="noopener noreferrer"
-                            >ScrapedDuck</a
-                        >.
-                    </p>
+                    <div class="footer-section">
+                        <p class="footer-heading">Data Sources</p>
+                        <p class="disclaimer-text">
+                            Event data powered by
+                            <a class="link-secondary" href="https://leekduck.com/" target="_blank" rel="noopener noreferrer">Leekduck</a> via
+                            <a class="link-secondary" href="https://github.com/bigfoott/ScrapedDuck" target="_blank" rel="noopener noreferrer"
+                                >ScrapedDuck</a
+                            >
+                        </p>
+                    </div>
 
-                    <p class="disclaimer-text mt-2">
-                        This site does not use cookies, tracking, or advertisements of any kind. All preferences are stored within
-                        <a
-                            class="link-secondary"
-                            href="https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            >localStorage</a
-                        >
-                        in your browser.
-                    </p>
+                    <div class="footer-section">
+                        <p class="footer-heading">Privacy</p>
+                        <p class="disclaimer-text">
+                            No cookies, tracking, or ads. All preferences stored locally in your browser's
+                            <a
+                                class="link-secondary"
+                                href="https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                >localStorage</a
+                            >.
+                        </p>
+                    </div>
+
+                    <div class="footer-legal">
+                        <p class="disclaimer-text small mb-0">
+                            This website is not affiliated with
+                            <a class="link-secondary" href="https://pokemongo.com/" target="_blank" rel="noopener noreferrer">Pokémon GO</a> and is
+                            intended to fall under Fair Use doctrine, similar to any other informational site such as a wiki. Pokémon and its
+                            trademarks are ©1995-2025 Nintendo, Creatures, and GAMEFREAK. <br />All images and names are owned and trademarked by
+                            Nintendo, Niantic, The Pokémon Company, and GAMEFREAK and are property of their respective owners.
+                        </p>
+                    </div>
                 </footer>
             </div>
         </main>
@@ -203,9 +231,29 @@ function goHome() {
 
 .disclaimer-footer {
     margin-top: 2rem;
-    padding: 1.5rem 0;
     text-align: center;
-    border-top: 1px solid var(--bs-border-color);
+    border-top: 1px dotted var(--bs-border-color-translucent);
+    padding-top: 1.5rem;
+}
+
+.footer-section {
+    margin-bottom: 1.5rem;
+}
+
+.footer-heading {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--bs-body-color);
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.footer-legal {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px dotted var(--bs-border-color-translucent);
+    margin-bottom: 2rem;
 }
 
 .disclaimer-text {

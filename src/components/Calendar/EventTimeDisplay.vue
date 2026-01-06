@@ -307,6 +307,7 @@ const statusInfo = computed(() => {
 .event-time-display {
     --transition--time-text: color 0.3s ease, opacity 0.3s ease;
     min-width: 140px;
+    flex-basis: 75%;
 
     .time-row {
         font-size: 0.9rem;
