@@ -365,7 +365,7 @@ const hasPokemon = computed(() => {
     .event-name {
         flex: 1;
         font-size: 0.975rem;
-        font-weight: 300;
+        font-weight: 400;
         color: color-mix(in srgb, var(--bs-body-color) 90%, transparent);
         line-height: 1.3;
         transition: color 0.2s ease;
