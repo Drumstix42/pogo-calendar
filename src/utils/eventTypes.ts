@@ -326,7 +326,7 @@ export const TimelineCategory = {
 export type TimelineCategoryKey = (typeof TimelineCategory)[keyof typeof TimelineCategory];
 
 // Event types that support sub-typing/categorization
-export const EVENTS_WITH_SUBTYPE = ['raid-battles', 'raid-weekend'] as const;
+export const EVENTS_WITH_SUBTYPE = ['raid-battles', 'raid-weekend', 'raid-day'] as const;
 export type EventWithSubtype = (typeof EVENTS_WITH_SUBTYPE)[number];
 
 /** Subtypes are a custom categorization for specific event types */
