@@ -37,8 +37,7 @@ import { useUrlSync } from '@/composables/useUrlSync';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { useEventFilterStore } from '@/stores/eventFilter';
 import { useEventsStore } from '@/stores/events';
-import { formatEventName } from '@/utils/eventName';
-import { getRaidSubType, getRaidSubTypePriority, isEventWithSubtype } from '@/utils/eventTypes';
+import { getRaidSubType, getRaidSubTypePriority } from '@/utils/eventTypes';
 import { type PogoEvent, getEventTypeInfo, parseEventDate } from '@/utils/eventTypes';
 
 import CalendarDay from './CalendarDay.vue';
@@ -105,7 +104,7 @@ const calendarDays = computed(() => {
 
 // Get all multi-day events for the calendar view
 const multiDayEventsForCalendar = computed(() => {
-    return eventsStore.events.filter(event => {
+    return eventsStore.processedEvents.filter(event => {
         // Filter by enabled event types, individual event IDs, and multi-day events only
         const metadata = eventsStore.eventMetadata[event.eventID];
         const isSingleDay = metadata?.isSingleDayEvent ?? false;
@@ -131,64 +130,9 @@ const eventSlots = computed((): EventSlot[] => {
     const events = multiDayEventsForCalendar.value;
     if (events.length === 0) return [];
 
-    // Conditionally group events with identical start/end times based on setting
-    let representativeEvents: PogoEvent[];
-
-    // TODO: pre-compute grouped event properties and metadata
-    if (calendarSettings.groupSimilarEvents) {
-        // Group events with identical start/end times
-        const eventGroups = new Map<string, PogoEvent[]>();
-        events.forEach(event => {
-            // Create more specific grouping key for events with subtypes
-            let groupingType = event.eventType;
-            if (isEventWithSubtype(event.eventType)) {
-                const raidSubType = getRaidSubType(event);
-                if (raidSubType) {
-                    groupingType = raidSubType;
-                }
-            }
-
-            const timeKey = `${groupingType}:${event.start}:${event.end}`;
-            if (!eventGroups.has(timeKey)) {
-                eventGroups.set(timeKey, []);
-            }
-            eventGroups.get(timeKey)!.push(event);
-        });
-
-        // Convert groups to representative events
-        representativeEvents = Array.from(eventGroups.values()).map(group => {
-            if (group.length === 1) {
-                return group[0]; // Single event
-            } else {
-                // Multiple identical events - create grouped representative
-                // Sort the group to ensure consistent representative selection
-                const sortedGroup = group.sort((a, b) => {
-                    // First by event type priority
-                    const aPriority = getEventTypeInfo(a.eventType).priority;
-                    const bPriority = getEventTypeInfo(b.eventType).priority;
-                    if (aPriority !== bPriority) {
-                        return bPriority - aPriority; // Higher priority first
-                    }
-
-                    // Then by event name for consistency
-                    return formatEventName(a.name).localeCompare(formatEventName(b.name));
-                });
-
-                const representative = { ...sortedGroup[0] };
-                (representative as any)._isGrouped = true;
-                (representative as any)._groupedEvents = group;
-                (representative as any)._displayName = getEventTypeInfo(sortedGroup[0].eventType).name;
-
-                return representative;
-            }
-        });
-    } else {
-        // No grouping - use events as-is
-        representativeEvents = events;
-    }
-
+    // Events are already processed (grouping already applied)
     // Sort by event type priority (from eventTypes.ts), then grouped vs individual, then by start date
-    const sortedEvents = representativeEvents.sort((a, b) => {
+    const sortedEvents = events.sort((a, b) => {
         // 1. Sort by event type priority (higher priority = higher in layout)
         const aPriority = getEventTypeInfo(a.eventType).priority;
         const bPriority = getEventTypeInfo(b.eventType).priority;

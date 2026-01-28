@@ -193,7 +193,7 @@ const selectedEvent = computed(() => {
     if (!selectedEventId.value) {
         return undefined;
     }
-    return eventsStore.events.find(e => e.eventID === selectedEventId.value);
+    return eventsStore.getProcessedEventById(selectedEventId.value);
 });
 
 const selectedEventIsSingleDay = computed(() => {

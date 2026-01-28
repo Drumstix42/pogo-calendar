@@ -140,7 +140,10 @@
                             <div class="event-text-wrap d-flex align-items-start gap-2">
                                 <div class="event-text-content flex-shrink-1 overflow-hidden">
                                     <div class="event-name-container">
-                                        <div class="event-name">{{ getEventDisplayName(event) }}</div>
+                                        <div class="event-name">
+                                            {{ getEventDisplayName(event) }}
+                                            <span v-if="shouldShowBadge(event)" class="event-badge">{{ getEventCount(event) }}</span>
+                                        </div>
                                     </div>
                                     <div class="event-time">
                                         <div class="event-dot" :style="{ backgroundColor: eventsStore.eventMetadata[event.eventID]?.color }"></div>
@@ -201,15 +204,7 @@ import { useEventFilterStore } from '@/stores/eventFilter';
 import { useEventHighlightStore } from '@/stores/eventHighlight';
 import { useEventsStore } from '@/stores/events';
 import { formatEventName } from '@/utils/eventName';
-import {
-    type PogoEvent,
-    getCalendarEventsForDate,
-    getEventsForDate,
-    getGroupedEventsCount,
-    hasGroupedEvents,
-    parseEventDate,
-    sortEventsByPriority,
-} from '@/utils/eventTypes';
+import { type PogoEvent, getEventsForDate, getGroupedEventsCount, hasGroupedEvents, parseEventDate, sortEventsByPriority } from '@/utils/eventTypes';
 
 /* import CatchIcon from '../Icons/CatchIcon.vue'; */
 import EvolveIcon from '../Icons/EvolveIcon.vue';
@@ -282,43 +277,26 @@ const getWeekBoundaries = (referenceDay: Dayjs) => {
     return { weekStart, weekEnd };
 };
 
-// Get events for this specific day using the new grouping logic
+// Get events for this specific day using preprocessed data from store
 const calendarEvents = computed(() => {
-    if (calendarSettings.groupSimilarEvents) {
-        // Use the existing grouping logic
-        const calendarData = getCalendarEventsForDate(eventsStore.events, props.dayInstance);
+    // Use processed events from store (grouping already applied)
+    const eventsForDate = getEventsForDate(eventsStore.processedEvents, props.dayInstance);
 
-        // Filter by enabled event types and individual event IDs
-        const filteredSingleDay = calendarData.singleDayEvents.filter(event => eventFilter.isEventVisible(event.eventType, event.eventID));
-        const filteredMultiDay = calendarData.multiDayEvents.filter(event => eventFilter.isEventVisible(event.eventType, event.eventID));
-        const filteredGroups = calendarData.eventGroups.filter(group =>
-            group.events.some(event => eventFilter.isEventVisible(event.eventType, event.eventID)),
-        );
+    // Filter by enabled event types and individual event IDs
+    const enabledEvents = eventsForDate.filter((event: PogoEvent) => eventFilter.isEventVisible(event.eventType, event.eventID));
 
-        return {
-            singleDayEvents: filteredSingleDay,
-            multiDayEvents: filteredMultiDay,
-            eventGroups: filteredGroups,
-        };
-    } else {
-        // No grouping - get individual events for the date
-        const eventsForDate = getEventsForDate(eventsStore.events, props.dayInstance);
+    // Separate by single/multi-day
+    const singleDay = enabledEvents.filter((event: PogoEvent) => {
+        return eventsStore.eventMetadata[event.eventID]?.isSingleDayEvent ?? false;
+    });
+    const multiDay = enabledEvents.filter((event: PogoEvent) => {
+        return eventsStore.eventMetadata[event.eventID]?.isMultiDayEvent ?? true;
+    });
 
-        // Filter by enabled event types and individual event IDs, then separate by single/multi-day
-        const enabledEvents = eventsForDate.filter((event: PogoEvent) => eventFilter.isEventVisible(event.eventType, event.eventID));
-        const singleDay = enabledEvents.filter((event: PogoEvent) => {
-            return eventsStore.eventMetadata[event.eventID]?.isSingleDayEvent ?? false;
-        });
-        const multiDay = enabledEvents.filter((event: PogoEvent) => {
-            return eventsStore.eventMetadata[event.eventID]?.isMultiDayEvent ?? true;
-        });
-
-        return {
-            singleDayEvents: sortEventsByPriority(singleDay),
-            multiDayEvents: sortEventsByPriority(multiDay),
-            eventGroups: [], // No groups when grouping is disabled
-        };
-    }
+    return {
+        singleDayEvents: sortEventsByPriority(singleDay),
+        multiDayEvents: sortEventsByPriority(multiDay),
+    };
 });
 
 // Use individual single-day events without grouping
