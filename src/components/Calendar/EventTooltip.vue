@@ -152,7 +152,7 @@ function getParentEventName(event: PogoEvent): string | null {
 <style scoped>
 .event-tooltip {
     max-width: 350px;
-    min-width: 180px;
+    min-width: 200px;
     padding: 0rem;
 }
 
@@ -221,7 +221,7 @@ function getParentEventName(event: PogoEvent): string | null {
 }
 
 .grouped-event-name {
-    font-size: 0.75rem;
+    font-size: 0.975rem;
     font-weight: 400;
     line-height: 1.3;
     color: color-mix(in srgb, var(--bs-body-color) 90%, transparent);
