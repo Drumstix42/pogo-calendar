@@ -20,6 +20,7 @@ export interface PokemonBoss {
     name: string;
     image: string;
     canBeShiny: boolean;
+    raidType?: string;
 }
 
 export interface RaidBattlesData {
@@ -50,10 +51,11 @@ export interface MaxBattlesData {
 
 export interface RaidScheduleEntry {
     date: string;
-    raidType: string;
     bosses: PokemonBoss[];
-    hasRaidHour: boolean;
-    raidHourTime?: string;
+    raidHours: Array<{
+        time: string;
+        bosses: PokemonBoss[];
+    }>;
     bonuses?: string[];
 }
 

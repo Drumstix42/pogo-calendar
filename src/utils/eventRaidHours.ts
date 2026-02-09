@@ -134,8 +134,8 @@ export function generateEventRaidHourSubEvents(parentEvent: PogoEvent): PogoEven
     const pseudoEvents: PogoEvent[] = [];
 
     raidSchedule.forEach((schedule: RaidScheduleEntry) => {
-        // Only process entries with raid hour
-        if (!schedule.hasRaidHour || !schedule.bosses || schedule.bosses.length === 0) {
+        // Only process entries with raid hours
+        if (!schedule.raidHours || schedule.raidHours.length === 0) {
             return;
         }
 
@@ -146,45 +146,52 @@ export function generateEventRaidHourSubEvents(parentEvent: PogoEvent): PogoEven
             return;
         }
 
-        // Parse the time
-        const { startHour, endHour } = parseRaidHourTime(schedule.raidHourTime || '');
+        // Process each raid hour
+        schedule.raidHours.forEach((raidHour, index) => {
+            if (!raidHour.bosses || raidHour.bosses.length === 0) {
+                return;
+            }
 
-        // Create start and end times
-        const startDateTime = raidDate.hour(startHour).minute(0).second(0);
-        const endDateTime = raidDate.hour(endHour).minute(0).second(0);
+            // Parse the time
+            const { startHour, endHour } = parseRaidHourTime(raidHour.time || '');
 
-        // Format event name
-        const eventName = formatPokemonList(schedule.bosses);
+            // Create start and end times
+            const startDateTime = raidDate.hour(startHour).minute(0).second(0);
+            const endDateTime = raidDate.hour(endHour).minute(0).second(0);
 
-        // Generate unique ID
-        const dateKey = raidDate.format('YYYY-MM-DD');
-        const eventID = `${parentEvent.eventID}-raid-hour-${dateKey}`;
+            // Format event name
+            const eventName = formatPokemonList(raidHour.bosses);
 
-        // Create pseudo event
-        const pseudoEvent: PogoEvent = {
-            eventID,
-            name: eventName,
-            eventType: 'event',
-            heading: 'Event',
-            link: parentEvent.link,
-            image: schedule.bosses[0]?.image || parentEvent.image,
-            start: startDateTime.format('YYYY-MM-DDTHH:mm:ss.SSS'),
-            end: endDateTime.format('YYYY-MM-DDTHH:mm:ss.SSS'),
-            extraData: {
-                isRaidHourSubEvent: true,
-                parentEventId: parentEvent.eventID,
-                generic: {
-                    hasSpawns: false,
-                    hasFieldResearchTasks: false,
+            // Generate unique ID
+            const dateKey = raidDate.format('YYYY-MM-DD');
+            const eventID = `${parentEvent.eventID}-raid-hour-${dateKey}-${index}`;
+
+            // Create pseudo event
+            const pseudoEvent: PogoEvent = {
+                eventID,
+                name: eventName,
+                eventType: 'event',
+                heading: 'Event',
+                link: parentEvent.link,
+                image: raidHour.bosses[0]?.image || parentEvent.image,
+                start: startDateTime.format('YYYY-MM-DDTHH:mm:ss.SSS'),
+                end: endDateTime.format('YYYY-MM-DDTHH:mm:ss.SSS'),
+                extraData: {
+                    isRaidHourSubEvent: true,
+                    parentEventId: parentEvent.eventID,
+                    generic: {
+                        hasSpawns: false,
+                        hasFieldResearchTasks: false,
+                    },
+                    raidbattles: {
+                        bosses: raidHour.bosses,
+                    },
+                    ...(schedule.bonuses && schedule.bonuses.length > 0 && { bonuses: schedule.bonuses }),
                 },
-                raidbattles: {
-                    bosses: schedule.bosses,
-                },
-                ...(schedule.bonuses && schedule.bonuses.length > 0 && { bonuses: schedule.bonuses }),
-            },
-        };
+            };
 
-        pseudoEvents.push(pseudoEvent);
+            pseudoEvents.push(pseudoEvent);
+        });
     });
 
     return pseudoEvents;
