@@ -1016,7 +1016,7 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     flex-direction: column;
     min-width: 0;
     flex: 1;
-    max-height: 130px;
+    max-height: 140px;
     /* overflow: hidden; */
 }
 

@@ -81,6 +81,22 @@ export const usePokemonDataStore = defineStore('pokemonData', () => {
             searchName = searchName.substring(7); // Remove "Shadow "
         }
 
+        // Handle form prefixes: "Origin Forme Dialga" → "Dialga Origin"
+        const formPrefixMatch = searchName.match(/^(.+?)\s+forme?\s+(.+)$/i);
+        if (formPrefixMatch) {
+            const formName = formPrefixMatch[1].trim();
+            const basePokemonName = formPrefixMatch[2].trim();
+            searchName = `${basePokemonName} ${formName}`;
+        }
+
+        // Handle form in parentheses: "Dialga (Origin Forme)" → "Dialga Origin"
+        const formParenthesesMatch = searchName.match(/^(.+?)\s+\((.+?)(?:\s+forme?)?\)$/i);
+        if (formParenthesesMatch) {
+            const basePokemonName = formParenthesesMatch[1].trim();
+            const formName = formParenthesesMatch[2].trim();
+            searchName = `${basePokemonName} ${formName}`;
+        }
+
         // Normalize the search name using our existing mapper normalization
         const normalizedSearch = normalizePokemonName(searchName);
         const cleanSearch = cleanPokemonName(searchName);
