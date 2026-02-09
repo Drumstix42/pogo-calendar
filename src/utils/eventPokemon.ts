@@ -173,6 +173,14 @@ function parsePokemonNameAndSuffix(pokemonNameString: string): { pokemonName: st
         return { pokemonName: baseName }; // No suffix for shadow, just base Pokemon
     }
 
+    // Handle forme prefixes: "Therian Forme <Pokemon>", "Incarnate Forme <Pokemon>", "Origin Forme <Pokemon>", etc.
+    const formeMatch = pokemonNameString.match(/^(Therian|Incarnate|Origin|Altered|Sky|Land|Attack|Defense|Speed)\s+Forme?\s+(.+)$/i);
+    if (formeMatch) {
+        const formeName = formeMatch[1].trim().toLowerCase();
+        const baseName = formeMatch[2].trim();
+        return { pokemonName: baseName, suffix: `-${formeName}` };
+    }
+
     // Handle Pokemon with special forms in parentheses
     // Examples: "Palkia (Origin Forme)" → "palkia-origin", "Landorus (Therian Form)" → "landorus-therian"
     // Also handles: "Deoxys (Normal)" → no suffix, "Deoxys (Attack)" → "deoxys-attack"
