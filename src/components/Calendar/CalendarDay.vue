@@ -179,6 +179,7 @@
                                 :event-name="getEventDisplayName(event)"
                                 :height="singleDayPokemonHeight"
                                 :show-placeholder="true"
+                                :show-overflow-counter="true"
                             />
                         </div>
                     </div>

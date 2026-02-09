@@ -49,6 +49,9 @@
         <!-- More indicator when there are additional images beyond the limit -->
         <span v-if="shouldShowMoreIndicator" class="pokemon-more-indicator">+</span>
 
+        <!-- Overflow counter badge (mobile only) -->
+        <span v-if="showOverflowBadge" class="overflow-counter-badge">{{ displayedImages.length }}</span>
+
         <VTooltip v-if="shouldShowPlaceholder" placement="top" :delay="{ show: 50, hide: 0 }" distance="8" :disabled="!showTooltips">
             <div
                 class="pokemon-container placeholder-container"
@@ -74,6 +77,7 @@
 </template>
 
 <script setup lang="ts">
+import { breakpointsBootstrapV5, useBreakpoints } from '@vueuse/core';
 import { BadgeQuestionMark, CircleHelpIcon } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 
@@ -91,6 +95,7 @@ interface Props {
     limit?: number;
     showTooltips?: boolean;
     showCP?: boolean;
+    showOverflowCounter?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -100,6 +105,7 @@ const props = withDefaults(defineProps<Props>(), {
     limit: undefined,
     showTooltips: false,
     showCP: false,
+    showOverflowCounter: false,
 });
 
 interface ExtendedPokemonImageData extends PokemonImageData {
@@ -108,6 +114,8 @@ interface ExtendedPokemonImageData extends PokemonImageData {
 
 const pokemonImages = computed(() => getEventPokemonImages(props.event, { useAnimated: props.useAnimated }));
 const imageErrors = ref<Set<number>>(new Set());
+
+const breakpoints = useBreakpoints(breakpointsBootstrapV5);
 
 const displayedImages = computed((): ExtendedPokemonImageData[] => {
     const images = props.limit === undefined || props.limit <= 0 ? pokemonImages.value : pokemonImages.value.slice(0, props.limit);
@@ -161,6 +169,17 @@ const showGigantamaxEffect = computed(() => {
     return gigantamaxMatch !== null;
 });
 
+const showOverflowBadge = computed(() => {
+    // Only show if explicitly enabled via prop
+    if (!props.showOverflowCounter) return false;
+
+    // Need at least 2 images to show badge
+    if (displayedImages.value.length < 2) return false;
+
+    // Only on mobile/tablet (< 768px) where wrapping is disabled
+    return breakpoints.smaller('md').value;
+});
+
 function handleImageError(index: number): void {
     imageErrors.value.add(index);
 }
@@ -175,7 +194,13 @@ function handleImageError(index: number): void {
 }
 
 .pokemon-images.wrap-multiple {
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+}
+
+@media (min-width: 768px) {
+    .pokemon-images.wrap-multiple {
+        flex-wrap: wrap;
+    }
 }
 
 .pokemon-item {
@@ -209,6 +234,32 @@ function handleImageError(index: number): void {
     line-height: 1;
     flex-shrink: 0;
     margin-right: 0.1rem;
+}
+
+.overflow-counter-badge {
+    position: absolute;
+    bottom: -2px;
+    left: 0px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 12px;
+    padding: 0 4px;
+    font-size: 9px;
+    font-weight: 500;
+    line-height: 1;
+    border-radius: 3px;
+    color: rgba(255, 255, 255, 0.7);
+    background-color: rgba(30, 30, 40, 0.75);
+    backdrop-filter: blur(0.05rem);
+    z-index: 10;
+    pointer-events: none;
+}
+
+@media (min-width: 375px) {
+    .overflow-counter-badge {
+        left: -2px;
+    }
 }
 
 .pokemon-container {
