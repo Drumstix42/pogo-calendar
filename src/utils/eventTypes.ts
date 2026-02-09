@@ -337,7 +337,10 @@ export function isEventWithSubtype(eventType: EventTypeKey) {
 }
 
 export function getRaidSubType(event: PogoEvent): string {
-    if (!isEventWithSubtype(event.eventType)) {
+    // Check for raid hour sub-events (pseudo events generated from parent events)
+    const isRaidHourSubEvent = event.extraData?.isRaidHourSubEvent === true;
+
+    if (!isEventWithSubtype(event.eventType) && !isRaidHourSubEvent) {
         return ''; // Not applicable for non-raid events
     }
 
