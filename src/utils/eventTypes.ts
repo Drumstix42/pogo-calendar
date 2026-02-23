@@ -139,7 +139,7 @@ export const EVENT_TYPES: Record<string, EventTypeInfo> = {
     'max-mondays': {
         name: 'Max Monday',
         color: '#690342', // darker purple
-        priority: 45,
+        priority: 53,
         category: 'community-and-raids',
     },
 

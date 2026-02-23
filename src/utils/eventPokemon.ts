@@ -166,6 +166,13 @@ function parsePokemonNameAndSuffix(pokemonNameString: string): { pokemonName: st
         return { pokemonName: baseName, suffix: '-mega' };
     }
 
+    // Handle Primal Pokemon
+    const primalMatch = pokemonNameString.match(/^Primal\s+(.+)$/i);
+    if (primalMatch) {
+        const baseName = primalMatch[1].trim();
+        return { pokemonName: baseName, suffix: '-primal' };
+    }
+
     // Handle Shadow Pokemon
     const shadowMatch = pokemonNameString.match(/^Shadow\s+(.+)$/i);
     if (shadowMatch) {
