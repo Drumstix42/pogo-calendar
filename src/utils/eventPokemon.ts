@@ -128,6 +128,11 @@ function extractPokemonNameFromRaidBattle(event: PogoEvent): string | null {
             const match = eventName.match(/^Mega\s+(.+?)\s+in\s+Mega\s+Raids$/i);
             return match ? match[1].trim() : null;
         }
+        case 'primal-raids': {
+            // Pattern: "Primal <Pokemon> in Primal Raids"
+            const match = eventName.match(/^Primal\s+(.+?)\s+in\s+Primal\s+Raids$/i);
+            return match ? match[1].trim() : null;
+        }
         case 'raid-battles':
         case 'raid-weekend': {
             // Pattern: "<Pokemon> in <tier>-star Raid battles" or "<Pokemon> [Special Type] Raid Weekend"
