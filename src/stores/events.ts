@@ -11,6 +11,7 @@ import { generateEventRaidHourSubEvents } from '../utils/eventRaidHours';
 import {
     EventTypeInfoWithoutColor,
     type PogoEvent,
+    type PokemonBoss,
     formatEventTime,
     getEventTypeInfo,
     getRaidSubType,
@@ -28,6 +29,21 @@ import { useEventTypeColorsStore } from '@/stores/eventTypeColors';
 dayjs.extend(utc); // Adds UTC timezone support for parsing/converting dates
 dayjs.extend(isSameOrBefore); // Adds comparison method for date <= checks
 dayjs.extend(isSameOrAfter); // Adds comparison method for date >= checks
+
+export interface RaidBossTierGroup {
+    label: string;
+    bosses: PokemonBoss[];
+}
+
+// "Tier N" labels sort first (numerically), all others sort alphabetically after
+function sortTierLabel(a: string, b: string): number {
+    const tierA = a.match(/^Tier (\d+)$/i);
+    const tierB = b.match(/^Tier (\d+)$/i);
+    if (tierA && tierB) return parseInt(tierA[1]) - parseInt(tierB[1]);
+    if (tierA) return -1;
+    if (tierB) return 1;
+    return a.localeCompare(b);
+}
 
 interface EventWithTypeInfo extends PogoEvent {
     typeInfo: EventTypeInfoWithoutColor;
@@ -55,6 +71,9 @@ export interface EventMetadata {
     // Spotlight bonus (for spotlight hour events)
     spotlightBonus?: SpotlightBonusInfo | null;
     spotlightBonusIconUrl?: string | null;
+
+    // Raid boss groupings by tier (for events with raidbattles data)
+    raidBossTierGroups?: RaidBossTierGroup[];
 
     // Grouping metadata (for when grouping is enabled)
     isGrouped?: boolean;
@@ -158,6 +177,20 @@ export const useEventsStore = defineStore('eventsStore', () => {
             const isMultiDay = isMultiDayEvent(event);
             const spotlightBonus = getSpotlightBonusInfo(event);
 
+            const bosses = event.extraData?.raidbattles?.bosses;
+            let raidBossTierGroups: RaidBossTierGroup[] | undefined;
+            if (bosses && bosses.length > 0) {
+                const tierMap = new Map<string, PokemonBoss[]>();
+                for (const boss of bosses) {
+                    const label = boss.raidType || 'Other';
+                    if (!tierMap.has(label)) tierMap.set(label, []);
+                    tierMap.get(label)!.push(boss);
+                }
+                raidBossTierGroups = Array.from(tierMap.entries())
+                    .sort(([a], [b]) => sortTierLabel(a, b))
+                    .map(([label, bosses]) => ({ label, bosses }));
+            }
+
             metadata[event.eventID] = {
                 displayName: formatEventName(event.name),
                 startDate,
@@ -171,6 +204,7 @@ export const useEventsStore = defineStore('eventsStore', () => {
                 isFutureEvent: startDate.isAfter(now),
                 spotlightBonus,
                 spotlightBonusIconUrl: spotlightBonus ? getSpotlightBonusTypeIcon(spotlightBonus.bonusType) : null,
+                raidBossTierGroups,
             };
         });
 

@@ -30,10 +30,10 @@ const props = withDefaults(defineProps<Props>(), {
 const pokemonDataStore = usePokemonDataStore();
 
 // Event types that support weather boosting (show two CP values)
-const WEATHER_BOOST_EVENT_TYPES = ['raid-battles', 'raid-day', 'raid-weekend', 'raid-hour'];
+const WEATHER_BOOST_EVENT_TYPES = ['raid-battles', 'raid-day', 'raid-weekend', 'raid-hour', 'event'];
 
 // Event types that should show CP (raids and max battles)
-const CP_SUPPORTED_EVENT_TYPES = ['raid-battles', 'raid-day', 'raid-weekend', 'raid-hour', 'max-battles', 'max-mondays'];
+const CP_SUPPORTED_EVENT_TYPES = ['raid-battles', 'raid-day', 'raid-weekend', 'raid-hour', 'max-battles', 'max-mondays', 'event'];
 
 const shouldShowWeatherBoost = computed(() => {
     // Pseudo raid hour events from parent events also support weather boost

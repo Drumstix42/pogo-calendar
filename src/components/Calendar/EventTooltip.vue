@@ -41,13 +41,14 @@
                         </div>
                     </div>
 
-                    <PokemonImages
+                    <PokemonEventImages
                         :event="groupedEvent"
                         :event-name="formatEventName(groupedEvent.name)"
                         :height="50"
                         :use-animated="calendarSettings.useAnimatedImages"
                         :show-tooltips="true"
                         :show-c-p="true"
+                        :wrap="true"
                     />
                 </div>
             </div>
@@ -64,7 +65,8 @@
                         <EventTimeDisplay :event="event" />
                     </div>
 
-                    <PokemonImages
+                    <PokemonEventImages
+                        v-if="!tierGroupsWithImages"
                         :event="event"
                         :event-name="formatEventName(event.name)"
                         :height="60"
@@ -72,7 +74,27 @@
                         :show-placeholder="isSingleDay"
                         :show-tooltips="true"
                         :show-c-p="true"
+                        :wrap="true"
                     />
+                </div>
+            </div>
+
+            <!-- Raid boss tier groups -->
+            <div v-if="tierGroupsWithImages" class="raid-boss-tiers">
+                <div v-for="group in tierGroupsWithImages" :key="group.label" class="tier-group">
+                    <div class="tier-label">{{ group.label }}</div>
+                    <div class="tier-images">
+                        <PokemonImage
+                            v-for="boss in group.images"
+                            :key="boss.name"
+                            :pokemon-data="boss"
+                            :height="60"
+                            :use-animated="calendarSettings.useAnimatedImages"
+                            :show-tooltip="true"
+                            :show-c-p="true"
+                            :event-type="event.eventType"
+                        />
+                    </div>
                 </div>
             </div>
         </div>
@@ -94,12 +116,15 @@ import { useHideEventModal } from '@/composables/useHideEventModal';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { useEventsStore } from '@/stores/events';
 import { formatEventName } from '@/utils/eventName';
+import { type PokemonImageData } from '@/utils/eventPokemon';
 import { type PogoEvent, getEventTypeInfo, getGroupedEvents } from '@/utils/eventTypes';
+import { getPokemonAnimatedUrl } from '@/utils/pokemonMapper';
 
 import EventExtras from './EventExtras.vue';
 import EventTimeDisplay from './EventTimeDisplay.vue';
 import EventToggleButton from './EventToggleButton.vue';
-import PokemonImages from './PokemonImages.vue';
+import PokemonEventImages from './PokemonEventImages.vue';
+import PokemonImage from './PokemonImage.vue';
 
 interface Props {
     event: PogoEvent;
@@ -147,6 +172,18 @@ const parentEventName = computed(() => lookupParentEventName(props.event));
 function getParentEventName(event: PogoEvent): string | null {
     return lookupParentEventName(event);
 }
+
+const tierGroupsWithImages = computed(() => {
+    const groups = eventsStore.eventMetadata[props.event.eventID]?.raidBossTierGroups;
+    if (!groups || groups.length === 0) return null;
+    return groups.map(group => ({
+        label: group.label,
+        images: group.bosses.map(boss => {
+            const animatedUrl = calendarSettings.useAnimatedImages ? getPokemonAnimatedUrl(boss.name) : null;
+            return { name: boss.name, imageUrl: animatedUrl ?? boss.image } satisfies PokemonImageData;
+        }),
+    }));
+});
 </script>
 
 <style scoped>
@@ -239,5 +276,31 @@ function getParentEventName(event: PogoEvent): string | null {
 
 .event-extras-wrapper {
     padding-left: 0.5rem;
+}
+
+.raid-boss-tiers {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.4rem 0.6rem 0.4rem 0.5rem;
+}
+
+.tier-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    margin-bottom: 1rem;
+}
+
+.tier-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: color-mix(in srgb, var(--bs-body-color) 70%, transparent);
+}
+
+.tier-images {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
 }
 </style>

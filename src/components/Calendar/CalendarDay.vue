@@ -82,15 +82,21 @@
                                 <!-- Show Pokemon images for grouped or individual events -->
                                 <template v-if="calendarSettings.useMultiDayEventSprites">
                                     <template v-if="calendarSettings.groupSimilarEvents && hasGroupedEvents(event)">
-                                        <PokemonImages
+                                        <PokemonEventImages
                                             :event="event"
                                             :event-name="formatEventName(event.name)"
                                             :height="multiDayEventIconHeight"
                                             :limit="2"
+                                            :exclude-tiers="['Tier 1', 'Tier 3']"
                                         />
                                     </template>
                                     <template v-else>
-                                        <PokemonImages :event="event" :event-name="getEventDisplayName(event)" :height="multiDayEventIconHeight" />
+                                        <PokemonEventImages
+                                            :event="event"
+                                            :event-name="getEventDisplayName(event)"
+                                            :height="multiDayEventIconHeight"
+                                            :exclude-tiers="['Tier 1', 'Tier 3']"
+                                        />
                                     </template>
                                 </template>
 
@@ -173,13 +179,14 @@
                                     />
                                 </div>
                             </div>
-                            <PokemonImages
+                            <PokemonEventImages
                                 v-if="calendarSettings.useSingleDayEventSprites"
                                 :event="event"
                                 :event-name="getEventDisplayName(event)"
                                 :height="singleDayPokemonHeight"
                                 :show-placeholder="true"
                                 :show-overflow-counter="true"
+                                :exclude-tiers="['Tier 1', 'Tier 3']"
                             />
                         </div>
                     </div>
@@ -211,7 +218,7 @@ import { type PogoEvent, getEventsForDate, getGroupedEventsCount, hasGroupedEven
 import EvolveIcon from '../Icons/EvolveIcon.vue';
 import TransferIcon from '../Icons/TransferIcon.vue';
 import EventTooltip from './EventTooltip.vue';
-import PokemonImages from './PokemonImages.vue';
+import PokemonEventImages from './PokemonEventImages.vue';
 
 interface Props {
     date: number;

@@ -75,7 +75,8 @@
                     class="flex-grow-1 d-flex gap-1 align-items-start justify-content-end"
                     :class="[props.isActive || pokemonCount > 6 ? 'w-100' : 'w-50']"
                 >
-                    <PokemonImages
+                    <PokemonEventImages
+                        v-if="!tierGroupsWithImages || !props.isActive"
                         :event="event"
                         :event-name="formatEventName(event.name)"
                         :height="40"
@@ -83,7 +84,27 @@
                         :show-placeholder="true"
                         :show-tooltips="true"
                         :show-c-p="props.isActive"
+                        :exclude-tiers="props.isActive ? [] : ['Tier 1', 'Tier 3']"
                     />
+                </div>
+
+                <!-- Raid boss tier groups (expanded only) -->
+                <div v-if="tierGroupsWithImages && props.isActive" class="raid-boss-tiers">
+                    <div v-for="group in tierGroupsWithImages" :key="group.label" class="tier-group">
+                        <div class="tier-label">{{ group.label }}</div>
+                        <div class="tier-images">
+                            <PokemonImage
+                                v-for="boss in group.images"
+                                :key="boss.name"
+                                :pokemon-data="boss"
+                                :height="40"
+                                :use-animated="true"
+                                :show-tooltip="true"
+                                :show-c-p="true"
+                                :event-type="event.eventType"
+                            />
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -107,15 +128,17 @@ import { useHideEventModal } from '@/composables/useHideEventModal';
 import { useEventHighlightStore } from '@/stores/eventHighlight';
 import { useEventsStore } from '@/stores/events';
 import { formatEventName } from '@/utils/eventName';
-import { getEventPokemonImages } from '@/utils/eventPokemon';
+import { type PokemonImageData, getEventPokemonImages } from '@/utils/eventPokemon';
 import { type PogoEvent, getEventTypeInfo } from '@/utils/eventTypes';
+import { getPokemonAnimatedUrl } from '@/utils/pokemonMapper';
 
 import EvolveIcon from '../Icons/EvolveIcon.vue';
 import TransferIcon from '../Icons/TransferIcon.vue';
 import EventExtras from './EventExtras.vue';
 import EventTimeDisplay from './EventTimeDisplay.vue';
 import EventToggleButton from './EventToggleButton.vue';
-import PokemonImages from './PokemonImages.vue';
+import PokemonEventImages from './PokemonEventImages.vue';
+import PokemonImage from './PokemonImage.vue';
 
 interface Props {
     event: PogoEvent;
@@ -201,6 +224,18 @@ const pokemonCount = computed(() => {
 
 const hasPokemon = computed(() => {
     return pokemonCount.value > 0;
+});
+
+const tierGroupsWithImages = computed(() => {
+    const groups = eventsStore.eventMetadata[props.event.eventID]?.raidBossTierGroups;
+    if (!groups || groups.length === 0) return null;
+    return groups.map(group => ({
+        label: group.label,
+        images: group.bosses.map(boss => {
+            const animatedUrl = props.isActive ? getPokemonAnimatedUrl(boss.name) : null;
+            return { name: boss.name, imageUrl: animatedUrl ?? boss.image } satisfies PokemonImageData;
+        }),
+    }));
 });
 </script>
 
@@ -385,6 +420,32 @@ const hasPokemon = computed(() => {
             flex-grow: 1;
             flex-shrink: 1;
         }
+    }
+
+    .raid-boss-tiers {
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+        margin-top: 0.4rem;
+        width: 100%;
+    }
+
+    .tier-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .tier-label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: color-mix(in srgb, var(--bs-body-color) 70%, transparent);
+    }
+
+    .tier-images {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
     }
 
     .event-extras-wrapper {

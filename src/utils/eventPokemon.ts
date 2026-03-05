@@ -6,6 +6,7 @@ import { GIGANTAMAX_POKEMON_IDS } from '@/constants/validGigantamaxSprites.ts';
 export interface PokemonImageOptions {
     useAnimated?: boolean;
     isMega?: boolean;
+    excludeTiers?: string[];
 }
 
 export interface PokemonImageData {
@@ -360,35 +361,49 @@ export function getEventPokemonImages(event: PogoEvent, options?: PokemonImageOp
         }
     }
 
-    // Handle event raid hour sub-events - use bosses data from extraData
-    if (event.eventType === 'event' && event.extraData?.isRaidHourSubEvent) {
-        if (event.extraData?.raidbattles?.bosses && event.extraData.raidbattles.bosses.length > 0) {
-            const bosses = event.extraData.raidbattles.bosses;
-            const images: PokemonImageData[] = [];
+    // Handle event type with raid bosses (e.g. anniversary events, raid hour sub-events)
+    if (event.eventType === 'event' && event.extraData?.raidbattles?.bosses && event.extraData.raidbattles.bosses.length > 0) {
+        const allBosses = event.extraData.raidbattles.bosses;
 
-            for (const boss of bosses) {
-                const parsedData = parsePokemonNameAndSuffix(boss.name);
-                if (parsedData) {
-                    let spriteUrl: string | null = null;
-
-                    // If we have a custom suffix (like -megax, -megay), use it directly
-                    if (parsedData.suffix) {
-                        spriteUrl = getSpriteUrl(parsedData.pokemonName, parsedData.suffix, options, boss.image);
-                    } else {
-                        spriteUrl = getSpriteUrl(parsedData.pokemonName, undefined, options, boss.image);
-                    }
-
-                    // Always add to images array, fallback handled by getSpriteUrl
-                    images.push({ name: boss.name, imageUrl: spriteUrl });
-                } else {
-                    // If we can't parse the boss name, try API image or use null
-                    images.push({ name: boss.name, imageUrl: boss.image || null });
+        // Progressively relax the exclude list (dropping from the end) until we get results,
+        // falling back to the full list if all tiers are excluded.
+        let bosses = allBosses;
+        if (options?.excludeTiers && options.excludeTiers.length > 0) {
+            for (let i = options.excludeTiers.length; i >= 0; i--) {
+                const activeExclusions = options.excludeTiers.slice(0, i);
+                const filtered = activeExclusions.length > 0
+                    ? allBosses.filter(b => !b.raidType || !activeExclusions.includes(b.raidType))
+                    : allBosses;
+                if (filtered.length > 0) {
+                    bosses = filtered;
+                    break;
                 }
             }
+        }
+        const images: PokemonImageData[] = [];
 
-            if (images.length > 0) {
-                return images;
+        for (const boss of bosses) {
+            const parsedData = parsePokemonNameAndSuffix(boss.name);
+            if (parsedData) {
+                let spriteUrl: string | null = null;
+
+                // If we have a custom suffix (like -megax, -megay), use it directly
+                if (parsedData.suffix) {
+                    spriteUrl = getSpriteUrl(parsedData.pokemonName, parsedData.suffix, options, boss.image);
+                } else {
+                    spriteUrl = getSpriteUrl(parsedData.pokemonName, undefined, options, boss.image);
+                }
+
+                // Always add to images array, fallback handled by getSpriteUrl
+                images.push({ name: boss.name, imageUrl: spriteUrl });
+            } else {
+                // If we can't parse the boss name, try API image or use null
+                images.push({ name: boss.name, imageUrl: boss.image || null });
             }
+        }
+
+        if (images.length > 0) {
+            return images;
         }
     }
 
