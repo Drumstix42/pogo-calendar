@@ -58,6 +58,11 @@ export const usePokemonDataStore = defineStore('pokemonData', () => {
         }
     }
 
+    // Maps verbose in-game form names to the simplified form names used in Pokemon data
+    const FORM_NAME_ALIASES: Record<string, string> = {
+        'hero of many battles': 'hero',
+    };
+
     /**
      * Search for a catchable Pokemon by name, stripping battle form prefixes
      * Returns the base form that can actually be caught/encountered
@@ -93,7 +98,8 @@ export const usePokemonDataStore = defineStore('pokemonData', () => {
         const formParenthesesMatch = searchName.match(/^(.+?)\s+\((.+?)(?:\s+forme?)?\)$/i);
         if (formParenthesesMatch) {
             const basePokemonName = formParenthesesMatch[1].trim();
-            const formName = formParenthesesMatch[2].trim();
+            const rawFormName = formParenthesesMatch[2].trim();
+            const formName = FORM_NAME_ALIASES[rawFormName.toLowerCase()] ?? rawFormName;
             searchName = `${basePokemonName} ${formName}`;
         }
 
