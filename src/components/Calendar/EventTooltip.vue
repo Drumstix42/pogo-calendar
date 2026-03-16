@@ -82,7 +82,7 @@
             <!-- Raid boss tier groups -->
             <div v-if="tierGroupsWithImages" class="raid-boss-tiers">
                 <div v-for="group in tierGroupsWithImages" :key="group.label" class="tier-group">
-                    <div class="tier-label">{{ group.label }}</div>
+                    <div v-if="group.showLabel" class="tier-label">{{ group.label }}</div>
                     <div class="tier-images">
                         <PokemonImage
                             v-for="boss in group.images"
@@ -93,6 +93,7 @@
                             :show-tooltip="true"
                             :show-c-p="true"
                             :event-type="event.eventType"
+                            :is-shadow="isShadowRaid"
                         />
                     </div>
                 </div>
@@ -116,9 +117,8 @@ import { useHideEventModal } from '@/composables/useHideEventModal';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { useEventsStore } from '@/stores/events';
 import { formatEventName } from '@/utils/eventName';
-import { type PokemonImageData } from '@/utils/eventPokemon';
-import { type PogoEvent, getEventTypeInfo, getGroupedEvents } from '@/utils/eventTypes';
-import { getPokemonAnimatedUrl } from '@/utils/pokemonMapper';
+import { buildRaidTierGroupsWithImages } from '@/utils/raidTierGroups';
+import { type PogoEvent, getEventTypeInfo, getGroupedEvents, getRaidSubType } from '@/utils/eventTypes';
 
 import EventExtras from './EventExtras.vue';
 import EventTimeDisplay from './EventTimeDisplay.vue';
@@ -173,16 +173,15 @@ function getParentEventName(event: PogoEvent): string | null {
     return lookupParentEventName(event);
 }
 
+const isShadowRaid = computed(() => {
+    return getRaidSubType(props.event) === 'shadow-raids';
+});
+
 const tierGroupsWithImages = computed(() => {
-    const groups = eventsStore.eventMetadata[props.event.eventID]?.raidBossTierGroups;
-    if (!groups || groups.length === 0) return null;
-    return groups.map(group => ({
-        label: group.label,
-        images: group.bosses.map(boss => {
-            const animatedUrl = calendarSettings.useAnimatedImages ? getPokemonAnimatedUrl(boss.name) : null;
-            return { name: boss.name, imageUrl: animatedUrl ?? boss.image } satisfies PokemonImageData;
-        }),
-    }));
+    return buildRaidTierGroupsWithImages(
+        eventsStore.eventMetadata[props.event.eventID]?.raidBossTierGroups,
+        calendarSettings.useAnimatedImages,
+    );
 });
 </script>
 

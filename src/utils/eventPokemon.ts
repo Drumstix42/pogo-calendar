@@ -155,7 +155,7 @@ function extractPokemonNameFromRaidBattle(event: PogoEvent): string | null {
     }
 }
 
-function parsePokemonNameAndSuffix(pokemonNameString: string): { pokemonName: string; suffix?: string } | null {
+export function parsePokemonNameAndSuffix(pokemonNameString: string): { pokemonName: string; suffix?: string } | null {
     // Handle Mega variants with X/Y
     const megaXYMatch = pokemonNameString.match(/^Mega\s+(.+?)\s+([XY])$/i);
     if (megaXYMatch) {
@@ -211,6 +211,16 @@ function parsePokemonNameAndSuffix(pokemonNameString: string): { pokemonName: st
         // Special handling for Genesect Drives - strip " drive" suffix
         if (baseName.toLowerCase() === 'genesect' && pokemonFormName.endsWith(' drive')) {
             pokemonFormName = pokemonFormName.replace(/\s+drive$/i, '');
+        }
+
+        // Map verbose form names to their short sprite slug equivalents
+        const FORM_NAME_OVERRIDES: Record<string, string> = {
+            'hero of many battles': 'hero',
+            'crowned sword': 'crownedsword',
+            'crowned shield': 'crownedshield',
+        };
+        if (FORM_NAME_OVERRIDES[pokemonFormName]) {
+            pokemonFormName = FORM_NAME_OVERRIDES[pokemonFormName];
         }
 
         return { pokemonName: baseName, suffix: `-${pokemonFormName}` };
@@ -371,9 +381,8 @@ export function getEventPokemonImages(event: PogoEvent, options?: PokemonImageOp
         if (options?.excludeTiers && options.excludeTiers.length > 0) {
             for (let i = options.excludeTiers.length; i >= 0; i--) {
                 const activeExclusions = options.excludeTiers.slice(0, i);
-                const filtered = activeExclusions.length > 0
-                    ? allBosses.filter(b => !b.raidType || !activeExclusions.includes(b.raidType))
-                    : allBosses;
+                const filtered =
+                    activeExclusions.length > 0 ? allBosses.filter(b => !b.raidType || !activeExclusions.includes(b.raidType)) : allBosses;
                 if (filtered.length > 0) {
                     bosses = filtered;
                     break;

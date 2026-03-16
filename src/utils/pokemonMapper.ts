@@ -3,10 +3,7 @@ import { POKEMON_FORM_MAP } from '@/constants/pokemonFormMap';
 import { VALID_ANIMATED_SPRITES } from '@/constants/validAnimatedSprites';
 import { VALID_STATIC_SPRITES } from '@/constants/validStaticSprites';
 
-// Type definitions
 export type PokemonName = keyof typeof POKEMON_NAME_TO_ID;
-export type PokemonId = number;
-export type SpriteType = 'dream-world' | 'official-artwork' | 'home';
 
 // track logged missing sprites (to avoid spam)
 const loggedMissingStaticSprites = new Set<string>();
@@ -37,6 +34,93 @@ export function getPokemonId(name: string): number | null {
     return null;
 }
 
+function normalizePokemonFormSlug(formName: string): string {
+    const normalizedForm = normalizePokemonName(formName)
+        .replace(/\s+forme?$/i, '')
+        .trim();
+    const FORM_SLUG_OVERRIDES: Record<string, string> = {
+        'hero of many battles': 'hero',
+        'crowned sword': 'crownedsword',
+        'crowned shield': 'crownedshield',
+    };
+
+    if (FORM_SLUG_OVERRIDES[normalizedForm]) {
+        return FORM_SLUG_OVERRIDES[normalizedForm];
+    }
+
+    return normalizedForm.replace(/[^a-z0-9]+/g, '-');
+}
+
+function parsePokemonNameWithOptionalForm(name: string): { pokemonName: string; pokemonId: number | null; suffix?: string } {
+    const directPokemonId = getPokemonId(name);
+    if (directPokemonId) {
+        return { pokemonName: name, pokemonId: directPokemonId };
+    }
+
+    const megaXYMatch = name.match(/^Mega\s+(.+?)\s+([XY])$/i);
+    if (megaXYMatch) {
+        const baseName = megaXYMatch[1].trim();
+        const basePokemonId = getPokemonId(baseName);
+        if (!basePokemonId) {
+            return { pokemonName: name, pokemonId: null };
+        }
+
+        const variant = megaXYMatch[2].toUpperCase();
+        return { pokemonName: baseName, pokemonId: basePokemonId, suffix: variant === 'X' ? '-megax' : '-megay' };
+    }
+
+    const megaMatch = name.match(/^Mega\s+(.+)$/i);
+    if (megaMatch) {
+        const baseName = megaMatch[1].trim();
+        const basePokemonId = getPokemonId(baseName);
+        if (!basePokemonId) {
+            return { pokemonName: name, pokemonId: null };
+        }
+
+        return { pokemonName: baseName, pokemonId: basePokemonId, suffix: '-mega' };
+    }
+
+    const primalMatch = name.match(/^Primal\s+(.+)$/i);
+    if (primalMatch) {
+        const baseName = primalMatch[1].trim();
+        const basePokemonId = getPokemonId(baseName);
+        if (!basePokemonId) {
+            return { pokemonName: name, pokemonId: null };
+        }
+
+        return { pokemonName: baseName, pokemonId: basePokemonId, suffix: '-primal' };
+    }
+
+    const shadowMatch = name.match(/^Shadow\s+(.+)$/i);
+    if (shadowMatch) {
+        const baseName = shadowMatch[1].trim();
+        const basePokemonId = getPokemonId(baseName);
+        if (!basePokemonId) {
+            return { pokemonName: name, pokemonId: null };
+        }
+
+        return { pokemonName: baseName, pokemonId: basePokemonId };
+    }
+
+    const pokemonFormMatch = name.match(/^(.+?)\s+\((.+?)\)$/i);
+    if (!pokemonFormMatch) {
+        return { pokemonName: name, pokemonId: null };
+    }
+
+    const baseName = pokemonFormMatch[1].trim();
+    const basePokemonId = getPokemonId(baseName);
+    if (!basePokemonId) {
+        return { pokemonName: name, pokemonId: null };
+    }
+
+    const formSlug = normalizePokemonFormSlug(pokemonFormMatch[2]);
+    if (!formSlug) {
+        return { pokemonName: baseName, pokemonId: basePokemonId };
+    }
+
+    return { pokemonName: baseName, pokemonId: basePokemonId, suffix: `-${formSlug}` };
+}
+
 // Check if an animated sprite exists for the given sprite name
 export function isValidAnimatedSprite(spriteName: string): boolean {
     return VALID_ANIMATED_SPRITES.has(spriteName.toLowerCase());
@@ -65,7 +149,13 @@ function getPokeMinersSpriteUrl(pokemonId: number, formSuffix?: string, shiny = 
         // Our suffixes come from eventPokemon.ts as "-burn", "-chill", etc.
         // PokeMiners expects uppercase without hyphen: "BURN", "CHILL" (stored as "fBURN", "fCHILL" in form map)
         const cleanedSuffix = formSuffix.startsWith('-') ? formSuffix.substring(1) : formSuffix;
-        const normalizedForm = cleanedSuffix.toUpperCase();
+
+        // Some of our slugs are more specific than PokeMiners' form names (e.g. "crownedsword" → "CROWNED")
+        const POKEMINERS_FORM_ALIASES: Record<string, string> = {
+            crownedsword: 'CROWNED',
+            crownedshield: 'CROWNED',
+        };
+        const normalizedForm = POKEMINERS_FORM_ALIASES[cleanedSuffix.toLowerCase()] ?? cleanedSuffix.toUpperCase();
 
         // Check if this form exists in PokeMiners form map
         // Forms are stored with 'f' prefix (e.g., "fBURN"), so we check both with and without it
@@ -180,17 +270,23 @@ export function getPokemonSpriteUrl(pokemonNameOrId: string | number, suffix?: s
 
 export function getPokemonAnimatedUrl(pokemonNameOrId: string | number, suffix?: string): string | null {
     let pokemonName: string;
+    let pokemonId: number | null = null;
+    let effectiveSuffix = suffix;
 
     if (typeof pokemonNameOrId === 'string') {
-        // Validate that the Pokemon name exists
-        const pokemonId = getPokemonId(pokemonNameOrId);
-        if (!pokemonId) return null;
-        pokemonName = pokemonNameOrId;
+        const parsedPokemon = parsePokemonNameWithOptionalForm(pokemonNameOrId);
+        if (!parsedPokemon.pokemonId) return null;
+        pokemonName = parsedPokemon.pokemonName;
+        pokemonId = parsedPokemon.pokemonId;
+        if (!effectiveSuffix && parsedPokemon.suffix) {
+            effectiveSuffix = parsedPokemon.suffix;
+        }
     } else if (typeof pokemonNameOrId === 'number') {
         // Find the Pokemon name from the ID
         const foundName = Object.entries(POKEMON_NAME_TO_ID).find(([, id]) => id === pokemonNameOrId);
         if (!foundName) return null;
         pokemonName = foundName[0];
+        pokemonId = pokemonNameOrId;
     } else {
         return null;
     }
@@ -199,8 +295,8 @@ export function getPokemonAnimatedUrl(pokemonNameOrId: string | number, suffix?:
     let urlName = normalizePokemonName(pokemonName).replace(/[^a-z0-9]/g, ''); // Remove all non-alphanumeric characters (spaces, hyphens, apostrophes, etc.)
 
     // Add suffix if provided - preserve hyphens in suffix
-    if (suffix) {
-        urlName += suffix;
+    if (effectiveSuffix) {
+        urlName += effectiveSuffix;
     }
 
     // Check if this animated sprite exists in primary source
@@ -209,9 +305,8 @@ export function getPokemonAnimatedUrl(pokemonNameOrId: string | number, suffix?:
     }
 
     // Fallback to PokeMiners using the form mapping (note: these are static PNGs, not animated)
-    const pokemonId = typeof pokemonNameOrId === 'number' ? pokemonNameOrId : getPokemonId(pokemonNameOrId);
     if (pokemonId) {
-        const pokeminersUrl = getPokeMinersSpriteUrl(pokemonId, suffix);
+        const pokeminersUrl = getPokeMinersSpriteUrl(pokemonId, effectiveSuffix);
         if (pokeminersUrl) {
             return pokeminersUrl;
         }
