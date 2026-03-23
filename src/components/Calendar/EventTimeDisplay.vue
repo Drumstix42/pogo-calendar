@@ -43,8 +43,9 @@ import { ArrowLeftRight } from 'lucide-vue-next';
 import { computed } from 'vue';
 
 import { useCurrentTime } from '@/composables/useCurrentTime';
+import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { useEventsStore } from '@/stores/events';
-import { type PogoEvent, formatEventTime, parseEventDate } from '@/utils/eventTypes';
+import { type PogoEvent, parseEventDate } from '@/utils/eventTypes';
 
 interface Props {
     event: PogoEvent;
@@ -56,22 +57,24 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const eventsStore = useEventsStore();
+const calendarSettings = useCalendarSettingsStore();
 
 // Get reactive current time that updates every minute
 const { liveMinute } = useCurrentTime();
+
+const displayNow = computed(() => {
+    return liveMinute.value.add(calendarSettings.manualTimeOffsetHours * 60, 'minute');
+});
 
 const isSingleDay = computed(() => {
     return eventsStore.eventMetadata[props.event.eventID]?.isSingleDayEvent ?? false;
 });
 
-const formatSingleDayTimes = (startDateStr: string, endDateStr: string) => {
-    const startTime = formatEventTime(startDateStr);
-    const endTime = formatEventTime(endDateStr);
+const formatSingleDayTimes = (startDate: ReturnType<typeof parseEventDate>, endDate: ReturnType<typeof parseEventDate>) => {
+    const startTime = startDate.minute() === 0 ? startDate.format('ha') : startDate.format('h:mma');
+    const endTime = endDate.minute() === 0 ? endDate.format('ha') : endDate.format('h:mma');
 
     // Parse the times to check if they're in the same AM/PM period
-    const startDate = parseEventDate(startDateStr);
-    const endDate = parseEventDate(endDateStr);
-
     const startPeriod = startDate.format('A'); // 'AM' or 'PM'
     const endPeriod = endDate.format('A'); // 'AM' or 'PM'
 
@@ -92,10 +95,10 @@ const formatSingleDayTimes = (startDateStr: string, endDateStr: string) => {
 };
 
 const timeDisplayParts = computed(() => {
-    const currentTime = liveMinute.value;
+    const currentTime = displayNow.value;
     const metadata = eventsStore.eventMetadata[props.event.eventID];
-    const startDate = metadata?.startDate ?? parseEventDate(props.event.start);
-    const endDate = metadata?.endDate ?? parseEventDate(props.event.end);
+    const startDate = metadata?.startDate ?? parseEventDate(props.event.start, calendarSettings.manualTimeOffsetHours);
+    const endDate = metadata?.endDate ?? parseEventDate(props.event.end, calendarSettings.manualTimeOffsetHours);
 
     if (isSingleDay.value) {
         // Single day: "Tue Oct 7 • 6–7pm"
@@ -107,7 +110,7 @@ const timeDisplayParts = computed(() => {
         const eventEnd = endDate;
 
         // Get formatted times with smart AM/PM handling
-        const { startTime, endTime } = formatSingleDayTimes(props.event.start, props.event.end);
+        const { startTime, endTime } = formatSingleDayTimes(startDate, endDate);
 
         if (currentTime.isAfter(eventEnd)) {
             // Event is completely over - both times are past
@@ -208,10 +211,10 @@ const timeDisplayParts = computed(() => {
 
 // Status text for relative timing info
 const statusInfo = computed(() => {
-    const currentTime = liveMinute.value;
+    const currentTime = displayNow.value;
     const metadata = eventsStore.eventMetadata[props.event.eventID];
-    const eventStart = metadata?.startDate ?? parseEventDate(props.event.start);
-    const eventEnd = metadata?.endDate ?? parseEventDate(props.event.end);
+    const eventStart = metadata?.startDate ?? parseEventDate(props.event.start, calendarSettings.manualTimeOffsetHours);
+    const eventEnd = metadata?.endDate ?? parseEventDate(props.event.end, calendarSettings.manualTimeOffsetHours);
     const isSingleDay = metadata?.isSingleDayEvent ?? false;
 
     // Check if event is completely over

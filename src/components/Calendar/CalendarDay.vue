@@ -288,7 +288,7 @@ const getWeekBoundaries = (referenceDay: Dayjs) => {
 // Get events for this specific day using preprocessed data from store
 const calendarEvents = computed(() => {
     // Use processed events from store (grouping already applied)
-    const eventsForDate = getEventsForDate(eventsStore.processedEvents, props.dayInstance);
+    const eventsForDate = getEventsForDate(eventsStore.processedEvents, props.dayInstance, calendarSettings.manualTimeOffsetHours);
 
     // Filter by enabled event types and individual event IDs
     const enabledEvents = eventsForDate.filter((event: PogoEvent) => eventFilter.isEventVisible(event.eventType, event.eventID));
@@ -457,8 +457,9 @@ const getMultiDayEventBarClass = (event: PogoEvent, currentDay: Dayjs): string =
     const weekEndDay = weekEnd.endOf('day');
 
     // Use the actual event's dates, not the composite slot's extended dates
-    const eventStartDay = parseEventDate(event.start).startOf('day');
-    const eventEndDay = parseEventDate(event.end).startOf('day');
+    const metadata = eventsStore.eventMetadata[event.eventID];
+    const eventStartDay = (metadata?.startDate ?? parseEventDate(event.start, calendarSettings.manualTimeOffsetHours)).startOf('day');
+    const eventEndDay = (metadata?.endDate ?? parseEventDate(event.end, calendarSettings.manualTimeOffsetHours)).startOf('day');
 
     // Start positioning (2 permutations)
     const isStartDay = today.isSame(eventStartDay, 'day');
@@ -511,8 +512,9 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     }
 
     const today = currentDay.startOf('day');
-    const eventStart = parseEventDate(event.start);
-    const eventEnd = parseEventDate(event.end);
+    const metadata = eventsStore.eventMetadata[event.eventID];
+    const eventStart = metadata?.startDate ?? parseEventDate(event.start, calendarSettings.manualTimeOffsetHours);
+    const eventEnd = metadata?.endDate ?? parseEventDate(event.end, calendarSettings.manualTimeOffsetHours);
 
     // This function only handles multi-day events that render as bars
     const eventStartDay = eventStart.startOf('day');
@@ -557,7 +559,8 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
             return false;
         }
 
-        const otherStart = parseEventDate(slot.event.start);
+        const otherMetadata = eventsStore.eventMetadata[slot.event.eventID];
+        const otherStart = otherMetadata?.startDate ?? parseEventDate(slot.event.start, calendarSettings.manualTimeOffsetHours);
 
         // Check if other event starts at or shortly after this one ends (within 2 hours)
         // AND starts within this same week

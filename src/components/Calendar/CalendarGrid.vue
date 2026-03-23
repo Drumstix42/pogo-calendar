@@ -46,7 +46,11 @@ const { urlMonth, urlYear } = useUrlSync();
 const calendarSettings = useCalendarSettingsStore();
 const eventFilter = useEventFilterStore();
 const eventsStore = useEventsStore();
-const { liveDay } = useCurrentTime();
+const { liveMinute } = useCurrentTime();
+
+const displayToday = computed(() => {
+    return liveMinute.value.add(calendarSettings.manualTimeOffsetHours * 60, 'minute').startOf('day');
+});
 
 // Types for slot-based layout
 interface EventSlot {
@@ -62,8 +66,8 @@ const dayHeaders = computed(() => calendarSettings.dayHeaders);
 
 // Calendar days calculation
 const calendarDays = computed(() => {
-    // Use liveDay to ensure reactivity to day changes (updates at midnight)
-    const now = liveDay.value;
+    // Use offset-adjusted day so "today" and month alignment match displayed event times
+    const now = displayToday.value;
     const currentDate = now.year(urlYear.value).month(urlMonth.value);
     const startOfMonth = currentDate.startOf('month');
     const endOfMonth = currentDate.endOf('month');
@@ -157,8 +161,8 @@ const eventSlots = computed((): EventSlot[] => {
         }
 
         // 4. Then sort by start date (earlier events first)
-        const aStart = parseEventDate(a.start);
-        const bStart = parseEventDate(b.start);
+        const aStart = eventsStore.eventMetadata[a.eventID]?.startDate ?? parseEventDate(a.start, calendarSettings.manualTimeOffsetHours);
+        const bStart = eventsStore.eventMetadata[b.eventID]?.startDate ?? parseEventDate(b.start, calendarSettings.manualTimeOffsetHours);
         if (!aStart.isSame(bStart)) {
             return aStart.isBefore(bStart) ? -1 : 1;
         }
@@ -169,8 +173,9 @@ const eventSlots = computed((): EventSlot[] => {
     const slots: EventSlot[] = [];
 
     for (const event of sortedEvents) {
-        const eventStart = parseEventDate(event.start).startOf('day');
-        const eventEnd = parseEventDate(event.end).startOf('day');
+        const metadata = eventsStore.eventMetadata[event.eventID];
+        const eventStart = (metadata?.startDate ?? parseEventDate(event.start, calendarSettings.manualTimeOffsetHours)).startOf('day');
+        const eventEnd = (metadata?.endDate ?? parseEventDate(event.end, calendarSettings.manualTimeOffsetHours)).startOf('day');
 
         // Try to find a slot where this event can fit without conflicts and with same event type
         let slotIndex = 0;
@@ -276,13 +281,15 @@ const findNextAvailableSlot = (event: PogoEvent, existingSlots: EventSlot[]): nu
 };
 
 const hasConflictInSlot = (event: PogoEvent, slotIndex: number, existingSlots: EventSlot[]): boolean => {
-    const eventStart = parseEventDate(event.start);
-    const eventEnd = parseEventDate(event.end);
+    const eventMetadata = eventsStore.eventMetadata[event.eventID];
+    const eventStart = eventMetadata?.startDate ?? parseEventDate(event.start, calendarSettings.manualTimeOffsetHours);
+    const eventEnd = eventMetadata?.endDate ?? parseEventDate(event.end, calendarSettings.manualTimeOffsetHours);
     const slotsInThisIndex = existingSlots.filter(slot => slot.slotIndex === slotIndex);
 
     return slotsInThisIndex.some(slot => {
-        const slotStart = parseEventDate(slot.event.start);
-        const slotEnd = parseEventDate(slot.event.end);
+        const slotMetadata = eventsStore.eventMetadata[slot.event.eventID];
+        const slotStart = slotMetadata?.startDate ?? parseEventDate(slot.event.start, calendarSettings.manualTimeOffsetHours);
+        const slotEnd = slotMetadata?.endDate ?? parseEventDate(slot.event.end, calendarSettings.manualTimeOffsetHours);
 
         // Check for actual time overlap
         const hasTimeOverlap = eventStart.isBefore(slotEnd) && eventEnd.isAfter(slotStart);

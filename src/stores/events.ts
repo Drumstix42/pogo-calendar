@@ -16,7 +16,6 @@ import {
     getEventTypeInfo,
     getRaidSubType,
     isEventWithSubtype,
-    isMultiDayEvent,
     parseEventDate,
     sortEventsByPriority,
 } from '../utils/eventTypes';
@@ -95,17 +94,23 @@ export const useEventsStore = defineStore('eventsStore', () => {
 
     // Get reactive current time for event status calculations
     const { liveMinute } = useCurrentTime();
+    const calendarSettings = useCalendarSettingsStore();
+
+    function getDisplayNow() {
+        return liveMinute.value.add(calendarSettings.manualTimeOffsetHours * 60, 'minute');
+    }
 
     // Getters (computed)
     const currentMonthEvents = computed((): PogoEvent[] => {
         const startOfMonth = dayjs().year(currentYear.value).month(currentMonth.value).startOf('month');
         const endOfMonth = dayjs().year(currentYear.value).month(currentMonth.value).endOf('month');
+        const manualOffsetHours = calendarSettings.manualTimeOffsetHours;
 
         return events.value.filter(event => {
             if (!event.start || !event.end) return false;
 
-            const eventStart = dayjs.utc(event.start).local();
-            const eventEnd = dayjs.utc(event.end).local();
+            const eventStart = parseEventDate(event.start, manualOffsetHours);
+            const eventEnd = parseEventDate(event.end, manualOffsetHours);
 
             return eventStart.isSameOrBefore(endOfMonth) && eventEnd.isSameOrAfter(startOfMonth);
         });
@@ -115,6 +120,7 @@ export const useEventsStore = defineStore('eventsStore', () => {
         const grouped: Record<string, EventWithTypeInfo[]> = {};
         const startOfMonth = dayjs().year(currentYear.value).month(currentMonth.value).startOf('month');
         const endOfMonth = dayjs().year(currentYear.value).month(currentMonth.value).endOf('month');
+        const manualOffsetHours = calendarSettings.manualTimeOffsetHours;
 
         // Initialize all dates in month
         for (let d = startOfMonth; d.isSameOrBefore(endOfMonth); d = d.add(1, 'day')) {
@@ -126,8 +132,8 @@ export const useEventsStore = defineStore('eventsStore', () => {
         events.value.forEach(event => {
             if (!event.start || !event.end) return;
 
-            const eventStart = dayjs.utc(event.start).local();
-            const eventEnd = dayjs.utc(event.end).local();
+            const eventStart = parseEventDate(event.start, manualOffsetHours);
+            const eventEnd = parseEventDate(event.end, manualOffsetHours);
 
             // Add event to each date it spans within the current month
             const spanStart = eventStart.isAfter(startOfMonth) ? eventStart : startOfMonth;
@@ -166,15 +172,16 @@ export const useEventsStore = defineStore('eventsStore', () => {
     const eventMetadata = computed((): Record<string, EventMetadata> => {
         const metadata: Record<string, EventMetadata> = {};
         // Use liveMinute for reactive event status that updates every minute
-        const now = liveMinute.value;
+        const now = getDisplayNow();
         const eventTypeColorsStore = useEventTypeColorsStore();
+        const manualOffsetHours = calendarSettings.manualTimeOffsetHours;
 
         // First pass: create metadata for all raw events
         events.value.forEach(event => {
-            const startDate = parseEventDate(event.start);
-            const endDate = parseEventDate(event.end);
+            const startDate = parseEventDate(event.start, manualOffsetHours);
+            const endDate = parseEventDate(event.end, manualOffsetHours);
             const typeInfo = getEventTypeInfo(event.eventType);
-            const isMultiDay = isMultiDayEvent(event);
+            const isMultiDay = !startDate.startOf('day').isSame(endDate.startOf('day'));
             const spotlightBonus = getSpotlightBonusInfo(event);
 
             const bosses = event.extraData?.raidbattles?.bosses;
@@ -197,7 +204,7 @@ export const useEventsStore = defineStore('eventsStore', () => {
                 endDate,
                 typeInfo,
                 color: eventTypeColorsStore.getEventTypeColor(event.eventType),
-                formattedStartTime: formatEventTime(event.start),
+                formattedStartTime: formatEventTime(event.start, manualOffsetHours),
                 isMultiDayEvent: isMultiDay,
                 isSingleDayEvent: !isMultiDay,
                 isPastEvent: endDate.isBefore(now),
@@ -225,7 +232,6 @@ export const useEventsStore = defineStore('eventsStore', () => {
      * Returns all events with _isGrouped, _groupedEvents, and _displayName properties when applicable.
      */
     const processedEvents = computed((): PogoEvent[] => {
-        const calendarSettings = useCalendarSettingsStore();
         const allEvents = events.value;
 
         if (!calendarSettings.groupSimilarEvents) {
@@ -293,12 +299,13 @@ export const useEventsStore = defineStore('eventsStore', () => {
     // Actions (including function-based getters)
     function getEventsForDate(date: Date | string | dayjs.Dayjs): PogoEvent[] {
         const targetDate = dayjs(date);
+        const manualOffsetHours = calendarSettings.manualTimeOffsetHours;
 
         return events.value.filter(event => {
             if (!event.start || !event.end) return false;
 
-            const eventStart = dayjs.utc(event.start).local();
-            const eventEnd = dayjs.utc(event.end).local();
+            const eventStart = parseEventDate(event.start, manualOffsetHours);
+            const eventEnd = parseEventDate(event.end, manualOffsetHours);
 
             return targetDate.isSameOrAfter(eventStart.startOf('day')) && targetDate.isSameOrBefore(eventEnd.startOf('day'));
         });
@@ -349,8 +356,8 @@ export const useEventsStore = defineStore('eventsStore', () => {
                     type: sampleEvent.eventType,
                     start: sampleEvent.start,
                     end: sampleEvent.end,
-                    startParsed: dayjs.utc(sampleEvent.start).local().format(DATE_FORMAT.DATE_TIME),
-                    endParsed: dayjs.utc(sampleEvent.end).local().format(DATE_FORMAT.DATE_TIME),
+                    startParsed: parseEventDate(sampleEvent.start, calendarSettings.manualTimeOffsetHours).format(DATE_FORMAT.DATE_TIME),
+                    endParsed: parseEventDate(sampleEvent.end, calendarSettings.manualTimeOffsetHours).format(DATE_FORMAT.DATE_TIME),
                 });
 
                 const currentMonthCount = currentMonthEvents.value.length;

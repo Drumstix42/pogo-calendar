@@ -65,7 +65,11 @@ import { DATE_FORMAT } from '@/utils/dateFormat';
 
 const { urlMonth, urlYear } = useUrlSync();
 const calendarSettings = useCalendarSettingsStore();
-const { liveDay } = useCurrentTime();
+const { liveMinute } = useCurrentTime();
+
+const displayToday = computed(() => {
+    return liveMinute.value.add(calendarSettings.manualTimeOffsetHours * 60, 'minute').startOf('day');
+});
 
 // Breakpoints
 const breakpoints = useBreakpoints(breakpointsBootstrapV5);
@@ -73,27 +77,26 @@ const isDesktopSidebar = breakpoints.greaterOrEqual('xxl'); // >= 1400px
 
 // Current month display
 const currentMonthDisplay = computed(() => {
-    // Use liveDay for reactivity (only updates at day boundaries)
-    const now = liveDay.value;
+    const now = displayToday.value;
     return now.year(urlYear.value).month(urlMonth.value).format(DATE_FORMAT.MONTH_YEAR);
 });
 
 // Check if we're viewing the current month
 const isCurrentMonth = computed(() => {
-    const now = liveDay.value;
+    const now = displayToday.value;
     return urlYear.value === now.year() && urlMonth.value === now.month();
 });
 
 // Check navigation boundaries
 const isPreviousDisabled = computed(() => {
-    const now = liveDay.value;
+    const now = displayToday.value;
     const current = now.year(urlYear.value).month(urlMonth.value);
     const earliest = dayjs().year(2016).month(0); // January 2016
     return current.isSameOrBefore(earliest, 'month');
 });
 
 const isNextDisabled = computed(() => {
-    const now = liveDay.value;
+    const now = displayToday.value;
     const current = now.year(urlYear.value).month(urlMonth.value);
     const currentYear = now.year();
     const latest = now.year(currentYear + 1).month(11); // December of next year
@@ -102,21 +105,21 @@ const isNextDisabled = computed(() => {
 
 // Navigation methods
 const goToPreviousMonth = () => {
-    const now = liveDay.value;
+    const now = displayToday.value;
     const prev = now.year(urlYear.value).month(urlMonth.value).subtract(1, 'month');
     urlMonth.value = prev.month();
     urlYear.value = prev.year();
 };
 
 const goToNextMonth = () => {
-    const now = liveDay.value;
+    const now = displayToday.value;
     const next = now.year(urlYear.value).month(urlMonth.value).add(1, 'month');
     urlMonth.value = next.month();
     urlYear.value = next.year();
 };
 
 const goToCurrentMonth = () => {
-    const now = liveDay.value;
+    const now = displayToday.value;
     urlMonth.value = now.month();
     urlYear.value = now.year();
 };

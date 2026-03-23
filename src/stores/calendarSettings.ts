@@ -6,6 +6,9 @@ import { STORAGE_KEYS } from '@/constants/storage';
 
 export type FirstDayOfWeek = 'Sunday' | 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday';
 
+const TIME_OVERRIDE_COLLAPSIBLE_KEY = 'calendarSettings/event-options-time-override';
+const COLLAPSE_DEFAULTS_MARKER_KEY = 'calendarSettings/default-collapsed-initialized-v1';
+
 /**
  * Pinia store for calendar display settings with persistent localStorage
  */
@@ -31,8 +34,17 @@ export const useCalendarSettingsStore = defineStore('calendarSettings', () => {
     // Event bar font size setting - font size for multi-day event bars in pixels
     const eventBarFontSize = useLocalStorage<number>(STORAGE_KEYS.EVENT_BAR_FONT_SIZE, 12);
 
+    // Manual display time offset in hours relative to local time
+    const manualTimeOffsetHours = useLocalStorage<number>(STORAGE_KEYS.MANUAL_TIME_OFFSET_HOURS, 0);
+
     // Collapsed sections state - only stores sections that are collapsed (expanded is default)
     const collapsedSections = useLocalStorage<Record<string, true>>(STORAGE_KEYS.COLLAPSIBLE_SECTIONS, {});
+
+    // One-time defaults for newly introduced sections that should start collapsed.
+    if (!(COLLAPSE_DEFAULTS_MARKER_KEY in collapsedSections.value)) {
+        collapsedSections.value[TIME_OVERRIDE_COLLAPSIBLE_KEY] = true;
+        collapsedSections.value[COLLAPSE_DEFAULTS_MARKER_KEY] = true;
+    }
 
     // Timeline sidebar collapsed state - separate from vertical layout collapse
     const timelineSidebarCollapsed = useLocalStorage<boolean>(STORAGE_KEYS.TIMELINE_SIDEBAR_COLLAPSED, true);
@@ -83,6 +95,28 @@ export const useCalendarSettingsStore = defineStore('calendarSettings', () => {
     // Computed event bar height based on font size using precise mapping
     const eventBarHeight = computed(() => fontSizeToHeightMap[eventBarFontSize.value] ?? 20);
 
+    const hasManualTimeOffset = computed(() => manualTimeOffsetHours.value !== 0);
+
+    const manualTimeOffsetLabel = computed(() => {
+        const offset = manualTimeOffsetHours.value;
+        if (offset === 0) return 'Local time';
+
+        const sign = offset > 0 ? '+' : '-';
+        const absoluteOffset = Math.abs(offset);
+        const wholeHours = Math.floor(absoluteOffset);
+        const hasHalfHour = absoluteOffset % 1 !== 0;
+
+        if (hasHalfHour && wholeHours === 0) {
+            return `Local ${sign}30m`;
+        }
+
+        if (hasHalfHour) {
+            return `Local ${sign}${wholeHours}h 30m`;
+        }
+
+        return `Local ${sign}${wholeHours}h`;
+    });
+
     // Actions
     const setFirstDayOfWeek = (day: FirstDayOfWeek) => {
         firstDayOfWeek.value = day;
@@ -110,6 +144,15 @@ export const useCalendarSettingsStore = defineStore('calendarSettings', () => {
 
     const setEventBarFontSize = (size: number) => {
         eventBarFontSize.value = Math.max(10, Math.min(18, size)); // Clamp between 10-18px
+    };
+
+    const setManualTimeOffsetHours = (hours: number) => {
+        const rounded = Math.round(hours * 2) / 2;
+        manualTimeOffsetHours.value = Math.max(-14, Math.min(14, rounded));
+    };
+
+    const resetManualTimeOffsetHours = () => {
+        manualTimeOffsetHours.value = 0;
     };
 
     const toggleOptionsExpanded = () => {
@@ -155,6 +198,7 @@ export const useCalendarSettingsStore = defineStore('calendarSettings', () => {
         useSingleDayEventSprites,
         filtersApplyToTimeline,
         eventBarFontSize,
+        manualTimeOffsetHours,
         optionsExpanded,
         timelineSidebarCollapsed,
 
@@ -163,6 +207,8 @@ export const useCalendarSettingsStore = defineStore('calendarSettings', () => {
         fullDayHeaders,
         firstDayIndex,
         eventBarHeight,
+        hasManualTimeOffset,
+        manualTimeOffsetLabel,
 
         // Actions
         setFirstDayOfWeek,
@@ -172,6 +218,8 @@ export const useCalendarSettingsStore = defineStore('calendarSettings', () => {
         setUseSingleDayEventSprites,
         setFiltersApplyToTimeline,
         setEventBarFontSize,
+        setManualTimeOffsetHours,
+        resetManualTimeOffsetHours,
         toggleOptionsExpanded,
         setOptionsExpanded,
         isCollapsibleSectionCollapsed,

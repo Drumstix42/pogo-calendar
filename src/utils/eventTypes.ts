@@ -641,17 +641,25 @@ export const getGroupedEventsCount = (event: PogoEvent): number => {
     return Array.isArray(groupedEvents) ? groupedEvents.length : 1;
 };
 
-export const parseEventDate = (dateStr: string): dayjs.Dayjs => {
+export const parseEventDate = (dateStr: string, manualOffsetHours: number = 0): dayjs.Dayjs => {
     // Check if the date string is in UTC format (ends with Z)
+    let parsedDate: dayjs.Dayjs;
     if (dateStr.endsWith('Z')) {
-        return dayjs.utc(dateStr).local();
+        parsedDate = dayjs.utc(dateStr).local();
+    } else {
+        // If not UTC, treat as local time
+        parsedDate = dayjs(dateStr);
     }
-    // If not UTC, treat as local time
-    return dayjs(dateStr);
+
+    if (manualOffsetHours === 0) {
+        return parsedDate;
+    }
+
+    return parsedDate.add(manualOffsetHours * 60, 'minute');
 };
 
-export const formatEventTime = (dateStr: string): string => {
-    const eventDate = parseEventDate(dateStr);
+export const formatEventTime = (dateStr: string, manualOffsetHours: number = 0): string => {
+    const eventDate = parseEventDate(dateStr, manualOffsetHours);
     const minutes = eventDate.minute();
 
     // Only show minutes if they're not zero
@@ -662,15 +670,15 @@ export const formatEventTime = (dateStr: string): string => {
     }
 };
 
-export const getEventsForDate = (events: PogoEvent[], date: Date | string | dayjs.Dayjs): PogoEvent[] => {
+export const getEventsForDate = (events: PogoEvent[], date: Date | string | dayjs.Dayjs, manualOffsetHours: number = 0): PogoEvent[] => {
     const targetDate = dayjs(date);
     const targetDateStr = targetDate.format(DATE_FORMAT.CALENDAR_DATE);
 
     return events.filter((event: PogoEvent) => {
         if (!event.start || !event.end) return false;
 
-        const startDate = parseEventDate(event.start);
-        const endDate = parseEventDate(event.end);
+        const startDate = parseEventDate(event.start, manualOffsetHours);
+        const endDate = parseEventDate(event.end, manualOffsetHours);
 
         const startDateStr = startDate.format(DATE_FORMAT.CALENDAR_DATE);
         const endDateStr = endDate.format(DATE_FORMAT.CALENDAR_DATE);

@@ -104,6 +104,10 @@ const eventFilter = useEventFilterStore();
 const calendarSettings = useCalendarSettingsStore();
 const { liveMinute } = useCurrentTime();
 
+const displayNow = computed(() => {
+    return liveMinute.value.add(calendarSettings.manualTimeOffsetHours * 60, 'minute');
+});
+
 const activeEventId = ref<string | null>(null);
 
 const setActiveEvent = (eventId: string): void => {
@@ -135,7 +139,7 @@ const eventCategories = [
 // Get filtered events
 const filteredEvents = computed(() => {
     // Use liveMinute to ensure reactivity to time changes
-    const now = liveMinute.value;
+    const now = displayNow.value;
     const startDate = now.subtract(1, 'day'); // Include yesterday for ongoing events
     const endDate = now.add(60, 'days'); // Show next 60 days
 
@@ -157,7 +161,7 @@ const filteredEvents = computed(() => {
 
 const eventData = computed(() => {
     // Use liveMinute to ensure reactivity to time changes
-    const now = liveMinute.value;
+    const now = displayNow.value;
     const today = now.startOf('day');
     const twoWeeksFromNow = now.add(2, 'weeks');
 

@@ -96,7 +96,7 @@
 
 <script setup lang="ts">
 import { Settings } from 'lucide-vue-next';
-import { onMounted, watch } from 'vue';
+import { computed, onMounted, watch } from 'vue';
 
 import { useCurrentTime } from '@/composables/useCurrentTime';
 import { useUrlSync } from '@/composables/useUrlSync';
@@ -120,7 +120,11 @@ const appStore = useAppStore();
 
 const calendarSettings = useCalendarSettingsStore();
 const { urlMonth, urlYear } = useUrlSync();
-const { liveDay, liveHour } = useCurrentTime();
+const { liveMinute, liveHour } = useCurrentTime();
+
+const displayToday = computed(() => {
+    return liveMinute.value.add(calendarSettings.manualTimeOffsetHours * 60, 'minute').startOf('day');
+});
 
 // Check for app updates on mount and hourly
 onMounted(() => {
@@ -134,7 +138,7 @@ onMounted(() => {
 });
 
 function goHome() {
-    const now = liveDay.value;
+    const now = displayToday.value;
     urlMonth.value = now.month();
     urlYear.value = now.year();
     window.scrollTo({ top: 0, behavior: 'smooth' });
