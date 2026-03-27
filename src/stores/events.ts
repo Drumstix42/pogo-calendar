@@ -7,7 +7,7 @@ import { computed, ref } from 'vue';
 
 import { DATE_FORMAT } from '../utils/dateFormat';
 import { formatEventName, getSmartGroupDisplayName } from '../utils/eventName';
-import { generateEventRaidHourSubEvents } from '../utils/eventRaidHours';
+import { generateEventRaidHourSubEvents, generateEventSpotlightSubEvents } from '../utils/eventRaidHours';
 import {
     EventTypeInfoWithoutColor,
     type PogoEvent,
@@ -331,21 +331,25 @@ export const useEventsStore = defineStore('eventsStore', () => {
 
             const fetchedEvents: PogoEvent[] = await response.json();
 
-            // Generate pseudo raid hour events from events with raidSchedule
+            // Generate pseudo raid hour and spotlight hour events from parent events
             const raidHourEvents: PogoEvent[] = [];
+            const spotlightEvents: PogoEvent[] = [];
             fetchedEvents.forEach(event => {
-                const pseudoEvents = generateEventRaidHourSubEvents(event);
-                raidHourEvents.push(...pseudoEvents);
+                raidHourEvents.push(...generateEventRaidHourSubEvents(event));
+                spotlightEvents.push(...generateEventSpotlightSubEvents(event));
             });
 
-            // Combine original events with generated raid hour events
-            events.value = [...fetchedEvents, ...raidHourEvents];
+            // Combine original events with generated pseudo sub-events
+            events.value = [...fetchedEvents, ...raidHourEvents, ...spotlightEvents];
             lastFetched.value = dayjs();
             error.value = null;
 
             console.log(`Loaded ${fetchedEvents.length} events from ScrapedDuck`);
             if (raidHourEvents.length > 0) {
                 console.log(`Parsed ${raidHourEvents.length} Raid Hour pseudo sub-events`);
+            }
+            if (spotlightEvents.length > 0) {
+                console.log(`Parsed ${spotlightEvents.length} Spotlight Hour pseudo sub-events`);
             }
 
             // Log some sample events and date analysis

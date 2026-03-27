@@ -2,7 +2,7 @@ import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 import utc from 'dayjs/plugin/utc';
 
-import type { PogoEvent, PokemonBoss, RaidScheduleEntry } from './eventTypes';
+import type { PogoEvent, PokemonBoss, RaidScheduleEntry, SpotlightScheduleEntry } from './eventTypes';
 
 dayjs.extend(utc);
 dayjs.extend(customParseFormat);
@@ -58,6 +58,17 @@ function parseRaidScheduleDate(dateString: string, parentEventStart: string, par
         }
     }
 
+    // Try parsing month + day format: "April 1"
+    const monthDayMatch = dateString.match(/^([A-Za-z]+)\s+(\d{1,2})$/);
+    if (monthDayMatch) {
+        const [, month, day] = monthDayMatch;
+        const dateStr = `${month} ${day}, ${parentYear}`;
+        const parsed = dayjs(dateStr, 'MMMM D, YYYY');
+        if (parsed.isValid()) {
+            return parsed;
+        }
+    }
+
     return null;
 }
 
@@ -95,6 +106,13 @@ function parseRaidHourTime(timeString: string): { startHour: number; endHour: nu
     }
 
     return defaultTime;
+}
+
+/**
+ * Format spotlight hour event name
+ */
+function formatSpotlightEventName(pokemon: PokemonBoss): string {
+    return `${pokemon.name} Spotlight Hour`;
 }
 
 /**
@@ -192,6 +210,71 @@ export function generateEventRaidHourSubEvents(parentEvent: PogoEvent): PogoEven
 
             pseudoEvents.push(pseudoEvent);
         });
+    });
+
+    return pseudoEvents;
+}
+
+/**
+ * Generate pseudo Spotlight Hour sub events from a parent event's spotlight schedule
+ */
+export function generateEventSpotlightSubEvents(parentEvent: PogoEvent): PogoEvent[] {
+    // Only process events with eventType "event"
+    if (parentEvent.eventType !== 'event') {
+        return [];
+    }
+
+    const spotlightSchedule = parentEvent.extraData?.spotlightSchedule;
+    if (!spotlightSchedule || spotlightSchedule.length === 0) {
+        return [];
+    }
+
+    const pseudoEvents: PogoEvent[] = [];
+
+    spotlightSchedule.forEach((schedule: SpotlightScheduleEntry, index) => {
+        if (!schedule.pokemon || !schedule.pokemon.name) {
+            return;
+        }
+
+        const spotlightDate = parseRaidScheduleDate(schedule.date, parentEvent.start, parentEvent.end);
+        if (!spotlightDate) {
+            console.warn(`Could not parse spotlight schedule date: "${schedule.date}" for event ${parentEvent.eventID}`);
+            return;
+        }
+
+        const { startHour, endHour } = parseRaidHourTime(schedule.time || '');
+        const startDateTime = spotlightDate.hour(startHour).minute(0).second(0);
+        const endDateTime = spotlightDate.hour(endHour).minute(0).second(0);
+
+        const eventName = formatSpotlightEventName(schedule.pokemon);
+        const dateKey = spotlightDate.format('YYYY-MM-DD');
+        const eventID = `${parentEvent.eventID}-spotlight-hour-${dateKey}-${index}`;
+
+        const pseudoEvent: PogoEvent = {
+            eventID,
+            name: eventName,
+            eventType: parentEvent.eventType,
+            heading: parentEvent.heading,
+            link: parentEvent.link,
+            image: schedule.pokemon.image || parentEvent.image,
+            start: startDateTime.format('YYYY-MM-DDTHH:mm:ss.SSS'),
+            end: endDateTime.format('YYYY-MM-DDTHH:mm:ss.SSS'),
+            extraData: {
+                isSpotlightSubEvent: true,
+                parentEventId: parentEvent.eventID,
+                generic: {
+                    hasSpawns: false,
+                    hasFieldResearchTasks: false,
+                },
+                spotlight: {
+                    name: schedule.pokemon.name,
+                    image: schedule.pokemon.image,
+                    canBeShiny: schedule.pokemon.canBeShiny,
+                },
+            },
+        };
+
+        pseudoEvents.push(pseudoEvent);
     });
 
     return pseudoEvents;

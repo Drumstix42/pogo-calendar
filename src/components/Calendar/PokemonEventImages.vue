@@ -14,6 +14,7 @@
             :show-c-p="showCP"
             :event-type="event.eventType"
             :is-raid-hour-sub-event="event.extraData?.isRaidHourSubEvent === true"
+            :is-spotlight-sub-event="event.extraData?.isSpotlightSubEvent === true"
             :is-dynamax="showDynamaxOverlay"
             :is-shadow="showShadowEffect"
             :is-gigantamax="showGigantamaxEffect"

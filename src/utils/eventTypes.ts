@@ -59,6 +59,12 @@ export interface RaidScheduleEntry {
     bonuses?: string[];
 }
 
+export interface SpotlightScheduleEntry {
+    date: string;
+    time: string;
+    pokemon: PokemonBoss;
+}
+
 export interface PogoEvent {
     eventID: string;
     name: string;
@@ -75,6 +81,7 @@ export interface PogoEvent {
         };
         raidbattles?: RaidBattlesData;
         raidSchedule?: RaidScheduleEntry[];
+        spotlightSchedule?: SpotlightScheduleEntry[];
         spotlight?: SpotlightData;
         communityday?: CommunityDayData;
         maxbattles?: MaxBattlesData;

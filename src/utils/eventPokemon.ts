@@ -459,7 +459,7 @@ export function getEventPokemonImages(event: PogoEvent, options?: PokemonImageOp
     }
 
     // Handle spotlight hours - can have multiple Pokémon
-    if (event.eventType === 'pokemon-spotlight-hour' && event.extraData.spotlight) {
+    if ((event.eventType === 'pokemon-spotlight-hour' || event.extraData?.isSpotlightSubEvent) && event.extraData.spotlight) {
         const images: PokemonImageData[] = [];
 
         // Try to get images from our sprite mapper first

@@ -21,10 +21,12 @@ interface Props {
     pokemonName: string;
     eventType: string;
     isRaidHourSubEvent?: boolean;
+    isSpotlightSubEvent?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
     isRaidHourSubEvent: false,
+    isSpotlightSubEvent: false,
 });
 
 const pokemonDataStore = usePokemonDataStore();
@@ -36,12 +38,14 @@ const WEATHER_BOOST_EVENT_TYPES = ['raid-battles', 'raid-day', 'raid-weekend', '
 const CP_SUPPORTED_EVENT_TYPES = ['raid-battles', 'raid-day', 'raid-weekend', 'raid-hour', 'max-battles', 'max-mondays', 'event'];
 
 const shouldShowWeatherBoost = computed(() => {
+    if (props.isSpotlightSubEvent) return false;
     // Pseudo raid hour events from parent events also support weather boost
     if (props.isRaidHourSubEvent) return true;
     return WEATHER_BOOST_EVENT_TYPES.includes(props.eventType);
 });
 
 const shouldShowCP = computed(() => {
+    if (props.isSpotlightSubEvent) return false;
     // Pseudo raid hour events from parent events should show CP
     if (props.isRaidHourSubEvent) return true;
     return CP_SUPPORTED_EVENT_TYPES.includes(props.eventType);

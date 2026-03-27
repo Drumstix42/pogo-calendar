@@ -47,6 +47,7 @@
                 :pokemon-name="pokemonData.name"
                 :event-type="eventType"
                 :is-raid-hour-sub-event="isRaidHourSubEvent"
+                :is-spotlight-sub-event="isSpotlightSubEvent"
             />
         </Transition>
     </div>
@@ -68,6 +69,7 @@ interface Props {
     showCP?: boolean;
     eventType: string;
     isRaidHourSubEvent?: boolean;
+    isSpotlightSubEvent?: boolean;
     isDynamax?: boolean;
     isShadow?: boolean;
     isGigantamax?: boolean;
@@ -81,6 +83,7 @@ withDefaults(defineProps<Props>(), {
     showTooltip: false,
     showCP: false,
     isRaidHourSubEvent: false,
+    isSpotlightSubEvent: false,
     isDynamax: false,
     isShadow: false,
     isGigantamax: false,
