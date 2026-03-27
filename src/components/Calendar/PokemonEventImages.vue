@@ -2,7 +2,11 @@
     <div
         v-if="displayedImages.length > 0 || shouldShowPlaceholder"
         class="pokemon-images"
-        :class="{ 'wrap-multiple': displayedImages.length >= 3, 'force-wrap': wrap }"
+        :class="{
+            'wrap-multiple': displayedImages.length >= 3,
+            'force-wrap': wrap,
+            'overflow-badge-right': overflowBadgeAlign === 'right',
+        }"
     >
         <PokemonImage
             v-for="(pokemonData, index) in displayedImages"
@@ -23,8 +27,8 @@
         <!-- More indicator when there are additional images beyond the limit -->
         <span v-if="shouldShowMoreIndicator" class="pokemon-more-indicator">+</span>
 
-        <!-- Overflow counter badge (mobile only) -->
-        <span v-if="showOverflowBadge" class="overflow-counter-badge">{{ displayedImages.length }}</span>
+        <!-- Overflow counter badge -->
+        <span v-if="showOverflowBadge" class="overflow-counter-badge">{{ overflowBadgeCount }}</span>
 
         <PokemonImage
             v-if="shouldShowPlaceholder"
@@ -58,6 +62,7 @@ interface Props {
     showTooltips?: boolean;
     showCP?: boolean;
     showOverflowCounter?: boolean;
+    overflowBadgeAlign?: 'left' | 'right';
     excludeTiers?: string[];
     wrap?: boolean;
 }
@@ -70,6 +75,7 @@ const props = withDefaults(defineProps<Props>(), {
     showTooltips: false,
     showCP: false,
     showOverflowCounter: false,
+    overflowBadgeAlign: 'left',
     excludeTiers: undefined,
     wrap: false,
 });
@@ -126,7 +132,16 @@ const showGigantamaxEffect = computed(() => {
 });
 
 const showOverflowBadge = computed(() => {
-    // Only show if explicitly enabled via prop
+    const totalRaidBosses = props.event.extraData?.raidbattles?.bosses?.length ?? 0;
+    const hasTierExclusionOverflow =
+        totalRaidBosses > pokemonImages.value.length &&
+        Boolean(props.excludeTiers && props.excludeTiers.length > 0) &&
+        pokemonImages.value.length > 0;
+
+    // Always show when tier exclusions are actively hiding raid bosses.
+    if (hasTierExclusionOverflow) return true;
+
+    // Otherwise only show if explicitly enabled via prop.
     if (!props.showOverflowCounter) return false;
 
     // Need at least 2 images to show badge
@@ -134,6 +149,21 @@ const showOverflowBadge = computed(() => {
 
     // Only on mobile/tablet (< 768px) where wrapping is disabled
     return breakpoints.smaller('md').value;
+});
+
+const overflowBadgeCount = computed(() => {
+    const totalRaidBosses = props.event.extraData?.raidbattles?.bosses?.length ?? 0;
+    const hasTierExclusionOverflow =
+        totalRaidBosses > pokemonImages.value.length &&
+        Boolean(props.excludeTiers && props.excludeTiers.length > 0) &&
+        pokemonImages.value.length > 0;
+
+    // For tier-based overflow, show total available bosses so hidden count is implied.
+    if (hasTierExclusionOverflow) {
+        return totalRaidBosses;
+    }
+
+    return displayedImages.value.length;
 });
 </script>
 
@@ -174,14 +204,14 @@ const showOverflowBadge = computed(() => {
 
 .overflow-counter-badge {
     position: absolute;
-    bottom: -2px;
-    left: 0px;
+    top: -2px;
+    left: 0;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     height: 12px;
     padding: 0 4px;
-    font-size: 9px;
+    font-size: 10px;
     font-weight: 500;
     line-height: 1;
     border-radius: 3px;
@@ -195,6 +225,17 @@ const showOverflowBadge = computed(() => {
 @media (min-width: 375px) {
     .overflow-counter-badge {
         left: -2px;
+    }
+}
+
+.pokemon-images.overflow-badge-right .overflow-counter-badge {
+    left: auto;
+    right: 0;
+}
+
+@media (min-width: 375px) {
+    .pokemon-images.overflow-badge-right .overflow-counter-badge {
+        right: -2px;
     }
 }
 </style>

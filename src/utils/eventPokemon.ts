@@ -14,6 +14,8 @@ export interface PokemonImageData {
     imageUrl: string | null;
 }
 
+const RAID_DAY_TITLE_EXCEPTIONS = new Set(['fashion raid day']);
+
 // Special Gigantamax forms for Pokemon with multiple variants
 // Maps Pokemon ID to default form filename and pattern-based form filenames
 // TODO: migrate mapping to pokemonMapper.ts
@@ -269,6 +271,52 @@ function getSpriteUrl(pokemonName: string, suffix?: string, options?: PokemonIma
     return null;
 }
 
+function getRaidBossesWithTierFallback(event: PogoEvent, options?: PokemonImageOptions) {
+    const allBosses = event.extraData?.raidbattles?.bosses;
+    if (!allBosses || allBosses.length === 0) {
+        return [];
+    }
+
+    // Progressively relax excludes (dropping from the end) until at least one boss remains.
+    if (!options?.excludeTiers || options.excludeTiers.length === 0) {
+        return allBosses;
+    }
+
+    for (let i = options.excludeTiers.length; i >= 0; i--) {
+        const activeExclusions = options.excludeTiers.slice(0, i);
+        const filtered = activeExclusions.length > 0 ? allBosses.filter(b => !b.raidType || !activeExclusions.includes(b.raidType)) : allBosses;
+        if (filtered.length > 0) {
+            return filtered;
+        }
+    }
+
+    return allBosses;
+}
+
+function getPokemonImagesFromBosses(event: PogoEvent, options?: PokemonImageOptions): PokemonImageData[] {
+    const bosses = getRaidBossesWithTierFallback(event, options);
+    const images: PokemonImageData[] = [];
+
+    for (const boss of bosses) {
+        const parsedData = parsePokemonNameAndSuffix(boss.name);
+        if (parsedData) {
+            let spriteUrl: string | null = null;
+
+            if (parsedData.suffix) {
+                spriteUrl = getSpriteUrl(parsedData.pokemonName, parsedData.suffix, options, boss.image);
+            } else {
+                spriteUrl = getSpriteUrl(parsedData.pokemonName, undefined, options, boss.image);
+            }
+
+            images.push({ name: boss.name, imageUrl: spriteUrl });
+        } else {
+            images.push({ name: boss.name, imageUrl: boss.image || null });
+        }
+    }
+
+    return images;
+}
+
 export function getEventPokemonImages(event: PogoEvent, options?: PokemonImageOptions): PokemonImageData[] {
     if (!event.extraData) return [];
 
@@ -276,28 +324,7 @@ export function getEventPokemonImages(event: PogoEvent, options?: PokemonImageOp
     if (event.eventType === 'raid-battles' || event.eventType === 'raid-weekend') {
         // First try to use bosses data from extraData
         if (event.extraData?.raidbattles?.bosses && event.extraData.raidbattles.bosses.length > 0) {
-            const bosses = event.extraData.raidbattles.bosses;
-            const images: PokemonImageData[] = [];
-
-            for (const boss of bosses) {
-                const parsedData = parsePokemonNameAndSuffix(boss.name);
-                if (parsedData) {
-                    let spriteUrl: string | null = null;
-
-                    // If we have a custom suffix (like -megax, -megay), use it directly
-                    if (parsedData.suffix) {
-                        spriteUrl = getSpriteUrl(parsedData.pokemonName, parsedData.suffix, options, boss.image);
-                    } else {
-                        spriteUrl = getSpriteUrl(parsedData.pokemonName, undefined, options, boss.image);
-                    }
-
-                    // Always add to images array, fallback handled by getSpriteUrl
-                    images.push({ name: boss.name, imageUrl: spriteUrl });
-                } else {
-                    // If we can't parse the boss name, try API image or use null
-                    images.push({ name: boss.name, imageUrl: boss.image || null });
-                }
-            }
+            const images = getPokemonImagesFromBosses(event, options);
 
             if (images.length > 0) {
                 return images;
@@ -335,7 +362,7 @@ export function getEventPokemonImages(event: PogoEvent, options?: PokemonImageOp
 
         // Final fallback to LeetDuck's provided images
         if (event.extraData?.raidbattles?.bosses) {
-            const bosses = event.extraData.raidbattles.bosses;
+            const bosses = getRaidBossesWithTierFallback(event, options);
             if (bosses.length > 0) {
                 return bosses.map(boss => ({ name: boss.name, imageUrl: boss.image || null }));
             }
@@ -373,52 +400,26 @@ export function getEventPokemonImages(event: PogoEvent, options?: PokemonImageOp
 
     // Handle event type with raid bosses (e.g. anniversary events, raid hour sub-events)
     if (event.eventType === 'event' && event.extraData?.raidbattles?.bosses && event.extraData.raidbattles.bosses.length > 0) {
-        const allBosses = event.extraData.raidbattles.bosses;
-
-        // Progressively relax the exclude list (dropping from the end) until we get results,
-        // falling back to the full list if all tiers are excluded.
-        let bosses = allBosses;
-        if (options?.excludeTiers && options.excludeTiers.length > 0) {
-            for (let i = options.excludeTiers.length; i >= 0; i--) {
-                const activeExclusions = options.excludeTiers.slice(0, i);
-                const filtered =
-                    activeExclusions.length > 0 ? allBosses.filter(b => !b.raidType || !activeExclusions.includes(b.raidType)) : allBosses;
-                if (filtered.length > 0) {
-                    bosses = filtered;
-                    break;
-                }
-            }
-        }
-        const images: PokemonImageData[] = [];
-
-        for (const boss of bosses) {
-            const parsedData = parsePokemonNameAndSuffix(boss.name);
-            if (parsedData) {
-                let spriteUrl: string | null = null;
-
-                // If we have a custom suffix (like -megax, -megay), use it directly
-                if (parsedData.suffix) {
-                    spriteUrl = getSpriteUrl(parsedData.pokemonName, parsedData.suffix, options, boss.image);
-                } else {
-                    spriteUrl = getSpriteUrl(parsedData.pokemonName, undefined, options, boss.image);
-                }
-
-                // Always add to images array, fallback handled by getSpriteUrl
-                images.push({ name: boss.name, imageUrl: spriteUrl });
-            } else {
-                // If we can't parse the boss name, try API image or use null
-                images.push({ name: boss.name, imageUrl: boss.image || null });
-            }
-        }
+        const images = getPokemonImagesFromBosses(event, options);
 
         if (images.length > 0) {
             return images;
         }
     }
 
-    // Handle raid-day events - parse Pokemon name from title and generate sprite URL
+    // Handle raid-day events - prefer bosses data, then fall back to title parsing
     if (event.eventType === 'raid-day') {
+        if (event.extraData?.raidbattles?.bosses && event.extraData.raidbattles.bosses.length > 0) {
+            const images = getPokemonImagesFromBosses(event, options);
+            if (images.length > 0) {
+                return images;
+            }
+        }
+
         const eventName = formatEventName(event.name);
+        if (RAID_DAY_TITLE_EXCEPTIONS.has(eventName.toLowerCase())) {
+            return [];
+        }
 
         // Pattern: "<Pokemon Name> [Special Type] Raid Day" or "<Pokemon Name> Raid Day"
         // Special types can be: "Fusion", "Shadow", etc.

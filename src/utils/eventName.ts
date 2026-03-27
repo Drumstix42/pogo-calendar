@@ -70,6 +70,16 @@ export function getSmartGroupDisplayName(events: Array<{ name: string; eventType
     const shortestIsCommon = sortedByLength.every(name => name.toLowerCase().includes(shortest.toLowerCase()));
 
     if (shortestIsCommon) {
+        // If the shortest common label is just the generic event type name (e.g. "Raid Day"),
+        // prefer the most specific title in the group.
+        const eventTypeName = getEventTypeInfo(events[0].eventType).name;
+        const shortestIsEventType = formatEventName(shortest).toLowerCase() === formatEventName(eventTypeName).toLowerCase();
+        if (shortestIsEventType) {
+            const longest = sortedByLength[sortedByLength.length - 1];
+            const longestIndex = names.lastIndexOf(longest);
+            return rawNames[longestIndex >= 0 ? longestIndex : shortestIndex];
+        }
+
         return rawNames[shortestIndex]; // Return the raw version
     }
 

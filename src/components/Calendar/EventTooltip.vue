@@ -42,6 +42,7 @@
                     </div>
 
                     <PokemonEventImages
+                        v-if="!getTierGroupsWithImagesForEvent(groupedEvent)"
                         :event="groupedEvent"
                         :event-name="formatEventName(groupedEvent.name)"
                         :height="50"
@@ -50,6 +51,29 @@
                         :show-c-p="true"
                         :wrap="true"
                     />
+
+                    <div v-if="getTierGroupsWithImagesForEvent(groupedEvent)" class="raid-boss-tiers">
+                        <div
+                            v-for="group in getTierGroupsWithImagesForEvent(groupedEvent)"
+                            :key="`${groupedEvent.eventID}-${group.label}`"
+                            class="tier-group"
+                        >
+                            <div v-if="group.showLabel" class="tier-label">{{ group.label }}</div>
+                            <div class="tier-images">
+                                <PokemonImage
+                                    v-for="boss in group.images"
+                                    :key="boss.name"
+                                    :pokemon-data="boss"
+                                    :height="50"
+                                    :use-animated="calendarSettings.useAnimatedImages"
+                                    :show-tooltip="true"
+                                    :show-c-p="true"
+                                    :event-type="groupedEvent.eventType"
+                                    :is-shadow="isShadowRaidEvent(groupedEvent)"
+                                />
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -117,8 +141,8 @@ import { useHideEventModal } from '@/composables/useHideEventModal';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { useEventsStore } from '@/stores/events';
 import { formatEventName } from '@/utils/eventName';
-import { buildRaidTierGroupsWithImages } from '@/utils/raidTierGroups';
 import { type PogoEvent, getEventTypeInfo, getGroupedEvents, getRaidSubType } from '@/utils/eventTypes';
+import { buildRaidTierGroupsWithImages } from '@/utils/raidTierGroups';
 
 import EventExtras from './EventExtras.vue';
 import EventTimeDisplay from './EventTimeDisplay.vue';
@@ -173,15 +197,20 @@ function getParentEventName(event: PogoEvent): string | null {
     return lookupParentEventName(event);
 }
 
+function getTierGroupsWithImagesForEvent(event: PogoEvent) {
+    return buildRaidTierGroupsWithImages(eventsStore.eventMetadata[event.eventID]?.raidBossTierGroups, calendarSettings.useAnimatedImages);
+}
+
+function isShadowRaidEvent(event: PogoEvent) {
+    return getRaidSubType(event) === 'shadow-raids';
+}
+
 const isShadowRaid = computed(() => {
-    return getRaidSubType(props.event) === 'shadow-raids';
+    return isShadowRaidEvent(props.event);
 });
 
 const tierGroupsWithImages = computed(() => {
-    return buildRaidTierGroupsWithImages(
-        eventsStore.eventMetadata[props.event.eventID]?.raidBossTierGroups,
-        calendarSettings.useAnimatedImages,
-    );
+    return buildRaidTierGroupsWithImages(eventsStore.eventMetadata[props.event.eventID]?.raidBossTierGroups, calendarSettings.useAnimatedImages);
 });
 </script>
 
