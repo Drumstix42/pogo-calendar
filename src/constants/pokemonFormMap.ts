@@ -1432,7 +1432,10 @@ export const POKEMON_FORM_MAP: PokemonFormMap = {
         default: null,
         forms: ['fGIGANTAMAX'],
     },
-    '870': null,
+    '870': {
+        default: null,
+        forms: ['fMEGA'],
+    },
     '871': null,
     '872': null,
     '873': null,

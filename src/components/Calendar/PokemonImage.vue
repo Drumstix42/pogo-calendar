@@ -23,11 +23,11 @@
                 <template v-else>
                     <img
                         v-if="pokemonData?.imageUrl && !hasError"
-                        :src="pokemonData.imageUrl"
+                        :src="currentImageSrc"
                         :alt="pokemonData.name"
                         class="pokemon-icon"
                         :style="{ height: `${height}px`, width: `${height}px` }"
-                        @error="hasError = true"
+                        @error="onImageError"
                     />
                     <BadgeQuestionMark v-else class="placeholder-icon" :size="height" />
                 </template>
@@ -55,9 +55,10 @@
 
 <script setup lang="ts">
 import { BadgeQuestionMark, CircleHelpIcon } from '@lucide/vue';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 
 import type { PokemonImageData } from '@/utils/eventPokemon';
+import { getSpriteFallbackUrl } from '@/utils/pokemonMapper';
 
 import PokemonCPBadge from './PokemonCPBadge.vue';
 
@@ -76,7 +77,7 @@ interface Props {
     isPlaceholder?: boolean;
 }
 
-withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<Props>(), {
     pokemonData: undefined,
     height: 18,
     useAnimated: false,
@@ -90,7 +91,26 @@ withDefaults(defineProps<Props>(), {
     isPlaceholder: false,
 });
 
-const hasError = ref(false);
+const errorLevel = ref(0);
+
+const hubFallbackUrl = computed(() => {
+    const url = props.pokemonData?.imageUrl;
+    return url ? getSpriteFallbackUrl(url) : null;
+});
+
+const currentImageSrc = computed(() => {
+    if (errorLevel.value === 1 && hubFallbackUrl.value) return hubFallbackUrl.value;
+    return props.pokemonData?.imageUrl ?? null;
+});
+
+const hasError = computed(() => {
+    if (errorLevel.value === 0) return false;
+    return errorLevel.value >= 2 || !hubFallbackUrl.value;
+});
+
+function onImageError() {
+    errorLevel.value++;
+}
 </script>
 
 <style lang="scss" scoped>

@@ -179,7 +179,20 @@ function getPokeMinersSpriteUrl(pokemonId: number, formSuffix?: string, shiny = 
     const shinyPart = shiny ? '.s' : '';
     const filename = `pm${pokemonId}${suffix}${shinyPart}.icon.png`;
 
-    return `https://raw.githubusercontent.com/PokeMiners/pogo_assets/master/Images/Pokemon/Addressable%20Assets/${filename}`;
+    return `${POKEMINERS_URL_PREFIX}${filename}`;
+}
+
+const POKEMINERS_URL_PREFIX = 'https://raw.githubusercontent.com/PokeMiners/pogo_assets/master/Images/Pokemon/Addressable%20Assets/';
+const POKEMINERS_MIRROR_CDN = 'https://db.pokemongohub.net/images/ingame/normal/';
+
+function swapUrlBase(url: string, fromBase: string, toBase: string): string | null {
+    if (!url.startsWith(fromBase)) return null;
+    const filename = url.split('/').pop();
+    return filename ? `${toBase}${filename}` : null;
+}
+
+export function getSpriteFallbackUrl(spriteUrl: string): string | null {
+    return swapUrlBase(spriteUrl, POKEMINERS_URL_PREFIX, POKEMINERS_MIRROR_CDN);
 }
 
 // Get available PokeMiners form suffixes for a Pokemon

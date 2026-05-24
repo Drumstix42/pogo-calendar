@@ -55,7 +55,8 @@
                         <p class="footer-heading">Data Sources</p>
                         <p class="disclaimer-text">
                             Event data powered by
-                            <a class="link-secondary" href="https://leekduck.com/" target="_blank" rel="noopener noreferrer">Leekduck</a> via
+                            <a class="link-secondary" href="https://leekduck.com/" target="_blank" rel="noopener noreferrer">Leekduck</a> via a fork
+                            of
                             <a class="link-secondary" href="https://github.com/bigfoott/ScrapedDuck" target="_blank" rel="noopener noreferrer"
                                 >ScrapedDuck</a
                             >

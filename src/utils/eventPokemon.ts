@@ -421,11 +421,13 @@ export function getEventPokemonImages(event: PogoEvent, options?: PokemonImageOp
             return [];
         }
 
-        // Pattern: "<Pokemon Name> [Special Type] Raid Day" or "<Pokemon Name> Raid Day"
-        // Special types can be: "Fusion", "Shadow", etc.
-        const match = eventName.match(/^(.+?)\s+(?:Fusion\s+)?Raid\s+Day$/i);
+        // Pattern: "<Pokemon Name> [Modifier] Raid Day"
+        // Modifiers: "Fusion", "Mega", "Super Mega", "Shadow", etc.
+        // "Mega"/"Super Mega" after the name indicates a Mega form (e.g. "Falinks Super Mega Raid Day")
+        const match = eventName.match(/^(.+?)\s+((?:Super\s+)?Mega\s+|Fusion\s+)?Raid\s+Day$/i);
         if (match) {
             const pokemonNameString = match[1].trim();
+            const raidModifier = match[2]?.trim().toLowerCase() ?? '';
 
             // Skip generic raid days without a Pokemon name (e.g. future events without complete data)
             if (pokemonNameString.toLowerCase() === 'shadow' || pokemonNameString.toLowerCase() === 'raid') {
@@ -434,17 +436,15 @@ export function getEventPokemonImages(event: PogoEvent, options?: PokemonImageOp
 
             const parsedData = parsePokemonNameAndSuffix(pokemonNameString);
             if (parsedData) {
-                let spriteUrl: string | null = null;
-
-                // If we have a custom suffix (like -mega), use it directly
-                if (parsedData.suffix) {
-                    spriteUrl = getSpriteUrl(parsedData.pokemonName, parsedData.suffix, options);
-                } else {
-                    spriteUrl = getSpriteUrl(parsedData.pokemonName, undefined, options);
-                }
+                const isMegaModifier = raidModifier.includes('mega');
+                // Prefer suffix from name parsing; fall back to modifier-derived suffix
+                const suffix = parsedData.suffix ?? (isMegaModifier ? '-mega' : undefined);
+                const spriteUrl = getSpriteUrl(parsedData.pokemonName, suffix, options);
+                // Reflect the actual Pokemon form in the display name
+                const displayName = isMegaModifier ? `Mega ${pokemonNameString}` : pokemonNameString;
 
                 // Always return, even if spriteUrl is null
-                return [{ name: pokemonNameString, imageUrl: spriteUrl }];
+                return [{ name: displayName, imageUrl: spriteUrl }];
             }
         }
     }
