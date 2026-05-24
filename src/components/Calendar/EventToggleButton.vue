@@ -13,7 +13,7 @@
 </template>
 
 <script setup lang="ts">
-import { EyeOff } from 'lucide-vue-next';
+import { EyeOff } from '@lucide/vue';
 import { computed } from 'vue';
 
 import { useDeviceDetection } from '@/composables/useDeviceDetection';

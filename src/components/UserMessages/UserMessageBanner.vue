@@ -26,7 +26,7 @@
 </template>
 
 <script setup lang="ts">
-import { AlertCircle, AlertTriangle, CheckCircle2, Info } from 'lucide-vue-next';
+import { AlertCircle, AlertTriangle, CheckCircle2, Info } from '@lucide/vue';
 import { nextTick, ref, watch } from 'vue';
 
 import { useUserMessagesStore } from '@/stores/userMessages';

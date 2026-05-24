@@ -72,7 +72,7 @@
 </template>
 
 <script setup lang="ts">
-import { X } from 'lucide-vue-next';
+import { X } from '@lucide/vue';
 import { computed } from 'vue';
 
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';

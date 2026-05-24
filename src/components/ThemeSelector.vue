@@ -31,7 +31,7 @@
 </template>
 
 <script setup lang="ts">
-import { Check, Moon, Sun, SunMoon } from 'lucide-vue-next';
+import { Check, Moon, Sun, SunMoon } from '@lucide/vue';
 import { computed } from 'vue';
 
 import { useThemeStore } from '@/stores/theme';

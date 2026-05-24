@@ -126,7 +126,7 @@
 <script setup lang="ts">
 import { breakpointsBootstrapV5, useBreakpoints } from '@vueuse/core';
 import { useWindowFocus } from '@vueuse/core';
-import { CalendarRange, EyeOff, PanelTop } from 'lucide-vue-next';
+import { CalendarRange, EyeOff, PanelTop } from '@lucide/vue';
 import { computed, nextTick, onMounted, onUnmounted, watch, watchEffect } from 'vue';
 
 import { useCurrentTime } from '@/composables/useCurrentTime';

@@ -54,7 +54,7 @@
 </template>
 
 <script setup lang="ts">
-import { ExternalLink } from 'lucide-vue-next';
+import { ExternalLink } from '@lucide/vue';
 import { computed, nextTick, onMounted, ref } from 'vue';
 
 import { type PogoEvent } from '@/utils/eventTypes';

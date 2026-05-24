@@ -55,7 +55,7 @@
 <script setup lang="ts">
 import { breakpointsBootstrapV5, useBreakpoints } from '@vueuse/core';
 import dayjs from 'dayjs';
-import { Calendar, ChevronLeft, ChevronRight, PanelRightClose, PanelRightOpen, Undo2 } from 'lucide-vue-next';
+import { Calendar, ChevronLeft, ChevronRight, PanelRightClose, PanelRightOpen, Undo2 } from '@lucide/vue';
 import { computed } from 'vue';
 
 import { useCurrentTime } from '@/composables/useCurrentTime';

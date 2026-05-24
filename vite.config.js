@@ -82,7 +82,7 @@ export default defineConfig({
         },
     },
     optimizeDeps: {
-        include: ['vue', 'vue-router', 'lucide-vue-next', 'pinia'],
+        include: ['vue', 'vue-router', '@lucide/vue', 'pinia'],
     },
     css: {
         preprocessorOptions: {

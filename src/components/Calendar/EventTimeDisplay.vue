@@ -39,7 +39,7 @@
 </template>
 
 <script setup lang="ts">
-import { ArrowLeftRight } from 'lucide-vue-next';
+import { ArrowLeftRight } from '@lucide/vue';
 import { computed } from 'vue';
 
 import { useCurrentTime } from '@/composables/useCurrentTime';

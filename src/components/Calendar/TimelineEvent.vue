@@ -121,7 +121,7 @@
 
 <script setup lang="ts">
 import { breakpointsBootstrapV5, useBreakpoints } from '@vueuse/core';
-import { ChevronsDownUp, ChevronsUpDown, Palette } from 'lucide-vue-next';
+import { ChevronsDownUp, ChevronsUpDown, Palette } from '@lucide/vue';
 import { computed } from 'vue';
 
 import { useDeviceDetection } from '@/composables/useDeviceDetection';

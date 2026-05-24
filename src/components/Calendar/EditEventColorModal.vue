@@ -90,7 +90,7 @@
 
 <script setup lang="ts">
 import iro from '@jaames/iro';
-import { X } from 'lucide-vue-next';
+import { X } from '@lucide/vue';
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
 
 import { useEventTypeColorsStore } from '@/stores/eventTypeColors';

@@ -95,7 +95,7 @@
 </template>
 
 <script setup lang="ts">
-import { Settings } from 'lucide-vue-next';
+import { Settings } from '@lucide/vue';
 import { computed, onMounted, watch } from 'vue';
 
 import { useCurrentTime } from '@/composables/useCurrentTime';

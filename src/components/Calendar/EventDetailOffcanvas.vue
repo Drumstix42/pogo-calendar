@@ -19,7 +19,7 @@
 </template>
 
 <script setup lang="ts">
-import { CalendarDays, X } from 'lucide-vue-next';
+import { CalendarDays, X } from '@lucide/vue';
 
 import type { PogoEvent } from '@/utils/eventTypes';
 

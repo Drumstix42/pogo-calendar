@@ -131,7 +131,7 @@
     </div>
 </template>
 <script setup lang="ts">
-import { Check, Palette, X } from 'lucide-vue-next';
+import { Check, Palette, X } from '@lucide/vue';
 import { computed } from 'vue';
 
 import { useEditColorModal } from '@/composables/useEditColorModal';

@@ -54,7 +54,7 @@
 </template>
 
 <script setup lang="ts">
-import { BadgeQuestionMark, CircleHelpIcon } from 'lucide-vue-next';
+import { BadgeQuestionMark, CircleHelpIcon } from '@lucide/vue';
 import { ref } from 'vue';
 
 import type { PokemonImageData } from '@/utils/eventPokemon';

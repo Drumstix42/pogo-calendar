@@ -132,7 +132,7 @@
 
 <script setup lang="ts">
 import { hideAllPoppers } from 'floating-vue';
-import { ExternalLink, Palette } from 'lucide-vue-next';
+import { ExternalLink, Palette } from '@lucide/vue';
 import { computed, nextTick } from 'vue';
 
 import { useDeviceDetection } from '@/composables/useDeviceDetection';

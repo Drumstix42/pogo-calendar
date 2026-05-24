@@ -38,7 +38,7 @@
 </template>
 
 <script setup lang="ts">
-import { ChevronDown, ChevronUp } from 'lucide-vue-next';
+import { ChevronDown, ChevronUp } from '@lucide/vue';
 import { computed } from 'vue';
 
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';

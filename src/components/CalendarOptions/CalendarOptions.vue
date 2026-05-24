@@ -19,7 +19,7 @@
 </template>
 
 <script setup lang="ts">
-import { Settings, X } from 'lucide-vue-next';
+import { Settings, X } from '@lucide/vue';
 import { onMounted, onUnmounted } from 'vue';
 
 import EventFilterOptions from './EventFilterOptions.vue';

@@ -47,7 +47,7 @@
 </template>
 
 <script setup lang="ts">
-import { X } from 'lucide-vue-next';
+import { X } from '@lucide/vue';
 import { computed, onMounted, onUnmounted, ref } from 'vue';
 
 import type { ToastAction, ToastMessage } from '@/stores/toasts';
