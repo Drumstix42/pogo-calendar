@@ -35,6 +35,14 @@ Vue 3 + TypeScript calendar for Pokemon GO events. Events fetched from external 
 - Don't set function return types unless it improves clarity
 - Use `function` syntax over `const` when possible for consistency
 
+## Commit Messages
+
+- Use a conventional prefix such as `fix:`, `feat:`, `chore:`, `refactor:`, or `docs:`
+- Keep the subject line under 50 characters and write it in the imperative mood
+- Use bullet points in the body for high-level functional changes and why they matter
+- When the change scope is small, prefer a single concise bullet in the body
+- Avoid low-level implementation details in the commit body
+
 ## Critical Patterns
 
 ### Pinia Stores

@@ -106,6 +106,18 @@ function extractPokemonNameFromMaxMonday(eventName: string): string | null {
     return match ? match[1].trim() : null;
 }
 
+function extractPokemonNamesFromSpotlightHour(eventName: string): string[] {
+    const decodedEventName = formatEventName(eventName);
+
+    // Pattern: "<Pokemon Name(s)> Spotlight Hour"
+    const match = decodedEventName.match(/^(.+?)\s+Spotlight\s+Hour$/i);
+    if (!match) {
+        return [];
+    }
+
+    return parseEventPokemonNames(match[1].trim());
+}
+
 // Uses getRaidSubType to determine the format, then applies appropriate regex patterns
 function extractPokemonNameFromRaidBattle(event: PogoEvent): string | null {
     const subType = getRaidSubType(event);
@@ -459,25 +471,39 @@ export function getEventPokemonImages(event: PogoEvent, options?: PokemonImageOp
         }
     }
 
-    // Handle spotlight hours - can have multiple Pokémon
-    if ((event.eventType === 'pokemon-spotlight-hour' || event.extraData?.isSpotlightSubEvent) && event.extraData.spotlight) {
+    if (event.eventType === 'pokemon-spotlight-hour' || event.extraData?.isSpotlightSubEvent) {
         const images: PokemonImageData[] = [];
 
-        // Try to get images from our sprite mapper first
-        if (event.extraData.spotlight.list && event.extraData.spotlight.list.length > 0) {
-            // Handle multiple Pokémon (like Plusle and Minun)
-            for (const pokemon of event.extraData.spotlight.list) {
-                const spriteUrl = getSpriteUrl(pokemon.name, undefined, options, pokemon.image);
-                images.push({ name: pokemon.name, imageUrl: spriteUrl });
+        if (event.extraData.spotlight) {
+            // Prefer structured spotlight payloads when present.
+            if (event.extraData.spotlight.list && event.extraData.spotlight.list.length > 0) {
+                for (const pokemon of event.extraData.spotlight.list) {
+                    const spriteUrl = getSpriteUrl(pokemon.name, undefined, options, pokemon.image);
+                    images.push({ name: pokemon.name, imageUrl: spriteUrl });
+                }
+            } else if (event.extraData.spotlight.name) {
+                const fallbackImage = event.extraData.spotlight.image || null;
+                const spriteUrl = getSpriteUrl(event.extraData.spotlight.name, undefined, options, fallbackImage);
+                images.push({ name: event.extraData.spotlight.name, imageUrl: spriteUrl });
+            } else if (event.extraData.spotlight.image) {
+                images.push({ name: 'Spotlight Pokemon', imageUrl: event.extraData.spotlight.image });
             }
-        } else if (event.extraData.spotlight.name) {
-            // Handle single Pokémon
-            const fallbackImage = event.extraData.spotlight.image || null;
-            const spriteUrl = getSpriteUrl(event.extraData.spotlight.name, undefined, options, fallbackImage);
-            images.push({ name: event.extraData.spotlight.name, imageUrl: spriteUrl });
-        } else if (event.extraData.spotlight.image) {
-            // Last fallback - just use the API image (we may not have the name in this case)
-            images.push({ name: 'Spotlight Pokemon', imageUrl: event.extraData.spotlight.image });
+
+            if (images.length > 0) {
+                return images;
+            }
+        }
+
+        const pokemonNames = extractPokemonNamesFromSpotlightHour(event.name);
+
+        for (const pokemonName of pokemonNames) {
+            const parsedData = parsePokemonNameAndSuffix(pokemonName);
+            if (!parsedData) {
+                continue;
+            }
+
+            const spriteUrl = getSpriteUrl(parsedData.pokemonName, parsedData.suffix, options);
+            images.push({ name: pokemonName, imageUrl: spriteUrl });
         }
 
         if (images.length > 0) {
