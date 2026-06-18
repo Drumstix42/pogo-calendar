@@ -144,6 +144,7 @@ import { useUrlSync } from '@/composables/useUrlSync';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { useEventFilterStore } from '@/stores/eventFilter';
 import { useEventsStore } from '@/stores/events';
+import { useSeasonsStore } from '@/stores/seasons';
 import { type EventTypeKey } from '@/utils/eventTypes';
 import { getEffectiveTimezoneLabel } from '@/utils/timezoneLabel';
 
@@ -158,6 +159,7 @@ import CalendarOptions from '@/components/CalendarOptions/CalendarOptions.vue';
 import CollapsibleSection from '@/components/CollapsibleSection.vue';
 
 const eventsStore = useEventsStore();
+const seasonsStore = useSeasonsStore();
 const calendarSettings = useCalendarSettingsStore();
 const eventFilter = useEventFilterStore();
 const hideEventModal = useHideEventModal();
@@ -315,18 +317,23 @@ onMounted(async () => {
     if (!eventsStore.hasFreshData) {
         await eventsStore.fetchEvents();
     }
+    if (!seasonsStore.hasFreshData) {
+        await seasonsStore.fetchSeasons();
+    }
 });
 
 // Watch for hour changes and refetch events (only when window is focused)
 watch(liveHour, async () => {
     if (!windowFocused.value) return; // Skip if window is not focused
     await eventsStore.fetchEvents();
+    await seasonsStore.fetchSeasons();
 });
 
 // Refetch events when window regains focus (in case hours passed while unfocused)
 watch(windowFocused, async focused => {
     if (focused) {
         await eventsStore.fetchEvents();
+        await seasonsStore.fetchSeasons();
     }
 });
 

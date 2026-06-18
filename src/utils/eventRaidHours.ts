@@ -358,7 +358,7 @@ export function generateEventRaidHourSubEvents(parentEvent: PogoEvent): PogoEven
                     raidbattles: {
                         bosses: raidHour.bosses,
                     },
-                    ...(schedule.bonuses && schedule.bonuses.length > 0 && { bonuses: schedule.bonuses }),
+                    ...(schedule.bonuses && schedule.bonuses.length > 0 && { raidHourBonuses: schedule.bonuses }),
                 },
             };
 

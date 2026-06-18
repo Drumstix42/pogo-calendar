@@ -132,8 +132,8 @@ function scrollCardIntoView(eventCard: HTMLElement): void {
     const container = getScrollContainer(eventCard);
     const cardRect = eventCard.getBoundingClientRect();
 
-    const viewTop = container === window ? 0 : container.getBoundingClientRect().top;
-    const viewBottom = container === window ? window.innerHeight : container.getBoundingClientRect().bottom;
+    const viewTop = container instanceof HTMLElement ? container.getBoundingClientRect().top : 0;
+    const viewBottom = container instanceof HTMLElement ? container.getBoundingClientRect().bottom : window.innerHeight;
     const effectiveViewTop = viewTop + TIMELINE_TITLE_BUFFER_PX;
     const viewHeight = viewBottom - effectiveViewTop;
 

@@ -18,6 +18,7 @@ export const STORAGE_KEYS = {
     GROUP_SIMILAR_EVENTS: createStorageKey('group-similar-events'),
     HIDDEN_EVENT_IDS: createStorageKey('hidden-event-ids'),
     MANUAL_TIME_OFFSET_HOURS: createStorageKey('manual-time-offset-hours'),
+    SHOW_SEASON_DAILY_BONUSES: createStorageKey('show-season-daily-bonuses'),
     THEME_MODE: createStorageKey('theme-mode'),
     TIMELINE_SIDEBAR_COLLAPSED: createStorageKey('timeline-sidebar-collapsed'),
     USE_ANIMATED_IMAGES: createStorageKey('use-animated-images'),

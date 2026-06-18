@@ -61,6 +61,43 @@ export interface EventBonusGroup {
     items: BonusItem[];
 }
 
+/** A titled group of daily-discovery bonus lines (a single day can stack multiple groups). */
+export interface SeasonDailyBonusGroup {
+    title: string | null;
+    items: string[];
+}
+
+/** One day-of-week's daily-discovery bonuses. Days without bonuses are omitted from the feed. */
+export interface SeasonDailyBonus {
+    day: string;
+    dayOfWeek: number; // 0=Sunday .. 6=Saturday (matches dayjs().day())
+    bonuses: SeasonDailyBonusGroup[];
+    footnote: string | null;
+}
+
+/** A season-long bonus. `milestone` is the GO Pass rank that unlocks it, or null for a flat list. */
+export interface SeasonBonusEntry {
+    milestone: string | null;
+    text: string;
+    image: string | null;
+}
+
+/** Season bonus block — rides on the `season` event as `extraData.season`. */
+export interface SeasonData {
+    note: string | null;
+    dailyBonuses: SeasonDailyBonus[];
+    seasonBonuses: SeasonBonusEntry[];
+}
+
+/** A standalone season.json array entry — `SeasonData` plus the season's own identity/dates. */
+export interface Season extends SeasonData {
+    name: string;
+    eventID: string;
+    link: string;
+    start: string;
+    end: string;
+}
+
 export interface RaidScheduleEntry {
     date: string;
     time?: string;
@@ -101,6 +138,10 @@ export interface PogoEvent {
         communityday?: CommunityDayData;
         maxbattles?: MaxBattlesData;
         bonuses?: EventBonusGroup[];
+        season?: SeasonData;
+        // Plain-text bonus lines for generated raid-hour sub-events (distinct from `bonuses`).
+        raidHourBonuses?: string[];
+        isRaidHourSubEvent?: boolean;
         [key: string]: any;
     };
 }

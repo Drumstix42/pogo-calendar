@@ -158,7 +158,7 @@
             </div>
 
             <div class="event-extras-wrapper">
-                <EventExtras :event="event" />
+                <EventExtras :event="event" :highlight-day-of-week="highlightDayOfWeek" />
             </div>
 
             <!-- Raid boss tier groups -->
@@ -281,6 +281,7 @@ import {
     type MajorCalendarEventVariant,
     type PogoEvent,
     type PokemonBoss,
+    type RaidScheduleEntry,
     getEventTypeInfo,
     getGroupedEvents,
     getMajorCalendarEventVariant,
@@ -449,7 +450,7 @@ function buildFullRaidScheduleDaySections(event: PogoEvent) {
         });
     }
 
-    raidSchedule.forEach((schedule: NonNullable<PogoEvent['extraData']>['raidSchedule'][number], scheduleIndex) => {
+    raidSchedule.forEach((schedule: RaidScheduleEntry, scheduleIndex) => {
         const daySection = ensureDaySection(schedule.date, scheduleIndex);
 
         if (schedule.bosses?.length) {
@@ -604,6 +605,11 @@ const scheduleSectionsWithTierGroups = computed(() => {
 
 const scheduleTargetDayName = computed(() => {
     return props.targetDate ? dayjs(props.targetDate).format('dddd') : undefined;
+});
+
+// For season events, highlight the day-of-week the tooltip was opened from.
+const highlightDayOfWeek = computed<number | null>(() => {
+    return props.targetDate ? dayjs(props.targetDate).day() : null;
 });
 </script>
 

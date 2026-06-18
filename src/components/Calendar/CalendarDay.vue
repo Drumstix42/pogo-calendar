@@ -12,6 +12,9 @@
 
         <div class="day-number">{{ date }}</div>
 
+        <!-- Season "Daily Discovery" chip (current week only) -->
+        <SeasonDailyChip :day-instance="dayInstance" />
+
         <!-- Loading skeleton -->
         <div v-if="eventsStore.loading" class="loading-skeleton">
             <div class="skeleton-multi-day placeholder-glow">
@@ -240,6 +243,7 @@ import EvolveIcon from '../Icons/EvolveIcon.vue';
 import TransferIcon from '../Icons/TransferIcon.vue';
 import EventTooltip from './EventTooltip.vue';
 import PokemonEventImages from './PokemonEventImages.vue';
+import SeasonDailyChip from './SeasonDailyChip.vue';
 
 interface Props {
     date: number;
@@ -749,8 +753,8 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 23px;
-    height: 23px;
+    width: 21px;
+    height: 21px;
     border-radius: 50%;
     font-size: 0.875rem;
     margin: 2px 0 2px 2px;

@@ -38,6 +38,9 @@
             </div>
         </div>
 
+        <!-- Season "Daily Discoveries" + season-long bonuses -->
+        <SeasonBonuses v-if="seasonData" :season="seasonData" :highlight-day-of-week="highlightDayOfWeek" />
+
         <!-- Bonuses with time ranges (e.g. GO Fest) -->
         <div v-if="eventBonuses" class="event-bonuses">
             <div class="bonus-header"><strong>Bonuses:</strong></div>
@@ -57,13 +60,31 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, ref } from 'vue';
 
+import { useEventTypeColorsStore } from '@/stores/eventTypeColors';
 import { type EventBonusGroup, type PogoEvent } from '@/utils/eventTypes';
+
+import SeasonBonuses from './SeasonBonuses.vue';
 
 interface Props {
     event: PogoEvent;
+    highlightDayOfWeek?: number | null;
 }
 
-const props = defineProps<Props>();
+const props = withDefaults(defineProps<Props>(), {
+    highlightDayOfWeek: null,
+});
+
+const eventTypeColorsStore = useEventTypeColorsStore();
+
+// The event type's configured color (respects user overrides), used for the bonus card accent border.
+const eventColor = computed(() => eventTypeColorsStore.getEventTypeColor(props.event.eventType));
+
+const seasonData = computed(() => {
+    if (props.event.eventType === 'season' && props.event.extraData?.season) {
+        return props.event.extraData.season;
+    }
+    return null;
+});
 
 const bonusListRef = ref<HTMLElement>();
 const canScrollUp = ref(false);
@@ -87,8 +108,8 @@ const spotlightBonus = computed(() => {
 });
 
 const raidHourBonuses = computed(() => {
-    if (props.event.extraData?.isRaidHourSubEvent && props.event.extraData?.bonuses) {
-        return props.event.extraData.bonuses;
+    if (props.event.extraData?.isRaidHourSubEvent && props.event.extraData?.raidHourBonuses) {
+        return props.event.extraData.raidHourBonuses;
     }
     return null;
 });
@@ -183,7 +204,7 @@ onMounted(() => {
     margin: 0.1rem 0 0.1rem 0;
     background-color: color-mix(in srgb, var(--bs-body-color) 3%, transparent);
     border: 1px solid color-mix(in srgb, var(--bs-body-color) 12%, transparent);
-    border-left: 3px solid color-mix(in srgb, var(--bs-body-color) 25%, transparent);
+    border-left: 3px solid color-mix(in srgb, v-bind(eventColor) 70%, transparent);
     border-radius: 0.25rem;
 }
 
@@ -194,7 +215,7 @@ onMounted(() => {
     margin: 0.1rem 0 0.1rem 0;
     background-color: color-mix(in srgb, var(--bs-body-color) 3%, transparent);
     border: 1px solid color-mix(in srgb, var(--bs-body-color) 12%, transparent);
-    border-left: 3px solid color-mix(in srgb, var(--bs-body-color) 25%, transparent);
+    border-left: 3px solid color-mix(in srgb, v-bind(eventColor) 70%, transparent);
     border-radius: 0.25rem;
 }
 
@@ -217,7 +238,7 @@ onMounted(() => {
     padding: 0.4rem 0.6rem 0.1rem 0.6rem;
     background-color: color-mix(in srgb, var(--bs-body-color) 3%, transparent);
     border: 1px solid color-mix(in srgb, var(--bs-body-color) 12%, transparent);
-    border-left: 3px solid color-mix(in srgb, var(--bs-body-color) 25%, transparent);
+    border-left: 3px solid color-mix(in srgb, v-bind(eventColor) 70%, transparent);
     border-radius: 0.25rem;
 }
 
@@ -284,7 +305,7 @@ onMounted(() => {
     padding: 0.4rem 0.6rem 0.3rem 0.6rem;
     background-color: color-mix(in srgb, var(--bs-body-color) 3%, transparent);
     border: 1px solid color-mix(in srgb, var(--bs-body-color) 12%, transparent);
-    border-left: 3px solid color-mix(in srgb, var(--bs-body-color) 25%, transparent);
+    border-left: 3px solid color-mix(in srgb, v-bind(eventColor) 70%, transparent);
     border-radius: 0.25rem;
 }
 

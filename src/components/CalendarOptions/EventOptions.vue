@@ -35,6 +35,21 @@
             >When enabled, events with identical type and start/times will be grouped into a single bar with a count badge.</small
         >
 
+        <div class="form-check form-switch mt-3">
+            <input
+                id="showSeasonDailyBonuses"
+                class="form-check-input"
+                type="checkbox"
+                role="switch"
+                :checked="calendarSettings.showSeasonDailyBonuses"
+                @change="handleSeasonDailyBonusesToggle"
+            />
+            <label for="showSeasonDailyBonuses" class="form-check-label">Show season daily bonuses</label>
+        </div>
+        <small class="text-muted mt-1 d-block"
+            >When enabled, the current week's season "Daily Discovery" bonuses appear in the calendar day cells.</small
+        >
+
         <div class="mt-4">
             <CollapsibleSection title="Local Timezone Override" storage-key="calendarSettings/event-options-time-override">
                 <label for="manualTimeOffsetHours" class="form-label">Displayed event time adjustment</label>
@@ -160,6 +175,11 @@ watch(
 const handleToggleChange = (event: Event) => {
     const target = event.target as HTMLInputElement;
     calendarSettings.setGroupSimilarEvents(target.checked);
+};
+
+const handleSeasonDailyBonusesToggle = (event: Event) => {
+    const target = event.target as HTMLInputElement;
+    calendarSettings.setShowSeasonDailyBonuses(target.checked);
 };
 
 const handleFontSizeChange = (event: Event) => {

@@ -494,7 +494,7 @@ function buildCollapsedScheduleDayGroups(event: PogoEvent) {
             daySection.sections.forEach(section => {
                 section.tierGroups.forEach(group => {
                     group.images.forEach(boss => {
-                        const dedupeKey = `${boss.name.toLowerCase()}|${(boss.formId ?? '').toLowerCase()}`;
+                        const dedupeKey = `${boss.name.toLowerCase()}|${(boss.imageUrl ?? '').toLowerCase()}`;
                         const existing = dedupedBosses.get(dedupeKey);
 
                         if (!existing) {

@@ -24,7 +24,7 @@
                     <img
                         v-if="currentImageSrc && !hasError"
                         :src="currentImageSrc"
-                        :alt="pokemonData.name"
+                        :alt="pokemonData?.name"
                         class="pokemon-icon"
                         :style="{ height: `${height}px`, width: `${height}px` }"
                         @error="onImageError"

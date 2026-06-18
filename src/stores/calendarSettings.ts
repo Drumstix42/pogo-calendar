@@ -28,6 +28,9 @@ export const useCalendarSettingsStore = defineStore('calendarSettings', () => {
     // Single-day event sprites setting - whether to show Pokemon sprites in single-day events
     const useSingleDayEventSprites = useLocalStorage<boolean>(STORAGE_KEYS.USE_SINGLE_DAY_EVENT_SPRITES, true);
 
+    // Season daily bonuses setting - whether to show the current week's season "Daily Discovery" chips in calendar cells
+    const showSeasonDailyBonuses = useLocalStorage<boolean>(STORAGE_KEYS.SHOW_SEASON_DAILY_BONUSES, true);
+
     // Filters apply to timeline setting - whether event type filters should apply to EventTimeline
     const filtersApplyToTimeline = useLocalStorage<boolean>(STORAGE_KEYS.FILTERS_APPLY_TO_TIMELINE, false);
 
@@ -138,6 +141,10 @@ export const useCalendarSettingsStore = defineStore('calendarSettings', () => {
         useSingleDayEventSprites.value = enabled;
     };
 
+    const setShowSeasonDailyBonuses = (enabled: boolean) => {
+        showSeasonDailyBonuses.value = enabled;
+    };
+
     const setFiltersApplyToTimeline = (enabled: boolean) => {
         filtersApplyToTimeline.value = enabled;
     };
@@ -196,6 +203,7 @@ export const useCalendarSettingsStore = defineStore('calendarSettings', () => {
         useAnimatedImages,
         useMultiDayEventSprites,
         useSingleDayEventSprites,
+        showSeasonDailyBonuses,
         filtersApplyToTimeline,
         eventBarFontSize,
         manualTimeOffsetHours,
@@ -216,6 +224,7 @@ export const useCalendarSettingsStore = defineStore('calendarSettings', () => {
         setUseAnimatedImages,
         setUseMultiDayEventSprites,
         setUseSingleDayEventSprites,
+        setShowSeasonDailyBonuses,
         setFiltersApplyToTimeline,
         setEventBarFontSize,
         setManualTimeOffsetHours,
