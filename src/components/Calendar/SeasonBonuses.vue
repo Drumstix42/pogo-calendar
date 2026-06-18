@@ -127,7 +127,7 @@ const milestoneTiers = computed(() => {
 
 .season-section {
     margin: 0.1rem 0;
-    padding: 0.4rem 0.6rem;
+    padding: 0.4rem 0.2rem 0.4rem 0.4rem;
     background-color: color-mix(in srgb, var(--bs-body-color) 3%, transparent);
     border: 1px solid color-mix(in srgb, var(--bs-body-color) 12%, transparent);
     border-left: 3px solid color-mix(in srgb, v-bind(seasonColor) 70%, transparent);
@@ -135,10 +135,10 @@ const milestoneTiers = computed(() => {
 }
 
 .season-header {
-    font-size: 12px;
+    font-size: 14px;
     line-height: 1;
     color: color-mix(in srgb, var(--bs-body-color) 80%, transparent);
-    font-weight: 500;
+    font-weight: 400;
     padding-bottom: 0.35rem;
 }
 
@@ -153,18 +153,16 @@ const milestoneTiers = computed(() => {
 }
 
 .season-daily-day {
-    padding: 0.25rem 0.4rem;
+    padding: 0.2rem 0.4rem;
     border-radius: 0.2rem;
-    border-left: 2px solid transparent;
 }
 
 .season-daily-day.is-highlighted {
     background-color: color-mix(in srgb, v-bind(seasonColor) 12%, transparent);
-    border-left-color: v-bind(seasonColor);
 }
 
 .season-daily-day-name {
-    font-size: 0.72rem;
+    font-size: 0.75rem;
     font-weight: 600;
     /* Pull toward body text color so the season hue stays readable on the tooltip/offcanvas bg. */
     color: color-mix(in srgb, v-bind(seasonColor) 65%, var(--bs-body-color));
@@ -172,6 +170,7 @@ const milestoneTiers = computed(() => {
 }
 
 .season-daily-group {
+    margin-left: 1px;
     margin-bottom: 0.2rem;
 }
 
@@ -181,7 +180,7 @@ const milestoneTiers = computed(() => {
 
 .season-daily-group-title {
     font-size: 0.68rem;
-    font-weight: 600;
+    font-weight: 500;
     color: color-mix(in srgb, var(--bs-body-color) 85%, transparent);
 }
 
@@ -222,7 +221,6 @@ const milestoneTiers = computed(() => {
     font-size: 0.65rem;
     font-weight: 600;
     color: color-mix(in srgb, var(--bs-body-color) 60%, transparent);
-    text-transform: uppercase;
     letter-spacing: 0.03em;
     margin-bottom: 0.15rem;
 }
