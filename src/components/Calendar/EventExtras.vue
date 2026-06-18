@@ -1,5 +1,5 @@
 <template>
-    <div class="event-extras">
+    <div v-if="hasContent" class="event-extras">
         <div v-if="spotlightBonus" class="spotlight-bonus">
             <strong>Bonus:</strong>
             <div class="bonus-content">
@@ -61,7 +61,7 @@
 import { computed, nextTick, onMounted, ref } from 'vue';
 
 import { useEventTypeColorsStore } from '@/stores/eventTypeColors';
-import { type EventBonusGroup, type PogoEvent } from '@/utils/eventTypes';
+import { type EventBonusGroup, type PogoEvent, hasEventExtras } from '@/utils/eventTypes';
 
 import SeasonBonuses from './SeasonBonuses.vue';
 
@@ -75,6 +75,8 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const eventTypeColorsStore = useEventTypeColorsStore();
+
+const hasContent = computed(() => hasEventExtras(props.event));
 
 // The event type's configured color (respects user overrides), used for the bonus card accent border.
 const eventColor = computed(() => eventTypeColorsStore.getEventTypeColor(props.event.eventType));

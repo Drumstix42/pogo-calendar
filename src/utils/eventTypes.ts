@@ -468,6 +468,20 @@ export function getRaidSubType(event: PogoEvent): string {
     return ''; // Default case, no specific sub-type
 }
 
+/** Whether the event has any bonus content for EventExtras to render. */
+export function hasEventExtras(event: PogoEvent): boolean {
+    const extra = event.extraData;
+    if (!extra) return false;
+
+    const hasSpotlightBonus = event.eventType === 'pokemon-spotlight-hour' && Boolean(extra.spotlight?.bonus);
+    const hasRaidHourBonuses = Boolean(extra.isRaidHourSubEvent && extra.raidHourBonuses);
+    const hasCommunityDayBonuses = event.eventType === 'community-day' && Boolean(extra.communityday?.bonuses);
+    const hasSeason = event.eventType === 'season' && Boolean(extra.season);
+    const hasEventBonuses = Boolean(extra.bonuses?.some(group => group.items?.length));
+
+    return hasSpotlightBonus || hasRaidHourBonuses || hasCommunityDayBonuses || hasSeason || hasEventBonuses;
+}
+
 /** Higher number = higher priority for raid sub-type sorting */
 export function getRaidSubTypePriority(event: PogoEvent): number {
     if (!isEventWithSubtype(event.eventType)) {

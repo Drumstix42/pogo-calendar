@@ -74,12 +74,12 @@
                 <EventTimeDisplay :event="event" />
 
                 <div
-                    v-if="hasPokemon"
+                    v-if="showPokemonRow"
                     class="flex-grow-1 d-flex gap-1 align-items-start"
                     :class="[props.isActive || pokemonCount > 6 || collapsedScheduleDayGroups?.length ? 'w-100' : 'w-50 justify-content-end']"
                 >
                     <PokemonEventImages
-                        v-if="props.isActive ? !hasExpandedRaidSections : !collapsedScheduleDayGroups?.length"
+                        v-if="showInlinePokemonImages"
                         :event="event"
                         :event-name="formatEventName(event.name)"
                         :height="40"
@@ -91,7 +91,7 @@
                         :exclude-tiers="props.isActive ? [] : ['Tier 1', 'Tier 3']"
                     />
 
-                    <div v-else-if="!props.isActive && collapsedScheduleDayGroups?.length" class="collapsed-schedule-days">
+                    <div v-else-if="showCollapsedScheduleDays" class="collapsed-schedule-days">
                         <div v-for="dayGroup in collapsedScheduleDayGroups" :key="dayGroup.id" class="collapsed-day-group">
                             <div class="collapsed-day-name">{{ dayGroup.date }}</div>
                             <div class="tier-images">
@@ -111,11 +111,11 @@
                     </div>
                 </div>
 
-                <div class="event-extras-wrapper">
-                    <Transition name="fade">
-                        <EventExtras v-if="props.isActive" :event="event" />
-                    </Transition>
-                </div>
+                <Transition name="fade">
+                    <div v-if="props.isActive && hasExtras" class="event-extras-wrapper">
+                        <EventExtras :event="event" />
+                    </div>
+                </Transition>
 
                 <!-- Raid boss schedule sections grouped by day (expanded only) -->
                 <div v-if="timelineScheduleDaySectionsWithTierGroups?.length && props.isActive" class="raid-boss-tiers">
@@ -204,6 +204,7 @@ import {
     getEventTypeInfo,
     getMajorCalendarEventVariant,
     getRaidSubType,
+    hasEventExtras,
     isMajorCalendarEventType,
 } from '@/utils/eventTypes';
 import { buildRaidTierGroupsWithImages } from '@/utils/raidTierGroups';
@@ -286,7 +287,7 @@ function sortTierLabel(a: string, b: string): number {
 
     const tierA = a.match(/^Tier (\d+)$/i);
     const tierB = b.match(/^Tier (\d+)$/i);
-    if (tierA && tierB) return parseInt(tierA[1]) - parseInt(tierB[1]);
+    if (tierA && tierB) return parseInt(tierB[1]) - parseInt(tierA[1]);
     if (tierA) return -1;
     if (tierB) return 1;
 
@@ -581,6 +582,20 @@ const hasExpandedRaidSections = computed(() => {
         defaultTierGroupsWithImages.value,
     );
 });
+
+const showCollapsedScheduleDays = computed(() => {
+    return !props.isActive && Boolean(collapsedScheduleDayGroups.value?.length);
+});
+
+const showInlinePokemonImages = computed(() => {
+    return props.isActive ? !hasExpandedRaidSections.value : !collapsedScheduleDayGroups.value?.length;
+});
+
+const showPokemonRow = computed(() => {
+    return hasPokemon.value && (showInlinePokemonImages.value || showCollapsedScheduleDays.value);
+});
+
+const hasExtras = computed(() => hasEventExtras(props.event));
 
 const isMajorTimelineEvent = computed(() => {
     return isMajorCalendarEventType(props.event.eventType);

@@ -45,7 +45,7 @@ function sortTierLabel(a: string, b: string): number {
 
     const tierA = a.match(/^Tier (\d+)$/i);
     const tierB = b.match(/^Tier (\d+)$/i);
-    if (tierA && tierB) return parseInt(tierA[1]) - parseInt(tierB[1]);
+    if (tierA && tierB) return parseInt(tierB[1]) - parseInt(tierA[1]);
     if (tierA) return -1;
     if (tierB) return 1;
     return a.localeCompare(b);

@@ -204,33 +204,37 @@ const overflowBadgeCount = computed(() => {
 
 .overflow-counter-badge {
     position: absolute;
-    top: -2px;
-    left: 0;
+    bottom: -1px;
+    right: -2px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    height: 12px;
-    padding: 0 4px;
-    font-size: 10px;
-    font-weight: 500;
+    height: 10px;
+    padding: 0 2px;
+    font-size: 8px;
+    font-weight: 300;
     line-height: 1;
     border-radius: 3px;
     color: rgba(255, 255, 255, 0.7);
-    background-color: rgba(30, 30, 40, 0.75);
+    background-color: rgba(30, 30, 40, 0.5);
     backdrop-filter: blur(0.05rem);
     z-index: 10;
     pointer-events: none;
 }
 
-@media (min-width: 375px) {
+/* @media (min-width: 375px) {
     .overflow-counter-badge {
-        left: -2px;
+        right: -2px;
     }
-}
+} */
 
 .pokemon-images.overflow-badge-right .overflow-counter-badge {
     left: auto;
     right: 0;
+    height: 12px;
+    padding: 0 4px;
+    font-size: 10px;
+    font-weight: 500;
 }
 
 @media (min-width: 375px) {
