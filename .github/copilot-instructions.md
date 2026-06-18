@@ -39,9 +39,10 @@ Vue 3 + TypeScript calendar for Pokemon GO events. Events fetched from external 
 
 - Use a conventional prefix such as `fix:`, `feat:`, `chore:`, `refactor:`, or `docs:`
 - Keep the subject line under 50 characters and write it in the imperative mood
-- Use bullet points in the body for high-level functional changes and why they matter
+- Use bullet points in the body for high-level functional changes and why they matter, focusing on user-facing impact
 - When the change scope is small, prefer a single concise bullet in the body
 - Avoid low-level implementation details in the commit body
+- Prefer git command line instead of tools
 
 ## Critical Patterns
 

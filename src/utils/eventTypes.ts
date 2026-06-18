@@ -89,6 +89,8 @@ export interface PogoEvent {
     };
 }
 
+// Note: When adding new event types, also update the $event-types list in src/styles/style.scss
+// to enable hover highlighting for the new event type in the filter options
 export const EVENT_TYPES: Record<string, EventTypeInfo> = {
     // Community & Social Events
     'community-day': {
@@ -173,6 +175,12 @@ export const EVENT_TYPES: Record<string, EventTypeInfo> = {
         name: 'Limited Research',
         color: '#11866f', // teal
         priority: 49,
+        category: 'research',
+    },
+    'choose-your-path': {
+        name: 'Choose Your Path',
+        color: '#1b9b7f', // teal-green
+        priority: 48,
         category: 'research',
     },
     'special-research': {
