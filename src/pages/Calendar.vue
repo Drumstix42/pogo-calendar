@@ -124,9 +124,10 @@
 </template>
 
 <script setup lang="ts">
+import { CalendarRange, EyeOff, PanelTop } from '@lucide/vue';
 import { breakpointsBootstrapV5, useBreakpoints } from '@vueuse/core';
 import { useWindowFocus } from '@vueuse/core';
-import { CalendarRange, EyeOff, PanelTop } from '@lucide/vue';
+import { hideAllPoppers } from 'floating-vue';
 import { computed, nextTick, onMounted, onUnmounted, watch, watchEffect } from 'vue';
 
 import { useCurrentTime } from '@/composables/useCurrentTime';
@@ -242,6 +243,35 @@ const handleBackdropClick = () => {
     closeSettings();
 };
 
+function handleGlobalKeydown(event: KeyboardEvent) {
+    if (event.key !== 'Escape' || event.defaultPrevented) {
+        return;
+    }
+
+    // Close visible tooltips first so Escape dismisses the top-most UI layer.
+    if (document.querySelector('.v-popper__popper--shown')) {
+        hideAllPoppers();
+        return;
+    }
+
+    if (!calendarSettings.optionsExpanded) {
+        return;
+    }
+
+    // Let higher-priority overlays and native color pickers handle Escape first.
+    const hasBlockingOverlay = hideEventModal.showModal.value || editColorModal.showModal.value || !!selectedEventId.value;
+    if (hasBlockingOverlay) {
+        return;
+    }
+
+    const activeElement = document.activeElement;
+    if (activeElement instanceof HTMLInputElement && activeElement.type === 'color') {
+        return;
+    }
+
+    closeSettings();
+}
+
 const handleCloseEventDetail = () => {
     clearEvent();
 };
@@ -273,6 +303,8 @@ watchEffect(() => {
 });
 
 onMounted(async () => {
+    window.addEventListener('keydown', handleGlobalKeydown);
+
     // Auto-load events when the page mounts
     // only fetch if we don't have fresh data
     if (!eventsStore.hasFreshData) {
@@ -294,6 +326,7 @@ watch(windowFocused, async focused => {
 });
 
 onUnmounted(() => {
+    window.removeEventListener('keydown', handleGlobalKeydown);
     document.body.style.overflow = '';
 });
 </script>

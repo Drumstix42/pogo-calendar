@@ -196,6 +196,12 @@ function handleBackdropClick() {
     closeModal();
 }
 
+function handleKeydown(event: KeyboardEvent) {
+    if (event.key === 'Escape' && !event.defaultPrevented && props.show) {
+        closeModal();
+    }
+}
+
 function saveColor() {
     // If the current color matches the default, remove any custom color override
     if (currentColor.value.toLowerCase() === defaultColor.value.toLowerCase()) {
@@ -231,6 +237,8 @@ watch(
     () => props.show,
     async newShow => {
         if (newShow) {
+            window.addEventListener('keydown', handleKeydown);
+
             // Disable offcanvas focus trap by marking it inert
             const offcanvas = document.querySelector('.calendar-options-offcanvas');
             if (offcanvas) {
@@ -241,6 +249,8 @@ watch(
             await nextTick();
             initializeColorPicker();
         } else {
+            window.removeEventListener('keydown', handleKeydown);
+
             // Re-enable offcanvas
             const offcanvas = document.querySelector('.calendar-options-offcanvas');
             if (offcanvas) {
@@ -251,9 +261,12 @@ watch(
             destroyColorPicker();
         }
     },
+    { immediate: true },
 );
 
 onBeforeUnmount(() => {
+    window.removeEventListener('keydown', handleKeydown);
+
     // Ensure we clean up inert attribute if component unmounts while modal is open
     const offcanvas = document.querySelector('.calendar-options-offcanvas');
     if (offcanvas) {

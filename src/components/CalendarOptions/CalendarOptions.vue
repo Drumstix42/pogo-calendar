@@ -69,6 +69,9 @@ onUnmounted(() => {
         slider.removeEventListener('blur', removeSliderActiveClass);
         slider.removeEventListener('mouseleave', removeSliderActiveClass);
     }
+
+    // Ensure slider-only presentation state is reset if the panel closes mid-drag.
+    removeSliderActiveClass();
 });
 </script>
 

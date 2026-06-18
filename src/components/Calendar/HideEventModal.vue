@@ -73,7 +73,7 @@
 
 <script setup lang="ts">
 import { X } from '@lucide/vue';
-import { computed } from 'vue';
+import { computed, onBeforeUnmount, watch } from 'vue';
 
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { useEventsStore } from '@/stores/events';
@@ -110,6 +110,12 @@ function handleBackdropClick() {
     closeModal();
 }
 
+function handleKeydown(event: KeyboardEvent) {
+    if (event.key === 'Escape' && !event.defaultPrevented && props.show) {
+        closeModal();
+    }
+}
+
 function handleTimelineFilterToggle(event: Event) {
     const target = event.target as HTMLInputElement;
     calendarSettings.setFiltersApplyToTimeline(target.checked);
@@ -124,6 +130,22 @@ function hideById() {
     emit('hide-by-id', props.event.eventID, eventName.value);
     closeModal();
 }
+
+watch(
+    () => props.show,
+    newShow => {
+        if (newShow) {
+            window.addEventListener('keydown', handleKeydown);
+        } else {
+            window.removeEventListener('keydown', handleKeydown);
+        }
+    },
+    { immediate: true },
+);
+
+onBeforeUnmount(() => {
+    window.removeEventListener('keydown', handleKeydown);
+});
 </script>
 
 <style scoped>
