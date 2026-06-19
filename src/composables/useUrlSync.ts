@@ -117,18 +117,32 @@ export const useUrlSync = () => {
         return typeof eventId === 'string' ? eventId : undefined;
     });
 
-    function selectEvent(eventId: string) {
+    const selectedEventDay = computed(() => {
+        const eventDay = route.query.eventDay;
+        return typeof eventDay === 'string' ? eventDay : undefined;
+    });
+
+    function selectEvent(eventId: string, eventDay?: string) {
+        const nextQuery: Record<string, any> = {
+            ...route.query,
+            event: eventId,
+        };
+
+        if (eventDay) {
+            nextQuery.eventDay = eventDay;
+        } else {
+            delete nextQuery.eventDay;
+        }
+
         router.push({
-            query: {
-                ...route.query,
-                event: eventId,
-            },
+            query: nextQuery,
         });
     }
 
     function clearEvent() {
         const currentQuery = { ...route.query };
         delete currentQuery.event;
+        delete currentQuery.eventDay;
         router.replace({ query: currentQuery });
     }
 
@@ -145,6 +159,7 @@ export const useUrlSync = () => {
 
         // Event detail panel
         selectedEventId,
+        selectedEventDay,
         selectEvent,
         clearEvent,
     };

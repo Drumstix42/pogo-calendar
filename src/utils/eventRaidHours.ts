@@ -108,6 +108,145 @@ function parseRaidHourTime(timeString: string): { startHour: number; endHour: nu
     return defaultTime;
 }
 
+function parseTimeStartSortKey(timeString?: string): number {
+    if (!timeString) {
+        return Number.MAX_SAFE_INTEGER;
+    }
+
+    const match = timeString.match(/(\d+):(\d+)\s*(a\.m\.|p\.m\.|am|pm)/i);
+    if (!match) {
+        return Number.MAX_SAFE_INTEGER;
+    }
+
+    const [, hourStr, minuteStr, period] = match;
+    let hour = parseInt(hourStr, 10);
+    const minute = parseInt(minuteStr, 10);
+
+    if (period.toLowerCase().includes('p') && hour !== 12) {
+        hour += 12;
+    } else if (period.toLowerCase().includes('a') && hour === 12) {
+        hour = 0;
+    }
+
+    return hour * 60 + minute;
+}
+
+function formatScheduleSectionTitle(time?: string, label?: string, isAllDay: boolean = false): string {
+    const normalizedTime = time?.trim();
+    const normalizedLabel = label?.trim();
+
+    if (isAllDay) {
+        return normalizedLabel ? `${normalizedLabel} (All Day)` : 'All Day';
+    }
+
+    if (normalizedLabel && normalizedTime) {
+        return `${normalizedLabel} - ${normalizedTime}`;
+    }
+
+    if (normalizedLabel) {
+        return normalizedLabel;
+    }
+
+    if (normalizedTime) {
+        return normalizedTime;
+    }
+
+    return 'Scheduled';
+}
+
+function matchesScheduleDate(schedule: RaidScheduleEntry, parentEvent: PogoEvent, targetDay: dayjs.Dayjs): boolean {
+    const scheduleDateValue = (schedule.date || '').trim().toLowerCase();
+    const isWeekdayLabelMatch = scheduleDateValue === targetDay.format('dddd').toLowerCase();
+
+    const raidDate = parseRaidScheduleDate(schedule.date, parentEvent.start, parentEvent.end);
+    const isParsedDateMatch = Boolean(raidDate && raidDate.isSame(targetDay, 'day'));
+
+    return isWeekdayLabelMatch || isParsedDateMatch;
+}
+
+function dedupeBosses(bosses: PokemonBoss[]): PokemonBoss[] {
+    if (bosses.length <= 1) {
+        return bosses;
+    }
+
+    const deduped = new Map<string, PokemonBoss>();
+    bosses.forEach(boss => {
+        const key = `${boss.name.toLowerCase()}|${(boss.raidType ?? '').toLowerCase()}`;
+        if (!deduped.has(key)) {
+            deduped.set(key, boss);
+        }
+    });
+
+    return Array.from(deduped.values());
+}
+
+export interface RaidScheduleSection {
+    id: string;
+    title: string;
+    label?: string;
+    time?: string;
+    bosses: PokemonBoss[];
+    isAllDay: boolean;
+    sortKey: number;
+}
+
+export function getRaidScheduleSectionsForDate(parentEvent: PogoEvent, targetDate: dayjs.ConfigType): RaidScheduleSection[] {
+    const raidSchedule = parentEvent.extraData?.raidSchedule;
+    if (!raidSchedule || raidSchedule.length === 0) {
+        return [];
+    }
+
+    const targetDay = dayjs(targetDate).startOf('day');
+    const sections: RaidScheduleSection[] = [];
+
+    raidSchedule.forEach((schedule, scheduleIndex) => {
+        if (!matchesScheduleDate(schedule, parentEvent, targetDay)) {
+            return;
+        }
+
+        if (schedule.bosses && schedule.bosses.length > 0) {
+            const isAllDay = !schedule.time;
+            sections.push({
+                id: `schedule-${scheduleIndex}`,
+                title: formatScheduleSectionTitle(schedule.time, schedule.label, isAllDay),
+                label: schedule.label?.trim() || undefined,
+                time: schedule.time?.trim() || undefined,
+                bosses: dedupeBosses(schedule.bosses),
+                isAllDay,
+                sortKey: isAllDay ? -1 : parseTimeStartSortKey(schedule.time),
+            });
+        }
+
+        if (schedule.raidHours && schedule.raidHours.length > 0) {
+            schedule.raidHours.forEach((raidHour, hourIndex) => {
+                if (!raidHour.bosses || raidHour.bosses.length === 0) {
+                    return;
+                }
+
+                sections.push({
+                    id: `schedule-${scheduleIndex}-raidhour-${hourIndex}`,
+                    title: formatScheduleSectionTitle(raidHour.time, raidHour.label, false),
+                    label: raidHour.label?.trim() || undefined,
+                    time: raidHour.time?.trim() || undefined,
+                    bosses: dedupeBosses(raidHour.bosses),
+                    isAllDay: false,
+                    sortKey: parseTimeStartSortKey(raidHour.time),
+                });
+            });
+        }
+    });
+
+    return sections.sort((a, b) => {
+        if (a.isAllDay !== b.isAllDay) {
+            return a.isAllDay ? -1 : 1;
+        }
+        if (a.sortKey !== b.sortKey) {
+            return a.sortKey - b.sortKey;
+        }
+        return a.title.localeCompare(b.title);
+    });
+}
+
 /**
  * Format spotlight hour event name
  */
@@ -134,6 +273,20 @@ function formatPokemonList(bosses: PokemonBoss[]): string {
         .join(', ');
     const last = bosses[bosses.length - 1].name;
     return `${allButLast}, and ${last} Raid Hour`;
+}
+
+/**
+ * Get raid bosses for a specific local calendar day from an event's raid schedule.
+ * Includes bosses from both top-level schedule entries and nested raidHours entries.
+ */
+export function getRaidScheduleBossesForDate(parentEvent: PogoEvent, targetDate: dayjs.ConfigType): PokemonBoss[] {
+    const sections = getRaidScheduleSectionsForDate(parentEvent, targetDate);
+    if (sections.length === 0) {
+        return [];
+    }
+
+    const mergedBosses = sections.flatMap(section => section.bosses);
+    return dedupeBosses(mergedBosses);
 }
 
 /**

@@ -21,7 +21,12 @@
 
         <!-- Show individual events if grouped -->
         <div v-if="(event as any)._isGrouped" class="grouped-events">
-            <div v-for="groupedEvent in getGroupedEvents(event)" :key="groupedEvent.eventID" class="event-time-info">
+            <div
+                v-for="groupedEvent in getGroupedEvents(event)"
+                :key="groupedEvent.eventID"
+                class="event-time-info"
+                :class="getMajorTooltipClass(groupedEvent)"
+            >
                 <div class="event-content">
                     <!-- Event text content -->
                     <div class="event-text">
@@ -52,7 +57,41 @@
                         :wrap="true"
                     />
 
-                    <div v-if="getTierGroupsWithImagesForEvent(groupedEvent)" class="raid-boss-tiers">
+                    <div v-if="getScheduleSectionsWithTierGroupsForEvent(groupedEvent)?.length" class="raid-boss-tiers">
+                        <div
+                            v-for="section in getScheduleSectionsWithTierGroupsForEvent(groupedEvent)"
+                            :key="`${groupedEvent.eventID}-${section.id}`"
+                            class="schedule-section"
+                        >
+                            <div class="schedule-section-header" :class="{ 'is-all-day': section.isAllDay }">
+                                <span v-if="section.label" class="schedule-label" :style="getScheduleLabelStyle(section.label, section.isAllDay)">{{
+                                    section.label
+                                }}</span>
+                                <span v-else class="schedule-label" :style="getScheduleLabelStyle(undefined, section.isAllDay)">{{
+                                    section.isAllDay ? 'All Day' : 'Scheduled'
+                                }}</span>
+                                <span v-if="section.time" class="schedule-time">{{ section.time }}</span>
+                            </div>
+                            <div class="tier-group" v-for="group in section.tierGroups" :key="`${groupedEvent.eventID}-${section.id}-${group.label}`">
+                                <div v-if="group.showLabel" class="tier-label">{{ group.label }}</div>
+                                <div class="tier-images">
+                                    <PokemonImage
+                                        v-for="boss in group.images"
+                                        :key="boss.name"
+                                        :pokemon-data="boss"
+                                        :height="50"
+                                        :use-animated="calendarSettings.useAnimatedImages"
+                                        :show-tooltip="true"
+                                        :show-c-p="true"
+                                        :event-type="groupedEvent.eventType"
+                                        :is-shadow="isShadowRaidEvent(groupedEvent)"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div v-else-if="getTierGroupsWithImagesForEvent(groupedEvent)" class="raid-boss-tiers">
                         <div
                             v-for="group in getTierGroupsWithImagesForEvent(groupedEvent)"
                             :key="`${groupedEvent.eventID}-${group.label}`"
@@ -80,7 +119,7 @@
 
         <!-- Show time for single events -->
         <div v-else>
-            <div class="event-time-info">
+            <div class="event-time-info" :class="getMajorTooltipClass(event)">
                 <div class="event-content">
                     <!-- Event text content -->
                     <div class="event-text">
@@ -104,7 +143,37 @@
             </div>
 
             <!-- Raid boss tier groups -->
-            <div v-if="tierGroupsWithImages" class="raid-boss-tiers">
+            <div v-if="scheduleSectionsWithTierGroups?.length" class="raid-boss-tiers">
+                <div v-for="section in scheduleSectionsWithTierGroups" :key="section.id" class="schedule-section">
+                    <div class="schedule-section-header" :class="{ 'is-all-day': section.isAllDay }">
+                        <span v-if="section.label" class="schedule-label" :style="getScheduleLabelStyle(section.label, section.isAllDay)">{{
+                            section.label
+                        }}</span>
+                        <span v-else class="schedule-label" :style="getScheduleLabelStyle(undefined, section.isAllDay)">{{
+                            section.isAllDay ? 'All Day' : 'Scheduled'
+                        }}</span>
+                        <span v-if="section.time" class="schedule-time">{{ section.time }}</span>
+                    </div>
+                    <div v-for="group in section.tierGroups" :key="`${section.id}-${group.label}`" class="tier-group">
+                        <div v-if="group.showLabel" class="tier-label">{{ group.label }}</div>
+                        <div class="tier-images">
+                            <PokemonImage
+                                v-for="boss in group.images"
+                                :key="boss.name"
+                                :pokemon-data="boss"
+                                :height="60"
+                                :use-animated="calendarSettings.useAnimatedImages"
+                                :show-tooltip="true"
+                                :show-c-p="true"
+                                :event-type="event.eventType"
+                                :is-shadow="isShadowRaid"
+                            />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div v-else-if="tierGroupsWithImages" class="raid-boss-tiers">
                 <div v-for="group in tierGroupsWithImages" :key="group.label" class="tier-group">
                     <div v-if="group.showLabel" class="tier-label">{{ group.label }}</div>
                     <div class="tier-images">
@@ -132,6 +201,7 @@
 
 <script setup lang="ts">
 import { ExternalLink, Palette } from '@lucide/vue';
+import type { Dayjs } from 'dayjs';
 import { hideAllPoppers } from 'floating-vue';
 import { computed, nextTick } from 'vue';
 
@@ -141,7 +211,17 @@ import { useHideEventModal } from '@/composables/useHideEventModal';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { useEventsStore } from '@/stores/events';
 import { formatEventName } from '@/utils/eventName';
-import { type PogoEvent, getEventTypeInfo, getGroupedEvents, getRaidSubType } from '@/utils/eventTypes';
+import { getRaidScheduleBossesForDate, getRaidScheduleSectionsForDate } from '@/utils/eventRaidHours';
+import {
+    type MajorCalendarEventVariant,
+    type PogoEvent,
+    type PokemonBoss,
+    getEventTypeInfo,
+    getGroupedEvents,
+    getMajorCalendarEventVariant,
+    getRaidSubType,
+    isMajorCalendarEventType,
+} from '@/utils/eventTypes';
 import { buildRaidTierGroupsWithImages } from '@/utils/raidTierGroups';
 
 import EventExtras from './EventExtras.vue';
@@ -153,10 +233,12 @@ import PokemonImage from './PokemonImage.vue';
 interface Props {
     event: PogoEvent;
     isSingleDay?: boolean;
+    targetDate?: Dayjs | string | Date;
 }
 
 const props = withDefaults(defineProps<Props>(), {
     isSingleDay: false,
+    targetDate: undefined,
 });
 
 const calendarSettings = useCalendarSettingsStore();
@@ -197,12 +279,122 @@ function getParentEventName(event: PogoEvent): string | null {
     return lookupParentEventName(event);
 }
 
+function sortTierLabel(a: string, b: string): number {
+    const normalizedA = a.trim().toLowerCase();
+    const normalizedB = b.trim().toLowerCase();
+
+    if (normalizedA === 'super mega' && normalizedB !== 'super mega') return -1;
+    if (normalizedB === 'super mega' && normalizedA !== 'super mega') return 1;
+
+    const tierA = a.match(/^Tier (\d+)$/i);
+    const tierB = b.match(/^Tier (\d+)$/i);
+    if (tierA && tierB) return parseInt(tierA[1]) - parseInt(tierB[1]);
+    if (tierA) return -1;
+    if (tierB) return 1;
+    return a.localeCompare(b);
+}
+
+function buildTierGroupsFromBosses(bosses: PokemonBoss[]) {
+    if (!bosses || bosses.length === 0) {
+        return undefined;
+    }
+
+    const tierMap = new Map<string, PokemonBoss[]>();
+    bosses.forEach(boss => {
+        const label = boss.raidType || 'Other';
+        if (!tierMap.has(label)) {
+            tierMap.set(label, []);
+        }
+        tierMap.get(label)!.push(boss);
+    });
+
+    return Array.from(tierMap.entries())
+        .sort(([a], [b]) => sortTierLabel(a, b))
+        .map(([label, groupedBosses]) => ({
+            label,
+            bosses: groupedBosses,
+        }));
+}
+
 function getTierGroupsWithImagesForEvent(event: PogoEvent) {
+    if (props.targetDate && event.extraData?.raidSchedule?.length) {
+        const scheduleBosses = getRaidScheduleBossesForDate(event, props.targetDate);
+        if (scheduleBosses.length > 0) {
+            const scheduleTierGroups = buildTierGroupsFromBosses(scheduleBosses);
+            return buildRaidTierGroupsWithImages(scheduleTierGroups, calendarSettings.useAnimatedImages);
+        }
+    }
+
     return buildRaidTierGroupsWithImages(eventsStore.eventMetadata[event.eventID]?.raidBossTierGroups, calendarSettings.useAnimatedImages);
+}
+
+function getScheduleSectionsWithTierGroupsForEvent(event: PogoEvent) {
+    if (!props.targetDate || !event.extraData?.raidSchedule?.length) {
+        return undefined;
+    }
+
+    const sections = getRaidScheduleSectionsForDate(event, props.targetDate);
+    if (sections.length === 0) {
+        return undefined;
+    }
+
+    return sections
+        .map(section => {
+            const tierGroups = buildTierGroupsFromBosses(section.bosses);
+            const tierGroupsWithImages = buildRaidTierGroupsWithImages(tierGroups, calendarSettings.useAnimatedImages);
+
+            return {
+                id: section.id,
+                title: section.title,
+                label: section.label,
+                time: section.time,
+                isAllDay: section.isAllDay,
+                tierGroups: tierGroupsWithImages ?? [],
+            };
+        })
+        .filter(section => section.tierGroups.length > 0);
+}
+
+function getScheduleLabelStyle(_label?: string, isAllDay: boolean = false) {
+    if (isAllDay) {
+        return {
+            color: '#2b9a47',
+            borderBottomColor: 'rgba(43, 154, 71, 0.45)',
+        };
+    }
+
+    return {
+        color: '#3f86cc',
+        borderBottomColor: 'rgba(63, 134, 204, 0.46)',
+    };
 }
 
 function isShadowRaidEvent(event: PogoEvent) {
     return getRaidSubType(event) === 'shadow-raids';
+}
+
+function isMajorEvent(event: PogoEvent) {
+    return isMajorCalendarEventType(event.eventType);
+}
+
+function getMajorVariant(event: PogoEvent): MajorCalendarEventVariant {
+    if (!isMajorEvent(event)) {
+        return 'location-specific';
+    }
+
+    return getMajorCalendarEventVariant(event);
+}
+
+function getMajorTooltipClass(event: PogoEvent) {
+    if (!isMajorEvent(event)) {
+        return undefined;
+    }
+
+    return {
+        'major-tooltip-event': true,
+        'major-tooltip-global': getMajorVariant(event) === 'global',
+        'major-tooltip-location': getMajorVariant(event) === 'location-specific',
+    };
 }
 
 const isShadowRaid = computed(() => {
@@ -210,7 +402,11 @@ const isShadowRaid = computed(() => {
 });
 
 const tierGroupsWithImages = computed(() => {
-    return buildRaidTierGroupsWithImages(eventsStore.eventMetadata[props.event.eventID]?.raidBossTierGroups, calendarSettings.useAnimatedImages);
+    return getTierGroupsWithImagesForEvent(props.event);
+});
+
+const scheduleSectionsWithTierGroups = computed(() => {
+    return getScheduleSectionsWithTierGroupsForEvent(props.event);
 });
 </script>
 
@@ -265,10 +461,63 @@ const tierGroupsWithImages = computed(() => {
     border-radius: 4px;
 }
 
+.event-time-info.major-tooltip-event {
+    position: relative;
+}
+
+.event-time-info.major-tooltip-event::after {
+    content: '';
+    position: absolute;
+    right: 1px;
+    bottom: 0;
+    width: 56px;
+    height: 56px;
+    pointer-events: none;
+    opacity: 0.22;
+    background-color: color-mix(in srgb, var(--bs-body-color) 62%, transparent);
+    mask-repeat: no-repeat;
+    mask-position: center;
+    mask-size: contain;
+    z-index: 0;
+}
+
+@media (min-width: 768px) {
+    .event-time-info.major-tooltip-event::after {
+        right: 2px;
+        bottom: 0;
+        width: 68px;
+        height: 68px;
+    }
+}
+
+@media (min-width: 1200px) {
+    .event-time-info.major-tooltip-event::after {
+        right: 3px;
+        bottom: -1px;
+        width: 74px;
+        height: 74px;
+    }
+}
+
+.event-time-info.major-tooltip-global::after {
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='M2 12h20'/%3E%3Cpath d='M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z'/%3E%3C/svg%3E");
+}
+
+.event-time-info.major-tooltip-location::after {
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 1 1 16 0'/%3E%3Ccircle cx='12' cy='10' r='3'/%3E%3C/svg%3E");
+}
+
+[data-bs-theme='dark'] .event-time-info.major-tooltip-event::after {
+    opacity: 0.26;
+    background-color: color-mix(in srgb, var(--bs-body-color) 70%, transparent);
+}
+
 .event-content {
     display: flex;
     flex-direction: column;
     gap: 0.4rem;
+    position: relative;
+    z-index: 1;
 }
 
 .event-text {
@@ -309,8 +558,72 @@ const tierGroupsWithImages = computed(() => {
 .raid-boss-tiers {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.35rem;
     padding: 0.4rem 0.6rem 0.4rem 0.5rem;
+
+    .schedule-section {
+        display: flex;
+        flex-direction: column;
+        gap: 0.15rem;
+        margin-bottom: 0.1rem;
+    }
+
+    .schedule-section-header {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+        padding-top: 0.2rem;
+    }
+
+    .schedule-label {
+        display: block;
+        align-items: center;
+        width: 100%;
+        font-size: 0.82rem;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+        line-height: 1.2;
+        padding: 0.12rem 0 0.34rem 0;
+        margin-bottom: 0.05rem;
+        color: color-mix(in srgb, var(--bs-body-color) 82%, transparent);
+        border-bottom: 1px solid color-mix(in srgb, var(--bs-body-color) 22%, transparent);
+        text-shadow: none;
+    }
+
+    :global([data-bs-theme='dark']) & .schedule-label {
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+    }
+
+    .schedule-section-header.is-all-day .schedule-label {
+        color: color-mix(in srgb, #0f5132 88%, var(--bs-body-color));
+        border-bottom-color: color-mix(in srgb, #198754 40%, transparent);
+    }
+
+    .schedule-time {
+        display: inline-flex;
+        align-items: center;
+        font-size: 0.66rem;
+        font-weight: 600;
+        letter-spacing: 0.01em;
+        line-height: 1;
+        border-radius: 999px;
+        padding: 0.2rem 0.4rem;
+        color: color-mix(in srgb, var(--bs-body-color) 56%, transparent);
+        background: color-mix(in srgb, var(--bs-body-color) 4%, transparent);
+        border: 1px solid color-mix(in srgb, var(--bs-body-color) 12%, transparent);
+        margin-bottom: 0.24rem;
+    }
+
+    .schedule-section .tier-group {
+        margin-bottom: 0.55rem;
+    }
+
+    .schedule-section .tier-group:last-child {
+        margin-bottom: 0.2rem;
+    }
+
     max-height: calc(45dvh - 120px);
     overflow-y: auto;
     overscroll-behavior: contain;
@@ -320,7 +633,7 @@ const tierGroupsWithImages = computed(() => {
     display: flex;
     flex-direction: column;
     gap: 0.35rem;
-    margin-bottom: 1rem;
+    margin-bottom: 0.75rem;
 }
 
 .tier-label {

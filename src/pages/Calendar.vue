@@ -99,7 +99,12 @@
                 @click="handleEventDetailBackdropClick"
             >
                 <div class="offcanvas offcanvas-bottom show event-detail-offcanvas" @click.stop>
-                    <EventDetailOffcanvas :event="selectedEvent" :is-single-day="selectedEventIsSingleDay" @close="handleCloseEventDetail" />
+                    <EventDetailOffcanvas
+                        :event="selectedEvent"
+                        :is-single-day="selectedEventIsSingleDay"
+                        :target-date="selectedEventDay"
+                        @close="handleCloseEventDetail"
+                    />
                 </div>
             </div>
         </Transition>
@@ -158,7 +163,7 @@ const eventFilter = useEventFilterStore();
 const hideEventModal = useHideEventModal();
 const editColorModal = useEditColorModal();
 const { hideEventTypeWithToast, hideEventByIdWithToast } = useEventFilterToasts();
-const { settingsOpen, openSettings, closeSettings, selectedEventId, clearEvent } = useUrlSync();
+const { settingsOpen, openSettings, closeSettings, selectedEventId, selectedEventDay, clearEvent } = useUrlSync();
 const { isTouchDevice } = useDeviceDetection();
 const { liveHour } = useCurrentTime();
 const windowFocused = useWindowFocus();

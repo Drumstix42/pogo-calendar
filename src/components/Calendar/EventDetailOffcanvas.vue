@@ -10,7 +10,7 @@
     </div>
     <div class="offcanvas-body">
         <div v-if="event" class="event-detail-content">
-            <EventTooltip :event="event" :is-single-day="isSingleDay" />
+            <EventTooltip :event="event" :is-single-day="isSingleDay" :target-date="targetDate" />
         </div>
         <div v-else class="event-not-found">
             <p class="text-muted">Event not found</p>
@@ -28,11 +28,13 @@ import EventTooltip from './EventTooltip.vue';
 interface Props {
     event?: PogoEvent;
     isSingleDay?: boolean;
+    targetDate?: string;
 }
 
 withDefaults(defineProps<Props>(), {
     event: undefined,
     isSingleDay: false,
+    targetDate: undefined,
 });
 
 defineEmits<{

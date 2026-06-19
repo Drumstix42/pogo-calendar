@@ -51,9 +51,12 @@ export interface MaxBattlesData {
 
 export interface RaidScheduleEntry {
     date: string;
+    time?: string;
+    label?: string;
     bosses: PokemonBoss[];
     raidHours: Array<{
         time: string;
+        label?: string;
         bosses: PokemonBoss[];
     }>;
     bonuses?: string[];

@@ -105,7 +105,7 @@
                             </div>
 
                             <template #popper>
-                                <EventTooltip :event="event" />
+                                <EventTooltip :event="event" :target-date="props.dayInstance" />
                             </template>
                         </VMenu>
                     </div>
@@ -184,7 +184,7 @@
                                 </div>
                             </div>
                             <PokemonEventImages
-                                v-if="calendarSettings.useSingleDayEventSprites && !isMajorDailyDisplayEvent(event)"
+                                v-if="calendarSettings.useSingleDayEventSprites"
                                 :event="event"
                                 :event-name="getEventDisplayNameForSingleDay(event)"
                                 :height="singleDayPokemonHeight"
@@ -196,7 +196,7 @@
                     </div>
 
                     <template #popper>
-                        <EventTooltip :event="getEventForDetails(event)" :is-single-day="true" />
+                        <EventTooltip :event="getEventForDetails(event)" :is-single-day="true" :target-date="props.dayInstance" />
                     </template>
                 </VMenu>
             </TransitionGroup>
@@ -216,6 +216,7 @@ import { useEventFilterStore } from '@/stores/eventFilter';
 import { useEventHighlightStore } from '@/stores/eventHighlight';
 import { useEventsStore } from '@/stores/events';
 import { formatEventName } from '@/utils/eventName';
+import { getRaidScheduleSectionsForDate } from '@/utils/eventRaidHours';
 import {
     type MajorCalendarEventVariant,
     type PogoEvent,
@@ -349,10 +350,25 @@ const majorDailyDisplayEvents = computed<DailyMajorDisplayEvent[]>(() => {
         })
         .map(event => {
             const dateKey = targetDay.format('YYYY-MM-DD');
+            const scheduleSections = event.extraData?.raidSchedule ? getRaidScheduleSectionsForDate(event, targetDay) : [];
+            const allDayBosses = scheduleSections.filter(section => section.isAllDay).flatMap(section => section.bosses);
+
+            const dedupedAllDayBosses = Array.from(
+                new Map(allDayBosses.map(boss => [`${boss.name.toLowerCase()}|${(boss.raidType ?? '').toLowerCase()}`, boss])).values(),
+            );
+
+            const nextExtraData = {
+                ...event.extraData,
+                raidbattles: {
+                    ...(event.extraData?.raidbattles ?? {}),
+                    bosses: dedupedAllDayBosses,
+                },
+            };
 
             return {
                 ...event,
                 eventID: `${event.eventID}-daily-${dateKey}`,
+                extraData: nextExtraData,
                 _isMajorDailyDisplay: true,
                 _sourceEventID: event.eventID,
             };
@@ -531,12 +547,12 @@ const debouncedClearEventIDHighlight = (): void => {
 // Mobile: opens drawer on tap
 function handleEventClick(event: PogoEvent) {
     if (!isTouchDevice.value) return;
-    selectEvent(getCanonicalEventID(event));
+    selectEvent(getCanonicalEventID(event), props.dayInstance.format('YYYY-MM-DD'));
 }
 
 // Desktop: updates URL when tooltip shows
 function handleMenuShow(event: PogoEvent) {
-    selectEvent(getCanonicalEventID(event));
+    selectEvent(getCanonicalEventID(event), props.dayInstance.format('YYYY-MM-DD'));
 }
 
 // Clears URL when tooltip closes

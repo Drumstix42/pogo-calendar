@@ -109,6 +109,54 @@ const displayNow = computed(() => {
 });
 
 const activeEventId = ref<string | null>(null);
+const TIMELINE_TITLE_BUFFER_PX = 56;
+
+function getScrollContainer(element: HTMLElement): Window | HTMLElement {
+    let parent = element.parentElement;
+
+    while (parent) {
+        const overflowY = window.getComputedStyle(parent).overflowY;
+        const isScrollable = (overflowY === 'auto' || overflowY === 'scroll') && parent.scrollHeight > parent.clientHeight;
+
+        if (isScrollable) {
+            return parent;
+        }
+
+        parent = parent.parentElement;
+    }
+
+    return window;
+}
+
+function scrollCardIntoView(eventCard: HTMLElement): void {
+    const container = getScrollContainer(eventCard);
+    const cardRect = eventCard.getBoundingClientRect();
+
+    const viewTop = container === window ? 0 : container.getBoundingClientRect().top;
+    const viewBottom = container === window ? window.innerHeight : container.getBoundingClientRect().bottom;
+    const effectiveViewTop = viewTop + TIMELINE_TITLE_BUFFER_PX;
+    const viewHeight = viewBottom - effectiveViewTop;
+
+    const isOutOfView = cardRect.top < effectiveViewTop || cardRect.bottom > viewBottom;
+    if (!isOutOfView) {
+        return;
+    }
+
+    let delta: number;
+
+    // If content is taller than viewport, align top; otherwise align bottom.
+    if (cardRect.height > viewHeight) {
+        delta = cardRect.top - effectiveViewTop;
+    } else {
+        delta = cardRect.bottom - viewBottom;
+    }
+
+    if (container === window) {
+        window.scrollBy({ top: delta, behavior: 'smooth' });
+    } else {
+        container.scrollBy({ top: delta, behavior: 'smooth' });
+    }
+}
 
 const setActiveEvent = (eventId: string): void => {
     const previousActiveId = activeEventId.value;
@@ -119,9 +167,9 @@ const setActiveEvent = (eventId: string): void => {
         // Wait for DOM update and animation
         setTimeout(() => {
             nextTick(() => {
-                const element = document.querySelector(`[data-timeline-event-id="${eventId}"]`);
-                if (element) {
-                    element.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                const eventCard = document.querySelector(`[data-timeline-event-id="${eventId}"]`);
+                if (eventCard instanceof HTMLElement) {
+                    scrollCardIntoView(eventCard);
                 }
             });
         }, 200);

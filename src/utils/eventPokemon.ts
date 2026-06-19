@@ -323,8 +323,10 @@ function getPokemonImagesFromBosses(event: PogoEvent, options?: PokemonImageOpti
         if (parsedData) {
             let spriteUrl: string | null = null;
 
+            const preferProvidedImage = parsedData.suffix === '-megax' || parsedData.suffix === '-megay';
+
             if (parsedData.suffix) {
-                spriteUrl = getSpriteUrl(parsedData.pokemonName, parsedData.suffix, options, boss.image);
+                spriteUrl = preferProvidedImage && boss.image ? boss.image : getSpriteUrl(parsedData.pokemonName, parsedData.suffix, options, boss.image);
             } else {
                 spriteUrl = getSpriteUrl(parsedData.pokemonName, undefined, options, boss.image);
             }
@@ -340,6 +342,18 @@ function getPokemonImagesFromBosses(event: PogoEvent, options?: PokemonImageOpti
 
 export function getEventPokemonImages(event: PogoEvent, options?: PokemonImageOptions): PokemonImageData[] {
     if (!event.extraData) return [];
+
+    // Handle major events with raid schedule boss data pre-mapped into raidbattles.
+    if (
+        (event.eventType === 'pokemon-go-fest' || event.eventType === 'pokemon-go-tour' || event.eventType === 'wild-area') &&
+        event.extraData?.raidbattles?.bosses &&
+        event.extraData.raidbattles.bosses.length > 0
+    ) {
+        const images = getPokemonImagesFromBosses(event, options);
+        if (images.length > 0) {
+            return images;
+        }
+    }
 
     // Handle raid battles - check bosses data FIRST, then fall back to event name extraction
     if (event.eventType === 'raid-battles' || event.eventType === 'raid-weekend') {
