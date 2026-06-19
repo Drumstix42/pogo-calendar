@@ -458,7 +458,8 @@ onUnmounted(() => {
 .event-detail-offcanvas {
     position: relative;
     width: 100%;
-    min-height: min(max(310px, 50vh), 80vh);
+    height: 75dvh;
+    max-height: 75dvh;
     border: none;
     border-top-left-radius: 16px;
     border-top-right-radius: 16px;

@@ -1061,6 +1061,6 @@ const majorTimelineVariant = computed<MajorCalendarEventVariant>(() => {
 }
 
 .event-bottom-link {
-    padding-top: 0.25rem;
+    padding-top: 0.15rem;
 }
 </style>
