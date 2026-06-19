@@ -38,26 +38,26 @@
             </div>
         </div>
 
-        <!-- External link to LeekDuck for single events -->
-        <div v-if="event.link && !(event as any)._isGrouped" class="event-link">
-            <a
-                :href="event.link"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="link-neutral link-underline-opacity-0 link-underline-opacity-100-hover d-inline-flex align-items-center gap-1"
-                style="font-size: 0.75rem"
-            >
-                View on LeekDuck <ExternalLink :size="12" />
-            </a>
+        <!-- Bonuses with time ranges (e.g. GO Fest) -->
+        <div v-if="eventBonuses" class="event-bonuses">
+            <div class="bonus-header"><strong>Bonuses:</strong></div>
+            <div class="event-bonus-list">
+                <div v-for="group in eventBonuses" :key="group.description ?? group.startTime" class="event-bonus-group">
+                    <div v-if="group.startTime && group.endTime" class="event-bonus-time-range">{{ group.startTime }} – {{ group.endTime }}</div>
+                    <div v-for="item in group.items" :key="item.text" class="bonus-item">
+                        <img v-if="item.image" :src="item.image" :alt="item.text" class="bonus-icon" />
+                        <span class="bonus-text">{{ item.text }}</span>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { ExternalLink } from '@lucide/vue';
 import { computed, nextTick, onMounted, ref } from 'vue';
 
-import { type PogoEvent } from '@/utils/eventTypes';
+import { type EventBonusGroup, type PogoEvent } from '@/utils/eventTypes';
 
 interface Props {
     event: PogoEvent;
@@ -123,6 +123,49 @@ const communityDayBonusDisclaimers = computed(() => {
         return props.event.extraData.communityday.bonusDisclaimers;
     }
     return null;
+});
+
+function parseBonusStartTimeMinutes(value?: string) {
+    if (!value) return Number.POSITIVE_INFINITY;
+
+    const normalized = value.trim().toLowerCase();
+    const match = normalized.match(/^(\d{1,2}):(\d{2})\s*(a\.m\.|p\.m\.)$/);
+    if (!match) return Number.POSITIVE_INFINITY;
+
+    let hours = parseInt(match[1], 10);
+    const minutes = parseInt(match[2], 10);
+    const period = match[3];
+
+    if (hours === 12) {
+        hours = period === 'a.m.' ? 0 : 12;
+    } else if (period === 'p.m.') {
+        hours += 12;
+    }
+
+    return hours * 60 + minutes;
+}
+
+const eventBonuses = computed<EventBonusGroup[] | null>(() => {
+    const bonuses = props.event.extraData?.bonuses;
+    if (!bonuses?.length) return null;
+
+    // Filter out groups with no items and sort earliest time window first.
+    const filtered = bonuses
+        .filter(g => g.items?.length)
+        .map((group, index) => ({
+            group,
+            startMinutes: parseBonusStartTimeMinutes(group.startTime),
+            index,
+        }))
+        .sort((a, b) => {
+            if (a.startMinutes === b.startMinutes) {
+                return a.index - b.index;
+            }
+            return a.startMinutes - b.startMinutes;
+        })
+        .map(entry => entry.group);
+
+    return filtered.length ? filtered : null;
 });
 
 onMounted(() => {
@@ -234,5 +277,40 @@ onMounted(() => {
 
 .disclaimer-text:last-child {
     margin-bottom: 0;
+}
+
+.event-bonuses {
+    margin: 0.1rem 0 0.1rem 0;
+    padding: 0.4rem 0.6rem 0.3rem 0.6rem;
+    background-color: color-mix(in srgb, var(--bs-body-color) 3%, transparent);
+    border: 1px solid color-mix(in srgb, var(--bs-body-color) 12%, transparent);
+    border-left: 3px solid color-mix(in srgb, var(--bs-body-color) 25%, transparent);
+    border-radius: 0.25rem;
+}
+
+.event-bonus-group {
+    margin-bottom: 0.5rem;
+}
+
+.event-bonus-group:last-child {
+    margin-bottom: 0;
+}
+
+.event-bonus-list {
+    max-height: 120px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-right: 0.2rem;
+}
+
+.event-bonus-time-range {
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: color-mix(in srgb, var(--bs-body-color) 60%, transparent);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    margin-bottom: 0.2rem;
+    padding-bottom: 0.15rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--bs-body-color) 10%, transparent);
 }
 </style>

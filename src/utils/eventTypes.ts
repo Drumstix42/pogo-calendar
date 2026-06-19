@@ -49,6 +49,18 @@ export interface MaxBattlesData {
     featured: PokemonBoss | PokemonBoss[];
 }
 
+export interface BonusItem {
+    text: string;
+    image: string;
+}
+
+export interface EventBonusGroup {
+    startTime?: string;
+    endTime?: string;
+    description?: string;
+    items: BonusItem[];
+}
+
 export interface RaidScheduleEntry {
     date: string;
     time?: string;
@@ -88,6 +100,7 @@ export interface PogoEvent {
         spotlight?: SpotlightData;
         communityday?: CommunityDayData;
         maxbattles?: MaxBattlesData;
+        bonuses?: EventBonusGroup[];
         [key: string]: any;
     };
 }

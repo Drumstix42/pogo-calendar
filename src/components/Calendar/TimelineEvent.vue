@@ -111,6 +111,12 @@
                     </div>
                 </div>
 
+                <div class="event-extras-wrapper">
+                    <Transition name="fade">
+                        <EventExtras v-if="props.isActive" :event="event" />
+                    </Transition>
+                </div>
+
                 <!-- Raid boss schedule sections grouped by day (expanded only) -->
                 <div v-if="timelineScheduleDaySectionsWithTierGroups?.length && props.isActive" class="raid-boss-tiers">
                     <div v-for="daySection in timelineScheduleDaySectionsWithTierGroups" :key="daySection.id" class="schedule-day-section">
@@ -163,17 +169,23 @@
                 </div>
             </div>
 
-            <div class="event-extras-wrapper">
-                <Transition name="fade">
-                    <EventExtras v-if="props.isActive" :event="event" />
-                </Transition>
+            <div v-if="props.isActive && event.link && !(event as any)._isGrouped" class="event-bottom-link">
+                <a
+                    :href="event.link"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="link-neutral link-underline-opacity-0 link-underline-opacity-100-hover d-inline-flex align-items-center gap-1"
+                    style="font-size: 0.75rem"
+                >
+                    View on LeekDuck <ExternalLink :size="12" />
+                </a>
             </div>
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { ChevronsDownUp, ChevronsUpDown, Palette } from '@lucide/vue';
+import { ChevronsDownUp, ChevronsUpDown, ExternalLink, Palette } from '@lucide/vue';
 import { breakpointsBootstrapV5, useBreakpoints } from '@vueuse/core';
 import { computed } from 'vue';
 
@@ -1046,5 +1058,9 @@ const majorTimelineVariant = computed<MajorCalendarEventVariant>(() => {
     .event-extras-wrapper {
         max-height: 180px;
     }
+}
+
+.event-bottom-link {
+    padding-top: 0.25rem;
 }
 </style>

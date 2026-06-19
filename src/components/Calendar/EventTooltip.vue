@@ -64,9 +64,21 @@
                             class="schedule-section"
                         >
                             <div class="schedule-section-header" :class="{ 'is-all-day': section.isAllDay }">
-                                <span v-if="section.label" class="schedule-label" :style="getScheduleLabelStyle(section.label, section.isAllDay)">{{ section.label }}</span>
-                                <span v-else class="schedule-label" :style="getScheduleLabelStyle(undefined, section.isAllDay)">{{ section.isAllDay ? (scheduleTargetDayName ? `All Day (${scheduleTargetDayName})` : 'All Day') : (scheduleTargetDayName ? `Scheduled (${scheduleTargetDayName})` : 'Scheduled') }}</span>
-                                <span v-if="section.time" class="schedule-time">{{ scheduleTargetDayName ? `${scheduleTargetDayName} · ${section.time}` : section.time }}</span>
+                                <span v-if="section.label" class="schedule-label" :style="getScheduleLabelStyle(section.label, section.isAllDay)">{{
+                                    section.label
+                                }}</span>
+                                <span v-else class="schedule-label" :style="getScheduleLabelStyle(undefined, section.isAllDay)">{{
+                                    section.isAllDay
+                                        ? scheduleTargetDayName
+                                            ? `All Day (${scheduleTargetDayName})`
+                                            : 'All Day'
+                                        : scheduleTargetDayName
+                                          ? `Scheduled (${scheduleTargetDayName})`
+                                          : 'Scheduled'
+                                }}</span>
+                                <span v-if="section.time" class="schedule-time">{{
+                                    scheduleTargetDayName ? `${scheduleTargetDayName} · ${section.time}` : section.time
+                                }}</span>
                             </div>
                             <div class="tier-group" v-for="group in section.tierGroups" :key="`${groupedEvent.eventID}-${section.id}-${group.label}`">
                                 <div v-if="group.showLabel" class="tier-label">{{ group.label }}</div>
@@ -138,13 +150,29 @@
                 </div>
             </div>
 
+            <div class="event-extras-wrapper">
+                <EventExtras :event="event" />
+            </div>
+
             <!-- Raid boss tier groups -->
             <div v-if="scheduleSectionsWithTierGroups?.length" class="raid-boss-tiers">
                 <div v-for="section in scheduleSectionsWithTierGroups" :key="section.id" class="schedule-section">
                     <div class="schedule-section-header" :class="{ 'is-all-day': section.isAllDay }">
-                        <span v-if="section.label" class="schedule-label" :style="getScheduleLabelStyle(section.label, section.isAllDay)">{{ section.label }}</span>
-                        <span v-else class="schedule-label" :style="getScheduleLabelStyle(undefined, section.isAllDay)">{{ section.isAllDay ? (scheduleTargetDayName ? `All Day (${scheduleTargetDayName})` : 'All Day') : (scheduleTargetDayName ? `Scheduled (${scheduleTargetDayName})` : 'Scheduled') }}</span>
-                        <span v-if="section.time" class="schedule-time">{{ scheduleTargetDayName ? `${scheduleTargetDayName} · ${section.time}` : section.time }}</span>
+                        <span v-if="section.label" class="schedule-label" :style="getScheduleLabelStyle(section.label, section.isAllDay)">{{
+                            section.label
+                        }}</span>
+                        <span v-else class="schedule-label" :style="getScheduleLabelStyle(undefined, section.isAllDay)">{{
+                            section.isAllDay
+                                ? scheduleTargetDayName
+                                    ? `All Day (${scheduleTargetDayName})`
+                                    : 'All Day'
+                                : scheduleTargetDayName
+                                  ? `Scheduled (${scheduleTargetDayName})`
+                                  : 'Scheduled'
+                        }}</span>
+                        <span v-if="section.time" class="schedule-time">{{
+                            scheduleTargetDayName ? `${scheduleTargetDayName} · ${section.time}` : section.time
+                        }}</span>
                     </div>
                     <div v-for="group in section.tierGroups" :key="`${section.id}-${group.label}`" class="tier-group">
                         <div v-if="group.showLabel" class="tier-label">{{ group.label }}</div>
@@ -185,8 +213,16 @@
             </div>
         </div>
 
-        <div class="event-extras-wrapper">
-            <EventExtras :event="event" />
+        <div v-if="event.link && !(event as any)._isGrouped" class="event-bottom-link">
+            <a
+                :href="event.link"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="link-neutral link-underline-opacity-0 link-underline-opacity-100-hover d-inline-flex align-items-center gap-1"
+                style="font-size: 0.75rem"
+            >
+                View on LeekDuck <ExternalLink :size="12" />
+            </a>
         </div>
     </div>
 </template>
@@ -551,6 +587,10 @@ const scheduleTargetDayName = computed(() => {
     padding-left: 0.5rem;
 }
 
+.event-bottom-link {
+    padding: 0.35rem 0.6rem 0.2rem 0.5rem;
+}
+
 .raid-boss-tiers {
     display: flex;
     flex-direction: column;
@@ -620,7 +660,7 @@ const scheduleTargetDayName = computed(() => {
         margin-bottom: 0.2rem;
     }
 
-    max-height: calc(45dvh - 120px);
+    max-height: calc(35dvh - 120px);
     overflow-y: auto;
     overscroll-behavior: contain;
 }
