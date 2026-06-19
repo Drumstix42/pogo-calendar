@@ -399,6 +399,8 @@ export function getRaidSubType(event: PogoEvent): string {
 
     if (eventName.includes('shadow')) {
         return 'shadow-raids';
+    } else if (eventName.includes('super mega')) {
+        return 'super-mega-raids';
     } else if (eventName.includes('primal')) {
         return 'primal-raids';
     } else if (eventName.includes('mega')) {
@@ -417,6 +419,8 @@ export function getRaidSubTypePriority(event: PogoEvent): number {
 
     const subType = getRaidSubType(event);
     switch (subType) {
+        case 'super-mega-raids':
+            return 4;
         case 'shadow-raids':
             return 3;
         case 'raid-battles':

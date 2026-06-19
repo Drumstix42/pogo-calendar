@@ -34,8 +34,15 @@ export interface RaidBossTierGroup {
     bosses: PokemonBoss[];
 }
 
-// "Tier N" labels sort first (numerically), all others sort alphabetically after
+// "Super Mega" should always sort above numeric tiers, then "Tier N" labels sort numerically,
+// and all other labels sort alphabetically after that.
 function sortTierLabel(a: string, b: string): number {
+    const normalizedA = a.trim().toLowerCase();
+    const normalizedB = b.trim().toLowerCase();
+
+    if (normalizedA === 'super mega' && normalizedB !== 'super mega') return -1;
+    if (normalizedB === 'super mega' && normalizedA !== 'super mega') return 1;
+
     const tierA = a.match(/^Tier (\d+)$/i);
     const tierB = b.match(/^Tier (\d+)$/i);
     if (tierA && tierB) return parseInt(tierA[1]) - parseInt(tierB[1]);
@@ -195,7 +202,7 @@ export const useEventsStore = defineStore('eventsStore', () => {
                 }
                 raidBossTierGroups = Array.from(tierMap.entries())
                     .sort(([a], [b]) => sortTierLabel(a, b))
-                    .map(([label, bosses]) => ({ label, bosses }));
+                    .map(([label, groupedBosses]) => ({ label, bosses: groupedBosses }));
             }
 
             metadata[event.eventID] = {

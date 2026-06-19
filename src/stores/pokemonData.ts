@@ -75,16 +75,27 @@ export const usePokemonDataStore = defineStore('pokemonData', () => {
 
         // Strip all battle form prefixes - these forms can't be caught, only base forms
         let searchName = pokemonName;
+        let wasMegaPrefixed = false;
         if (searchName.startsWith('Gigantamax ')) {
             searchName = searchName.substring(11); // Remove "Gigantamax "
         } else if (searchName.startsWith('Dynamax ')) {
             searchName = searchName.substring(8); // Remove "Dynamax "
         } else if (searchName.startsWith('Mega ')) {
+            wasMegaPrefixed = true;
             searchName = searchName.substring(5); // Remove "Mega "
         } else if (searchName.startsWith('Primal ')) {
             searchName = searchName.substring(7); // Remove "Primal "
         } else if (searchName.startsWith('Shadow ')) {
             searchName = searchName.substring(7); // Remove "Shadow "
+        }
+
+        // Mega variants with a trailing X/Y should map to the base species for CP lookup.
+        // Example: "Mega Mewtwo X" -> "Mewtwo".
+        if (wasMegaPrefixed) {
+            const megaVariantMatch = searchName.match(/^(.+?)\s+[XY]$/i);
+            if (megaVariantMatch) {
+                searchName = megaVariantMatch[1].trim();
+            }
         }
 
         // Handle form prefixes: "Origin Forme Dialga" → "Dialga Origin"

@@ -138,6 +138,11 @@ function extractPokemonNameFromRaidBattle(event: PogoEvent): string | null {
 
             return null;
         }
+        case 'super-mega-raids': {
+            // Pattern: "Mega <Pokemon> in Super Mega Raids"
+            const match = eventName.match(/^Mega\s+(.+?)\s+in\s+Super\s+Mega\s+Raids$/i);
+            return match ? match[1].trim() : null;
+        }
         case 'mega-raids': {
             // Pattern: "Mega <Pokemon> in Mega Raids"
             const match = eventName.match(/^Mega\s+(.+?)\s+in\s+Mega\s+Raids$/i);
@@ -350,7 +355,8 @@ export function getEventPokemonImages(event: PogoEvent, options?: PokemonImageOp
         // Fallback to event name extraction if bosses data doesn't work
         const pokemonName = extractPokemonNameFromRaidBattle(event);
         if (pokemonName) {
-            const isMega = getRaidSubType(event) === 'mega-raids';
+            const raidSubType = getRaidSubType(event);
+            const isMega = raidSubType === 'mega-raids' || raidSubType === 'super-mega-raids';
             const pokemonNames = parseEventPokemonNames(pokemonName);
             const images: PokemonImageData[] = [];
 

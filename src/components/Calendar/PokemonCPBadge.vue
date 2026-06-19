@@ -15,6 +15,7 @@
 import { computed } from 'vue';
 
 import { usePokemonDataStore } from '@/stores/pokemonData';
+import { MAJOR_CALENDAR_EVENT_TYPES } from '@/utils/eventTypes';
 import { calculateRaidCP, formatCPDisplay } from '@/utils/pokemonCP';
 
 interface Props {
@@ -32,10 +33,19 @@ const props = withDefaults(defineProps<Props>(), {
 const pokemonDataStore = usePokemonDataStore();
 
 // Event types that support weather boosting (show two CP values)
-const WEATHER_BOOST_EVENT_TYPES = ['raid-battles', 'raid-day', 'raid-weekend', 'raid-hour', 'event'];
+const WEATHER_BOOST_EVENT_TYPES = ['raid-battles', 'raid-day', 'raid-weekend', 'raid-hour', 'event', ...MAJOR_CALENDAR_EVENT_TYPES];
 
 // Event types that should show CP (raids and max battles)
-const CP_SUPPORTED_EVENT_TYPES = ['raid-battles', 'raid-day', 'raid-weekend', 'raid-hour', 'max-battles', 'max-mondays', 'event'];
+const CP_SUPPORTED_EVENT_TYPES = [
+    'raid-battles',
+    'raid-day',
+    'raid-weekend',
+    'raid-hour',
+    'max-battles',
+    'max-mondays',
+    'event',
+    ...MAJOR_CALENDAR_EVENT_TYPES,
+];
 
 const shouldShowWeatherBoost = computed(() => {
     if (props.isSpotlightSubEvent) return false;
@@ -83,10 +93,11 @@ const tooltipText = computed(() => {
     padding: 2px 3px;
     font-size: 0.675rem;
     font-weight: 400;
-    line-height: 1.1;
+    line-height: 1.05;
     border-radius: 2px;
     text-align: center;
     white-space: nowrap;
+    margin-bottom: 5px;
 }
 
 /* Dark mode - light text on dark background */
