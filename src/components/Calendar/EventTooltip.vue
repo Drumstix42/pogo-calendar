@@ -64,13 +64,9 @@
                             class="schedule-section"
                         >
                             <div class="schedule-section-header" :class="{ 'is-all-day': section.isAllDay }">
-                                <span v-if="section.label" class="schedule-label" :style="getScheduleLabelStyle(section.label, section.isAllDay)">{{
-                                    section.label
-                                }}</span>
-                                <span v-else class="schedule-label" :style="getScheduleLabelStyle(undefined, section.isAllDay)">{{
-                                    section.isAllDay ? 'All Day' : 'Scheduled'
-                                }}</span>
-                                <span v-if="section.time" class="schedule-time">{{ section.time }}</span>
+                                <span v-if="section.label" class="schedule-label" :style="getScheduleLabelStyle(section.label, section.isAllDay)">{{ section.label }}</span>
+                                <span v-else class="schedule-label" :style="getScheduleLabelStyle(undefined, section.isAllDay)">{{ section.isAllDay ? (scheduleTargetDayName ? `All Day (${scheduleTargetDayName})` : 'All Day') : (scheduleTargetDayName ? `Scheduled (${scheduleTargetDayName})` : 'Scheduled') }}</span>
+                                <span v-if="section.time" class="schedule-time">{{ scheduleTargetDayName ? `${scheduleTargetDayName} · ${section.time}` : section.time }}</span>
                             </div>
                             <div class="tier-group" v-for="group in section.tierGroups" :key="`${groupedEvent.eventID}-${section.id}-${group.label}`">
                                 <div v-if="group.showLabel" class="tier-label">{{ group.label }}</div>
@@ -146,13 +142,9 @@
             <div v-if="scheduleSectionsWithTierGroups?.length" class="raid-boss-tiers">
                 <div v-for="section in scheduleSectionsWithTierGroups" :key="section.id" class="schedule-section">
                     <div class="schedule-section-header" :class="{ 'is-all-day': section.isAllDay }">
-                        <span v-if="section.label" class="schedule-label" :style="getScheduleLabelStyle(section.label, section.isAllDay)">{{
-                            section.label
-                        }}</span>
-                        <span v-else class="schedule-label" :style="getScheduleLabelStyle(undefined, section.isAllDay)">{{
-                            section.isAllDay ? 'All Day' : 'Scheduled'
-                        }}</span>
-                        <span v-if="section.time" class="schedule-time">{{ section.time }}</span>
+                        <span v-if="section.label" class="schedule-label" :style="getScheduleLabelStyle(section.label, section.isAllDay)">{{ section.label }}</span>
+                        <span v-else class="schedule-label" :style="getScheduleLabelStyle(undefined, section.isAllDay)">{{ section.isAllDay ? (scheduleTargetDayName ? `All Day (${scheduleTargetDayName})` : 'All Day') : (scheduleTargetDayName ? `Scheduled (${scheduleTargetDayName})` : 'Scheduled') }}</span>
+                        <span v-if="section.time" class="schedule-time">{{ scheduleTargetDayName ? `${scheduleTargetDayName} · ${section.time}` : section.time }}</span>
                     </div>
                     <div v-for="group in section.tierGroups" :key="`${section.id}-${group.label}`" class="tier-group">
                         <div v-if="group.showLabel" class="tier-label">{{ group.label }}</div>
@@ -201,7 +193,7 @@
 
 <script setup lang="ts">
 import { ExternalLink, Palette } from '@lucide/vue';
-import type { Dayjs } from 'dayjs';
+import dayjs, { type Dayjs } from 'dayjs';
 import { hideAllPoppers } from 'floating-vue';
 import { computed, nextTick } from 'vue';
 
@@ -407,6 +399,10 @@ const tierGroupsWithImages = computed(() => {
 
 const scheduleSectionsWithTierGroups = computed(() => {
     return getScheduleSectionsWithTierGroupsForEvent(props.event);
+});
+
+const scheduleTargetDayName = computed(() => {
+    return props.targetDate ? dayjs(props.targetDate).format('dddd') : undefined;
 });
 </script>
 

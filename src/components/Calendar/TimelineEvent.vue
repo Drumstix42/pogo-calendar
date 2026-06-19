@@ -70,13 +70,13 @@
                 </div>
             </div>
 
-            <div class="event-content" :class="{ 'flex-column gap-2': props.isActive || pokemonCount > 6 }">
+            <div class="event-content" :class="{ 'flex-column gap-2': props.isActive || pokemonCount > 6 || collapsedScheduleDayGroups?.length }">
                 <EventTimeDisplay :event="event" />
 
                 <div
                     v-if="hasPokemon"
-                    class="flex-grow-1 d-flex gap-1 align-items-start justify-content-end"
-                    :class="[props.isActive || pokemonCount > 6 ? 'w-100' : 'w-50']"
+                    class="flex-grow-1 d-flex gap-1 align-items-start"
+                    :class="[props.isActive || pokemonCount > 6 || collapsedScheduleDayGroups?.length ? 'w-100' : 'w-50 justify-content-end']"
                 >
                     <PokemonEventImages
                         v-if="props.isActive ? !hasExpandedRaidSections : !collapsedScheduleDayGroups?.length"
@@ -904,14 +904,15 @@ const majorTimelineVariant = computed<MajorCalendarEventVariant>(() => {
         padding: 0.4rem;
         border-radius: 7px;
         border: 1px solid color-mix(in srgb, var(--bs-border-color) 15%, transparent);
-        background-color: color-mix(in srgb, var(--calendar-cell-bg) 95%, var(--event-color) 5%);
+        background-color: color-mix(in srgb, var(--calendar-cell-bg) 75%, var(--event-color) 5%);
     }
 
     .schedule-day-header {
-        font-size: 0.78rem;
+        font-size: 0.925rem;
+        text-transform: uppercase;
         font-weight: 700;
-        line-height: 1.2;
-        letter-spacing: 0.02em;
+        line-height: 1.5;
+        letter-spacing: 0.05em;
         color: color-mix(in srgb, var(--bs-body-color) 82%, transparent);
         padding: 0 0.1rem;
     }
