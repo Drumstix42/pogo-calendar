@@ -131,8 +131,8 @@
 </template>
 
 <script setup lang="ts">
-import { hideAllPoppers } from 'floating-vue';
 import { ExternalLink, Palette } from '@lucide/vue';
+import { hideAllPoppers } from 'floating-vue';
 import { computed, nextTick } from 'vue';
 
 import { useDeviceDetection } from '@/composables/useDeviceDetection';
@@ -311,6 +311,9 @@ const tierGroupsWithImages = computed(() => {
     flex-direction: column;
     gap: 0.5rem;
     padding: 0.4rem 0.6rem 0.4rem 0.5rem;
+    max-height: calc(45dvh - 120px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
 }
 
 .tier-group {

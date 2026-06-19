@@ -78,7 +78,7 @@ export function calculateRaidCP(stats: PokemonStats): CPResult {
  * This matches the normalization used in the Python fetcher
  */
 export function cleanPokemonName(name: string): string {
-    return name.replace(/\W/g, '').toLowerCase();
+    return name.replace(/[^a-z0-9]/gi, '').toLowerCase();
 }
 
 /**

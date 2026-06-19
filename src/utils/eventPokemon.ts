@@ -229,12 +229,16 @@ export function parsePokemonNameAndSuffix(pokemonNameString: string): { pokemonN
 
         // Map verbose form names to their short sprite slug equivalents
         const FORM_NAME_OVERRIDES: Record<string, string> = {
+            'dawn wings': 'dawnwings',
+            'dusk mane': 'duskmane',
             'hero of many battles': 'hero',
             'crowned sword': 'crownedsword',
             'crowned shield': 'crownedshield',
         };
         if (FORM_NAME_OVERRIDES[pokemonFormName]) {
             pokemonFormName = FORM_NAME_OVERRIDES[pokemonFormName];
+        } else {
+            pokemonFormName = pokemonFormName.replace(/[^a-z0-9]+/g, '-');
         }
 
         return { pokemonName: baseName, suffix: `-${pokemonFormName}` };

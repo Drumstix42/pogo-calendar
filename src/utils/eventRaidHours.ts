@@ -125,8 +125,9 @@ function formatPokemonList(bosses: PokemonBoss[]): string {
     if (bosses.length === 0) return 'Raid Hour';
     if (bosses.length === 1) return `${bosses[0].name} Raid Hour`;
     if (bosses.length === 2) return `${bosses[0].name} and ${bosses[1].name} Raid Hour`;
+    if (bosses.length > 6) return `${bosses.length} Bosses Raid Hour`;
 
-    // 3 or more
+    // 3–6
     const allButLast = bosses
         .slice(0, -1)
         .map(b => b.name)

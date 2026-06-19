@@ -15,8 +15,10 @@ export function normalizePokemonName(name: string): string {
         .toLowerCase()
         .replace(/♀/g, 'f') // Female symbol → f
         .replace(/♂/g, 'm') // Male symbol → m
+        .replace(/_/g, ' ') // Underscore-delimited form names → spaces
         .normalize('NFD') // Decompose accented characters (é → e + ́)
         .replace(/[\u0300-\u036f]/g, '') // Remove all combining diacritical marks
+        .replace(/\s+/g, ' ')
         .trim();
 }
 
@@ -39,6 +41,8 @@ function normalizePokemonFormSlug(formName: string): string {
         .replace(/\s+forme?$/i, '')
         .trim();
     const FORM_SLUG_OVERRIDES: Record<string, string> = {
+        'dawn wings': 'dawnwings',
+        'dusk mane': 'duskmane',
         'hero of many battles': 'hero',
         'crowned sword': 'crownedsword',
         'crowned shield': 'crownedshield',
@@ -111,6 +115,15 @@ function parsePokemonNameWithOptionalForm(name: string): { pokemonName: string; 
     const basePokemonId = getPokemonId(baseName);
     if (!basePokemonId) {
         return { pokemonName: name, pokemonId: null };
+    }
+
+    const normalizedBaseName = normalizePokemonName(baseName);
+    const normalizedFormName = normalizePokemonName(pokemonFormMatch[2])
+        .replace(/\s+forme?$/i, '')
+        .trim();
+
+    if (normalizedBaseName === 'deoxys' && normalizedFormName === 'normal') {
+        return { pokemonName: baseName, pokemonId: basePokemonId };
     }
 
     const formSlug = normalizePokemonFormSlug(pokemonFormMatch[2]);

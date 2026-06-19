@@ -61,6 +61,7 @@ export const usePokemonDataStore = defineStore('pokemonData', () => {
     // Maps verbose in-game form names to the simplified form names used in Pokemon data
     const FORM_NAME_ALIASES: Record<string, string> = {
         'hero of many battles': 'hero',
+        normal: 'Normal',
     };
 
     /**
@@ -109,7 +110,7 @@ export const usePokemonDataStore = defineStore('pokemonData', () => {
 
         // Try exact match first (with form)
         for (const pokemon of pokemonData.value) {
-            const fullName = `${pokemon.name}${pokemon.form !== 'Normal' ? ` ${pokemon.form}` : ''}`;
+            const fullName = `${pokemon.name} ${pokemon.form}`.trim();
             const normalizedFullName = normalizePokemonName(fullName);
             const cleanFullName = cleanPokemonName(fullName);
 
