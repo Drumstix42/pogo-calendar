@@ -80,7 +80,7 @@
                         >
                             <div class="multi-day-event-bar--inner">
                                 <!-- Show Pokemon images for grouped or individual events -->
-                                <template v-if="calendarSettings.useMultiDayEventSprites">
+                                <template v-if="calendarSettings.useMultiDayEventSprites && !isMajorCalendarEventType(event.eventType)">
                                     <template v-if="calendarSettings.groupSimilarEvents && hasGroupedEvents(event)">
                                         <PokemonEventImages
                                             :event="event"
@@ -131,13 +131,19 @@
                     <div
                         class="single-day-event calendar-event"
                         :class="{
-                            'event-past': eventsStore.eventMetadata[event.eventID]?.isPastEvent,
-                            'event-id-highlighted': eventHighlight.hoveredEventID === event.eventID,
-                            'has-bonus-icons': calendarSettings.useSingleDayEventSprites && eventsStore.eventMetadata[event.eventID]?.spotlightBonus,
+                            'event-past': getEventMetadataForDisplay(event)?.isPastEvent,
+                            'event-id-highlighted': eventHighlight.hoveredEventID === getCanonicalEventID(event),
+                            'has-bonus-icons': calendarSettings.useSingleDayEventSprites && getEventMetadataForDisplay(event)?.spotlightBonus,
+                            'major-daily-display-event': isMajorDailyDisplayEvent(event),
+                            'major-daily-global': isMajorDailyDisplayEvent(event) && getMajorDailyVariant(event) === 'global',
+                            'major-daily-location': isMajorDailyDisplayEvent(event) && getMajorDailyVariant(event) === 'location-specific',
+                        }"
+                        :style="{
+                            '--major-event-color': getEventMetadataForDisplay(event)?.color,
                         }"
                         :data-event-type="event.eventType"
-                        :data-event-id="event.eventID"
-                        @mouseenter="debouncedHighlightEventID(event.eventID)"
+                        :data-event-id="getCanonicalEventID(event)"
+                        @mouseenter="debouncedHighlightEventID(getCanonicalEventID(event))"
                         @mouseleave="debouncedClearEventIDHighlight"
                         @click="handleEventClick(event)"
                     >
@@ -147,42 +153,40 @@
                                 <div class="event-text-content flex-shrink-1 overflow-hidden">
                                     <div class="event-name-container">
                                         <div class="event-name">
-                                            {{ getEventDisplayName(event) }}
+                                            {{ getEventDisplayNameForSingleDay(event) }}
                                             <span v-if="shouldShowBadge(event)" class="event-badge">{{ getEventCount(event) }}</span>
                                         </div>
                                     </div>
                                     <div class="event-time">
-                                        <div class="event-dot" :style="{ backgroundColor: eventsStore.eventMetadata[event.eventID]?.color }"></div>
-                                        {{ eventsStore.eventMetadata[event.eventID]?.formattedStartTime }}
-                                        <span v-if="isToday && eventsStore.eventMetadata[event.eventID]?.isPastEvent" class="event-ended-label"
-                                            >Ended</span
-                                        >
+                                        <div class="event-dot" :style="{ backgroundColor: getEventMetadataForDisplay(event)?.color }"></div>
+                                        {{ getEventMetadataForDisplay(event)?.formattedStartTime }}
+                                        <span v-if="isToday && getEventMetadataForDisplay(event)?.isPastEvent" class="event-ended-label">Ended</span>
                                     </div>
                                 </div>
 
                                 <!-- Spotlight bonus icons -->
-                                <div v-if="eventsStore.eventMetadata[event.eventID]?.spotlightBonus" class="spotlight-bonus-icons">
+                                <div
+                                    v-if="!isMajorDailyDisplayEvent(event) && getEventMetadataForDisplay(event)?.spotlightBonus"
+                                    class="spotlight-bonus-icons"
+                                >
                                     <!-- <CatchIcon v-if="eventsStore.eventMetadata[event.eventID]?.spotlightBonus?.category === 'catch'" :size="13" /> -->
                                     <EvolveIcon
-                                        v-if="eventsStore.eventMetadata[event.eventID]?.spotlightBonus?.category === 'evolve'"
+                                        v-if="getEventMetadataForDisplay(event)?.spotlightBonus?.category === 'evolve'"
                                         :size="13"
                                         class="evolve-icon"
                                     />
-                                    <TransferIcon
-                                        v-else-if="eventsStore.eventMetadata[event.eventID]?.spotlightBonus?.category === 'transfer'"
-                                        :size="13"
-                                    />
+                                    <TransferIcon v-else-if="getEventMetadataForDisplay(event)?.spotlightBonus?.category === 'transfer'" :size="13" />
                                     <img
-                                        v-if="eventsStore.eventMetadata[event.eventID]?.spotlightBonusIconUrl"
-                                        :src="eventsStore.eventMetadata[event.eventID]!.spotlightBonusIconUrl!"
+                                        v-if="getEventMetadataForDisplay(event)?.spotlightBonusIconUrl"
+                                        :src="getEventMetadataForDisplay(event)!.spotlightBonusIconUrl!"
                                         class="bonus-type-icon"
                                     />
                                 </div>
                             </div>
                             <PokemonEventImages
-                                v-if="calendarSettings.useSingleDayEventSprites"
+                                v-if="calendarSettings.useSingleDayEventSprites && !isMajorDailyDisplayEvent(event)"
                                 :event="event"
-                                :event-name="getEventDisplayName(event)"
+                                :event-name="getEventDisplayNameForSingleDay(event)"
                                 :height="singleDayPokemonHeight"
                                 :show-placeholder="true"
                                 :show-overflow-counter="true"
@@ -192,7 +196,7 @@
                     </div>
 
                     <template #popper>
-                        <EventTooltip :event="event" :is-single-day="true" />
+                        <EventTooltip :event="getEventForDetails(event)" :is-single-day="true" />
                     </template>
                 </VMenu>
             </TransitionGroup>
@@ -212,7 +216,17 @@ import { useEventFilterStore } from '@/stores/eventFilter';
 import { useEventHighlightStore } from '@/stores/eventHighlight';
 import { useEventsStore } from '@/stores/events';
 import { formatEventName } from '@/utils/eventName';
-import { type PogoEvent, getEventsForDate, getGroupedEventsCount, hasGroupedEvents, parseEventDate, sortEventsByPriority } from '@/utils/eventTypes';
+import {
+    type MajorCalendarEventVariant,
+    type PogoEvent,
+    getEventsForDate,
+    getGroupedEventsCount,
+    getMajorCalendarEventVariant,
+    hasGroupedEvents,
+    isMajorCalendarEventType,
+    parseEventDate,
+    sortEventsByPriority,
+} from '@/utils/eventTypes';
 
 /* import CatchIcon from '../Icons/CatchIcon.vue'; */
 import EvolveIcon from '../Icons/EvolveIcon.vue';
@@ -236,6 +250,11 @@ interface Props {
         shouldRenderOnDay: (day: Dayjs) => boolean;
     }>;
 }
+
+type DailyMajorDisplayEvent = PogoEvent & {
+    _isMajorDailyDisplay: true;
+    _sourceEventID: string;
+};
 
 const MULTI_DAY_EVENT_BAR_MARGIN = 1; // px margin between bars
 
@@ -304,16 +323,91 @@ const calendarEvents = computed(() => {
     return {
         singleDayEvents: sortEventsByPriority(singleDay),
         multiDayEvents: sortEventsByPriority(multiDay),
+        enabledEvents,
     };
 });
 
-// Use individual single-day events without grouping
-const singleDayEvents = computed(() => {
-    return calendarEvents.value.singleDayEvents;
+const majorDailyDisplayEvents = computed<DailyMajorDisplayEvent[]>(() => {
+    const targetDay = props.dayInstance.startOf('day');
+
+    return calendarEvents.value.enabledEvents
+        .filter((event: PogoEvent) => {
+            if (!isMajorCalendarEventType(event.eventType)) {
+                return false;
+            }
+
+            const metadata = eventsStore.eventMetadata[event.eventID];
+            const isMultiDayEvent = metadata?.isMultiDayEvent ?? true;
+            if (!isMultiDayEvent) {
+                return false;
+            }
+
+            const startDay = (metadata?.startDate ?? parseEventDate(event.start, calendarSettings.manualTimeOffsetHours)).startOf('day');
+            const endDay = (metadata?.endDate ?? parseEventDate(event.end, calendarSettings.manualTimeOffsetHours)).startOf('day');
+
+            return targetDay.isSameOrAfter(startDay, 'day') && targetDay.isSameOrBefore(endDay, 'day');
+        })
+        .map(event => {
+            const dateKey = targetDay.format('YYYY-MM-DD');
+
+            return {
+                ...event,
+                eventID: `${event.eventID}-daily-${dateKey}`,
+                _isMajorDailyDisplay: true,
+                _sourceEventID: event.eventID,
+            };
+        });
 });
 
+// Use individual single-day events without grouping.
+// Major daily display entries are appended to the end so they stand out in a separate lane.
+const singleDayEvents = computed<PogoEvent[]>(() => {
+    return [...calendarEvents.value.singleDayEvents, ...majorDailyDisplayEvents.value];
+});
+
+function getCanonicalEventID(event: PogoEvent): string {
+    return ((event as Partial<DailyMajorDisplayEvent>)._sourceEventID ?? event.eventID) as string;
+}
+
+function isMajorDailyDisplayEvent(event: PogoEvent): event is DailyMajorDisplayEvent {
+    return (event as Partial<DailyMajorDisplayEvent>)._isMajorDailyDisplay === true;
+}
+
+function getEventMetadataForDisplay(event: PogoEvent) {
+    return eventsStore.eventMetadata[getCanonicalEventID(event)];
+}
+
+function getMajorDailyVariant(event: PogoEvent): MajorCalendarEventVariant {
+    if (!isMajorDailyDisplayEvent(event)) {
+        return 'location-specific';
+    }
+
+    return getMajorCalendarEventVariant({
+        ...event,
+        eventID: getCanonicalEventID(event),
+    });
+}
+
+function getEventDisplayNameForSingleDay(event: PogoEvent): string {
+    if (isMajorDailyDisplayEvent(event)) {
+        return formatEventName(event.name);
+    }
+
+    return getEventDisplayName(event);
+}
+
+function getEventForDetails(event: PogoEvent): PogoEvent {
+    if (!isMajorDailyDisplayEvent(event)) {
+        return event;
+    }
+
+    return eventsStore.getEventById(getCanonicalEventID(event)) ?? event;
+}
+
 const multiDayEvents = computed(() => {
-    const eventsOnThisDay = props.eventSlots.filter(slot => slot.shouldRenderOnDay(props.dayInstance));
+    const eventsOnThisDay = props.eventSlots.filter(slot => {
+        return slot.shouldRenderOnDay(props.dayInstance) && !isMajorCalendarEventType(slot.event.eventType);
+    });
 
     // Sort by compact slot index instead of original slot index
     return eventsOnThisDay
@@ -335,6 +429,10 @@ const weekCompactSlots = computed(() => {
 
     // Find all events that actually render on at least one day in this week
     const eventsRenderingInThisWeek = props.eventSlots.filter(slot => {
+        if (isMajorCalendarEventType(slot.event.eventType)) {
+            return false;
+        }
+
         // Check if this slot renders on any day of this week
         for (let day = weekStart.clone(); day.isSameOrBefore(weekEnd); day = day.add(1, 'day')) {
             if (slot.shouldRenderOnDay(day)) {
@@ -433,17 +531,17 @@ const debouncedClearEventIDHighlight = (): void => {
 // Mobile: opens drawer on tap
 function handleEventClick(event: PogoEvent) {
     if (!isTouchDevice.value) return;
-    selectEvent(event.eventID);
+    selectEvent(getCanonicalEventID(event));
 }
 
 // Desktop: updates URL when tooltip shows
 function handleMenuShow(event: PogoEvent) {
-    selectEvent(event.eventID);
+    selectEvent(getCanonicalEventID(event));
 }
 
 // Clears URL when tooltip closes
 function handleMenuHide(event: PogoEvent) {
-    if (selectedEventId.value === event.eventID) {
+    if (selectedEventId.value === getCanonicalEventID(event)) {
         clearEvent();
     }
 }
@@ -1062,13 +1160,14 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+    text-shadow: none;
     margin-top: 1px;
     flex: 1;
 }
 
 [data-bs-theme='dark'] .single-day-event .event-name {
     color: #e9ecef;
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
 }
 
 .single-day-event .event-time {
@@ -1146,6 +1245,146 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     min-width: 14px;
     height: 14px;
     padding: 0 3px;
+}
+
+.single-day-event.major-daily-display-event {
+    margin-top: -1px;
+    position: relative;
+    isolation: isolate;
+    min-height: 82px;
+    border-radius: 5px;
+    border: 2px solid color-mix(in srgb, var(--calendar-cell-bg) 22%, var(--major-event-color) 78%);
+    background: linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--calendar-cell-bg) 70%, var(--major-event-color) 20%),
+        color-mix(in srgb, var(--calendar-cell-bg) 66%, var(--major-event-color) 28%)
+    );
+
+    .event-content {
+        position: relative;
+        z-index: 1;
+        max-height: none;
+    }
+
+    .event-name {
+        white-space: normal;
+        line-height: 0.875rem;
+        text-overflow: unset;
+        font-weight: 600;
+    }
+
+    .event-time {
+        margin-top: 3px;
+        margin-bottom: 2px;
+        font-size: 0.68rem;
+    }
+
+    &:hover {
+        background: linear-gradient(
+            135deg,
+            color-mix(in srgb, var(--calendar-hover-bg) 60%, var(--major-event-color) 25%),
+            color-mix(in srgb, var(--calendar-cell-bg) 64%, var(--major-event-color) 33%)
+        );
+    }
+}
+
+@media (min-width: 576px) {
+    .single-day-event.major-daily-display-event {
+        min-height: 82px;
+    }
+}
+
+@media (min-width: 768px) {
+    .single-day-event.major-daily-display-event {
+        min-height: 82px;
+    }
+}
+
+@media (min-width: 1200px) {
+    .single-day-event.major-daily-display-event {
+        min-height: 86px;
+    }
+}
+
+@media (min-width: 1400px) {
+    .single-day-event.major-daily-display-event {
+        min-height: 92px;
+    }
+}
+
+.single-day-event.major-daily-display-event::after {
+    content: '';
+    position: absolute;
+    right: -12px;
+    bottom: 0px;
+    width: 38px;
+    height: 38px;
+    pointer-events: none;
+    opacity: 0.24;
+    background-color: color-mix(in srgb, var(--major-event-color) 60%, var(--bs-body-color) 40%);
+    mask-repeat: no-repeat;
+    mask-position: center;
+    mask-size: contain;
+    z-index: 0;
+}
+
+@media (min-width: 375px) {
+    .single-day-event.major-daily-display-event::after {
+        right: -10px;
+        bottom: -1px;
+        width: 42px;
+        height: 42px;
+        opacity: 0.28;
+    }
+}
+
+@media (min-width: 576px) {
+    .single-day-event.major-daily-display-event::after {
+        right: -8px;
+        bottom: -2px;
+        width: 50px;
+        height: 50px;
+        opacity: 0.34;
+    }
+}
+
+@media (min-width: 768px) {
+    .single-day-event.major-daily-display-event::after {
+        right: -6px;
+        bottom: -2px;
+        width: 58px;
+        height: 58px;
+        opacity: 0.4;
+    }
+}
+
+.single-day-event.major-daily-display-event.major-daily-global::after {
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='M2 12h20'/%3E%3Cpath d='M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z'/%3E%3C/svg%3E");
+}
+
+.single-day-event.major-daily-display-event.major-daily-location::after {
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 1 1 16 0'/%3E%3Ccircle cx='12' cy='10' r='3'/%3E%3C/svg%3E");
+}
+
+[data-bs-theme='dark'] .single-day-event.major-daily-display-event {
+    border-color: color-mix(in srgb, #495057 35%, var(--major-event-color) 65%);
+    background: linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--calendar-cell-bg) 74%, var(--major-event-color) 20%),
+        color-mix(in srgb, var(--calendar-cell-bg) 70%, var(--major-event-color) 28%)
+    );
+}
+
+[data-bs-theme='dark'] .single-day-event.major-daily-display-event:hover {
+    background: linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--calendar-hover-bg) 60%, var(--major-event-color) 25%),
+        color-mix(in srgb, var(--calendar-cell-bg) 64%, var(--major-event-color) 33%)
+    );
+}
+
+[data-bs-theme='dark'] .single-day-event.major-daily-display-event::after {
+    background-color: color-mix(in srgb, var(--major-event-color) 70%, var(--bs-body-color) 30%);
 }
 
 .spotlight-bonus-icons {

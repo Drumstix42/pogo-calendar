@@ -352,7 +352,23 @@ body {
         &:not(:hover) {
             background-color: var(--bs-secondary-bg);
         }
+
+        &.major-daily-display-event:not(:hover) {
+            background: linear-gradient(
+                135deg,
+                color-mix(in srgb, var(--calendar-hover-bg) 60%, var(--major-event-color) 25%),
+                color-mix(in srgb, var(--calendar-cell-bg) 64%, var(--major-event-color) 33%)
+            );
+        }
     }
+}
+
+[data-bs-theme='dark'] .calendar-event.event-id-highlighted.single-day-event.major-daily-display-event:not(:hover) {
+    background: linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--calendar-hover-bg) 60%, var(--major-event-color) 25%),
+        color-mix(in srgb, var(--calendar-cell-bg) 64%, var(--major-event-color) 33%)
+    );
 }
 
 .timeline-event.event-id-highlighted {
@@ -365,18 +381,17 @@ body {
 
     /* Don't apply highlight styles when hovering, focusing, or has any focus/active within */
     &:not(:hover):not(:focus-within):not(:has(:focus)):not(:has(:active)) {
-        border-color: color-mix(in srgb, var(--event-bg-color) 80%, black);
-        background-color: color-mix(in srgb, var(--event-bg-color) 80%, black);
+        border-color: color-mix(in srgb, var(--event-color, var(--event-bg-color)) 78%, black);
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         outline: 2px dashed rgba(243, 240, 75, 0.5);
         outline-offset: 1px;
 
-        .event-header {
-            background-color: color-mix(in srgb, var(--event-bg-color) 80%, black) !important;
+        .event-header-bar {
+            background-color: color-mix(in srgb, var(--event-color, var(--event-bg-color)) 12%, transparent);
         }
+
         .event-body {
             transition: background-color 0.5s ease;
-            background-color: color-mix(in srgb, var(--calendar-cell-bg) 99%, white) !important;
         }
     }
 }

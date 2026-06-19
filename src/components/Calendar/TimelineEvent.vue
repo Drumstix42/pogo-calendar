@@ -4,6 +4,9 @@
         :class="{
             'is-active': props.isActive,
             'event-id-highlighted': eventHighlight.hoveredEventID === props.event.eventID,
+            'major-timeline-event': isMajorTimelineEvent,
+            'major-timeline-global': isMajorTimelineEvent && majorTimelineVariant === 'global',
+            'major-timeline-location': isMajorTimelineEvent && majorTimelineVariant === 'location-specific',
         }"
         :data-event-type="event.eventType"
         :data-timeline-event-id="event.eventID"
@@ -120,8 +123,8 @@
 </template>
 
 <script setup lang="ts">
-import { breakpointsBootstrapV5, useBreakpoints } from '@vueuse/core';
 import { ChevronsDownUp, ChevronsUpDown, Palette } from '@lucide/vue';
+import { breakpointsBootstrapV5, useBreakpoints } from '@vueuse/core';
 import { computed } from 'vue';
 
 import { useDeviceDetection } from '@/composables/useDeviceDetection';
@@ -131,8 +134,15 @@ import { useEventHighlightStore } from '@/stores/eventHighlight';
 import { useEventsStore } from '@/stores/events';
 import { formatEventName } from '@/utils/eventName';
 import { getEventPokemonImages } from '@/utils/eventPokemon';
+import {
+    type MajorCalendarEventVariant,
+    type PogoEvent,
+    getEventTypeInfo,
+    getMajorCalendarEventVariant,
+    getRaidSubType,
+    isMajorCalendarEventType,
+} from '@/utils/eventTypes';
 import { buildRaidTierGroupsWithImages } from '@/utils/raidTierGroups';
-import { type PogoEvent, getEventTypeInfo, getRaidSubType } from '@/utils/eventTypes';
 
 import EvolveIcon from '../Icons/EvolveIcon.vue';
 import TransferIcon from '../Icons/TransferIcon.vue';
@@ -235,6 +245,18 @@ const isShadowRaid = computed(() => {
 const tierGroupsWithImages = computed(() => {
     return buildRaidTierGroupsWithImages(eventsStore.eventMetadata[props.event.eventID]?.raidBossTierGroups, props.isActive);
 });
+
+const isMajorTimelineEvent = computed(() => {
+    return isMajorCalendarEventType(props.event.eventType);
+});
+
+const majorTimelineVariant = computed<MajorCalendarEventVariant>(() => {
+    if (!isMajorTimelineEvent.value) {
+        return 'location-specific';
+    }
+
+    return getMajorCalendarEventVariant(props.event);
+});
 </script>
 
 <style lang="scss" scoped>
@@ -272,6 +294,110 @@ const tierGroupsWithImages = computed(() => {
     }
 }
 
+.timeline-event-card.major-timeline-event {
+    border-width: 2px;
+    border-color: color-mix(in srgb, var(--calendar-cell-bg) 28%, var(--event-color) 72%);
+    background: linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--calendar-cell-bg) 72%, var(--event-color) 28%),
+        color-mix(in srgb, var(--calendar-cell-bg) 62%, var(--event-color) 38%)
+    );
+
+    @media (pointer: fine) {
+        &:hover {
+            background: linear-gradient(
+                135deg,
+                color-mix(in srgb, var(--calendar-hover-bg) 66%, var(--event-color) 34%),
+                color-mix(in srgb, var(--calendar-cell-bg) 56%, var(--event-color) 44%)
+            );
+            border-color: color-mix(in srgb, var(--calendar-cell-bg) 20%, var(--event-color) 80%);
+        }
+    }
+
+    &.is-active {
+        border-color: color-mix(in srgb, var(--calendar-cell-bg) 16%, var(--event-color) 84%);
+        background: linear-gradient(
+            135deg,
+            color-mix(in srgb, var(--calendar-hover-bg) 60%, var(--event-color) 40%),
+            color-mix(in srgb, var(--calendar-cell-bg) 52%, var(--event-color) 48%)
+        );
+    }
+}
+
+.timeline-event-card.major-timeline-event::after {
+    content: '';
+    position: absolute;
+    right: 1px;
+    bottom: 0;
+    width: 56px;
+    height: 56px;
+    pointer-events: none;
+    opacity: 0.2;
+    background-color: color-mix(in srgb, var(--event-color) 62%, var(--bs-body-color) 38%);
+    mask-repeat: no-repeat;
+    mask-position: center;
+    mask-size: contain;
+    z-index: 0;
+}
+
+@media (min-width: 768px) {
+    .timeline-event-card.major-timeline-event::after {
+        right: 2px;
+        bottom: 0;
+        width: 68px;
+        height: 68px;
+    }
+}
+
+@media (min-width: 1200px) {
+    .timeline-event-card.major-timeline-event::after {
+        right: 3px;
+        bottom: -1px;
+        width: 74px;
+        height: 74px;
+    }
+}
+
+.timeline-event-card.major-timeline-event.major-timeline-global::after {
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='M2 12h20'/%3E%3Cpath d='M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z'/%3E%3C/svg%3E");
+}
+
+.timeline-event-card.major-timeline-event.major-timeline-location::after {
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 1 1 16 0'/%3E%3Ccircle cx='12' cy='10' r='3'/%3E%3C/svg%3E");
+}
+
+[data-bs-theme='dark'] .timeline-event-card.major-timeline-event {
+    border-color: color-mix(in srgb, #495057 32%, var(--event-color) 68%);
+    background: linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--calendar-cell-bg) 76%, var(--event-color) 24%),
+        color-mix(in srgb, var(--calendar-cell-bg) 66%, var(--event-color) 34%)
+    );
+
+    @media (pointer: fine) {
+        &:hover {
+            background: linear-gradient(
+                135deg,
+                color-mix(in srgb, var(--calendar-hover-bg) 62%, var(--event-color) 38%),
+                color-mix(in srgb, var(--calendar-cell-bg) 58%, var(--event-color) 42%)
+            );
+        }
+    }
+
+    &.is-active {
+        background: linear-gradient(
+            135deg,
+            color-mix(in srgb, var(--calendar-hover-bg) 56%, var(--event-color) 44%),
+            color-mix(in srgb, var(--calendar-cell-bg) 52%, var(--event-color) 48%)
+        );
+    }
+}
+
+[data-bs-theme='dark'] .timeline-event-card.major-timeline-event::after {
+    opacity: 0.24;
+    background-color: color-mix(in srgb, var(--event-color) 70%, var(--bs-body-color) 30%);
+}
+
 .event-header-bar {
     position: absolute;
     top: 0;
@@ -281,7 +407,7 @@ const tierGroupsWithImages = computed(() => {
     justify-content: space-between;
     padding: 4px 4px;
     cursor: pointer;
-    z-index: 1;
+    z-index: 3;
 
     .event-header-actions {
         display: flex;
