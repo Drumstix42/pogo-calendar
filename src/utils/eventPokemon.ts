@@ -327,7 +327,8 @@ function getPokemonImagesFromBosses(event: PogoEvent, options?: PokemonImageOpti
             const preferProvidedImage = parsedData.suffix === '-megax' || parsedData.suffix === '-megay';
 
             if (parsedData.suffix) {
-                spriteUrl = preferProvidedImage && boss.image ? boss.image : getSpriteUrl(parsedData.pokemonName, parsedData.suffix, options, boss.image);
+                spriteUrl =
+                    preferProvidedImage && boss.image ? boss.image : getSpriteUrl(parsedData.pokemonName, parsedData.suffix, options, boss.image);
             } else {
                 spriteUrl = getSpriteUrl(parsedData.pokemonName, undefined, options, boss.image);
             }

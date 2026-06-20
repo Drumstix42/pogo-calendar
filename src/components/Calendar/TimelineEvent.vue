@@ -895,6 +895,7 @@ const majorTimelineVariant = computed<MajorCalendarEventVariant>(() => {
         display: flex;
         flex-direction: column;
         gap: 0.25rem;
+        padding-left: 0.5rem;
     }
 
     .schedule-section {
@@ -993,14 +994,14 @@ const majorTimelineVariant = computed<MajorCalendarEventVariant>(() => {
     .collapsed-schedule-days {
         display: flex;
         flex-direction: column;
-        gap: 0.35rem;
+        gap: 1rem;
         width: 100%;
     }
 
     .collapsed-day-group {
         display: flex;
         flex-direction: column;
-        gap: 0.2rem;
+        gap: 0.4rem;
     }
 
     .collapsed-day-name {

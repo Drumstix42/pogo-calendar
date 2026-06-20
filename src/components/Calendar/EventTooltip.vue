@@ -865,6 +865,7 @@ const scheduleTargetDayName = computed(() => {
     flex-direction: column;
     gap: 0.35rem;
     margin-bottom: 0.75rem;
+    padding-left: 0.5rem;
 }
 
 .tier-label {

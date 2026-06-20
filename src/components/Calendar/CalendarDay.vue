@@ -80,7 +80,13 @@
                         >
                             <div class="multi-day-event-bar--inner">
                                 <!-- Show Pokemon images for grouped or individual events -->
-                                <template v-if="calendarSettings.useMultiDayEventSprites && !isMajorCalendarEventType(event.eventType)">
+                                <template
+                                    v-if="
+                                        calendarSettings.useMultiDayEventSprites &&
+                                        !isMajorCalendarEventType(event.eventType) &&
+                                        shouldShowMultiDaySprites(event)
+                                    "
+                                >
                                     <template v-if="calendarSettings.groupSimilarEvents && hasGroupedEvents(event)">
                                         <PokemonEventImages
                                             :event="event"
@@ -513,6 +519,15 @@ const getEventCount = (event: PogoEvent): number => {
 const shouldShowBadge = (event: PogoEvent): boolean => {
     return getEventCount(event) > 1;
 };
+
+function shouldShowMultiDaySprites(event: PogoEvent): boolean {
+    // Raid schedule bosses are day/time-specific and not representative for the full multi-day bar.
+    if (event.extraData?.raidSchedule && event.extraData.raidSchedule.length > 0) {
+        return false;
+    }
+
+    return true;
+}
 
 const highlightEventID = (eventID: string): void => {
     eventHighlight.highlightEventID(eventID);

@@ -10,7 +10,7 @@
     >
         <PokemonImage
             v-for="(pokemonData, index) in displayedImages"
-            :key="`pokemon-${index}`"
+            :key="`pokemon-${pokemonData.name}-${pokemonData.imageUrl ?? 'none'}-${pokemonData.fallbackImageUrl ?? 'none'}-${index}`"
             :pokemon-data="pokemonData"
             :height="height"
             :use-animated="useAnimated"

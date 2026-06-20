@@ -7,7 +7,7 @@
                     'has-dynamax-overlay': isDynamax,
                     'has-shadow-effect': isShadow,
                     'has-gigantamax-effect': isGigantamax,
-                    'placeholder-container': isPlaceholder || !pokemonData?.imageUrl,
+                    'placeholder-container': isPlaceholder || !currentImageSrc,
                 }"
             >
                 <div v-if="isDynamax" class="dynamax-overlay" :class="{ animated: useAnimated }">
@@ -22,7 +22,7 @@
                 </template>
                 <template v-else>
                     <img
-                        v-if="pokemonData?.imageUrl && !hasError"
+                        v-if="currentImageSrc && !hasError"
                         :src="currentImageSrc"
                         :alt="pokemonData.name"
                         class="pokemon-icon"
@@ -36,7 +36,7 @@
             <template #popper>
                 <div class="tooltip-text white-space-nowrap">
                     <template v-if="isPlaceholder">Unknown pokemon</template>
-                    <template v-else> {{ pokemonData?.name }}{{ !pokemonData?.imageUrl || hasError ? ' (missing sprite)' : '' }} </template>
+                    <template v-else> {{ pokemonData?.name }}{{ !currentImageSrc || hasError ? ' (missing sprite)' : '' }} </template>
                 </div>
             </template>
         </VTooltip>
@@ -55,7 +55,7 @@
 
 <script setup lang="ts">
 import { BadgeQuestionMark, CircleHelpIcon } from '@lucide/vue';
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 
 import type { PokemonImageData } from '@/utils/eventPokemon';
 import { getSpriteFallbackUrl } from '@/utils/pokemonMapper';
@@ -124,6 +124,13 @@ const currentImageSrc = computed(() => {
 const hasError = computed(() => {
     return errorLevel.value >= imageSources.value.length;
 });
+
+watch(
+    () => imageSources.value.join('|'),
+    () => {
+        errorLevel.value = 0;
+    },
+);
 
 function onImageError() {
     errorLevel.value++;
