@@ -27,7 +27,11 @@ export function buildRaidTierGroupsWithImages(groups: TierGroupInput[] | undefin
         showLabel: !shouldHideOtherLabel,
         images: group.bosses.map(boss => {
             const animatedUrl = useAnimated ? getPokemonAnimatedUrl(boss.name) : null;
-            return { name: boss.name, imageUrl: animatedUrl ?? boss.image } satisfies PokemonImageData;
+            return {
+                name: boss.name,
+                imageUrl: animatedUrl ?? boss.image,
+                fallbackImageUrl: boss.image || null,
+            } satisfies PokemonImageData;
         }),
     }));
 }

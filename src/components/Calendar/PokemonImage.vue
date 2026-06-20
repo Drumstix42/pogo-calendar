@@ -98,14 +98,31 @@ const hubFallbackUrl = computed(() => {
     return url ? getSpriteFallbackUrl(url) : null;
 });
 
+const imageSources = computed(() => {
+    const sources: string[] = [];
+    const primary = props.pokemonData?.imageUrl;
+    const hub = hubFallbackUrl.value;
+    const jsonFallback = props.pokemonData?.fallbackImageUrl;
+
+    if (primary) {
+        sources.push(primary);
+    }
+    if (hub && hub !== primary) {
+        sources.push(hub);
+    }
+    if (jsonFallback && !sources.includes(jsonFallback)) {
+        sources.push(jsonFallback);
+    }
+
+    return sources;
+});
+
 const currentImageSrc = computed(() => {
-    if (errorLevel.value === 1 && hubFallbackUrl.value) return hubFallbackUrl.value;
-    return props.pokemonData?.imageUrl ?? null;
+    return imageSources.value[errorLevel.value] ?? null;
 });
 
 const hasError = computed(() => {
-    if (errorLevel.value === 0) return false;
-    return errorLevel.value >= 2 || !hubFallbackUrl.value;
+    return errorLevel.value >= imageSources.value.length;
 });
 
 function onImageError() {

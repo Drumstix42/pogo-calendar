@@ -12,6 +12,7 @@ export interface PokemonImageOptions {
 export interface PokemonImageData {
     name: string;
     imageUrl: string | null;
+    fallbackImageUrl?: string | null;
 }
 
 const RAID_DAY_TITLE_EXCEPTIONS = new Set(['fashion raid day']);
@@ -331,9 +332,9 @@ function getPokemonImagesFromBosses(event: PogoEvent, options?: PokemonImageOpti
                 spriteUrl = getSpriteUrl(parsedData.pokemonName, undefined, options, boss.image);
             }
 
-            images.push({ name: boss.name, imageUrl: spriteUrl });
+            images.push({ name: boss.name, imageUrl: spriteUrl, fallbackImageUrl: boss.image || null });
         } else {
-            images.push({ name: boss.name, imageUrl: boss.image || null });
+            images.push({ name: boss.name, imageUrl: boss.image || null, fallbackImageUrl: boss.image || null });
         }
     }
 
