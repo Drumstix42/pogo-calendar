@@ -463,23 +463,7 @@ function buildFullRaidScheduleDaySections(event: PogoEvent) {
                 schedule.bosses,
             );
         }
-
-        if (schedule.raidHours?.length) {
-            schedule.raidHours.forEach((raidHour, hourIndex) => {
-                if (!raidHour.bosses?.length) {
-                    return;
-                }
-
-                appendScheduleSection(
-                    daySection,
-                    `schedule-${scheduleIndex}-raidhour-${hourIndex}`,
-                    raidHour.label?.trim() || 'Scheduled',
-                    raidHour.time?.trim() || undefined,
-                    false,
-                    raidHour.bosses,
-                );
-            });
-        }
+        // Raid-hour rows are shown by generated pseudo events, not the parent event.
     });
 
     const daySections = orderedDates
@@ -798,6 +782,9 @@ const scheduleTargetDayName = computed(() => {
     letter-spacing: 0.05em;
     color: color-mix(in srgb, var(--bs-body-color) 82%, transparent);
     padding: 0 0.1rem;
+    position: sticky;
+    top: 0;
+    z-index: 11;
 }
 
 .raid-boss-tiers {
@@ -819,6 +806,9 @@ const scheduleTargetDayName = computed(() => {
         flex-wrap: wrap;
         gap: 0.35rem;
         padding-top: 0.2rem;
+        position: sticky;
+        top: 0;
+        z-index: 10;
     }
 
     .schedule-label {
@@ -887,5 +877,23 @@ const scheduleTargetDayName = computed(() => {
     display: flex;
     flex-wrap: wrap;
     gap: 4px;
+}
+
+.event-tooltip.is-scrollable .schedule-section-header {
+    background-color: var(--calendar-cell-bg);
+}
+
+.event-tooltip.is-scrollable .schedule-day-header {
+    background-color: var(--calendar-cell-bg);
+}
+
+.event-tooltip:not(.is-scrollable) .schedule-section-header {
+    background-color: var(--bs-body-bg);
+    top: -1rem;
+}
+
+.event-tooltip:not(.is-scrollable) .schedule-day-header {
+    background-color: var(--bs-body-bg);
+    top: -1rem;
 }
 </style>
