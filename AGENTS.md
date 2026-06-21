@@ -1,6 +1,20 @@
 # PoGo Calendar — Agent Notes
 
-Companion to `.github/copilot-instructions.md`. Deeper notes on subsystems, naming conventions, and edge cases. These are high-level orientations — treat them as guidance, not strict rules. Always read the actual code before making assumptions.
+Guidance for AI coding agents (Claude Code, Copilot, etc.) working in this repo.
+
+**This file is the canonical source.** `CLAUDE.md` imports it via `@AGENTS.md`, and
+[.github/copilot-instructions.md](.github/copilot-instructions.md) mirrors it for GitHub Copilot.
+Deeper notes on subsystems, naming conventions, and edge cases. These are high-level orientations —
+treat them as guidance, not strict rules. Always read the actual code before making assumptions.
+
+## Keep these docs current
+
+While working, if you notice anything in this file or
+[.github/copilot-instructions.md](.github/copilot-instructions.md) that is outdated, inaccurate, or
+incomplete — a renamed/removed file, a changed pipeline step, a new event type, a different CI
+schedule, a stale command, etc. — proactively flag it and suggest the fix. When a code change alters
+behavior these docs describe, propose the matching doc update in the same change. Edit **this file**
+(the canonical source) and keep the Copilot mirror in sync.
 
 ---
 
