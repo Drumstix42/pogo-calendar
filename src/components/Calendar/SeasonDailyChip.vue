@@ -106,6 +106,12 @@ function handleClick(event?: PogoEvent) {
     overflow: hidden;
 }
 
+@media (min-width: 576px) {
+    .season-chip-area {
+        margin-left: 3px;
+    }
+}
+
 .season-chip-area {
     &.season-chip-past {
         opacity: 0.5;
