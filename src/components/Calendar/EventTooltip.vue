@@ -738,7 +738,7 @@ const highlightDayOfWeek = computed<number | null>(() => {
 .event-content {
     display: flex;
     flex-direction: column;
-    gap: 0.4rem;
+    gap: 1rem;
     position: relative;
     z-index: 1;
 }

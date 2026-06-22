@@ -44,12 +44,11 @@
                         </div>
                     </div>
 
-                    <!-- Spotlight bonus icons -->
-                    <div v-if="!isMajorDaily && metadata?.spotlightBonus" class="spotlight-bonus-icons">
-                        <EvolveIcon v-if="metadata?.spotlightBonus?.category === 'evolve'" :size="13" class="evolve-icon" />
-                        <TransferIcon v-else-if="metadata?.spotlightBonus?.category === 'transfer'" :size="13" />
-                        <img v-if="metadata?.spotlightBonusIconUrl" :src="metadata!.spotlightBonusIconUrl!" class="bonus-type-icon" />
-                    </div>
+                    <SpotlightBonusIcons
+                        v-if="!isMajorDaily && metadata?.spotlightBonus"
+                        :category="metadata?.spotlightBonus?.category"
+                        :icon-url="metadata?.spotlightBonusIconUrl"
+                    />
                 </div>
                 <PokemonEventImages
                     v-if="calendarSettings.useSingleDayEventSprites"
@@ -81,10 +80,9 @@ import { useEventHighlightStore } from '@/stores/eventHighlight';
 import { getEventCount, shouldShowBadge } from '@/utils/eventDisplay';
 import { type PogoEvent } from '@/utils/eventTypes';
 
-import EvolveIcon from '../../Icons/EvolveIcon.vue';
-import TransferIcon from '../../Icons/TransferIcon.vue';
-import EventTooltip from '../EventTooltip.vue';
-import PokemonEventImages from '../PokemonEventImages.vue';
+import SpotlightBonusIcons from '@/components/Calendar/CalendarDay/SpotlightBonusIcons.vue';
+import EventTooltip from '@/components/Calendar/EventTooltip.vue';
+import PokemonEventImages from '@/components/Calendar/PokemonEventImages.vue';
 
 interface Props {
     event: PogoEvent;
@@ -177,7 +175,7 @@ const eventCount = computed(() => getEventCount(props.event));
             opacity 0.3s ease;
     }
 
-    .spotlight-bonus-icons {
+    :deep(.spotlight-bonus-icons) {
         transition:
             filter 0.3s ease,
             opacity 0.3s ease;
@@ -193,7 +191,7 @@ const eventCount = computed(() => getEventCount(props.event));
             }
         }
 
-        .spotlight-bonus-icons {
+        :deep(.spotlight-bonus-icons) {
             opacity: 0.6;
             filter: grayscale(100%);
         }
@@ -229,27 +227,6 @@ const eventCount = computed(() => getEventCount(props.event));
 
 .single-day-event:hover :deep(.event-toggle-button) {
     display: inline-flex;
-}
-
-.evolve-icon {
-    color: #aa403a;
-}
-
-[data-bs-theme='dark'] .evolve-icon {
-    color: #ee726e;
-}
-
-.event-dot {
-    margin-top: 3px;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    flex-shrink: 0;
-
-    @media (min-width: 425px) {
-        width: 9px;
-        height: 9px;
-    }
 }
 
 .event-content {
@@ -336,12 +313,21 @@ const eventCount = computed(() => getEventCount(props.event));
 
     .event-dot {
         display: inline-flex;
+        flex-shrink: 0;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
         margin-top: -1px;
         margin-right: 1px;
         margin-left: 1px;
 
         @media (min-width: 375px) {
             margin-left: 1px;
+        }
+
+        @media (min-width: 425px) {
+            width: 9px;
+            height: 9px;
         }
     }
 }
@@ -507,71 +493,15 @@ const eventCount = computed(() => getEventCount(props.event));
     );
 }
 
-[data-bs-theme='dark'] .single-day-event.major-daily-display-event:hover {
+/* [data-bs-theme='dark'] .single-day-event.major-daily-display-event:hover {
     background: linear-gradient(
         135deg,
         color-mix(in srgb, var(--calendar-hover-bg) 60%, var(--major-event-color) 25%),
         color-mix(in srgb, var(--calendar-cell-bg) 64%, var(--major-event-color) 33%)
     );
-}
+} */
 
 [data-bs-theme='dark'] .single-day-event.major-daily-display-event::after {
     background-color: color-mix(in srgb, var(--major-event-color) 70%, var(--bs-body-color) 30%);
-}
-
-.spotlight-bonus-icons {
-    z-index: 10;
-    pointer-events: none;
-    position: absolute;
-    right: 0;
-    bottom: 2px;
-    color: var(--bs-body-color);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0;
-    padding: 0 1px;
-    background-color: color-mix(in srgb, var(--calendar-cell-bg) 90%, transparent);
-    border-radius: 8px;
-    filter: grayscale(20%);
-
-    @media (min-width: 576px) {
-        right: 2px;
-        bottom: 3px;
-    }
-
-    @media (min-width: 992px) {
-        position: relative;
-        top: 2px;
-        right: auto;
-        bottom: auto;
-        gap: 3px;
-    }
-
-    @media (min-width: 1200px) {
-        flex-direction: row;
-    }
-}
-
-.calendar-day.today {
-    .spotlight-bonus-icons {
-        background-color: color-mix(in srgb, var(--calendar-today-bg) 90%, transparent);
-    }
-}
-
-.spotlight-bonus-icons > svg {
-    flex-shrink: 0;
-    background-color: color-mix(in srgb, var(--calendar-cell-bg) 50%, transparent);
-    border-radius: 50%;
-}
-
-.spotlight-bonus-icons .bonus-type-icon {
-    width: 13px;
-    height: 13px;
-    flex-shrink: 0;
-    object-fit: contain;
-    /* background-color: color-mix(in srgb, var(--calendar-cell-bg) 50%, transparent);
-    border-radius: 50%; */
-    filter: drop-shadow(1px 1px 1px color-mix(in srgb, black 40%, transparent));
 }
 </style>

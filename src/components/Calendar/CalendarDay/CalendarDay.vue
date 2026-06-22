@@ -79,9 +79,9 @@ import { type EventSlot, useCalendarDayLayout } from '@/composables/useCalendarD
 import { useCalendarDaySingleEvents } from '@/composables/useCalendarDaySingleEvents';
 import { useEventsStore } from '@/stores/events';
 
-import SeasonDailyChip from '../SeasonDailyChip.vue';
-import MultiDayEventBar from './MultiDayEventBar.vue';
-import SingleDayEvent from './SingleDayEvent.vue';
+import MultiDayEventBar from '@/components/Calendar/CalendarDay/MultiDayEventBar.vue';
+import SingleDayEvent from '@/components/Calendar/CalendarDay/SingleDayEvent.vue';
+import SeasonDailyChip from '@/components/Calendar/SeasonDailyChip.vue';
 
 interface Props {
     date: number;

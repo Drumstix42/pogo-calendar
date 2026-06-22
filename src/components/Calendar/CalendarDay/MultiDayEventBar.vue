@@ -82,8 +82,8 @@ import { getEventCount, getEventDisplayName, shouldShowBadge, shouldShowMultiDay
 import { formatEventName } from '@/utils/eventName';
 import { type PogoEvent, hasGroupedEvents, isMajorCalendarEventType } from '@/utils/eventTypes';
 
-import EventTooltip from '../EventTooltip.vue';
-import PokemonEventImages from '../PokemonEventImages.vue';
+import EventTooltip from '@/components/Calendar/EventTooltip.vue';
+import PokemonEventImages from '@/components/Calendar/PokemonEventImages.vue';
 
 interface Props {
     event: PogoEvent;

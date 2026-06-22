@@ -1,7 +1,7 @@
 import typescript from '@typescript-eslint/eslint-plugin';
 import typescriptParser from '@typescript-eslint/parser';
-import { includeIgnoreFile } from 'eslint/config';
 import vue from 'eslint-plugin-vue';
+import { includeIgnoreFile } from 'eslint/config';
 import { fileURLToPath } from 'node:url';
 import vueParser from 'vue-eslint-parser';
 
