@@ -157,7 +157,7 @@ seams below are **initial hypotheses from the first survey** — verify against 
     - Composables in `src/composables/`: `useCalendarDayLayout.ts` (255 — week boundaries, compact-slot
       packing, bar positioning/classes/sizing; exports the shared `EventSlot` type),
       `useCalendarDaySingleEvents.ts` (98 — single-day list + major-daily projections),
-      `useDailyEventDisplay.ts` (59 — per-event helpers: canonical id, variant, display name, details),
+      `useDailyEventDisplay.ts` (59 — per-event helpers: source id, variant, display name, details),
       `useCalendarDayEventInteraction.ts` (48 — shared hover/tooltip/tap handlers),
       `useEventHighlightDebounce.ts` (44 — **shared with TimelineEvent**, replaced a duplicated impl).
     - Util `src/utils/eventDisplay.ts` (29 — `getEventDisplayName`/`getEventCount`/`shouldShowBadge`/

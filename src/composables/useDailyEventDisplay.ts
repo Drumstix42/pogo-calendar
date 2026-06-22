@@ -9,7 +9,7 @@ import { type MajorCalendarEventVariant, type PogoEvent, getMajorCalendarEventVa
 export function useDailyEventDisplay() {
     const eventsStore = useEventsStore();
 
-    function getCanonicalEventID(event: PogoEvent): string {
+    function getSourceEventID(event: PogoEvent): string {
         return ((event as Partial<DailyMajorDisplayEvent>)._sourceEventID ?? event.eventID) as string;
     }
 
@@ -18,7 +18,7 @@ export function useDailyEventDisplay() {
     }
 
     function getEventMetadataForDisplay(event: PogoEvent) {
-        return eventsStore.eventMetadata[getCanonicalEventID(event)];
+        return eventsStore.eventMetadata[getSourceEventID(event)];
     }
 
     function getMajorDailyVariant(event: PogoEvent): MajorCalendarEventVariant {
@@ -28,7 +28,7 @@ export function useDailyEventDisplay() {
 
         return getMajorCalendarEventVariant({
             ...event,
-            eventID: getCanonicalEventID(event),
+            eventID: getSourceEventID(event),
         });
     }
 
@@ -45,11 +45,11 @@ export function useDailyEventDisplay() {
             return event;
         }
 
-        return eventsStore.getEventById(getCanonicalEventID(event)) ?? event;
+        return eventsStore.getEventById(getSourceEventID(event)) ?? event;
     }
 
     return {
-        getCanonicalEventID,
+        getSourceEventID,
         isMajorDailyDisplayEvent,
         getEventMetadataForDisplay,
         getMajorDailyVariant,

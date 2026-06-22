@@ -6,7 +6,7 @@ import { useEventHighlightDebounce } from '@/composables/useEventHighlightDeboun
 import { useUrlSync } from '@/composables/useUrlSync';
 
 // Shared hover/tooltip/tap interaction for the event bars and blocks in a CalendarDay cell.
-// Callers pass the already-resolved (canonical) event id.
+// Callers pass the already-resolved (source) event id.
 export function useCalendarDayEventInteraction(getDayInstance: () => Dayjs) {
     const { isTouchDevice } = useDeviceDetection();
     const { selectEvent, clearEvent, selectedEventId } = useUrlSync();

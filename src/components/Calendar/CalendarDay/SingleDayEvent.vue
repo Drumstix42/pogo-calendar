@@ -6,14 +6,14 @@
         :distance="tooltipOptionsDefaults.distance"
         :auto-hide="tooltipOptionsDefaults.autoHide"
         :show-group="`single-${event.eventID}`"
-        @apply-show="handleMenuShow(canonicalId)"
-        @apply-hide="handleMenuHide(canonicalId)"
+        @apply-show="handleMenuShow(sourceEventId)"
+        @apply-hide="handleMenuHide(sourceEventId)"
     >
         <div
             class="single-day-event calendar-event"
             :class="{
                 'event-past': metadata?.isPastEvent,
-                'event-id-highlighted': eventHighlight.hoveredEventID === canonicalId,
+                'event-id-highlighted': eventHighlight.hoveredEventID === sourceEventId,
                 'has-bonus-icons': calendarSettings.useSingleDayEventSprites && metadata?.spotlightBonus,
                 'major-daily-display-event': isMajorDaily,
                 'major-daily-global': isMajorDaily && majorVariant === 'global',
@@ -23,10 +23,10 @@
                 '--major-event-color': metadata?.color,
             }"
             :data-event-type="event.eventType"
-            :data-event-id="canonicalId"
-            @mouseenter="debouncedHighlightEventID(canonicalId)"
+            :data-event-id="sourceEventId"
+            @mouseenter="debouncedHighlightEventID(sourceEventId)"
             @mouseleave="debouncedClearEventIDHighlight"
-            @click="handleEventClick(canonicalId)"
+            @click="handleEventClick(sourceEventId)"
         >
             <div class="event-content">
                 <div class="event-text-wrap d-flex align-items-start gap-2">
@@ -96,7 +96,7 @@ const calendarSettings = useCalendarSettingsStore();
 const eventHighlight = useEventHighlightStore();
 
 const {
-    getCanonicalEventID,
+    getSourceEventID,
     isMajorDailyDisplayEvent,
     getEventMetadataForDisplay,
     getMajorDailyVariant,
@@ -125,7 +125,7 @@ const singleDayPokemonHeight = computed(() => {
     return 40; // < 1200px
 });
 
-const canonicalId = computed(() => getCanonicalEventID(props.event));
+const sourceEventId = computed(() => getSourceEventID(props.event));
 const metadata = computed(() => getEventMetadataForDisplay(props.event));
 const isMajorDaily = computed(() => isMajorDailyDisplayEvent(props.event));
 const majorVariant = computed(() => getMajorDailyVariant(props.event));
