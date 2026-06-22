@@ -1141,6 +1141,24 @@ const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; 
     min-width: max(80px, 100%);
 }
 
+.single-day-event :deep(.overflow-counter-badge) {
+    top: -2px;
+    bottom: auto;
+    left: 0;
+    right: auto;
+    height: 12px;
+    padding: 0 4px;
+    font-size: 10px;
+    font-weight: 500;
+    background-color: rgba(30, 30, 40, 0.75);
+}
+
+@media (min-width: 375px) {
+    .single-day-event :deep(.overflow-counter-badge) {
+        left: -2px;
+    }
+}
+
 .event-dot {
     margin-top: 3px;
     width: 8px;
