@@ -4,7 +4,7 @@
         <div class="d-flex align-items-center flex-wrap gap-1" :class="{ 'flex-grow-1': !isDesktopSidebar }">
             <span class="month-label flex-grow-1">{{ currentMonthDisplay }}</span>
 
-            <VTooltip v-if="!isCurrentMonth" placement="top" :delay="{ show: 50, hide: 0 }" distance="10" class="d-flex align-items-center ms-1">
+            <VTooltip v-if="!isCurrentMonth" :disabled="isTouchDevice" placement="top" :delay="{ show: 50, hide: 0 }" distance="10" class="d-flex align-items-center ms-1">
                 <template #popper>
                     <div class="tooltip-text">Go to current month</div>
                 </template>
@@ -15,7 +15,7 @@
             </VTooltip>
 
             <div class="d-flex align-items-center">
-                <VTooltip placement="top" :delay="{ show: 50, hide: 0 }" distance="10" class="d-flex align-items-center ms-1">
+                <VTooltip :disabled="isTouchDevice" placement="top" :delay="{ show: 50, hide: 0 }" distance="10" class="d-flex align-items-center ms-1">
                     <template #popper>
                         <div class="tooltip-text">Previous month</div>
                     </template>
@@ -23,7 +23,7 @@
                         <ChevronLeft :size="24" />
                     </button>
                 </VTooltip>
-                <VTooltip placement="top" :delay="{ show: 50, hide: 0 }" distance="10" class="d-flex align-items-center ms-1">
+                <VTooltip :disabled="isTouchDevice" placement="top" :delay="{ show: 50, hide: 0 }" distance="10" class="d-flex align-items-center ms-1">
                     <template #popper>
                         <div class="tooltip-text">Next month</div>
                     </template>
@@ -59,6 +59,7 @@ import { Calendar, ChevronLeft, ChevronRight, PanelRightClose, PanelRightOpen, U
 import { computed } from 'vue';
 
 import { useCurrentTime } from '@/composables/useCurrentTime';
+import { useDeviceDetection } from '@/composables/useDeviceDetection';
 import { useUrlSync } from '@/composables/useUrlSync';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { DATE_FORMAT } from '@/utils/dateFormat';
@@ -66,6 +67,7 @@ import { DATE_FORMAT } from '@/utils/dateFormat';
 const { urlMonth, urlYear } = useUrlSync();
 const calendarSettings = useCalendarSettingsStore();
 const { liveMinute } = useCurrentTime();
+const { isTouchDevice } = useDeviceDetection();
 
 const displayToday = computed(() => {
     return liveMinute.value.add(calendarSettings.manualTimeOffsetHours * 60, 'minute').startOf('day');
