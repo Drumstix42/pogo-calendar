@@ -289,7 +289,7 @@ import {
     isEventWithSubtype,
     isMajorCalendarEventType,
 } from '@/utils/eventTypes';
-import { buildRaidTierGroupsWithImages } from '@/utils/raidTierGroups';
+import { buildRaidTierGroupsWithImages, buildTierGroupsFromBosses } from '@/utils/raidTierGroups';
 
 import EventExtras from './EventExtras.vue';
 import EventTimeDisplay from './EventTimeDisplay.vue';
@@ -348,43 +348,6 @@ const parentEventName = computed(() => lookupParentEventName(props.event));
 
 function getParentEventName(event: PogoEvent): string | null {
     return lookupParentEventName(event);
-}
-
-function sortTierLabel(a: string, b: string): number {
-    const normalizedA = a.trim().toLowerCase();
-    const normalizedB = b.trim().toLowerCase();
-
-    if (normalizedA === 'super mega' && normalizedB !== 'super mega') return -1;
-    if (normalizedB === 'super mega' && normalizedA !== 'super mega') return 1;
-
-    const tierA = a.match(/^Tier (\d+)$/i);
-    const tierB = b.match(/^Tier (\d+)$/i);
-    if (tierA && tierB) return parseInt(tierB[1]) - parseInt(tierA[1]);
-    if (tierA) return -1;
-    if (tierB) return 1;
-    return a.localeCompare(b);
-}
-
-function buildTierGroupsFromBosses(bosses: PokemonBoss[]) {
-    if (!bosses || bosses.length === 0) {
-        return undefined;
-    }
-
-    const tierMap = new Map<string, PokemonBoss[]>();
-    bosses.forEach(boss => {
-        const label = boss.raidType || 'Other';
-        if (!tierMap.has(label)) {
-            tierMap.set(label, []);
-        }
-        tierMap.get(label)!.push(boss);
-    });
-
-    return Array.from(tierMap.entries())
-        .sort(([a], [b]) => sortTierLabel(a, b))
-        .map(([label, groupedBosses]) => ({
-            label,
-            bosses: groupedBosses,
-        }));
 }
 
 type TooltipScheduleSection = {

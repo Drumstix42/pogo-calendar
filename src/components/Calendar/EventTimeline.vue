@@ -90,7 +90,7 @@ import { useEventFilterStore } from '@/stores/eventFilter';
 import { useEventsStore } from '@/stores/events';
 import { type PogoEvent, TimelineCategory, type TimelineCategoryKey, sortEventsByTimingAndPriority } from '@/utils/eventTypes';
 
-import TimelineEvent from './TimelineEvent.vue';
+import TimelineEvent from './TimelineEvent/TimelineEvent.vue';
 import CollapsibleSection from '@/components/CollapsibleSection.vue';
 
 interface Props {

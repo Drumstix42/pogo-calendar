@@ -114,7 +114,7 @@ Priority: ordered roughly by size × tangle. Tackle top-down; they're largely in
 | #   | Feature / file                                                                  | Lines (T/script/style) | Status | Result                        | Priority |
 | --- | ------------------------------------------------------------------------------- | ---------------------- | ------ | ----------------------------- | -------- |
 | 1   | [CalendarDay.vue](src/components/Calendar/CalendarDay/CalendarDay.vue)          | 1320 / ~494 / ~820     | ✅     | 226 (orchestrator); see notes | P1       |
-| 2   | [TimelineEvent.vue](src/components/Calendar/TimelineEvent.vue)                  | 931 / ~424 / ~469      | ⬜     | —                             | P1       |
+| 2   | [TimelineEvent.vue](src/components/Calendar/TimelineEvent/TimelineEvent.vue)    | 931 / ~424 / ~469      | ✅     | 428 (orchestrator); see notes | P1       |
 | 3   | [EventTooltip.vue](src/components/Calendar/EventTooltip.vue)                    | 795 / ~347 / ~290      | ⬜     | —                             | P2       |
 | 4   | [Calendar.vue (page)](src/pages/Calendar.vue)                                   | 525 / ~213 / ~265      | ⬜     | —                             | P2       |
 | 5   | [EventFilterOptions.vue](src/components/CalendarOptions/EventFilterOptions.vue) | 516                    | ⬜     | —                             | P2       |
@@ -191,9 +191,47 @@ seams below are **initial hypotheses from the first survey** — verify against 
 ### 2. TimelineEvent.vue
 
 - **Why:** 931 lines, uses `lang="scss"`; single event row in the timeline with heavy state.
-- **Suggested seams (verify):** active/popper region; logic → `useTimelineEvent.ts`.
-- **Manual checks:** timeline event rendering, active state, popper, responsiveness.
-- **Findings:** _(none yet)_
+- **Manual checks:** ✅ header (badge color, expand chevron hover-fade, palette/hide buttons when
+  expanded); ✅ collapsed multi-day raid schedule (compact per-day boss list); ✅ expanded raid
+  schedule (day sections, all-day/timed label colors, time pills, tier groups, animated sprites);
+  ✅ fallback tier groups; ✅ shadow-raid overlay; ✅ inline pokemon row + overflow; ✅ highlight-on-
+  hover (xxl sidebar). (Verified light + dark across stages 4 & 5.)
+- **Realized split** (TimelineEvent.vue 931 → **428-line orchestrator**, promoted to
+  `src/components/Calendar/TimelineEvent/`):
+    - Sub-components in `TimelineEvent/`: `TimelineEvent.vue` (orchestrator — keeps the card shell +
+      major-timeline CSS + body name/spotlight + bottom link), `TimelineEventHeader.vue` (141 —
+      badge/color-edit/hide/expand header bar + its CSS), `TimelineRaidSchedule.vue` (179 — expanded
+      schedule, both day-section and fallback-tier variants, + all `.schedule-*`/`.tier-*` CSS),
+      `TimelineCollapsedSchedule.vue` (63 — compact per-day boss list for the non-active card).
+    - Composable `src/composables/useTimelineEvent.ts` (158 — display computeds, action handlers,
+      and the guarded highlight debounce; takes `(props, emit)`).
+    - Util `src/utils/timelineSchedule.ts` (232 — `buildTimelineScheduleDaySectionsWithTierGroups`
+      and `buildCollapsedScheduleDayGroups` plus the private time-sort/label helpers; exports the
+      `TimelineScheduleDaySection` and `CollapsedScheduleDayGroup` types).
+    - Shared into `src/utils/raidTierGroups.ts`: `sortTierLabel` + `buildTierGroupsFromBosses`
+      (were **byte-identical duplicates** in `EventTooltip.vue` — both now import them).
+- **Findings:**
+    - **Dedup done (connected component):** [EventTooltip.vue](src/components/Calendar/EventTooltip.vue)
+      had identical `sortTierLabel`/`buildTierGroupsFromBosses` copies; both files now use the shared
+      versions in `raidTierGroups.ts`. EventTooltip's _schedule-day_ builder genuinely diverges
+      (no `raidHours`, different default labels, `sortKey: 0`) so it was left in place — not shareable.
+    - **Cross-boundary CSS:** the card-shell rule `.timeline-event-card:hover .expand-toggle` now
+      reaches the child header via `:deep(.expand-toggle)`. `--event-color` (inline on the card) still
+      cascades into all children since CSS custom properties ignore scoping.
+    - **Two schedule components, not one:** collapsed vs. expanded render in different slots with
+      different layouts, so a single component with a `variant` branch was avoided. The trivial 3-line
+      `.tier-images` rule is duplicated in each (not worth centralizing).
+    - **Orchestrator still 428 lines (over the ~300 soft target):** ~258 of those are scoped CSS,
+      almost entirely the cohesive card shell — `.timeline-event-card` + the `major-timeline`
+      gradient/`::after` mask variants across 3 breakpoints + dark theme. This is the orchestrator's
+      own card surface, not a separable seam. _Follow-up option:_ lift the major-timeline card CSS to
+      an SCSS partial if it grows.
+    - **Spotlight bonus icons (deferred):** the `.spotlight-bonus-icons` block here duplicates the
+      _logic_ of [SpotlightBonusIcons.vue](src/components/Calendar/CalendarDay/SpotlightBonusIcons.vue)
+      but with different styling (15px inline row vs. 13px absolutely-positioned in calendar cells).
+      Left as-is to avoid disturbing the just-settled CalendarDay component; a shared icon-only
+      component (size prop, consumer-owned positioning) is a possible follow-up.
+    - **Typing smell (noted, not changed):** `(event as any)._isGrouped` in the bottom-link guard.
 
 ### 3. EventTooltip.vue
 
