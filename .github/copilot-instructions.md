@@ -44,6 +44,18 @@ Vue 3 + TypeScript calendar for Pokemon GO events. Events fetched from external 
 - Avoid low-level implementation details in the commit body
 - Prefer git command line instead of tools
 
+## Component Standards (large-file refactors)
+
+Full standard: `AGENTS.md → Component Standards`. Active refactor tracker: `REFACTOR.md`.
+
+- Soft target: `.vue` files under ~300 lines; flag over ~400. Goal is reduced complexity per file, not line golf. Large `<style scoped>` blocks count as bloat.
+- Keep templates thin — push multi-branch ternaries / derived data into `computed` or composables. Lift inline `:style`/`:class` objects with >3 keys to a `computed`.
+- Stateful/reusable logic → composable (`useX.ts`); pure helpers → `src/utils/`; persisted/global state → Pinia store.
+- Split sub-components at clear seams (template region + its styles); move CSS with its markup. Promote to a folder when a component grows its own parts.
+- Don't analyze a component in isolation — scan connected/related components (imports, importers, siblings doing similar work). Look for duplicated logic to extract once and share, and for new parts/composables that belong in a shared location because a neighbor could reuse them. Widening scope to a neighbor needs user sign-off; otherwise note it as a follow-up.
+- Refactors are **behavior-preserving**: no functional/output changes. Surface modernization ideas and suspected bugs as notes — don't smuggle them into a refactor.
+- Refactor in **small, independently verifiable stages** — one seam per step, app left working and manually confirmable between steps — not one big-bang rewrite. With no test suite, the size of a step is the size of the debugging haystack. Run `type-check`/`lint` as a near-complete gate, not after every edit.
+
 ## Critical Patterns
 
 ### Pinia Stores
