@@ -129,13 +129,13 @@ but when a file violates several at once, it's a refactor candidate.
   styles + (ideally) its own slice of logic. Avoid "prop-drilling" splits that just move a tangle
   behind a `<Child :a :b :c :d :e>` wall.
 - When a component grows its own family of parts/composables, **promote it to a folder**:
-  ```
-  Calendar/CalendarDay/
-    CalendarDay.vue          # orchestrator
-    MultiDayEventBar.vue     # extracted region
-    useCalendarDayEvents.ts  # extracted logic
-  ```
-  Update all imports to the new path. Keep explicit imports (no barrel `index.ts`; matches current style).
+    ```
+    Calendar/CalendarDay/
+      CalendarDay.vue          # orchestrator
+      MultiDayEventBar.vue     # extracted region
+      useCalendarDayEvents.ts  # extracted logic
+    ```
+    Update all imports to the new path. Keep explicit imports (no barrel `index.ts`; matches current style).
 
 ### Styling
 
@@ -151,4 +151,4 @@ but when a file violates several at once, it's a refactor candidate.
 - Day.js UTC→local: `dayjs.utc(event.start).local()`.
 - VueUse breakpoints via `breakpointsBootstrapV5`; FloatingVue tooltips with touch disabled.
 - Lucide Vue for icons; `pokemonMapper.ts` for name normalization / ID lookup.
-- Minimal comments — explain *why*, not *what*.
+- Minimal comments — explain _why_, not _what_.

@@ -191,6 +191,7 @@ import { computed } from 'vue';
 
 import { useDeviceDetection } from '@/composables/useDeviceDetection';
 import { useEditColorModal } from '@/composables/useEditColorModal';
+import { useEventHighlightDebounce } from '@/composables/useEventHighlightDebounce';
 import { useHideEventModal } from '@/composables/useHideEventModal';
 import { useEventHighlightStore } from '@/stores/eventHighlight';
 import { useEventsStore } from '@/stores/events';
@@ -250,33 +251,10 @@ function openHideModal() {
     hideEventModal.openModal(props.event);
 }
 
-let highlightTimeout: number | null = null;
-
-function debouncedHighlightEventID(eventID: string) {
-    if (highlightTimeout) {
-        clearTimeout(highlightTimeout);
-    }
-
-    highlightTimeout = setTimeout(() => {
-        // Only highlight calendar events when desktop sidebar is visible
-        if (isDesktopSidebar.value) {
-            eventHighlight.highlightEventID(eventID);
-        }
-        highlightTimeout = null;
-    }, 200);
-}
-
-function debouncedClearEventIDHighlight() {
-    if (highlightTimeout) {
-        clearTimeout(highlightTimeout);
-        highlightTimeout = null;
-    }
-
-    // Only clear calendar highlights when desktop sidebar is visible
-    if (isDesktopSidebar.value) {
-        eventHighlight.clearEventIDHighlight();
-    }
-}
+// Only highlight/clear calendar events when desktop sidebar is visible
+const { debouncedHighlightEventID, debouncedClearEventIDHighlight } = useEventHighlightDebounce({
+    guard: () => isDesktopSidebar.value,
+});
 
 function sortTierLabel(a: string, b: string): number {
     const normalizedA = a.trim().toLowerCase();

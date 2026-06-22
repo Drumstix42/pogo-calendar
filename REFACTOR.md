@@ -21,13 +21,13 @@ agent at this file and the feature's row, and it has everything it needs.
    code, **note it** (in the PR description and/or the feature's "Findings" notes) rather than
    silently changing behavior. The user decides whether to action it.
 5. **No test suite exists.** Verification is type-check + lint + manual. Extract logic in a
-   *testable shape* (pure functions, composables) so tests can be added later. Type-check is a
+   _testable shape_ (pure functions, composables) so tests can be added later. Type-check is a
    gate for when the refactor is well under way / near complete — not something to run after every
    small edit. (The user watches the IDE for type errors in-flight and will flag them.)
 6. **Refactor in small, independently verifiable stages.** Prefer a sequence of small extractions —
    each leaving the app in a working, manually-confirmable state — over one big-bang rewrite. With
    no test suite to localize a regression, the size of a single step is the size of your debugging
-   haystack. Keep each step to *one seam* so that if behavior breaks, the cause is obviously the
+   haystack. Keep each step to _one seam_ so that if behavior breaks, the cause is obviously the
    last thing you did. Checkpoint (commit, or pause for the user to eyeball) between stages so a
    single step can be reverted without losing the rest. Big-bang is acceptable only for a genuinely
    atomic change that can't be decomposed — the rare exception, called out explicitly.
@@ -65,16 +65,16 @@ Follow these steps for each feature. They assume a fresh conversation.
 4. **Scan connected/related components.** Don't analyze the target in isolation. Look at what it
    imports, what imports it, and its siblings that do similar work (e.g. the timeline pair, the
    shared tooltip, a modal + its existing composable). For each, ask:
-   - Is there **duplicated or near-duplicated logic** that should be extracted once and shared,
-     rather than extracted into this component's private composable?
-   - Would a sub-component or composable being created here be **reusable by a neighbor**, and
-     should it therefore live in a shared location (`src/composables/`, `src/utils/`, a shared
-     component) instead of the feature's folder?
-   - Will this refactor **leave a sibling diverging** in a way worth folding into scope (or noting
-     as a follow-up row)?
-   Decide deliberately whether to pull a neighbor into scope, extract shared code both can adopt,
-   or just record the opportunity. **Widening scope needs the user's sign-off in step 5** — flag
-   it; don't silently expand the refactor.
+    - Is there **duplicated or near-duplicated logic** that should be extracted once and shared,
+      rather than extracted into this component's private composable?
+    - Would a sub-component or composable being created here be **reusable by a neighbor**, and
+      should it therefore live in a shared location (`src/composables/`, `src/utils/`, a shared
+      component) instead of the feature's folder?
+    - Will this refactor **leave a sibling diverging** in a way worth folding into scope (or noting
+      as a follow-up row)?
+      Decide deliberately whether to pull a neighbor into scope, extract shared code both can adopt,
+      or just record the opportunity. **Widening scope needs the user's sign-off in step 5** — flag
+      it; don't silently expand the refactor.
 5. **Propose the split to the user** (file list: new components/composables, what moves where, and
    any connected-component scope from step 4) **and wait for confirmation** before editing. This
    matches the repo's "outline first for larger changes" workflow.
@@ -111,20 +111,20 @@ Status legend: ⬜ Not started · 🟡 In progress · ✅ Settled · ⏭️ Skip
 
 Priority: ordered roughly by size × tangle. Tackle top-down; they're largely independent.
 
-| # | Feature / file | Lines (T/script/style) | Status | Result | Priority |
-|---|----------------|------------------------|--------|--------|----------|
-| 1 | [CalendarDay.vue](src/components/Calendar/CalendarDay.vue) | 1320 / ~494 / ~820 | ⬜ | — | P1 |
-| 2 | [TimelineEvent.vue](src/components/Calendar/TimelineEvent.vue) | 931 / ~424 / ~469 | ⬜ | — | P1 |
-| 3 | [EventTooltip.vue](src/components/Calendar/EventTooltip.vue) | 795 / ~347 / ~290 | ⬜ | — | P2 |
-| 4 | [Calendar.vue (page)](src/pages/Calendar.vue) | 525 / ~213 / ~265 | ⬜ | — | P2 |
-| 5 | [EventFilterOptions.vue](src/components/CalendarOptions/EventFilterOptions.vue) | 516 | ⬜ | — | P2 |
-| 6 | [EventTimeline.vue](src/components/Calendar/EventTimeline.vue) | 453 | ⬜ | — | P3 |
-| 7 | [EditEventColorModal.vue](src/components/Calendar/EditEventColorModal.vue) | 430 | ⬜ | — | P3 |
-| 8 | [eventTypes.ts](src/utils/eventTypes.ts) | 747 | ⬜ | — | P3 |
-| 9 | [eventPokemon.ts](src/utils/eventPokemon.ts) | 566 | ⬜ | — | P3 |
-| 10 | [EventTimeDisplay.vue](src/components/Calendar/EventTimeDisplay.vue) | 353 | ⬜ | — | P4 |
-| 11 | [EventOptions.vue](src/components/CalendarOptions/EventOptions.vue) | 331 | ⬜ | — | P4 |
-| 12 | [HideEventModal.vue](src/components/Calendar/HideEventModal.vue) | 308 | ⬜ | — | P4 |
+| #   | Feature / file                                                                  | Lines (T/script/style) | Status | Result                        | Priority |
+| --- | ------------------------------------------------------------------------------- | ---------------------- | ------ | ----------------------------- | -------- |
+| 1   | [CalendarDay.vue](src/components/Calendar/CalendarDay/CalendarDay.vue)          | 1320 / ~494 / ~820     | ✅     | 226 (orchestrator); see notes | P1       |
+| 2   | [TimelineEvent.vue](src/components/Calendar/TimelineEvent.vue)                  | 931 / ~424 / ~469      | ⬜     | —                             | P1       |
+| 3   | [EventTooltip.vue](src/components/Calendar/EventTooltip.vue)                    | 795 / ~347 / ~290      | ⬜     | —                             | P2       |
+| 4   | [Calendar.vue (page)](src/pages/Calendar.vue)                                   | 525 / ~213 / ~265      | ⬜     | —                             | P2       |
+| 5   | [EventFilterOptions.vue](src/components/CalendarOptions/EventFilterOptions.vue) | 516                    | ⬜     | —                             | P2       |
+| 6   | [EventTimeline.vue](src/components/Calendar/EventTimeline.vue)                  | 453                    | ⬜     | —                             | P3       |
+| 7   | [EditEventColorModal.vue](src/components/Calendar/EditEventColorModal.vue)      | 430                    | ⬜     | —                             | P3       |
+| 8   | [eventTypes.ts](src/utils/eventTypes.ts)                                        | 747                    | ⬜     | —                             | P3       |
+| 9   | [eventPokemon.ts](src/utils/eventPokemon.ts)                                    | 566                    | ⬜     | —                             | P3       |
+| 10  | [EventTimeDisplay.vue](src/components/Calendar/EventTimeDisplay.vue)            | 353                    | ⬜     | —                             | P4       |
+| 11  | [EventOptions.vue](src/components/CalendarOptions/EventOptions.vue)             | 331                    | ⬜     | —                             | P4       |
+| 12  | [HideEventModal.vue](src/components/Calendar/HideEventModal.vue)                | 308                    | ⬜     | —                             | P4       |
 
 **Explicitly out of scope** (large but they're data, not logic — leave alone unless asked):
 `constants/pokemonFormMap.ts`, `constants/validAnimatedSprites.ts`, `constants/validStaticSprites.ts`,
@@ -142,15 +142,51 @@ seams below are **initial hypotheses from the first survey** — verify against 
 - **Why:** Largest file; ~820 lines of scoped CSS in one component; dense template with multi-day
   bar positioning logic, major-event handling, single-day events, loading skeleton, tooltips.
 - **Suggested seams (verify):**
-  - `MultiDayEventBar.vue` — the multi-day bar slot region + its positioning/`:style`/`:class` CSS.
-  - `useCalendarDayEvents.ts` — `calendarEvents`, `majorDailyDisplayEvents`, week-boundary and
-    slot-positioning helpers (`getWeekBoundaries`, `getEventSlotTop`, `getEventPosition`, etc.).
-  - Possibly a single-day events region component.
-  - Promote to a `CalendarDay/` folder once it has 2+ parts.
-- **Manual checks:** multi-day bars span/position correctly across week boundaries; grouped events;
+    - `MultiDayEventBar.vue` — the multi-day bar slot region + its positioning/`:style`/`:class` CSS.
+    - `useCalendarDayEvents.ts` — `calendarEvents`, `majorDailyDisplayEvents`, week-boundary and
+      slot-positioning helpers (`getWeekBoundaries`, `getEventSlotTop`, `getEventPosition`, etc.).
+    - Possibly a single-day events region component.
+    - Promote to a `CalendarDay/` folder once it has 2+ parts.
+- **Manual checks:** ✅ multi-day bars span/position correctly across week boundaries; grouped events;
   badges/overflow counts; major event daily display; loading skeleton; tooltips on hover (desktop)
-  and tap (touch); past-event styling; highlight-on-hover sync.
-- **Findings:** _(none yet)_
+  and tap (touch); past-event styling; highlight-on-hover sync. (Verified light + dark, mobile +
+  desktop breakpoints across stages 5 & 6.)
+- **Realized split** (CalendarDay.vue 1320 → **226-line orchestrator**):
+    - Sub-components in `src/components/Calendar/CalendarDay/`: `CalendarDay.vue` (orchestrator),
+      `MultiDayEventBar.vue` (280), `SingleDayEvent.vue` (577).
+    - Composables in `src/composables/`: `useCalendarDayLayout.ts` (255 — week boundaries, compact-slot
+      packing, bar positioning/classes/sizing; exports the shared `EventSlot` type),
+      `useCalendarDaySingleEvents.ts` (98 — single-day list + major-daily projections),
+      `useDailyEventDisplay.ts` (59 — per-event helpers: canonical id, variant, display name, details),
+      `useCalendarDayEventInteraction.ts` (48 — shared hover/tooltip/tap handlers),
+      `useEventHighlightDebounce.ts` (44 — **shared with TimelineEvent**, replaced a duplicated impl).
+    - Util `src/utils/eventDisplay.ts` (29 — `getEventDisplayName`/`getEventCount`/`shouldShowBadge`/
+      `shouldShowMultiDaySprites`).
+    - Shared `.calendar-event-badge` base moved to global `src/styles/style.scss` (alongside the other
+      global calendar-event styles).
+- **Findings:**
+    - **Dead CSS removed (~95 lines):** `.composite-*`, `.tooltip-wrapper`, `.segment-content`,
+      `.composite-event-container` and the `.*.composite-*` cap overrides — no markup referenced them.
+    - **Dead computed field removed:** `calendarEvents.multiDayEvents` (+ its `multiDay` filter/sort)
+      was computed but never read — the rendered multi-day list comes from `eventSlots` via the layout
+      composable.
+    - **Dead selector dropped:** `.multi-day-event-bar:hover .event-name-container` (multi-day bars
+      have no `.event-name-container` element).
+    - **`SingleDayEvent.vue` is 577 lines (over the ~300 soft target):** ~440 of those are scoped CSS,
+      dominated by the `.major-daily-display-event` card variants across 5 breakpoints + the
+      `.spotlight-bonus-icons` block. It's one cohesive region (the major-daily entry is the same
+      `.single-day-event` element with extra classes/`::after`, not a separable template seam).
+      _Follow-up option:_ lift the major-daily-card CSS into an SCSS partial if it grows further.
+    - **Behavior note (debounce):** highlight debounce is now per-bar/per-block (each instance owns its
+      timeout) instead of one shared timer per cell. Equivalent for sibling elements (browser fires
+      `mouseleave` before `mouseenter`); only differs under overlapping/nested hover, which doesn't occur.
+    - **Possibly-dead `:deep(.event-toggle-button)` rules** (now in both sub-components) — `EventToggleButton`
+      isn't rendered here; left intact (behavior-preserving), worth confirming before removal.
+    - **Connected-component follow-up:** [CalendarGrid.vue](src/components/Calendar/CalendarGrid.vue)
+      has its own duplicate `EventSlot` interface; it could adopt the one now exported from
+      `useCalendarDayLayout.ts`.
+    - **Tooling (incidental):** `eslint .` was scanning `dist/`; added `@eslint/compat` +
+      `includeIgnoreFile('.gitignore')` so ESLint mirrors `.gitignore`.
 
 ### 2. TimelineEvent.vue
 

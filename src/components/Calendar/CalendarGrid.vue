@@ -40,7 +40,7 @@ import { useEventsStore } from '@/stores/events';
 import { getRaidSubType, getRaidSubTypePriority } from '@/utils/eventTypes';
 import { type PogoEvent, getEventTypeInfo, parseEventDate } from '@/utils/eventTypes';
 
-import CalendarDay from './CalendarDay.vue';
+import CalendarDay from './CalendarDay/CalendarDay.vue';
 
 const { urlMonth, urlYear } = useUrlSync();
 const calendarSettings = useCalendarSettingsStore();
