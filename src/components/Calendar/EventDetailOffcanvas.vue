@@ -36,7 +36,7 @@ import { CalendarDays, ExternalLink, X } from '@lucide/vue';
 
 import type { PogoEvent } from '@/utils/eventTypes';
 
-import EventTooltip from './EventTooltip.vue';
+import EventTooltip from './EventTooltip/EventTooltip.vue';
 
 interface Props {
     event?: PogoEvent;

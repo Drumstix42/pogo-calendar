@@ -342,6 +342,17 @@ const hiddenEventsCounts = computed(() => eventData.value.hiddenEventsCounts);
 <style lang="scss" scoped>
 .event-timeline {
     padding: 0;
+
+    /* Sticky offsets shared with the nested schedule headers in TimelineRaidSchedule (inherited via
+       CSS custom props). --tl-sticky-top is where the category header parks; the day + section
+       headers stack below it. Heights are approximate — nudge if headers gap or overlap. */
+    --tl-sticky-top: 0px;
+    --tl-category-header-h: 1.8rem;
+    --tl-day-header-h: 1.7rem;
+}
+
+.event-timeline:not(.sidebar-mode) {
+    --tl-sticky-top: var(--navbar-height-scrolled);
 }
 
 .no-events {
@@ -378,7 +389,7 @@ const hiddenEventsCounts = computed(() => eventData.value.hiddenEventsCounts);
 
 .event-category :deep(.timeline-category-header) {
     position: sticky;
-    top: 0;
+    top: var(--tl-sticky-top);
     z-index: 10;
     margin: 0;
     padding: 0 0.8rem;
@@ -390,11 +401,6 @@ const hiddenEventsCounts = computed(() => eventData.value.hiddenEventsCounts);
 
 .event-category :deep(.timeline-category-header:hover) {
     background: var(--bs-tertiary-bg);
-}
-
-/* When not in sidebar mode, stick relative to viewport */
-.event-timeline:not(.sidebar-mode) .event-category :deep(.timeline-category-header) {
-    top: var(--navbar-height-scrolled);
 }
 
 .event-category :deep(.section-title) {

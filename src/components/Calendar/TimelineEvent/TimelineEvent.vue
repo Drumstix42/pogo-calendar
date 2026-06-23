@@ -172,7 +172,6 @@ const {
     position: relative;
     border: 1px solid color-mix(in srgb, var(--event-color) 42%, var(--bs-border-color));
     border-radius: 8px;
-    overflow: hidden;
     background-color: color-mix(in srgb, var(--event-color) 5%, var(--calendar-cell-bg));
     transition:
         transform 0.15s ease,

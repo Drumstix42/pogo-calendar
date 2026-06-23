@@ -35,7 +35,7 @@ import { useSeasonsStore } from '@/stores/seasons';
 import { type PogoEvent } from '@/utils/eventTypes';
 import { formatSeasonChipLabel } from '@/utils/seasonChipLabel';
 
-import EventTooltip from './EventTooltip.vue';
+import EventTooltip from './EventTooltip/EventTooltip.vue';
 
 interface Props {
     dayInstance: Dayjs;

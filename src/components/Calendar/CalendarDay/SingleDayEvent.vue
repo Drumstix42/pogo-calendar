@@ -81,7 +81,7 @@ import { getEventCount, shouldShowBadge } from '@/utils/eventDisplay';
 import { type PogoEvent } from '@/utils/eventTypes';
 
 import SpotlightBonusIcons from '@/components/Calendar/CalendarDay/SpotlightBonusIcons.vue';
-import EventTooltip from '@/components/Calendar/EventTooltip.vue';
+import EventTooltip from '@/components/Calendar/EventTooltip/EventTooltip.vue';
 import PokemonEventImages from '@/components/Calendar/PokemonEventImages.vue';
 
 interface Props {

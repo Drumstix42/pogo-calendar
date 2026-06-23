@@ -115,7 +115,7 @@ Priority: ordered roughly by size × tangle. Tackle top-down; they're largely in
 | --- | ------------------------------------------------------------------------------- | ---------------------- | ------ | ----------------------------- | -------- |
 | 1   | [CalendarDay.vue](src/components/Calendar/CalendarDay/CalendarDay.vue)          | 1320 / ~494 / ~820     | ✅     | 226 (orchestrator); see notes | P1       |
 | 2   | [TimelineEvent.vue](src/components/Calendar/TimelineEvent/TimelineEvent.vue)    | 931 / ~424 / ~469      | ✅     | 428 (orchestrator); see notes | P1       |
-| 3   | [EventTooltip.vue](src/components/Calendar/EventTooltip.vue)                    | 795 / ~347 / ~290      | ⬜     | —                             | P2       |
+| 3   | [EventTooltip.vue](src/components/Calendar/EventTooltip/EventTooltip.vue)       | 795 / ~347 / ~290      | ✅     | 382 (orchestrator); see notes | P2       |
 | 4   | [Calendar.vue (page)](src/pages/Calendar.vue)                                   | 525 / ~213 / ~265      | ⬜     | —                             | P2       |
 | 5   | [EventFilterOptions.vue](src/components/CalendarOptions/EventFilterOptions.vue) | 516                    | ⬜     | —                             | P2       |
 | 6   | [EventTimeline.vue](src/components/Calendar/EventTimeline.vue)                  | 453                    | ⬜     | —                             | P3       |
@@ -236,9 +236,53 @@ seams below are **initial hypotheses from the first survey** — verify against 
 ### 3. EventTooltip.vue
 
 - **Why:** 795 lines; shared tooltip content rendered from multiple call sites.
-- **Suggested seams (verify):** sub-sections of tooltip body; formatting logic → util/composable.
-- **Manual checks:** tooltip content across event types (raids, spawns, research, seasonal).
-- **Findings:** _(none yet)_
+- **Manual checks:** tooltip content across event types (raids, spawns, research, seasonal) at all four
+  call sites — CalendarDay single-day + multi-day bar, `SeasonDailyChip`, `EventDetailOffcanvas`
+  (the `:scrollable="false"` variant). Confirm sticky schedule headers while scrolling, grouped-day
+  tooltips, and the Timeline sidebar (expanded day-sections + fallback tiers, collapsed card) since it
+  now shares the tier-image leaf. Light + dark.
+- **Realized split** (EventTooltip.vue 795 → **382-line orchestrator**, promoted to
+  `src/components/Calendar/EventTooltip/`):
+    - Sub-components in `EventTooltip/`: `EventTooltip.vue` (orchestrator — root shell, grouped + single
+      event cards, the major-tooltip mask CSS, body/extras/bottom-link), `EventTooltipHeader.vue` (101 —
+      type-name bar + color-edit + hide button, owns its modal handlers + CSS),
+      `EventTooltipScheduleSections.vue` (143 — the `.schedule-section` list with a `labelMode` prop
+      covering both the `fallback` variant (single/grouped, day-name aware, inline label color) and the
+      `plain` variant (multi-day schedule, pre-formatted `labelText`, CSS-driven all-day color); owns all
+      `.schedule-section*`/`.schedule-label`/`.schedule-time` CSS).
+    - Shared component `src/components/Calendar/RaidTierGroupImages.vue` (45 — the `.tier-group` →
+      `.tier-images` → `PokemonImage` loop). **Adopted by both EventTooltip and
+      [TimelineRaidSchedule.vue](src/components/Calendar/TimelineEvent/TimelineRaidSchedule.vue)** (180 →
+      144), replacing 7 near-duplicate loops total. Owns only the identical `.tier-images` rule; each
+      consumer keeps its own `.tier-group`/`.tier-label` values via `:deep()` (tooltip 0.8rem labels vs.
+      timeline 0.75rem — left un-unified to stay behavior-preserving).
+    - Composable `src/composables/useEventTooltip.ts` (167 — `(props)`-bound schedule/tier resolution +
+      display helpers: parent-name lookup, per-event tier/section builders, `scheduleDaySectionsWithTierGroups`,
+      `getMajorTooltipClass`, `isShadowRaid`, `scheduleTargetDayName`, `highlightDayOfWeek`).
+    - Util `src/utils/eventTooltipSchedule.ts` (113 — pure `buildFullRaidScheduleDaySections(event, useAnimated)`
+      + the `TooltipScheduleSection`/`TooltipScheduleDaySection` types). Deliberately **not** merged with
+      `timelineSchedule.ts` (diverges: no `raidHours`, plain default labels, `sortKey: 0`).
+- **Findings:**
+    - **Scope adjusted (no `EventTooltipGroupedEvents.vue`):** the proposed grouped-events component was
+      dropped after implementation showed the grouped and single event cards **share ~90 lines of CSS**
+      (`.event-time-info` + the `major-tooltip-*` mask variants across 3 breakpoints + dark, `.event-content`,
+      `.event-text`, `.grouped-event-name`, `.parent-event-name`). Splitting them would duplicate that
+      cohesive card surface across two scoped files — a maintenance hazard, not a complexity win. Both cards
+      stay in the orchestrator; the schedule-section list (the genuinely-repeated seam) was extracted instead.
+    - **Orchestrator still 382 lines (over the ~300 soft target):** ~190 of those are the cohesive event-card
+      scoped CSS (above). Like #1/#2's card shells, this is one surface, not a separable seam.
+    - **Cross-boundary CSS handled with `:deep()`:** sticky-header backgrounds key off the root
+      `.event-tooltip.is-scrollable` but the `.schedule-section-header` now lives in the child, so those
+      rules became `.event-tooltip.is-scrollable :deep(.schedule-section-header)`. Base `.tier-group`/
+      `.tier-label` styling reaches the leaf the same way; the `.schedule-section`-contextual tier margins
+      moved into the schedule-sections child.
+    - **`getScheduleLabelStyle` simplified on the way out:** the old helper ignored its `label` arg (only
+      `isAllDay` mattered) and both fallback `<span>` branches produced identical inline styles — collapsed
+      to one span + one `labelStyle(isAllDay)` in the child.
+    - **Typing smell (carried over, not changed):** `(event as any)._isGrouped` guards in the template.
+    - **Follow-up option:** the tier-image leaf could fully own `.tier-group`/`.tier-label` if the tooltip
+      (0.8rem) and timeline (0.75rem) label sizes + group gaps were unified — a small intentional visual
+      tweak, deferred to avoid changing the just-settled Timeline component's output here.
 
 ### 4. Calendar.vue (page)
 

@@ -10,44 +10,14 @@
                     <span v-if="section.time" class="schedule-time">{{ section.time }}</span>
                 </div>
 
-                <div v-for="group in section.tierGroups" :key="`${section.id}-${group.label}`" class="tier-group">
-                    <div v-if="group.showLabel" class="tier-label">{{ group.label }}</div>
-                    <div class="tier-images">
-                        <PokemonImage
-                            v-for="boss in group.images"
-                            :key="boss.name"
-                            :pokemon-data="boss"
-                            :height="60"
-                            :use-animated="true"
-                            :show-tooltip="true"
-                            :show-c-p="true"
-                            :event-type="eventType"
-                            :is-shadow="isShadow"
-                        />
-                    </div>
-                </div>
+                <RaidTierGroupImages :groups="section.tierGroups" :height="60" :event-type="eventType" :is-shadow="isShadow" :use-animated="true" />
             </div>
         </div>
     </div>
 
     <!-- Fallback raid boss tier groups -->
     <div v-else-if="defaultTierGroups" class="raid-boss-tiers">
-        <div v-for="group in defaultTierGroups" :key="group.label" class="tier-group">
-            <div v-if="group.showLabel" class="tier-label">{{ group.label }}</div>
-            <div class="tier-images">
-                <PokemonImage
-                    v-for="boss in group.images"
-                    :key="boss.name"
-                    :pokemon-data="boss"
-                    :height="60"
-                    :use-animated="true"
-                    :show-tooltip="true"
-                    :show-c-p="true"
-                    :event-type="eventType"
-                    :is-shadow="isShadow"
-                />
-            </div>
-        </div>
+        <RaidTierGroupImages :groups="defaultTierGroups" :height="60" :event-type="eventType" :is-shadow="isShadow" :use-animated="true" />
     </div>
 </template>
 
@@ -56,7 +26,7 @@ import { type EventTypeKey } from '@/utils/eventTypes';
 import { type RaidTierGroupWithImages } from '@/utils/raidTierGroups';
 import { type TimelineScheduleDaySection } from '@/utils/timelineSchedule';
 
-import PokemonImage from '@/components/Calendar/PokemonImage.vue';
+import RaidTierGroupImages from '@/components/Calendar/RaidTierGroupImages.vue';
 
 interface Props {
     daySections: TimelineScheduleDaySection[] | undefined;
@@ -77,7 +47,8 @@ defineProps<Props>();
     width: 100%;
 }
 
-.tier-group {
+/* `.tier-group` / `.tier-label` live in the RaidTierGroupImages child; reach in via :deep(). */
+:deep(.tier-group) {
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
@@ -113,7 +84,12 @@ defineProps<Props>();
     line-height: 1.5;
     letter-spacing: 0.05em;
     color: color-mix(in srgb, var(--bs-body-color) 82%, transparent);
-    padding: 0 0.1rem;
+    padding: 0.15rem 0.1rem;
+    position: sticky;
+    // Park just below the sticky category header (offsets inherited from .event-timeline).
+    top: calc(var(--tl-sticky-top, 0px) + var(--tl-category-header-h, 1.8rem));
+    z-index: 11;
+    background-color: color-mix(in srgb, var(--calendar-cell-bg) 75%, var(--event-color) 5%);
 }
 
 .schedule-section-header {
@@ -122,6 +98,11 @@ defineProps<Props>();
     flex-wrap: wrap;
     gap: 0.35rem;
     padding-top: 0.2rem;
+    position: sticky;
+    // Stacks directly under the day header so both the day and the timing stay visible.
+    top: calc(var(--tl-sticky-top, 0px) + var(--tl-category-header-h, 1.8rem) + var(--tl-day-header-h, 1.7rem));
+    z-index: 10;
+    background-color: color-mix(in srgb, var(--calendar-cell-bg) 75%, var(--event-color) 5%);
 }
 
 .schedule-label {
@@ -165,15 +146,9 @@ defineProps<Props>();
     margin-bottom: 0.24rem;
 }
 
-.tier-label {
+:deep(.tier-label) {
     font-size: 0.75rem;
     font-weight: 600;
     color: color-mix(in srgb, var(--bs-body-color) 70%, transparent);
-}
-
-.tier-images {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
 }
 </style>
