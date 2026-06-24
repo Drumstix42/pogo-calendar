@@ -58,7 +58,7 @@ import { BadgeQuestionMark, CircleHelpIcon } from '@lucide/vue';
 import { computed, ref, watch } from 'vue';
 
 import type { PokemonImageData } from '@/utils/eventPokemon';
-import { getSpriteFallbackUrl } from '@/utils/pokemonMapper';
+import { getSprite256FallbackUrl, getSpriteFallbackUrl } from '@/utils/pokemonMapper';
 
 import PokemonCPBadge from './PokemonCPBadge.vue';
 
@@ -93,6 +93,11 @@ const props = withDefaults(defineProps<Props>(), {
 
 const errorLevel = ref(0);
 
+const altFolderUrl = computed(() => {
+    const url = props.pokemonData?.imageUrl;
+    return url ? getSprite256FallbackUrl(url) : null;
+});
+
 const hubFallbackUrl = computed(() => {
     const url = props.pokemonData?.imageUrl;
     return url ? getSpriteFallbackUrl(url) : null;
@@ -101,13 +106,17 @@ const hubFallbackUrl = computed(() => {
 const imageSources = computed(() => {
     const sources: string[] = [];
     const primary = props.pokemonData?.imageUrl;
+    const altFolder = altFolderUrl.value;
     const hub = hubFallbackUrl.value;
     const jsonFallback = props.pokemonData?.fallbackImageUrl;
 
     if (primary) {
         sources.push(primary);
     }
-    if (hub && hub !== primary) {
+    if (altFolder && !sources.includes(altFolder)) {
+        sources.push(altFolder);
+    }
+    if (hub && !sources.includes(hub)) {
         sources.push(hub);
     }
     if (jsonFallback && !sources.includes(jsonFallback)) {

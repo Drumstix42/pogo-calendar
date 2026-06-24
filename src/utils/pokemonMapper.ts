@@ -106,6 +106,20 @@ function parsePokemonNameWithOptionalForm(name: string): { pokemonName: string; 
         return { pokemonName: baseName, pokemonId: basePokemonId };
     }
 
+    // Regional form prefixes: "Hisuian Braviary" → base "Braviary" + "-hisuian".
+    // Suffix slugs are irregular: Alolan→-alola, Paldean→-paldea; Hisuian/Galarian keep the full word.
+    const regionalMatch = name.match(/^(Alolan|Galarian|Hisuian|Paldean)\s+(.+)$/i);
+    if (regionalMatch) {
+        const baseName = regionalMatch[2].trim();
+        const basePokemonId = getPokemonId(baseName);
+        if (!basePokemonId) {
+            return { pokemonName: name, pokemonId: null };
+        }
+
+        const REGIONAL_FORM_SUFFIXES: Record<string, string> = { alolan: 'alola', galarian: 'galarian', hisuian: 'hisuian', paldean: 'paldea' };
+        return { pokemonName: baseName, pokemonId: basePokemonId, suffix: `-${REGIONAL_FORM_SUFFIXES[regionalMatch[1].toLowerCase()]}` };
+    }
+
     const pokemonFormMatch = name.match(/^(.+?)\s+\((.+?)\)$/i);
     if (!pokemonFormMatch) {
         return { pokemonName: name, pokemonId: null };
@@ -196,12 +210,18 @@ function getPokeMinersSpriteUrl(pokemonId: number, formSuffix?: string, shiny = 
 }
 
 const POKEMINERS_URL_PREFIX = 'https://raw.githubusercontent.com/PokeMiners/pogo_assets/master/Images/Pokemon/Addressable%20Assets/';
+// PokeMiners' 256x256 extraction folder: newly-released assets sometimes land here before the standard icon folder.
+const POKEMINERS_256_PREFIX = 'https://raw.githubusercontent.com/PokeMiners/pogo_assets/master/Images/Pokemon%20-%20256x256/Addressable%20Assets/';
 const POKEMINERS_MIRROR_CDN = 'https://db.pokemongohub.net/images/ingame/normal/';
 
 function swapUrlBase(url: string, fromBase: string, toBase: string): string | null {
     if (!url.startsWith(fromBase)) return null;
     const filename = url.split('/').pop();
     return filename ? `${toBase}${filename}` : null;
+}
+
+export function getSprite256FallbackUrl(spriteUrl: string): string | null {
+    return swapUrlBase(spriteUrl, POKEMINERS_URL_PREFIX, POKEMINERS_256_PREFIX);
 }
 
 export function getSpriteFallbackUrl(spriteUrl: string): string | null {

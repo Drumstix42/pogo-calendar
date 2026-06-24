@@ -175,6 +175,14 @@ function extractPokemonNameFromRaidBattle(event: PogoEvent): string | null {
     }
 }
 
+// Maps a regional-form prefix word to its sprite-slug suffix (irregular: Alolan/Paldean are abbreviated).
+const REGIONAL_FORM_SUFFIXES: Record<string, string> = {
+    alolan: 'alola',
+    galarian: 'galarian',
+    hisuian: 'hisuian',
+    paldean: 'paldea',
+};
+
 export function parsePokemonNameAndSuffix(pokemonNameString: string): { pokemonName: string; suffix?: string } | null {
     // Handle Mega variants with X/Y
     const megaXYMatch = pokemonNameString.match(/^Mega\s+(.+?)\s+([XY])$/i);
@@ -204,6 +212,14 @@ export function parsePokemonNameAndSuffix(pokemonNameString: string): { pokemonN
     if (shadowMatch) {
         const baseName = shadowMatch[1].trim();
         return { pokemonName: baseName }; // No suffix for shadow, just base Pokemon
+    }
+
+    // Handle regional form prefixes: "Hisuian Braviary", "Alolan Raichu", "Galarian Zapdos", "Paldean Wooper"
+    // Suffix slugs are irregular: Alolan→-alola, Paldean→-paldea, but Hisuian/Galarian keep the full word.
+    const regionalMatch = pokemonNameString.match(/^(Alolan|Galarian|Hisuian|Paldean)\s+(.+)$/i);
+    if (regionalMatch) {
+        const baseName = regionalMatch[2].trim();
+        return { pokemonName: baseName, suffix: `-${REGIONAL_FORM_SUFFIXES[regionalMatch[1].toLowerCase()]}` };
     }
 
     // Handle forme prefixes: "Therian Forme <Pokemon>", "Incarnate Forme <Pokemon>", "Origin Forme <Pokemon>", etc.

@@ -98,6 +98,20 @@ export const usePokemonDataStore = defineStore('pokemonData', () => {
             }
         }
 
+        // Handle regional form prefixes: "Hisuian Braviary" → "Braviary Hisuian" (data stores name + form order).
+        // These forms have their own stats, so map the prefix to the data's form string.
+        const regionalPrefixMatch = searchName.match(/^(Alolan|Galarian|Hisuian|Paldean)\s+(.+)$/i);
+        if (regionalPrefixMatch) {
+            const REGIONAL_DATA_FORMS: Record<string, string> = {
+                alolan: 'Alola',
+                galarian: 'Galarian',
+                hisuian: 'Hisuian',
+                paldean: 'Paldea',
+            };
+            const basePokemonName = regionalPrefixMatch[2].trim();
+            searchName = `${basePokemonName} ${REGIONAL_DATA_FORMS[regionalPrefixMatch[1].toLowerCase()]}`;
+        }
+
         // Handle form prefixes: "Origin Forme Dialga" → "Dialga Origin"
         const formPrefixMatch = searchName.match(/^(.+?)\s+forme?\s+(.+)$/i);
         if (formPrefixMatch) {
