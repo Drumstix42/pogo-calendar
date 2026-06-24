@@ -217,6 +217,22 @@ small,
     max-width: 250px;
 }
 
+/* Offcanvas backdrop fade (shared by CalendarOptionsOffcanvas + EventDetailDrawer) */
+.offcanvas-fade-enter-active,
+.offcanvas-fade-leave-active {
+    transition: all 0.3s ease-in-out;
+}
+
+.offcanvas-fade-enter-from,
+.offcanvas-fade-leave-to {
+    opacity: 0;
+}
+
+.offcanvas-fade-enter-to,
+.offcanvas-fade-leave-from {
+    opacity: 1;
+}
+
 /* Event Filter Hover Highlighting */
 /* Event Filter Hover Highlighting */
 

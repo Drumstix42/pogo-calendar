@@ -116,7 +116,7 @@ Priority: ordered roughly by size × tangle. Tackle top-down; they're largely in
 | 1   | [CalendarDay.vue](src/components/Calendar/CalendarDay/CalendarDay.vue)          | 1320 / ~494 / ~820     | ✅     | 226 (orchestrator); see notes | P1       |
 | 2   | [TimelineEvent.vue](src/components/Calendar/TimelineEvent/TimelineEvent.vue)    | 931 / ~424 / ~469      | ✅     | 428 (orchestrator); see notes | P1       |
 | 3   | [EventTooltip.vue](src/components/Calendar/EventTooltip/EventTooltip.vue)       | 795 / ~347 / ~290      | ✅     | 382 (orchestrator); see notes | P2       |
-| 4   | [Calendar.vue (page)](src/pages/Calendar.vue)                                   | 525 / ~213 / ~265      | ⬜     | —                             | P2       |
+| 4   | [Calendar.vue (page)](src/pages/Calendar.vue)                                   | 525 / ~213 / ~265      | ✅     | 312 (orchestrator); see notes | P2       |
 | 5   | [EventFilterOptions.vue](src/components/CalendarOptions/EventFilterOptions.vue) | 516                    | ⬜     | —                             | P2       |
 | 6   | [EventTimeline.vue](src/components/Calendar/EventTimeline.vue)                  | 453                    | ⬜     | —                             | P3       |
 | 7   | [EditEventColorModal.vue](src/components/Calendar/EditEventColorModal.vue)      | 430                    | ⬜     | —                             | P3       |
@@ -260,8 +260,8 @@ seams below are **initial hypotheses from the first survey** — verify against 
       display helpers: parent-name lookup, per-event tier/section builders, `scheduleDaySectionsWithTierGroups`,
       `getMajorTooltipClass`, `isShadowRaid`, `scheduleTargetDayName`, `highlightDayOfWeek`).
     - Util `src/utils/eventTooltipSchedule.ts` (113 — pure `buildFullRaidScheduleDaySections(event, useAnimated)`
-      + the `TooltipScheduleSection`/`TooltipScheduleDaySection` types). Deliberately **not** merged with
-      `timelineSchedule.ts` (diverges: no `raidHours`, plain default labels, `sortKey: 0`).
+        - the `TooltipScheduleSection`/`TooltipScheduleDaySection` types). Deliberately **not** merged with
+          `timelineSchedule.ts` (diverges: no `raidHours`, plain default labels, `sortKey: 0`).
 - **Findings:**
     - **Scope adjusted (no `EventTooltipGroupedEvents.vue`):** the proposed grouped-events component was
       dropped after implementation showed the grouped and single event cards **share ~90 lines of CSS**
@@ -286,11 +286,45 @@ seams below are **initial hypotheses from the first survey** — verify against 
 
 ### 4. Calendar.vue (page)
 
-- **Why:** 525-line page orchestrator; likely mixing layout, header controls, and wiring.
-- **Suggested seams (verify):** extract toolbar/header regions; move orchestration logic to
-  composables.
-- **Manual checks:** month navigation, URL sync, options panel, overall layout.
-- **Findings:** _(none yet)_
+- **Why:** 525-line page orchestrator mixing self-contained UI regions (time-offset banner, filter
+  summary, two teleported offcanvas wrappers) with data-fetch lifecycle and overlay/keyboard wiring.
+  The bulk was CSS — most of it owned by the two offcanvas regions, not the page layout.
+- **Manual checks:** ✅ month navigation + URL sync; ✅ options offcanvas open/close (gear, backdrop,
+  `Esc`, close button), slide-in, **slider-interacting** state, mobile full-width; ✅ event-detail
+  bottom drawer on touch (open/backdrop-close/close button + body scroll lock); ✅ time-offset banner
+  (set a manual offset → label/value/tz + Reset); ✅ filter summary (counts/pluralization, desktop
+  tooltip, touch "Tap to open" line, click scrolls to filters); ✅ timeline sidebar layout at ≥1400px.
+  _(Verify light + dark, mobile + desktop.)_
+- **Realized split** (Calendar.vue 525 → **312-line orchestrator**; keeps the page-grid layout +
+  CSS, store/modal wiring, settings↔URL sync, `selectedEvent` computeds, Escape handler):
+    - Sub-components in `src/components/Calendar/`: `TimeOffsetIndicator.vue` (60 — banner + its
+      `effectiveTimezoneLabel` helper, reads `calendarSettings`), `FilterSummary.vue` (62 — filter
+      summary button + its `v-if` guard, reads `eventFilter`/`isTouchDevice`, emits `open-filters`),
+      `CalendarOptionsOffcanvas.vue` (77 — Teleport/Transition/backdrop wrapping `CalendarOptions`;
+      `:show` + `@close`), `EventDetailDrawer.vue` (92 — Teleport/Transition/backdrop wrapping the
+      existing `EventDetailOffcanvas`; `:show`/`:event`/`:is-single-day`/`:target-date` + `@close`).
+    - Composable `src/composables/useCalendarDataRefresh.ts` (45 — on-mount events/seasons fetch +
+      `liveHour`/`windowFocused` refetch watches; encapsulates `useCurrentTime`/`useWindowFocus`/
+      `useSeasonsStore`).
+    - Shared `.offcanvas-fade-*` backdrop-fade base lifted to global `src/styles/style.scss` (used by
+      both offcanvas wrappers); each wrapper keeps its own panel-transform rules scoped.
+- **Findings:**
+    - **Constraint preserved (cross-component CSS):** `CalendarOptions.vue` has a **global** `<style>`
+      block (`.slider-interacting .calendar-options-offcanvas` / `.calendar-options-backdrop`) reaching
+      the page's offcanvas. Class names were kept identical in `CalendarOptionsOffcanvas.vue` so those
+      rules still apply. Worth noting for any future rename.
+    - **Modernization applied (approved, mild behavior change):** the manual `keydown`
+      `addEventListener`/`removeEventListener` (onMounted/onUnmounted) → VueUse `useEventListener`; the
+      body-overflow `watchEffect` → VueUse `useScrollLock(document.body)` driven by a `watchEffect`. Both
+      `onMounted`/`onUnmounted` hooks were removed. `useScrollLock` changes the lock _mechanism_ (adds
+      iOS touch handling, restores original overflow on unmount) — intentional, verify body scroll lock
+      on touch.
+    - **Left intentionally in the orchestrator:** the settings↔URL two-way sync + `isInitialSync`/100ms
+      delay (drives the slide-in animation on a deep-linked `?settings=1` load) and the Escape-priority
+      handler (tooltips → blocking overlays/native color picker → close settings). Cohesive page glue,
+      entangled with `useUrlSync`/modals/`selectedEventId`; extracting to a composable would need a wide
+      interface (and `useUrlSync` can't be called twice — it double-registers its month/year watchers)
+      for no real complexity win. _Stage 6 deliberately skipped._
 
 ### 5. EventFilterOptions.vue
 

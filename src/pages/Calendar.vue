@@ -1,12 +1,5 @@
 <template>
-    <div v-if="calendarSettings.hasManualTimeOffset" class="time-offset-indicator">
-        <div class="time-offset-indicator__content">
-            <span class="time-offset-indicator__label">Adjusted timezone:</span>
-            <span class="time-offset-indicator__value">{{ calendarSettings.manualTimeOffsetLabel }}</span>
-            <span class="time-offset-indicator__subvalue">({{ effectiveTimezoneLabel() }})</span>
-        </div>
-        <button type="button" class="btn btn-link btn-sm p-0 fw-bold" @click="calendarSettings.resetManualTimeOffsetHours">Reset</button>
-    </div>
+    <TimeOffsetIndicator v-if="calendarSettings.hasManualTimeOffset" />
 
     <div class="page-layout" :class="{ 'sidebar-layout': isXxlScreenSize }">
         <!-- Calendar Section -->
@@ -23,40 +16,7 @@
                 <CalendarGrid />
 
                 <!-- Filter Summary Button -->
-                <div v-if="eventFilter.disabledEventTypeKeys.length > 0 || eventFilter.hiddenEventIds.length > 0" class="filter-summary">
-                    <VTooltip
-                        :disabled="isTouchDevice"
-                        placement="top"
-                        :delay="{ show: 50, hide: 0 }"
-                        distance="10"
-                        class="d-flex align-items-center ms-1"
-                    >
-                        <template #popper>
-                            <div class="tooltip-text">Click to open Settings</div>
-                        </template>
-                        <button
-                            class="btn btn-icon-ghost filter-summary-btn"
-                            @click="openSettingsAndScrollToFilters"
-                            aria-label="Open settings to modify filters"
-                        >
-                            <EyeOff :size="12" class="me-2" />
-                            <span class="filter-summary-text">
-                                <span v-if="eventFilter.disabledEventTypeKeys.length > 0">
-                                    {{ eventFilter.disabledEventTypeKeys.length }} event type{{
-                                        eventFilter.disabledEventTypeKeys.length === 1 ? '' : 's'
-                                    }}
-                                    hidden
-                                </span>
-                                <span v-if="eventFilter.disabledEventTypeKeys.length > 0 && eventFilter.hiddenEventIds.length > 0"> • </span>
-                                <span v-if="eventFilter.hiddenEventIds.length > 0">
-                                    {{ eventFilter.hiddenEventIds.length }} specific event{{ eventFilter.hiddenEventIds.length === 1 ? '' : 's' }}
-                                    hidden
-                                </span>
-                            </span>
-                        </button>
-                    </VTooltip>
-                    <div v-if="isTouchDevice" class="touch-device-message">Tap to open Settings</div>
-                </div>
+                <FilterSummary @open-filters="openSettingsAndScrollToFilters" />
             </CollapsibleSection>
         </div>
 
@@ -80,35 +40,16 @@
     </div>
 
     <!-- Calendar Options Offcanvas -->
-    <Teleport to="body">
-        <Transition name="offcanvas-fade">
-            <div v-if="calendarSettings.optionsExpanded" class="calendar-options-backdrop" @click="handleBackdropClick">
-                <div class="offcanvas offcanvas-end show calendar-options-offcanvas" @click.stop>
-                    <CalendarOptions @close="handleCloseOptions" />
-                </div>
-            </div>
-        </Transition>
-    </Teleport>
+    <CalendarOptionsOffcanvas :show="calendarSettings.optionsExpanded" @close="closeSettings" />
 
     <!-- Event Detail Offcanvas (Mobile) -->
-    <Teleport to="body">
-        <Transition name="offcanvas-fade">
-            <div
-                v-if="selectedEventId && isTouchDevice && !eventsStore.loading"
-                class="event-detail-backdrop"
-                @click="handleEventDetailBackdropClick"
-            >
-                <div class="offcanvas offcanvas-bottom show event-detail-offcanvas" @click.stop>
-                    <EventDetailOffcanvas
-                        :event="selectedEvent"
-                        :is-single-day="selectedEventIsSingleDay"
-                        :target-date="selectedEventDay"
-                        @close="handleCloseEventDetail"
-                    />
-                </div>
-            </div>
-        </Transition>
-    </Teleport>
+    <EventDetailDrawer
+        :show="!!selectedEventId && isTouchDevice && !eventsStore.loading"
+        :event="selectedEvent"
+        :is-single-day="selectedEventIsSingleDay"
+        :target-date="selectedEventDay"
+        @close="clearEvent"
+    />
 
     <!-- Hide Event Modal -->
     <HideEventModal
@@ -129,53 +70,49 @@
 </template>
 
 <script setup lang="ts">
-import { CalendarRange, EyeOff, PanelTop } from '@lucide/vue';
-import { breakpointsBootstrapV5, useBreakpoints } from '@vueuse/core';
-import { useWindowFocus } from '@vueuse/core';
+import { CalendarRange, PanelTop } from '@lucide/vue';
+import { breakpointsBootstrapV5, useBreakpoints, useEventListener, useScrollLock } from '@vueuse/core';
 import { hideAllPoppers } from 'floating-vue';
-import { computed, nextTick, onMounted, onUnmounted, watch, watchEffect } from 'vue';
+import { computed, nextTick, watch, watchEffect } from 'vue';
 
-import { useCurrentTime } from '@/composables/useCurrentTime';
+import { useCalendarDataRefresh } from '@/composables/useCalendarDataRefresh';
 import { useDeviceDetection } from '@/composables/useDeviceDetection';
 import { useEditColorModal } from '@/composables/useEditColorModal';
 import { useEventFilterToasts } from '@/composables/useEventFilterToasts';
 import { useHideEventModal } from '@/composables/useHideEventModal';
 import { useUrlSync } from '@/composables/useUrlSync';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
-import { useEventFilterStore } from '@/stores/eventFilter';
 import { useEventsStore } from '@/stores/events';
-import { useSeasonsStore } from '@/stores/seasons';
 import { type EventTypeKey } from '@/utils/eventTypes';
-import { getEffectiveTimezoneLabel } from '@/utils/timezoneLabel';
 
 import CalendarGrid from '@/components/Calendar/CalendarGrid.vue';
 import CalendarHeader from '@/components/Calendar/CalendarHeader.vue';
+import CalendarOptionsOffcanvas from '@/components/Calendar/CalendarOptionsOffcanvas.vue';
 import EditEventColorModal from '@/components/Calendar/EditEventColorModal.vue';
-import EventDetailOffcanvas from '@/components/Calendar/EventDetailOffcanvas.vue';
+import EventDetailDrawer from '@/components/Calendar/EventDetailDrawer.vue';
 /* import CalendarMobile from '@/components/Calendar/CalendarMobile.vue'; */
 import EventTimeline from '@/components/Calendar/EventTimeline.vue';
+import FilterSummary from '@/components/Calendar/FilterSummary.vue';
 import HideEventModal from '@/components/Calendar/HideEventModal.vue';
-import CalendarOptions from '@/components/CalendarOptions/CalendarOptions.vue';
+import TimeOffsetIndicator from '@/components/Calendar/TimeOffsetIndicator.vue';
 import CollapsibleSection from '@/components/CollapsibleSection.vue';
 
 const eventsStore = useEventsStore();
-const seasonsStore = useSeasonsStore();
 const calendarSettings = useCalendarSettingsStore();
-const eventFilter = useEventFilterStore();
 const hideEventModal = useHideEventModal();
 const editColorModal = useEditColorModal();
 const { hideEventTypeWithToast, hideEventByIdWithToast } = useEventFilterToasts();
 const { settingsOpen, openSettings, closeSettings, selectedEventId, selectedEventDay, clearEvent } = useUrlSync();
 const { isTouchDevice } = useDeviceDetection();
-const { liveHour } = useCurrentTime();
-const windowFocused = useWindowFocus();
+
+useCalendarDataRefresh();
 
 // responsive breakpoints https://getbootstrap.com/docs/5.0/layout/breakpoints/#available-breakpoints
 const breakpoints = useBreakpoints(breakpointsBootstrapV5);
 const isXxlScreenSize = breakpoints.greaterOrEqual('xxl'); // >= 1400px
 // const isDesktop = breakpoints.greaterOrEqual('md'); // >= 768px
 
-// Sync settings with URL - delay initial sync to allow animation
+// Settings panel ⇄ URL sync — delay initial sync to allow animation
 let isInitialSync = true;
 watch(
     settingsOpen,
@@ -206,7 +143,7 @@ watch(
     },
 );
 
-// Get selected event details
+// Selected event (detail drawer)
 const selectedEvent = computed(() => {
     if (!selectedEventId.value) {
         return undefined;
@@ -221,10 +158,7 @@ const selectedEventIsSingleDay = computed(() => {
     return eventsStore.eventMetadata[selectedEvent.value.eventID]?.isSingleDayEvent ?? false;
 });
 
-function effectiveTimezoneLabel() {
-    return getEffectiveTimezoneLabel(calendarSettings.manualTimeOffsetHours);
-}
-
+// Event actions
 function openSettingsAndScrollToFilters() {
     const storageKey = 'calendarSettings/event-filters';
 
@@ -242,13 +176,25 @@ function openSettingsAndScrollToFilters() {
     });
 }
 
-const handleCloseOptions = () => {
-    closeSettings();
-};
+function handleHideByType(eventType: EventTypeKey) {
+    hideEventTypeWithToast(eventType);
+}
 
-const handleBackdropClick = () => {
-    closeSettings();
-};
+function handleHideById(eventId: string, eventName: string) {
+    const event = hideEventModal.currentEvent.value;
+    if (event) {
+        hideEventByIdWithToast(eventId, eventName, event);
+    }
+}
+
+// Overlays: body-scroll lock + Escape handling
+// Lock body scroll on touch devices while an overlay is open; useScrollLock
+// restores the original overflow automatically when the component unmounts.
+const isBodyScrollLocked = useScrollLock(document.body);
+watchEffect(() => {
+    const isOverlayOpen = calendarSettings.optionsExpanded || !!selectedEventId.value;
+    isBodyScrollLocked.value = isOverlayOpen && isTouchDevice.value;
+});
 
 function handleGlobalKeydown(event: KeyboardEvent) {
     if (event.key !== 'Escape' || event.defaultPrevented) {
@@ -279,231 +225,11 @@ function handleGlobalKeydown(event: KeyboardEvent) {
     closeSettings();
 }
 
-const handleCloseEventDetail = () => {
-    clearEvent();
-};
-
-const handleEventDetailBackdropClick = () => {
-    clearEvent();
-};
-
-function handleHideByType(eventType: EventTypeKey) {
-    hideEventTypeWithToast(eventType);
-}
-
-function handleHideById(eventId: string, eventName: string) {
-    const event = hideEventModal.currentEvent.value;
-    if (event) {
-        hideEventByIdWithToast(eventId, eventName, event);
-    }
-}
-
-watchEffect(() => {
-    const isOptionsOpen = calendarSettings.optionsExpanded;
-    const isEventDetailOpen = !!selectedEventId.value;
-
-    if ((isOptionsOpen || isEventDetailOpen) && isTouchDevice.value) {
-        document.body.style.overflow = 'hidden';
-    } else {
-        document.body.style.overflow = '';
-    }
-});
-
-onMounted(async () => {
-    window.addEventListener('keydown', handleGlobalKeydown);
-
-    // Auto-load events when the page mounts
-    // only fetch if we don't have fresh data
-    if (!eventsStore.hasFreshData) {
-        await eventsStore.fetchEvents();
-    }
-    if (!seasonsStore.hasFreshData) {
-        await seasonsStore.fetchSeasons();
-    }
-});
-
-// Watch for hour changes and refetch events (only when window is focused)
-watch(liveHour, async () => {
-    if (!windowFocused.value) return; // Skip if window is not focused
-    await eventsStore.fetchEvents();
-    await seasonsStore.fetchSeasons();
-});
-
-// Refetch events when window regains focus (in case hours passed while unfocused)
-watch(windowFocused, async focused => {
-    if (focused) {
-        await eventsStore.fetchEvents();
-        await seasonsStore.fetchSeasons();
-    }
-});
-
-onUnmounted(() => {
-    window.removeEventListener('keydown', handleGlobalKeydown);
-    document.body.style.overflow = '';
-});
+// useEventListener auto-removes the handler on unmount.
+useEventListener(window, 'keydown', handleGlobalKeydown);
 </script>
 
 <style scoped>
-.time-offset-indicator {
-    margin: 0.25rem 0 0.5rem;
-    padding: 0.45rem 0.7rem;
-    border: 1px solid color-mix(in srgb, var(--bs-info) 35%, var(--bs-border-color));
-    border-radius: 0.4rem;
-    background-color: color-mix(in srgb, var(--bs-info) 10%, var(--bs-body-bg));
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
-    flex-wrap: wrap;
-}
-
-.time-offset-indicator__content {
-    display: flex;
-    align-items: center;
-    gap: 0.45rem;
-    flex-wrap: wrap;
-    line-height: 1.5rem;
-}
-
-.time-offset-indicator__label {
-    font-size: 0.82rem;
-    color: var(--bs-secondary-color);
-}
-
-.time-offset-indicator__value {
-    font-size: 0.82rem;
-    font-weight: 600;
-    color: var(--bs-body-color);
-}
-
-.time-offset-indicator__subvalue {
-    font-size: 0.78rem;
-    color: var(--bs-secondary-color);
-}
-
-.offcanvas-fade-enter-active,
-.offcanvas-fade-leave-active {
-    transition: all 0.3s ease-in-out;
-}
-
-.offcanvas-fade-enter-from,
-.offcanvas-fade-leave-to {
-    opacity: 0;
-}
-
-.offcanvas-fade-enter-to,
-.offcanvas-fade-leave-from {
-    opacity: 1;
-}
-
-.calendar-options-backdrop {
-    z-index: 1045;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.3);
-    backdrop-filter: blur(0.5px);
-}
-
-.calendar-options-offcanvas {
-    z-index: 1050;
-    width: 100%;
-    max-width: 400px;
-    border: none;
-    box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
-    background-color: var(--bs-body-bg);
-}
-
-@media (max-width: 575.98px) {
-    .calendar-options-offcanvas {
-        /* Mobile: full width */
-        max-width: 100%;
-    }
-}
-
-/* Offcanvas slide-in animation */
-.offcanvas-fade-enter-active .calendar-options-offcanvas {
-    transition: transform 0.3s ease-in-out;
-}
-
-.offcanvas-fade-enter-from .calendar-options-offcanvas {
-    transform: translateX(100%);
-}
-
-.offcanvas-fade-enter-to .calendar-options-offcanvas {
-    transform: translateX(0);
-}
-
-.offcanvas-fade-leave-active .calendar-options-offcanvas {
-    transition: transform 0.3s ease-in-out;
-}
-
-.offcanvas-fade-leave-from .calendar-options-offcanvas {
-    transform: translateX(0);
-}
-
-.offcanvas-fade-leave-to .calendar-options-offcanvas {
-    transform: translateX(100%);
-}
-
-/* Event Detail Offcanvas (Bottom Drawer) */
-.event-detail-backdrop {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    z-index: 1070;
-    display: flex;
-    align-items: flex-end;
-    backdrop-filter: blur(2px);
-}
-
-.event-detail-offcanvas {
-    position: relative;
-    width: 100%;
-    height: auto;
-    min-height: 40vh;
-    max-height: 80dvh;
-    border: none;
-    border-top-left-radius: 16px;
-    border-top-right-radius: 16px;
-    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
-    background-color: var(--bs-body-bg);
-    display: flex;
-    flex-direction: column;
-    /* iOS safe area support */
-    padding-bottom: env(safe-area-inset-bottom);
-}
-
-/* Bottom offcanvas slide-up animation */
-.offcanvas-fade-enter-active .event-detail-offcanvas {
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.offcanvas-fade-enter-from .event-detail-offcanvas {
-    transform: translateY(100%);
-}
-
-.offcanvas-fade-enter-to .event-detail-offcanvas {
-    transform: translateY(0);
-}
-
-.offcanvas-fade-leave-active .event-detail-offcanvas {
-    transition: transform 0.25s cubic-bezier(0.4, 0, 0.6, 1);
-}
-
-.offcanvas-fade-leave-from .event-detail-offcanvas {
-    transform: translateY(0);
-}
-
-.offcanvas-fade-leave-to .event-detail-offcanvas {
-    transform: translateY(100%);
-}
-
 /* Sidebar Layout */
 .page-layout {
     display: flex;
@@ -583,29 +309,6 @@ onUnmounted(() => {
     .calendar-wrapper {
         flex: 1;
         min-width: 0;
-    }
-}
-
-.filter-summary {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    margin-top: 0.5rem;
-
-    .filter-summary-text {
-        font-size: 0.7rem;
-        font-weight: 500;
-        line-height: 1.3;
-        /* font-style: italic; */
-        color: var(--bs-secondary-color);
-    }
-
-    .touch-device-message {
-        font-size: 0.6rem;
-        margin-top: -2px;
-        font-style: italic;
-        color: var(--bs-secondary-color);
     }
 }
 </style>
