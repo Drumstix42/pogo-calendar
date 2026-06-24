@@ -51,15 +51,17 @@ Hard-coded special cases: `Deoxys (Normal)` → no suffix; `Genesect (<X> Drive)
 
 ## Sprite / CDN System (`src/utils/pokemonMapper.ts`)
 
-Three-tier fallback, chained at runtime in `PokemonImage.vue`:
+Multi-tier fallback, chained at runtime in `PokemonImage.vue`:
 
-| Tier | Source                                               | Condition                                   |
-| ---- | ---------------------------------------------------- | ------------------------------------------- |
-| 1    | `mgrann03/pokemon-resources` — static PNGs           | Name must be in `VALID_STATIC_SPRITES`      |
-| 2    | `PokeMiners/pogo_assets` — `pm{id}.f{FORM}.icon.png` | ID + form must be in `POKEMON_FORM_MAP`     |
-| 3    | `db.pokemongohub.net` — same filename as tier 2      | `@error` fallback; use when PokeMiners 404s |
+| Tier | Source                                                       | Condition                                          |
+| ---- | ------------------------------------------------------------ | -------------------------------------------------- |
+| 1    | `mgrann03/pokemon-resources` — static PNGs                   | Name must be in `VALID_STATIC_SPRITES`             |
+| 2    | `PokeMiners/pogo_assets` `Pokemon/` — `pm{id}.f{FORM}.icon.png` | ID + form must be in `POKEMON_FORM_MAP`          |
+| 3    | `PokeMiners/pogo_assets` `Pokemon - 256x256/` — same filename | `@error` fallback; new assets sometimes land here first |
+| 4    | `db.pokemongohub.net` — same filename as tier 2              | `@error` fallback; use when PokeMiners 404s        |
+| 5    | LeekDuck `boss.image` (`fallbackImageUrl`)                   | `@error` fallback; last resort                     |
 
-`getSpriteFallbackUrl()` derives the tier-3 URL via `swapUrlBase()` — same filename, different host. PokeMiners form suffixes use `f` prefix + uppercase (e.g. `fMEGA`, `fBURN`). Known alias: `crownedsword`/`crownedshield` both map to `CROWNED`.
+Tier 1 or 2 is the *primary* `imageUrl` chosen in `pokemonMapper.ts`; tiers 3–5 are appended in `PokemonImage.vue`'s `imageSources` and advanced through on `@error`. `getSprite256FallbackUrl()` (tier 3) and `getSpriteFallbackUrl()` (tier 4) both derive their URL via `swapUrlBase()` from the tier-2 PokeMiners URL — same filename, different folder/host (they return `null` when the primary isn't a tier-2 URL). PokeMiners form suffixes use `f` prefix + uppercase (e.g. `fMEGA`, `fBURN`). Known alias: `crownedsword`/`crownedshield` both map to `CROWNED`.
 
 Static sprite name: normalize → strip non-alphanumeric → append suffix.
 

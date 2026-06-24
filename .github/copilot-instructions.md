@@ -78,7 +78,7 @@ export const useCalendarSettingsStore = defineStore('calendarSettings', () => {
 
 ### Pokemon Integration
 
-- Pokemon sprites served from a three-tier CDN chain with runtime fallback handled in `PokemonImage.vue`
+- Pokemon sprites served from a multi-tier CDN chain with runtime `@error` fallback handled in `PokemonImage.vue` (static PNGs → PokeMiners `Pokemon/` → PokeMiners `Pokemon - 256x256/` → pokemongohub mirror → LeekDuck image)
 - Use `src/utils/pokemonMapper.ts` for name normalization and ID lookup
 - Sprite validation via `VALID_ANIMATED_SPRITES` and `VALID_STATIC_SPRITES` constants
 - Smart Unicode normalization handles accented characters and gender symbols
