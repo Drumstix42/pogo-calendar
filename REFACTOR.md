@@ -111,20 +111,20 @@ Status legend: ⬜ Not started · 🟡 In progress · ✅ Settled · ⏭️ Skip
 
 Priority: ordered roughly by size × tangle. Tackle top-down; they're largely independent.
 
-| #   | Feature / file                                                                                     | Lines (T/script/style) | Status | Result                        | Priority |
-| --- | -------------------------------------------------------------------------------------------------- | ---------------------- | ------ | ----------------------------- | -------- |
-| 1   | [CalendarDay.vue](src/components/Calendar/CalendarDay/CalendarDay.vue)                             | 1320 / ~494 / ~820     | ✅     | 226 (orchestrator); see notes | P1       |
-| 2   | [TimelineEvent.vue](src/components/Calendar/TimelineEvent/TimelineEvent.vue)                       | 931 / ~424 / ~469      | ✅     | 428 (orchestrator); see notes | P1       |
-| 3   | [EventTooltip.vue](src/components/Calendar/EventTooltip/EventTooltip.vue)                          | 795 / ~347 / ~290      | ✅     | 382 (orchestrator); see notes | P2       |
-| 4   | [Calendar.vue (page)](src/pages/Calendar.vue)                                                      | 525 / ~213 / ~265      | ✅     | 312 (orchestrator); see notes | P2       |
-| 5   | [EventFilterOptions.vue](src/components/CalendarOptions/EventFilterOptions/EventFilterOptions.vue) | 516                    | ✅     | 114 (orchestrator); see notes | P2       |
-| 6   | [EventTimeline.vue](src/components/Calendar/EventTimeline/EventTimeline.vue)                       | 542                    | ✅     | 74 (orchestrator); see notes  | P3       |
-| 7   | [EditEventColorModal.vue](src/components/Calendar/EditEventColorModal.vue)                         | 430                    | ⬜     | —                             | P3       |
-| 8   | [eventTypes.ts](src/utils/eventTypes.ts)                                                           | 747                    | ⬜     | —                             | P3       |
-| 9   | [eventPokemon.ts](src/utils/eventPokemon.ts)                                                       | 566                    | ⬜     | —                             | P3       |
-| 10  | [EventTimeDisplay.vue](src/components/Calendar/EventTimeDisplay.vue)                               | 353                    | ⬜     | —                             | P4       |
-| 11  | [EventOptions.vue](src/components/CalendarOptions/EventOptions.vue)                                | 331                    | ⬜     | —                             | P4       |
-| 12  | [HideEventModal.vue](src/components/Calendar/HideEventModal.vue)                                   | 308                    | ⬜     | —                             | P4       |
+| #   | Feature / file                                                                                     | Lines (T/script/style) | Status | Result                         | Priority |
+| --- | -------------------------------------------------------------------------------------------------- | ---------------------- | ------ | ------------------------------ | -------- |
+| 1   | [CalendarDay.vue](src/components/Calendar/CalendarDay/CalendarDay.vue)                             | 1320 / ~494 / ~820     | ✅     | 226 (orchestrator); see notes  | P1       |
+| 2   | [TimelineEvent.vue](src/components/Calendar/TimelineEvent/TimelineEvent.vue)                       | 931 / ~424 / ~469      | ✅     | 428 (orchestrator); see notes  | P1       |
+| 3   | [EventTooltip.vue](src/components/Calendar/EventTooltip/EventTooltip.vue)                          | 795 / ~347 / ~290      | ✅     | 382 (orchestrator); see notes  | P2       |
+| 4   | [Calendar.vue (page)](src/pages/Calendar.vue)                                                      | 525 / ~213 / ~265      | ✅     | 312 (orchestrator); see notes  | P2       |
+| 5   | [EventFilterOptions.vue](src/components/CalendarOptions/EventFilterOptions/EventFilterOptions.vue) | 516                    | ✅     | 114 (orchestrator); see notes  | P2       |
+| 6   | [EventTimeline.vue](src/components/Calendar/EventTimeline/EventTimeline.vue)                       | 542                    | ✅     | 74 (orchestrator); see notes   | P3       |
+| 7   | [EditEventColorModal.vue](src/components/Calendar/EditEventColorModal.vue)                         | 430                    | ✅     | 211 (orchestrator); see notes  | P3       |
+| 8   | [eventTypes.ts](src/utils/eventTypes.ts)                                                           | 747                    | ⬜     | —                              | P3       |
+| 9   | [eventPokemon.ts](src/utils/eventPokemon.ts)                                                       | 566                    | ⬜     | —                              | P3       |
+| 10  | [EventTimeDisplay.vue](src/components/Calendar/EventTimeDisplay.vue)                               | 353                    | ⬜     | —                              | P4       |
+| 11  | [EventOptions.vue](src/components/CalendarOptions/EventOptions.vue)                                | 331                    | ⬜     | —                              | P4       |
+| 12  | [HideEventModal.vue](src/components/Calendar/HideEventModal.vue)                                   | 363                    | ✅     | 220; adopted BaseModal (in #7) | P4       |
 
 **Explicitly out of scope** (large but they're data, not logic — leave alone unless asked):
 `constants/pokemonFormMap.ts`, `constants/validAnimatedSprites.ts`, `constants/validStaticSprites.ts`,
@@ -426,9 +426,42 @@ seams below are **initial hypotheses from the first survey** — verify against 
 
 ### 7. EditEventColorModal.vue
 
-- **Suggested seams (verify):** color-picker (`@jaames/iro`) wrapper component; modal logic →
-  `useEditColorModal` (already exists — check overlap).
-- **Findings:** _(none yet)_
+- **Why:** 430 lines mixing the modal shell (Teleport/Transition/backdrop + Escape + offcanvas
+  `inert` handling), the `@jaames/iro` picker (instance lifecycle + hex input + validation, all
+  interlocked), and the modal-specific preview/default/save UI. ~218 of those lines were CSS,
+  ~140 of which was a modal shell **duplicated near-verbatim** in `HideEventModal.vue` (#12).
+- **Manual checks:** ✅ picker wheel + value slider; ✅ hex typing (valid updates wheel/New preview,
+  invalid shows red border); ✅ Current bar resets to original, swatch / "Set to Default" reset to
+  default; ✅ Save persists (and removes the override when equal to default); ✅ Escape / backdrop /
+  X close; ✅ scrollable layout on a short viewport; ✅ opening from the options offcanvas suspends
+  its focus trap (`inert`). (Verified light + dark, mobile + desktop.)
+- **Realized split** (EditEventColorModal.vue 430 → **211-line orchestrator**; keeps preview
+  comparison, default swatch + "Set to Default", save, reset handlers, and the open-snapshot watch):
+    - Shared component `src/components/BaseModal.vue` (195 — generic modal shell: Teleport/Transition/
+      backdrop/dialog/content/header + close button + Escape + backdrop-click + `inert` handling + all
+      shell CSS). Props `show`/`title`/`scrollable`/`inertSelector`; `close` emit; default body slot.
+      Lives at the **components root** alongside `CollapsibleSection.vue`/`ThemeSelector.vue` (app-wide,
+      zero calendar coupling). **Adopted by both EditEventColorModal and `HideEventModal.vue` (#12).**
+    - Sub-component `src/components/Calendar/ColorPickerField.vue` (156 — iro wheel/value-slider + hex
+      input as `v-model:modelValue` (hex string); owns the iro instance lifecycle, `handleHexInput`/
+      `isValidHex`, `isHexInputValid`, and the picker/hex/`:deep(.IroSlider)` CSS). iro now inits/destroys
+      on the child's own mount/unmount (it mounts with the modal's `v-if`), so the parent watch only
+      snapshots the color + nothing else. The default-color button is passed in via the default slot.
+    - Util `src/utils/dom.ts` (6 — `setElementInert(el, inert)`, a Vue-free `el?.toggleAttribute('inert', …)`
+      helper; new generic-DOM home, as no existing domain util fit).
+- **Findings:**
+    - **Dead CSS removed:** the `.modal-body p` rule had no `<p>` in this modal's body (it was carried
+      over from the shared shell; the real `<p>` consumer is HideEventModal, which kept its own copy).
+    - **Behavior note (picker lifecycle):** the iro picker is now created/destroyed by `ColorPickerField`'s
+      mount/unmount instead of a `show`-watch + `nextTick`. Equivalent (the field only renders inside the
+      modal's `v-if="show"`); reset/default/hex all flow through `v-model` (parent reassigns `currentColor`
+      → child's `modelValue` watch drives the iro instance, guarded against redundant sets).
+    - **`inert` is the right primitive (no library):** there is **no focus-trap library** in the repo; the
+      offcanvas is a plain Teleport using Bootstrap `.offcanvas` CSS classes. `inert` is the modern platform
+      primitive for "suspend a subtree," so no VueUse/`useFocusTrap` change was warranted.
+    - **Cross-boundary CSS:** all shell selectors moved to `BaseModal`. Slotted body content keeps its
+      styles in each consumer; HideEventModal's `.modal-body p` still resolves because Vue scopes only the
+      rightmost selector (`.modal-body p[data-v-hide]` matches BaseModal's `.modal-body` + the slotted `p`).
 
 ### 8. eventTypes.ts
 
@@ -456,6 +489,20 @@ seams below are **initial hypotheses from the first survey** — verify against 
   `getEventPokemonImages()` as the single entry point.
 - **Findings:** _(none yet)_
 
-### 10–12
+### 10–11
 
 - Scope when reached. Likely smaller, may turn out to be ⏭️ if already cohesive.
+
+### 12. HideEventModal.vue
+
+- **Settled as part of #7.** Adopted the shared `src/components/BaseModal.vue` extracted there,
+  dropping its duplicated shell template + handlers (`handleBackdropClick`/`handleKeydown`/show-watch/
+  `onBeforeUnmount`) and ~140 lines of shell CSS (363 → 220). Body content (hide buttons, timeline-filter
+  switch, cancel) + their styles stay local.
+- **Intentional visual change (approved):** the close (X) button was restyled from the local
+  fade-on-hover `.btn-close` to the shared `btn-icon-ghost` (the house style used in 11 other
+  components) that `BaseModal` standardizes on. Verified light + dark, mobile + desktop.
+- **Kept local:** `.modal-body p` text styling (its `<p>` is the only one across both modals; resolves
+  against BaseModal's slotted `.modal-body` via Vue's rightmost-selector scoping).
+- **Pre-existing (not changed):** the `.form-check-input:checked`/`:focus` rules here duplicate global
+  `style.scss` rules — left as-is (behavior-preserving); candidate for cleanup if #12 is revisited.
