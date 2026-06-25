@@ -82,7 +82,7 @@
                             This website is not affiliated with
                             <a class="link-secondary" href="https://pokemongo.com/" target="_blank" rel="noopener noreferrer">Pokémon GO</a> and is
                             intended to fall under Fair Use doctrine, similar to any other informational site such as a wiki. Pokémon and its
-                            trademarks are ©1995-2025 Nintendo, Creatures, and GAMEFREAK. <br />All images and names are owned and trademarked by
+                            trademarks are ©1995-2026 Nintendo, Creatures, and GAMEFREAK. <br />All images and names are owned and trademarked by
                             Nintendo, Niantic, The Pokémon Company, and GAMEFREAK and are property of their respective owners.
                         </p>
                     </div>
