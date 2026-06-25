@@ -91,7 +91,7 @@ import CalendarOptionsOffcanvas from '@/components/Calendar/CalendarOptionsOffca
 import EditEventColorModal from '@/components/Calendar/EditEventColorModal.vue';
 import EventDetailDrawer from '@/components/Calendar/EventDetailDrawer.vue';
 /* import CalendarMobile from '@/components/Calendar/CalendarMobile.vue'; */
-import EventTimeline from '@/components/Calendar/EventTimeline.vue';
+import EventTimeline from '@/components/Calendar/EventTimeline/EventTimeline.vue';
 import FilterSummary from '@/components/Calendar/FilterSummary.vue';
 import HideEventModal from '@/components/Calendar/HideEventModal.vue';
 import TimeOffsetIndicator from '@/components/Calendar/TimeOffsetIndicator.vue';

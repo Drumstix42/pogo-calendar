@@ -111,20 +111,20 @@ Status legend: ⬜ Not started · 🟡 In progress · ✅ Settled · ⏭️ Skip
 
 Priority: ordered roughly by size × tangle. Tackle top-down; they're largely independent.
 
-| #   | Feature / file                                                                  | Lines (T/script/style) | Status | Result                        | Priority |
-| --- | ------------------------------------------------------------------------------- | ---------------------- | ------ | ----------------------------- | -------- |
-| 1   | [CalendarDay.vue](src/components/Calendar/CalendarDay/CalendarDay.vue)          | 1320 / ~494 / ~820     | ✅     | 226 (orchestrator); see notes | P1       |
-| 2   | [TimelineEvent.vue](src/components/Calendar/TimelineEvent/TimelineEvent.vue)    | 931 / ~424 / ~469      | ✅     | 428 (orchestrator); see notes | P1       |
-| 3   | [EventTooltip.vue](src/components/Calendar/EventTooltip/EventTooltip.vue)       | 795 / ~347 / ~290      | ✅     | 382 (orchestrator); see notes | P2       |
-| 4   | [Calendar.vue (page)](src/pages/Calendar.vue)                                   | 525 / ~213 / ~265      | ✅     | 312 (orchestrator); see notes | P2       |
-| 5   | [EventFilterOptions.vue](src/components/CalendarOptions/EventFilterOptions/EventFilterOptions.vue) | 516             | ✅     | 114 (orchestrator); see notes | P2       |
-| 6   | [EventTimeline.vue](src/components/Calendar/EventTimeline.vue)                  | 453                    | ⬜     | —                             | P3       |
-| 7   | [EditEventColorModal.vue](src/components/Calendar/EditEventColorModal.vue)      | 430                    | ⬜     | —                             | P3       |
-| 8   | [eventTypes.ts](src/utils/eventTypes.ts)                                        | 747                    | ⬜     | —                             | P3       |
-| 9   | [eventPokemon.ts](src/utils/eventPokemon.ts)                                    | 566                    | ⬜     | —                             | P3       |
-| 10  | [EventTimeDisplay.vue](src/components/Calendar/EventTimeDisplay.vue)            | 353                    | ⬜     | —                             | P4       |
-| 11  | [EventOptions.vue](src/components/CalendarOptions/EventOptions.vue)             | 331                    | ⬜     | —                             | P4       |
-| 12  | [HideEventModal.vue](src/components/Calendar/HideEventModal.vue)                | 308                    | ⬜     | —                             | P4       |
+| #   | Feature / file                                                                                     | Lines (T/script/style) | Status | Result                        | Priority |
+| --- | -------------------------------------------------------------------------------------------------- | ---------------------- | ------ | ----------------------------- | -------- |
+| 1   | [CalendarDay.vue](src/components/Calendar/CalendarDay/CalendarDay.vue)                             | 1320 / ~494 / ~820     | ✅     | 226 (orchestrator); see notes | P1       |
+| 2   | [TimelineEvent.vue](src/components/Calendar/TimelineEvent/TimelineEvent.vue)                       | 931 / ~424 / ~469      | ✅     | 428 (orchestrator); see notes | P1       |
+| 3   | [EventTooltip.vue](src/components/Calendar/EventTooltip/EventTooltip.vue)                          | 795 / ~347 / ~290      | ✅     | 382 (orchestrator); see notes | P2       |
+| 4   | [Calendar.vue (page)](src/pages/Calendar.vue)                                                      | 525 / ~213 / ~265      | ✅     | 312 (orchestrator); see notes | P2       |
+| 5   | [EventFilterOptions.vue](src/components/CalendarOptions/EventFilterOptions/EventFilterOptions.vue) | 516                    | ✅     | 114 (orchestrator); see notes | P2       |
+| 6   | [EventTimeline.vue](src/components/Calendar/EventTimeline/EventTimeline.vue)                       | 542                    | ✅     | 74 (orchestrator); see notes  | P3       |
+| 7   | [EditEventColorModal.vue](src/components/Calendar/EditEventColorModal.vue)                         | 430                    | ⬜     | —                             | P3       |
+| 8   | [eventTypes.ts](src/utils/eventTypes.ts)                                                           | 747                    | ⬜     | —                             | P3       |
+| 9   | [eventPokemon.ts](src/utils/eventPokemon.ts)                                                       | 566                    | ⬜     | —                             | P3       |
+| 10  | [EventTimeDisplay.vue](src/components/Calendar/EventTimeDisplay.vue)                               | 353                    | ⬜     | —                             | P4       |
+| 11  | [EventOptions.vue](src/components/CalendarOptions/EventOptions.vue)                                | 331                    | ⬜     | —                             | P4       |
+| 12  | [HideEventModal.vue](src/components/Calendar/HideEventModal.vue)                                   | 308                    | ⬜     | —                             | P4       |
 
 **Explicitly out of scope** (large but they're data, not logic — leave alone unless asked):
 `constants/pokemonFormMap.ts`, `constants/validAnimatedSprites.ts`, `constants/validStaticSprites.ts`,
@@ -364,8 +364,63 @@ seams below are **initial hypotheses from the first survey** — verify against 
 
 ### 6. EventTimeline.vue
 
-- **Suggested seams (verify):** timeline layout vs. row rendering; shares concerns with #2.
-- **Findings:** _(none yet)_
+- **Why:** 542 lines (board's 453 was stale) mixing three concerns: event categorization/grouping
+  data, imperative scroll-into-view on expand, and per-category rendering with most of the CSS.
+- **Manual checks:** ✅ four categories render with count badges (Today / Ongoing / Upcoming &
+  Future date-grouped); ✅ collapse/expand persists (`timeline/category-<key>`); ✅ expand-event
+  scrolls into view (standalone + ≥1400px sidebar — different scroll containers); ✅ sticky category
+  headers park at correct offset (standalone under navbar vs. sidebar); ✅ "No single-day events
+  today" message + "N events hidden by filters" indicator; ✅ fade transitions. (Verified light + dark.)
+- **Realized split** (EventTimeline.vue 542 → **74-line orchestrator**, promoted to
+  `src/components/Calendar/EventTimeline/`; keeps the `.event-timeline` shell + sticky CSS-var defs +
+  `.timeline-events`/`.no-events`, composes the category loop):
+    - Sub-component in `EventTimeline/`: `TimelineCategorySection.vue` (248 — one `CollapsibleSection`:
+      title slot, both render variants (flat list for Today/Ongoing, date-grouped for Upcoming/Future),
+      no-events-today message, hidden-events indicator + all category-level CSS). Props
+      `(category, categoryEvents, dateGroups, totalCount, hiddenCount, activeEventId)`, emits `activate`.
+    - Composable `src/composables/useTimelineCategories.ts` (194 — `filteredEvents`, the `eventData`
+      categorization+counts, `groupedByDate`, the 3 extracted computeds, and the exported
+      `eventCategories` const + `TimelineDateGroup` type).
+    - Composable `src/composables/useTimelineActiveEvent.ts` (30 — `activeEventId` + `setActiveEvent`
+      with the scroll-on-expand; `setActiveEvent` arrow → `function` per convention).
+    - Util `src/utils/timelineScroll.ts` (51 — pure `getScrollContainer`/`scrollCardIntoView` +
+      `TIMELINE_TITLE_BUFFER_PX`; no Vue reactivity → testable).
+- **Findings:**
+    - **Sticky CSS vars cross the new boundary cleanly:** `--tl-sticky-top` etc. stay defined on
+      `.event-timeline` in the orchestrator and inherit into `TimelineCategorySection` (custom props
+      ignore scope), so the child's `:deep(.timeline-category-header) { top: var(--tl-sticky-top) }`
+      still resolves. No change needed.
+    - **Dead/non-functional CSS (moved as-is, behavior-preserving):** `.category-section-content`
+      `{ padding: 0 !important }` never matched — it targets the class `CollapsibleSection` applies
+      inside _its own_ template scope, so the parent's scoped selector can't reach it. The real
+      padding reset is `:deep(.section-content)`. Candidate for removal (in both this and any consumer).
+    - **Cleanups:** dropped the two constant `:key` bindings on the inner TransitionGroups (redundant
+      now that each category is its own instance); removed the dead commented-out
+      `.date-group { overflow: hidden; }` block.
+    - **No dedup with #2:** the scroll logic here is bespoke (scrollable-container + sticky-buffer
+      aware); the other `scrollIntoView` call sites use the native `el.scrollIntoView()` — not shareable.
+- **Fixes applied (post-refactor, approved):**
+    - **Empty-state bug fixed:** the `v-if="Object.keys(categorizedEvents).length === 0"` guard was
+      _always false_ (the categorized record always has all four keys), so "No upcoming events found"
+      was unreachable. Replaced with a `hasAnyEvents` computed (true when any category total > 0; based
+      on totals so a fully-filtered view still shows its per-category hidden indicators). **Visible
+      behavior change:** the message now renders when the 60-day window genuinely has no events.
+    - **`groupedByDate` narrowed:** now typed `Partial<Record<…>>` and only builds the UPCOMING/FUTURE
+      keys it ever populated; the orchestrator passes `groupedByDate[key] ?? []` (TODAY/ONGOING got `[]`
+      before too — behavior-preserving).
+    - **Record-init dedup:** the three identical four-key records in `eventData` now come from an
+      `emptyCategoryRecord<T>(fill)` helper.
+- **Deferred:**
+    - **`.category-section-content` dead CSS** — non-functional `:deep`-scope mismatch (real reset is
+      `:deep(.section-content)`); left in place, safe to delete later.
+    - **`sortEventsByTimingAndPriority(events, eventMetadata: Record<string, any>)`** in `eventTypes.ts`
+      — `any`-typed metadata; type as `Record<string, EventMetadata>` (type-only import from the events
+      store to avoid a runtime cycle), ideally when `EventMetadata` moves into `eventTypes.ts` in **#8**.
+    - **`displayNow`/`displayToday` duplication (~8 files)** — the
+      `liveMinute.value.add(manualTimeOffsetHours * 60, 'minute')` expression is repeated across
+      `App.vue`, `CalendarGrid.vue`, `CalendarHeader.vue`, `EventTimeDisplay.vue`, `SeasonDailyChip.vue`,
+      `stores/seasons.ts`, this composable (and `stores/events.ts` already has a private `getDisplayNow()`).
+      Candidate shared `useDisplayTime()` composable — **logged as a follow-up (#4 of this session).**
 
 ### 7. EditEventColorModal.vue
 
