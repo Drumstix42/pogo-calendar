@@ -117,7 +117,7 @@ Priority: ordered roughly by size × tangle. Tackle top-down; they're largely in
 | 2   | [TimelineEvent.vue](src/components/Calendar/TimelineEvent/TimelineEvent.vue)    | 931 / ~424 / ~469      | ✅     | 428 (orchestrator); see notes | P1       |
 | 3   | [EventTooltip.vue](src/components/Calendar/EventTooltip/EventTooltip.vue)       | 795 / ~347 / ~290      | ✅     | 382 (orchestrator); see notes | P2       |
 | 4   | [Calendar.vue (page)](src/pages/Calendar.vue)                                   | 525 / ~213 / ~265      | ✅     | 312 (orchestrator); see notes | P2       |
-| 5   | [EventFilterOptions.vue](src/components/CalendarOptions/EventFilterOptions.vue) | 516                    | ⬜     | —                             | P2       |
+| 5   | [EventFilterOptions.vue](src/components/CalendarOptions/EventFilterOptions/EventFilterOptions.vue) | 516             | ✅     | 114 (orchestrator); see notes | P2       |
 | 6   | [EventTimeline.vue](src/components/Calendar/EventTimeline.vue)                  | 453                    | ⬜     | —                             | P3       |
 | 7   | [EditEventColorModal.vue](src/components/Calendar/EditEventColorModal.vue)      | 430                    | ⬜     | —                             | P3       |
 | 8   | [eventTypes.ts](src/utils/eventTypes.ts)                                        | 747                    | ⬜     | —                             | P3       |
@@ -328,10 +328,39 @@ seams below are **initial hypotheses from the first survey** — verify against 
 
 ### 5. EventFilterOptions.vue
 
-- **Why:** 516 lines of filter UI.
-- **Suggested seams (verify):** per-category filter group sub-component; selection logic → composable.
-- **Manual checks:** toggling event types, category groups, persistence, toasts.
-- **Findings:** _(none yet)_
+- **Why:** 516 lines of filter UI (timeline toggle + All/None stats + category filter grid + hidden-events
+  list), CSS-dominated.
+- **Manual checks:** ✅ toggling event types; ✅ All/None buttons + count text; ✅ hover-highlight on calendar
+  (body `data-filter-hover-event-type`); ✅ palette color-edit button (custom-color dot); ✅ hidden-events list +
+  show; ✅ "Apply filters to Timeline" switch; persistence. (Verified light + dark, mobile + desktop.)
+- **Realized split** (EventFilterOptions.vue 516 → **114-line orchestrator**, promoted to
+  `src/components/CalendarOptions/EventFilterOptions/`; keeps the timeline toggle, All/None stats bar,
+  helper text + their CSS, composes grid + hidden-list):
+    - Sub-components in `EventFilterOptions/`: `EventTypeFilterGrid.vue` (74 — grid container + category
+      groups + the body-attr hover-highlight handlers + grid CSS; renders the item), `EventTypeFilterItem.vue`
+      (230 — the single filter `<label>`: checkbox area + colored content + palette color-edit button + all
+      `.filter-item*`/`.filter-content`/`.filter-color-edit-btn` CSS), `HiddenEventsList.vue` (116 — hidden-events
+      region + its CSS).
+    - Composable `src/composables/useHiddenEvents.ts` (60 — `{ hiddenEvents, showHiddenEvent }`; single source
+      of truth via the stores, consumed by both orchestrator (count) and `HiddenEventsList` (render + action)).
+    - Util `src/utils/eventTypeGroups.ts` (36 — pure `groupEventTypesByCategory()` + `CATEGORY_DISPLAY_NAMES`;
+      kept out of the already-overloaded `eventTypes.ts` (row #8)).
+- **Findings:**
+    - **Highlight stays grid-owned** via native event fallthrough (`@mouseenter`/`@mouseleave` on
+      `<EventTypeFilterItem>`), keeping the `data-filter-hover-event-type` body-attribute coupling in one place;
+      the global consumer at `style.scss:310` is untouched.
+    - **`eventGroups` is now a plain const** (was a `computed`) — it derives only from the static `EVENT_TYPES`,
+      so behavior is identical. The new util also replaces the old convoluted reverse-lookup-by-title category
+      sort with a direct key-ordered sort.
+    - **Dead code removed:** the no-op `ref="filterGridContainer"` (no matching `ref()` in script);
+      the `.hidden-events-title` CSS rule (no markup referenced it); a commented-out
+      `.filter-color-edit-btn.has-custom-color` block.
+    - **Typing tightened:** `showHiddenEvent`'s `event: any` → `PogoEvent | null` (via `useHiddenEvents`), and
+      the helper now takes the whole `HiddenEventEntry` instead of three redundant args.
+    - **Convention/cleanup (approved):** `handleTimelineFilterToggle` arrow → `function` declaration; redundant
+      double `eventMetadata[id]` read collapsed to the local `metadata` var.
+    - **`EventTypeFilterItem.vue` is 230 lines (over the ~300 soft target is fine, but ~175 are CSS):** one
+      cohesive styled element, not a separable seam — same situation accepted in #1–#3.
 
 ### 6. EventTimeline.vue
 
