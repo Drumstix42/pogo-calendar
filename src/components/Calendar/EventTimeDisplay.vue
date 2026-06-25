@@ -42,7 +42,7 @@
 import { ArrowLeftRight } from '@lucide/vue';
 import { computed } from 'vue';
 
-import { useCurrentTime } from '@/composables/useCurrentTime';
+import { useDisplayTime } from '@/composables/useDisplayTime';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { useEventsStore } from '@/stores/events';
 import { type PogoEvent, parseEventDate } from '@/utils/eventTypes';
@@ -59,12 +59,7 @@ const props = withDefaults(defineProps<Props>(), {
 const eventsStore = useEventsStore();
 const calendarSettings = useCalendarSettingsStore();
 
-// Get reactive current time that updates every minute
-const { liveMinute } = useCurrentTime();
-
-const displayNow = computed(() => {
-    return liveMinute.value.add(calendarSettings.manualTimeOffsetHours * 60, 'minute');
-});
+const { displayNow } = useDisplayTime();
 
 const isSingleDay = computed(() => {
     return eventsStore.eventMetadata[props.event.eventID]?.isSingleDayEvent ?? false;

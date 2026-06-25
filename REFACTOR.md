@@ -413,14 +413,16 @@ seams below are **initial hypotheses from the first survey** — verify against 
 - **Deferred:**
     - **`.category-section-content` dead CSS** — non-functional `:deep`-scope mismatch (real reset is
       `:deep(.section-content)`); left in place, safe to delete later.
-    - **`sortEventsByTimingAndPriority(events, eventMetadata: Record<string, any>)`** in `eventTypes.ts`
-      — `any`-typed metadata; type as `Record<string, EventMetadata>` (type-only import from the events
-      store to avoid a runtime cycle), ideally when `EventMetadata` moves into `eventTypes.ts` in **#8**.
-    - **`displayNow`/`displayToday` duplication (~8 files)** — the
-      `liveMinute.value.add(manualTimeOffsetHours * 60, 'minute')` expression is repeated across
-      `App.vue`, `CalendarGrid.vue`, `CalendarHeader.vue`, `EventTimeDisplay.vue`, `SeasonDailyChip.vue`,
-      `stores/seasons.ts`, this composable (and `stores/events.ts` already has a private `getDisplayNow()`).
-      Candidate shared `useDisplayTime()` composable — **logged as a follow-up (#4 of this session).**
+    - **`sortEventsByTimingAndPriority` `any`-typed metadata** — best fixed alongside relocating
+      `EventMetadata` in **#8** (details recorded under #8's notes).
+- **Connected-component dedup done (`useDisplayTime`):** the
+  `liveMinute.value.add(manualTimeOffsetHours * 60, 'minute')` (`displayNow`) + `.startOf('day')`
+  (`displayToday`) expression was duplicated across 8 sites. Extracted to
+  `src/composables/useDisplayTime.ts` (`{ displayNow, displayToday }` computeds) and adopted by
+  `App.vue`, `CalendarGrid.vue`, `CalendarHeader.vue`, `EventTimeDisplay.vue`, `SeasonDailyChip.vue`,
+  `stores/seasons.ts`, `stores/events.ts` (its private `getDisplayNow()` now returns `displayNow.value`),
+  and `useTimelineCategories.ts`. Behavior-preserving; the stores call the composable at setup (no new
+  import cycle — `useDisplayTime` only depends on `calendarSettings` + `useCurrentTime`).
 
 ### 7. EditEventColorModal.vue
 
@@ -434,6 +436,18 @@ seams below are **initial hypotheses from the first survey** — verify against 
 - **Suggested seams (verify):** split data (`EVENT_TYPES`, keys, categories) from behavior
   (date parsing, grouping, sorting, major-event helpers). Keep public import paths stable or update
   all call sites.
+- **Carried-in opportunities (from #6):**
+    - **`sortEventsByTimingAndPriority(events, eventMetadata: Record<string, any>)` typing
+      (eventTypes.ts:533):** the `any`-typed metadata should be `Record<string, EventMetadata>`.
+      `EventMetadata` currently lives in `stores/events.ts` (line ~58), so typing it directly from
+      here would be backwards layering (util → store) — even a type-only import only avoids the
+      _runtime_ cycle, not the smell. The clean fix is to **relocate `EventMetadata` into
+      `eventTypes.ts`** (or a shared `types` module) as part of this split, then the param types itself
+      naturally. Worth checking whether `EventMetadata`'s own deps (`EventTypeInfoWithoutColor`, etc.)
+      already live here, which would make the move low-friction.
+    - **Note the layering rule generally:** several `utils/` consumers pass `eventsStore.eventMetadata`
+      into helpers here; centralizing the `EventMetadata` type in this file (not the store) keeps the
+      dependency direction store → util.
 - **Findings:** _(none yet)_
 
 ### 9. eventPokemon.ts

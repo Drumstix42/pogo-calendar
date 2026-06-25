@@ -1,6 +1,6 @@
 import { computed } from 'vue';
 
-import { useCurrentTime } from '@/composables/useCurrentTime';
+import { useDisplayTime } from '@/composables/useDisplayTime';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { useEventFilterStore } from '@/stores/eventFilter';
 import { useEventsStore } from '@/stores/events';
@@ -35,11 +35,7 @@ export function useTimelineCategories() {
     const eventsStore = useEventsStore();
     const eventFilter = useEventFilterStore();
     const calendarSettings = useCalendarSettingsStore();
-    const { liveMinute } = useCurrentTime();
-
-    const displayNow = computed(() => {
-        return liveMinute.value.add(calendarSettings.manualTimeOffsetHours * 60, 'minute');
-    });
+    const { displayNow } = useDisplayTime();
 
     // Get filtered events
     const filteredEvents = computed(() => {

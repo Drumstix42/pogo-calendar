@@ -32,7 +32,7 @@
 import dayjs from 'dayjs';
 import { computed } from 'vue';
 
-import { useCurrentTime } from '@/composables/useCurrentTime';
+import { useDisplayTime } from '@/composables/useDisplayTime';
 import { useUrlSync } from '@/composables/useUrlSync';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { useEventFilterStore } from '@/stores/eventFilter';
@@ -46,11 +46,7 @@ const { urlMonth, urlYear } = useUrlSync();
 const calendarSettings = useCalendarSettingsStore();
 const eventFilter = useEventFilterStore();
 const eventsStore = useEventsStore();
-const { liveMinute } = useCurrentTime();
-
-const displayToday = computed(() => {
-    return liveMinute.value.add(calendarSettings.manualTimeOffsetHours * 60, 'minute').startOf('day');
-});
+const { displayToday } = useDisplayTime();
 
 // Types for slot-based layout
 interface EventSlot {

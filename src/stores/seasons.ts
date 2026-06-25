@@ -5,7 +5,7 @@ import utc from 'dayjs/plugin/utc';
 import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
 
-import { useCurrentTime } from '@/composables/useCurrentTime';
+import { useDisplayTime } from '@/composables/useDisplayTime';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { type Season, type SeasonDailyBonus, parseEventDate } from '@/utils/eventTypes';
 
@@ -25,7 +25,7 @@ export const useSeasonsStore = defineStore('seasonsStore', () => {
     const error = ref<string | null>(null);
     const lastFetched = ref<dayjs.Dayjs | null>(null);
 
-    const { liveMinute } = useCurrentTime();
+    const { displayNow } = useDisplayTime();
     const calendarSettings = useCalendarSettingsStore();
 
     const hasFreshData = computed((): boolean => {
@@ -59,8 +59,7 @@ export const useSeasonsStore = defineStore('seasonsStore', () => {
 
     /** The season active "now" (offset-adjusted), or null between seasons. */
     const activeSeason = computed((): Season | null => {
-        const now = liveMinute.value.add(calendarSettings.manualTimeOffsetHours * 60, 'minute');
-        return getSeasonForDate(now);
+        return getSeasonForDate(displayNow.value);
     });
 
     async function fetchSeasons(force: boolean = false): Promise<void> {

@@ -77,20 +77,16 @@ import { breakpointsBootstrapV5, useBreakpoints } from '@vueuse/core';
 import dayjs from 'dayjs';
 import { computed } from 'vue';
 
-import { useCurrentTime } from '@/composables/useCurrentTime';
 import { useDeviceDetection } from '@/composables/useDeviceDetection';
+import { useDisplayTime } from '@/composables/useDisplayTime';
 import { useUrlSync } from '@/composables/useUrlSync';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { DATE_FORMAT } from '@/utils/dateFormat';
 
 const { urlMonth, urlYear } = useUrlSync();
 const calendarSettings = useCalendarSettingsStore();
-const { liveMinute } = useCurrentTime();
 const { isTouchDevice } = useDeviceDetection();
-
-const displayToday = computed(() => {
-    return liveMinute.value.add(calendarSettings.manualTimeOffsetHours * 60, 'minute').startOf('day');
-});
+const { displayToday } = useDisplayTime();
 
 // Breakpoints
 const breakpoints = useBreakpoints(breakpointsBootstrapV5);

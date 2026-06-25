@@ -20,7 +20,7 @@ import {
     sortEventsByPriority,
 } from '../utils/eventTypes';
 import { type SpotlightBonusInfo, getSpotlightBonusInfo, getSpotlightBonusTypeIcon } from '../utils/spotlightBonus';
-import { useCurrentTime } from '@/composables/useCurrentTime';
+import { useDisplayTime } from '@/composables/useDisplayTime';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { useEventTypeColorsStore } from '@/stores/eventTypeColors';
 
@@ -99,12 +99,12 @@ export const useEventsStore = defineStore('eventsStore', () => {
     const currentMonth = ref(dayjs().month());
     const currentYear = ref(dayjs().year());
 
-    // Get reactive current time for event status calculations
-    const { liveMinute } = useCurrentTime();
+    // Reactive "now", adjusted by the user's manual time offset, for event status calculations
+    const { displayNow } = useDisplayTime();
     const calendarSettings = useCalendarSettingsStore();
 
     function getDisplayNow() {
-        return liveMinute.value.add(calendarSettings.manualTimeOffsetHours * 60, 'minute');
+        return displayNow.value;
     }
 
     // Getters (computed)
