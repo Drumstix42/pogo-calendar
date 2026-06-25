@@ -48,7 +48,8 @@ import { breakpointsBootstrapV5, useBreakpoints } from '@vueuse/core';
 import { computed } from 'vue';
 
 import { type PokemonImageData, getEventPokemonImages } from '@/utils/eventPokemon';
-import { type PogoEvent, getRaidSubType } from '@/utils/eventTypes';
+import { getRaidSubType } from '@/utils/eventSubtype';
+import { type PogoEvent } from '@/utils/eventTypes';
 
 import PokemonImage from './PokemonImage.vue';
 

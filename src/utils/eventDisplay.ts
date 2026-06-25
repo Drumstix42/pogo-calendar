@@ -1,11 +1,12 @@
+import { getGroupedEventsCount } from '@/utils/eventGrouping';
 import { formatEventName } from '@/utils/eventName';
-import { type PogoEvent, getGroupedEventsCount } from '@/utils/eventTypes';
+import { type PogoEvent } from '@/utils/eventTypes';
 
 // Display name for a calendar event bar/block.
 // Grouped events carry a custom `_displayName`; individual events use their own name.
 export function getEventDisplayName(event: PogoEvent): string {
-    if ((event as any)._displayName) {
-        return formatEventName((event as any)._displayName);
+    if (event._displayName) {
+        return formatEventName(event._displayName);
     }
 
     return formatEventName(event.name);

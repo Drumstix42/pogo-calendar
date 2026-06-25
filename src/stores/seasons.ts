@@ -7,7 +7,8 @@ import { computed, ref } from 'vue';
 
 import { useDisplayTime } from '@/composables/useDisplayTime';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
-import { type Season, type SeasonDailyBonus, parseEventDate } from '@/utils/eventTypes';
+import { parseEventDate } from '@/utils/eventDate';
+import { type Season, type SeasonDailyBonus } from '@/utils/eventTypes';
 
 dayjs.extend(utc);
 dayjs.extend(isSameOrBefore);

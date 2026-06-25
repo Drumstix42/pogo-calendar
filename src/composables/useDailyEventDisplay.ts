@@ -1,8 +1,9 @@
 import { type DailyMajorDisplayEvent } from '@/composables/useCalendarDaySingleEvents';
 import { useEventsStore } from '@/stores/events';
 import { getEventDisplayName } from '@/utils/eventDisplay';
+import { type MajorCalendarEventVariant, getMajorCalendarEventVariant } from '@/utils/eventMajor';
 import { formatEventName } from '@/utils/eventName';
-import { type MajorCalendarEventVariant, type PogoEvent, getMajorCalendarEventVariant } from '@/utils/eventTypes';
+import { type PogoEvent } from '@/utils/eventTypes';
 
 // Per-event rendering helpers for single-day calendar entries. Resolves the per-day projections
 // of major multi-day events (see useCalendarDaySingleEvents) back to their source event.

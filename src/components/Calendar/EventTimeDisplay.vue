@@ -45,7 +45,8 @@ import { computed } from 'vue';
 import { useDisplayTime } from '@/composables/useDisplayTime';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { useEventsStore } from '@/stores/events';
-import { type PogoEvent, parseEventDate } from '@/utils/eventTypes';
+import { parseEventDate } from '@/utils/eventDate';
+import { type PogoEvent } from '@/utils/eventTypes';
 
 interface Props {
     event: PogoEvent;

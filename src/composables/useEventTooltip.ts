@@ -3,17 +3,12 @@ import { computed } from 'vue';
 
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { useEventsStore } from '@/stores/events';
+import { type MajorCalendarEventVariant, getMajorCalendarEventVariant, isMajorCalendarEventType } from '@/utils/eventMajor';
 import { formatEventName } from '@/utils/eventName';
 import { getRaidScheduleBossesForDate, getRaidScheduleSectionsForDate } from '@/utils/eventRaidHours';
+import { getRaidSubType, isEventWithSubtype } from '@/utils/eventSubtype';
 import { buildFullRaidScheduleDaySections } from '@/utils/eventTooltipSchedule';
-import {
-    type MajorCalendarEventVariant,
-    type PogoEvent,
-    getMajorCalendarEventVariant,
-    getRaidSubType,
-    isEventWithSubtype,
-    isMajorCalendarEventType,
-} from '@/utils/eventTypes';
+import { type PogoEvent } from '@/utils/eventTypes';
 import { buildRaidTierGroupsWithImages, buildTierGroupsFromBosses } from '@/utils/raidTierGroups';
 
 interface UseEventTooltipOptions {

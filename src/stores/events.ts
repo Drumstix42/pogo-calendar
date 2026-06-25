@@ -6,20 +6,20 @@ import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
 
 import { DATE_FORMAT } from '../utils/dateFormat';
+import { formatEventTime, parseEventDate } from '../utils/eventDate';
 import { formatEventName, getSmartGroupDisplayName } from '../utils/eventName';
 import { generateEventRaidHourSubEvents, generateEventSpotlightSubEvents } from '../utils/eventRaidHours';
+import { sortEventsByPriority } from '../utils/eventSort';
+import { getRaidSubType, isEventWithSubtype } from '../utils/eventSubtype';
 import {
+    type EventMetadata,
     EventTypeInfoWithoutColor,
     type PogoEvent,
     type PokemonBoss,
-    formatEventTime,
+    type RaidBossTierGroup,
     getEventTypeInfo,
-    getRaidSubType,
-    isEventWithSubtype,
-    parseEventDate,
-    sortEventsByPriority,
 } from '../utils/eventTypes';
-import { type SpotlightBonusInfo, getSpotlightBonusInfo, getSpotlightBonusTypeIcon } from '../utils/spotlightBonus';
+import { getSpotlightBonusInfo, getSpotlightBonusTypeIcon } from '../utils/spotlightBonus';
 import { useDisplayTime } from '@/composables/useDisplayTime';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { useEventTypeColorsStore } from '@/stores/eventTypeColors';
@@ -28,11 +28,6 @@ import { useEventTypeColorsStore } from '@/stores/eventTypeColors';
 dayjs.extend(utc); // Adds UTC timezone support for parsing/converting dates
 dayjs.extend(isSameOrBefore); // Adds comparison method for date <= checks
 dayjs.extend(isSameOrAfter); // Adds comparison method for date >= checks
-
-export interface RaidBossTierGroup {
-    label: string;
-    bosses: PokemonBoss[];
-}
 
 // "Super Mega" should always sort above numeric tiers, then "Tier N" labels sort numerically,
 // and all other labels sort alphabetically after that.
@@ -53,38 +48,6 @@ function sortTierLabel(a: string, b: string): number {
 
 interface EventWithTypeInfo extends PogoEvent {
     typeInfo: EventTypeInfoWithoutColor;
-}
-
-export interface EventMetadata {
-    // Precomputed dates
-    startDate: dayjs.Dayjs;
-    endDate: dayjs.Dayjs;
-
-    // Classifications
-    isMultiDayEvent: boolean;
-    isSingleDayEvent: boolean;
-    isPastEvent: boolean;
-    isFutureEvent: boolean;
-
-    // Type information
-    typeInfo: EventTypeInfoWithoutColor;
-    color: string;
-
-    // Display helpers
-    formattedStartTime: string;
-    displayName: string;
-
-    // Spotlight bonus (for spotlight hour events)
-    spotlightBonus?: SpotlightBonusInfo | null;
-    spotlightBonusIconUrl?: string | null;
-
-    // Raid boss groupings by tier (for events with raidbattles data)
-    raidBossTierGroups?: RaidBossTierGroup[];
-
-    // Grouping metadata (for when grouping is enabled)
-    isGrouped?: boolean;
-    groupedEvents?: PogoEvent[];
-    groupCount?: number;
 }
 
 //const SCRAPED_EVENTS_URL = 'https://raw.githubusercontent.com/bigfoott/ScrapedDuck/data/events.min.json';
@@ -224,10 +187,10 @@ export const useEventsStore = defineStore('eventsStore', () => {
 
         // Second pass: add grouping metadata for processed events
         processedEvents.value.forEach(event => {
-            if ((event as any)._isGrouped && metadata[event.eventID]) {
+            if (event._isGrouped && metadata[event.eventID]) {
                 metadata[event.eventID].isGrouped = true;
-                metadata[event.eventID].groupedEvents = (event as any)._groupedEvents;
-                metadata[event.eventID].groupCount = (event as any)._groupedEvents?.length || 0;
+                metadata[event.eventID].groupedEvents = event._groupedEvents;
+                metadata[event.eventID].groupCount = event._groupedEvents?.length || 0;
             }
         });
 
@@ -293,9 +256,9 @@ export const useEventsStore = defineStore('eventsStore', () => {
             });
 
             const representative = { ...sortedGroup[0] };
-            (representative as any)._isGrouped = true;
-            (representative as any)._groupedEvents = group;
-            (representative as any)._displayName = getSmartGroupDisplayName(group);
+            representative._isGrouped = true;
+            representative._groupedEvents = group;
+            representative._displayName = getSmartGroupDisplayName(group);
 
             return representative;
         });

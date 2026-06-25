@@ -4,8 +4,12 @@ import { computed } from 'vue';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { useEventFilterStore } from '@/stores/eventFilter';
 import { useEventsStore } from '@/stores/events';
+import { parseEventDate } from '@/utils/eventDate';
+import { getEventsForDate } from '@/utils/eventGrouping';
+import { isMajorCalendarEventType } from '@/utils/eventMajor';
 import { getRaidScheduleSectionsForDate } from '@/utils/eventRaidHours';
-import { type PogoEvent, getEventsForDate, isMajorCalendarEventType, parseEventDate, sortEventsByPriority } from '@/utils/eventTypes';
+import { sortEventsByPriority } from '@/utils/eventSort';
+import { type PogoEvent } from '@/utils/eventTypes';
 
 // A major multi-day event projected onto a single day so it renders in its own daily lane.
 export type DailyMajorDisplayEvent = PogoEvent & {

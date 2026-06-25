@@ -111,20 +111,20 @@ Status legend: ⬜ Not started · 🟡 In progress · ✅ Settled · ⏭️ Skip
 
 Priority: ordered roughly by size × tangle. Tackle top-down; they're largely independent.
 
-| #   | Feature / file                                                                                     | Lines (T/script/style) | Status | Result                         | Priority |
-| --- | -------------------------------------------------------------------------------------------------- | ---------------------- | ------ | ------------------------------ | -------- |
-| 1   | [CalendarDay.vue](src/components/Calendar/CalendarDay/CalendarDay.vue)                             | 1320 / ~494 / ~820     | ✅     | 226 (orchestrator); see notes  | P1       |
-| 2   | [TimelineEvent.vue](src/components/Calendar/TimelineEvent/TimelineEvent.vue)                       | 931 / ~424 / ~469      | ✅     | 428 (orchestrator); see notes  | P1       |
-| 3   | [EventTooltip.vue](src/components/Calendar/EventTooltip/EventTooltip.vue)                          | 795 / ~347 / ~290      | ✅     | 382 (orchestrator); see notes  | P2       |
-| 4   | [Calendar.vue (page)](src/pages/Calendar.vue)                                                      | 525 / ~213 / ~265      | ✅     | 312 (orchestrator); see notes  | P2       |
-| 5   | [EventFilterOptions.vue](src/components/CalendarOptions/EventFilterOptions/EventFilterOptions.vue) | 516                    | ✅     | 114 (orchestrator); see notes  | P2       |
-| 6   | [EventTimeline.vue](src/components/Calendar/EventTimeline/EventTimeline.vue)                       | 542                    | ✅     | 74 (orchestrator); see notes   | P3       |
-| 7   | [EditEventColorModal.vue](src/components/Calendar/EditEventColorModal.vue)                         | 430                    | ✅     | 211 (orchestrator); see notes  | P3       |
-| 8   | [eventTypes.ts](src/utils/eventTypes.ts)                                                           | 747                    | ⬜     | —                              | P3       |
-| 9   | [eventPokemon.ts](src/utils/eventPokemon.ts)                                                       | 566                    | ⬜     | —                              | P3       |
-| 10  | [EventTimeDisplay.vue](src/components/Calendar/EventTimeDisplay.vue)                               | 353                    | ⬜     | —                              | P4       |
-| 11  | [EventOptions.vue](src/components/CalendarOptions/EventOptions.vue)                                | 331                    | ⬜     | —                              | P4       |
-| 12  | [HideEventModal.vue](src/components/Calendar/HideEventModal.vue)                                   | 363                    | ✅     | 220; adopted BaseModal (in #7) | P4       |
+| #   | Feature / file                                                                                     | Lines (T/script/style)  | Status | Result                            | Priority |
+| --- | -------------------------------------------------------------------------------------------------- | ----------------------- | ------ | --------------------------------- | -------- |
+| 1   | [CalendarDay.vue](src/components/Calendar/CalendarDay/CalendarDay.vue)                             | 1320 / ~494 / ~820      | ✅     | 226 (orchestrator); see notes     | P1       |
+| 2   | [TimelineEvent.vue](src/components/Calendar/TimelineEvent/TimelineEvent.vue)                       | 931 / ~424 / ~469       | ✅     | 428 (orchestrator); see notes     | P1       |
+| 3   | [EventTooltip.vue](src/components/Calendar/EventTooltip/EventTooltip.vue)                          | 795 / ~347 / ~290       | ✅     | 382 (orchestrator); see notes     | P2       |
+| 4   | [Calendar.vue (page)](src/pages/Calendar.vue)                                                      | 525 / ~213 / ~265       | ✅     | 312 (orchestrator); see notes     | P2       |
+| 5   | [EventFilterOptions.vue](src/components/CalendarOptions/EventFilterOptions/EventFilterOptions.vue) | 516                     | ✅     | 114 (orchestrator); see notes     | P2       |
+| 6   | [EventTimeline.vue](src/components/Calendar/EventTimeline/EventTimeline.vue)                       | 542                     | ✅     | 74 (orchestrator); see notes      | P3       |
+| 7   | [EditEventColorModal.vue](src/components/Calendar/EditEventColorModal.vue)                         | 430                     | ✅     | 211 (orchestrator); see notes     | P3       |
+| 8   | [eventTypes.ts](src/utils/eventTypes.ts)                                                           | 849 (board's 747 stale) | ✅     | 449 (types + registry); see notes | P3       |
+| 9   | [eventPokemon.ts](src/utils/eventPokemon.ts)                                                       | 566                     | ⬜     | —                                 | P3       |
+| 10  | [EventTimeDisplay.vue](src/components/Calendar/EventTimeDisplay.vue)                               | 353                     | ⬜     | —                                 | P4       |
+| 11  | [EventOptions.vue](src/components/CalendarOptions/EventOptions.vue)                                | 331                     | ⬜     | —                                 | P4       |
+| 12  | [HideEventModal.vue](src/components/Calendar/HideEventModal.vue)                                   | 363                     | ✅     | 220; adopted BaseModal (in #7)    | P4       |
 
 **Explicitly out of scope** (large but they're data, not logic — leave alone unless asked):
 `constants/pokemonFormMap.ts`, `constants/validAnimatedSprites.ts`, `constants/validStaticSprites.ts`,
@@ -481,7 +481,61 @@ seams below are **initial hypotheses from the first survey** — verify against 
     - **Note the layering rule generally:** several `utils/` consumers pass `eventsStore.eventMetadata`
       into helpers here; centralizing the `EventMetadata` type in this file (not the store) keeps the
       dependency direction store → util.
-- **Findings:** _(none yet)_
+- **Manual checks:** pure-util split, behavior-preserving — no rendering/markup/CSS changed. Smoke-check
+  the calendar grid (single-day + multi-day bars, grouped events render), the timeline sidebar (category
+  sort/timing order), major-event variant badges, spotlight/CP badges, and the event tooltip/extras. Type
+  union + registry unchanged, so colors/priorities/categories are untouched.
+- **Realized split** (eventTypes.ts 849 → **449-line module**; keeps the domain-model interfaces,
+  the `EVENT_TYPES` registry table, `EventTypeKey`, `TimelineCategory`/`TimelineCategoryKey`, and
+  `getEventTypeInfo` — the symbols imported nearly everywhere, so ~40 `PogoEvent`/`EventTypeKey`/
+  `EVENT_TYPES` import lines stayed stable). All call sites updated (no barrel; per repo convention).
+  Five focused pure-util siblings under `src/utils/`:
+    - `eventDate.ts` (46 — `parseEventDate`, `formatEventTime`, `isMultiDayEvent`, `isSameDayEvent`;
+      owns its own `dayjs.extend(utc)`).
+    - `eventMajor.ts` (37 — `MAJOR_CALENDAR_EVENT_TYPES` + variant types/helpers).
+    - `eventSubtype.ts` (70 — `EVENTS_WITH_SUBTYPE`/`isEventWithSubtype`/`getRaidSubType`/
+      `getRaidSubTypePriority` + `hasEventExtras`).
+    - `eventSort.ts` (48 — `sortEventsByPriority`, `sortEventsByTimingAndPriority`).
+    - `eventGrouping.ts` (248 — `EventGroup`/`CalendarEventDisplay` types + `shouldGroupEvents`/
+      `groupEventsByType`/`getGroupedEvents`/`hasGroupedEvents`/`getGroupedEventsCount`/`getEventsForDate`/
+      `getCalendarEventsForDate`).
+- **EventMetadata relocated (carried-in #6 opportunity, done):** `EventMetadata` + `RaidBossTierGroup`
+  moved from `stores/events.ts` into `eventTypes.ts`; `sortEventsByTimingAndPriority`'s param tightened
+  from `Record<string, any>` → `Record<string, EventMetadata>`. Fixes the store→util layering smell. The
+  store now imports both types back from `eventTypes.ts`. Used `import type { Dayjs }` (type-only) for the
+  date fields so no runtime `dayjs` import was reintroduced into the now-lighter `eventTypes.ts`.
+- **Findings:**
+    - **Type-only import cycle (benign):** `eventTypes.ts` now imports `type SpotlightBonusInfo` from
+      `spotlightBonus.ts`, which imports `type PogoEvent` back. Purely type-level (erased at compile),
+      no runtime cycle; vue-tsc is clean.
+    - **Dead grouping trio removed (follow-up #2, ~190 lines):** `shouldGroupEvents`, `groupEventsByType`,
+      and `getCalendarEventsForDate` had **no callers** (the calendar grouping migrated into the events
+      store long ago — per `groupEventsByType`'s own TODO). Deleted along with the now-orphaned
+      `EventGroup`/`CalendarEventDisplay` types; `eventGrouping.ts` shrank **248 → 41 lines** (now just
+      `getGroupedEvents`/`hasGroupedEvents`/`getGroupedEventsCount`/`getEventsForDate`) and dropped its
+      `useEventTypeColorsStore`/`formatEventName`/`getEventTypeInfo`/`sortEventsByPriority`/`eventDate`
+      imports.
+    - **Grouping-augmentation fields typed (follow-up #1):** added `_isGrouped`/`_groupedEvents`/
+      `_displayName` as optional internal fields on `PogoEvent` (stamped by the events store). Removed
+      **all 15 `(event as any)._*` casts** across `eventGrouping.ts`, `eventDisplay.ts`, `events.ts`,
+      `CalendarGrid.vue`, `EventTooltip.vue`, `TimelineEvent.vue`, `EventDetailOffcanvas.vue`,
+      `MultiDayEventBar.vue`. Resolves the typing smell flagged in #2/#3 too. (`_isMajorDailyDisplay`/
+      `_sourceEventID` left on `DailyMajorDisplayEvent`, which already types them.)
+    - **Type-only import cycle (benign):** `eventTypes.ts` now imports `type SpotlightBonusInfo` from
+      `spotlightBonus.ts`, which imports `type PogoEvent` back. Purely type-level (erased at compile),
+      no runtime cycle; vue-tsc is clean.
+    - **Likely-dead export:** `getMajorCalendarEventVariantLabel` (eventMajor.ts) has no callers
+      (pre-existing — not introduced here). Candidate for removal.
+    - **Cleanups (follow-up #3):** dropped the dead `color: '#757575'` field from the `getEventTypeInfo`
+      fallback (its return is `EventTypeInfoWithoutColor` — the live grey fallback for unmapped events is
+      owned by `eventTypeColors.ts` `getEventTypeColor()`, untouched). Made `sortEventsByPriority` +
+      `sortEventsByTimingAndPriority` **pure** (`[...events].sort(...)`) — all 3 callers already pass
+      fresh arrays and consume the return value, so behavior-preserving; removes a latent mutation
+      footgun for a shared util.
+    - **`eventTypes.ts` still 449 lines, but ~200 is the `EVENT_TYPES` data table** and ~210 is domain
+      interfaces — data + types, not logic (comparable to the explicitly-out-of-scope constant files).
+      The behavioral tangle is gone. Could shrink further by moving the domain-model interfaces to a
+      `types`-only module, but that would churn the ~30 `PogoEvent` type-import sites for little gain.
 
 ### 9. eventPokemon.ts
 

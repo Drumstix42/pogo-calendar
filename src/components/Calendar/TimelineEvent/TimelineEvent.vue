@@ -95,7 +95,7 @@
                 />
             </div>
 
-            <div v-if="props.isActive && event.link && !(event as any)._isGrouped" class="event-bottom-link">
+            <div v-if="props.isActive && event.link && !event._isGrouped" class="event-bottom-link">
                 <a
                     :href="event.link"
                     target="_blank"

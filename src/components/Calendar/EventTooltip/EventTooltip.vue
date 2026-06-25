@@ -4,7 +4,7 @@
 
         <div class="event-tooltip-body">
             <!-- Show individual events if grouped -->
-            <div v-if="(event as any)._isGrouped" class="grouped-events">
+            <div v-if="event._isGrouped" class="grouped-events">
                 <div
                     v-for="groupedEvent in getGroupedEvents(event)"
                     :key="groupedEvent.eventID"
@@ -133,7 +133,7 @@
             </div>
         </div>
 
-        <div v-if="showBottomLink && event.link && !(event as any)._isGrouped" class="event-bottom-link">
+        <div v-if="showBottomLink && event.link && !event._isGrouped" class="event-bottom-link">
             <a
                 :href="event.link"
                 target="_blank"
@@ -153,8 +153,9 @@ import { type Dayjs } from 'dayjs';
 
 import { useEventTooltip } from '@/composables/useEventTooltip';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
+import { getGroupedEvents } from '@/utils/eventGrouping';
 import { formatEventName } from '@/utils/eventName';
-import { type PogoEvent, getGroupedEvents } from '@/utils/eventTypes';
+import { type PogoEvent } from '@/utils/eventTypes';
 
 import EventExtras from '../EventExtras.vue';
 import EventTimeDisplay from '../EventTimeDisplay.vue';

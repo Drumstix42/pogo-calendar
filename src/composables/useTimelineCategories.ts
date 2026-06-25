@@ -4,7 +4,8 @@ import { useDisplayTime } from '@/composables/useDisplayTime';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { useEventFilterStore } from '@/stores/eventFilter';
 import { useEventsStore } from '@/stores/events';
-import { type PogoEvent, TimelineCategory, type TimelineCategoryKey, sortEventsByTimingAndPriority } from '@/utils/eventTypes';
+import { sortEventsByTimingAndPriority } from '@/utils/eventSort';
+import { type PogoEvent, TimelineCategory, type TimelineCategoryKey } from '@/utils/eventTypes';
 
 export interface TimelineDateGroup {
     dateKey: string;

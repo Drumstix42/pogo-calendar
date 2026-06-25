@@ -37,8 +37,9 @@ import { useUrlSync } from '@/composables/useUrlSync';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { useEventFilterStore } from '@/stores/eventFilter';
 import { useEventsStore } from '@/stores/events';
-import { getRaidSubType, getRaidSubTypePriority } from '@/utils/eventTypes';
-import { type PogoEvent, getEventTypeInfo, parseEventDate } from '@/utils/eventTypes';
+import { parseEventDate } from '@/utils/eventDate';
+import { getRaidSubType, getRaidSubTypePriority } from '@/utils/eventSubtype';
+import { type PogoEvent, getEventTypeInfo } from '@/utils/eventTypes';
 
 import CalendarDay from './CalendarDay/CalendarDay.vue';
 
@@ -141,8 +142,8 @@ const eventSlots = computed((): EventSlot[] => {
         }
 
         // 2. Within same priority, grouped events come before individual events
-        const aIsGrouped = (a as any)._isGrouped;
-        const bIsGrouped = (b as any)._isGrouped;
+        const aIsGrouped = a._isGrouped;
+        const bIsGrouped = b._isGrouped;
         if (aIsGrouped !== bIsGrouped) {
             return aIsGrouped ? -1 : 1;
         }
@@ -208,8 +209,8 @@ const eventSlots = computed((): EventSlot[] => {
 
 const shouldShareSlot = (eventA: PogoEvent, eventB: PogoEvent): boolean => {
     // Check if either event is a grouped event
-    const aIsGrouped = (eventA as any)._isGrouped;
-    const bIsGrouped = (eventB as any)._isGrouped;
+    const aIsGrouped = eventA._isGrouped;
+    const bIsGrouped = eventB._isGrouped;
 
     // If both are grouped events of the same base type, they can share slots
     if (aIsGrouped && bIsGrouped && eventA.eventType === eventB.eventType) {

@@ -20,7 +20,7 @@
             pointerEvents: 'auto',
             zIndex: 20 + slotTop,
         }"
-        :data-debug="`Event: ${event.name} | ID: ${event.eventID} | Slot: ${slotIndex} | Grouped: ${(event as any)._isGrouped || false}`"
+        :data-debug="`Event: ${event.name} | ID: ${event.eventID} | Slot: ${slotIndex} | Grouped: ${event._isGrouped || false}`"
         @mouseenter="debouncedHighlightEventID(event.eventID)"
         @mouseleave="debouncedClearEventIDHighlight"
         @click="handleEventClick(event.eventID)"
@@ -79,8 +79,10 @@ import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { useEventHighlightStore } from '@/stores/eventHighlight';
 import { useEventsStore } from '@/stores/events';
 import { getEventCount, getEventDisplayName, shouldShowBadge, shouldShowMultiDaySprites } from '@/utils/eventDisplay';
+import { hasGroupedEvents } from '@/utils/eventGrouping';
+import { isMajorCalendarEventType } from '@/utils/eventMajor';
 import { formatEventName } from '@/utils/eventName';
-import { type PogoEvent, hasGroupedEvents, isMajorCalendarEventType } from '@/utils/eventTypes';
+import { type PogoEvent } from '@/utils/eventTypes';
 
 import EventTooltip from '@/components/Calendar/EventTooltip/EventTooltip.vue';
 import PokemonEventImages from '@/components/Calendar/PokemonEventImages.vue';

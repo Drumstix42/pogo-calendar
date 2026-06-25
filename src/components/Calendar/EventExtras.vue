@@ -61,7 +61,8 @@
 import { computed, nextTick, onMounted, ref } from 'vue';
 
 import { useEventTypeColorsStore } from '@/stores/eventTypeColors';
-import { type EventBonusGroup, type PogoEvent, hasEventExtras } from '@/utils/eventTypes';
+import { hasEventExtras } from '@/utils/eventSubtype';
+import { type EventBonusGroup, type PogoEvent } from '@/utils/eventTypes';
 
 import SeasonBonuses from './SeasonBonuses.vue';
 

@@ -13,7 +13,7 @@
             <div class="event-detail-scrollable">
                 <EventTooltip :event="event" :is-single-day="isSingleDay" :target-date="targetDate" :show-bottom-link="false" :scrollable="false" />
             </div>
-            <div v-if="event.link && !(event as any)._isGrouped" class="event-detail-footer">
+            <div v-if="event.link && !event._isGrouped" class="event-detail-footer">
                 <a
                     :href="event.link"
                     target="_blank"

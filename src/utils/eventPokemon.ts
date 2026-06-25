@@ -1,5 +1,6 @@
 import { formatEventName } from './eventName.ts';
-import { type PogoEvent, getRaidSubType } from './eventTypes';
+import { getRaidSubType } from './eventSubtype';
+import { type PogoEvent } from './eventTypes';
 import { getPokemonAnimatedUrl, getPokemonId, getPokemonSpriteUrl } from './pokemonMapper.ts';
 import { GIGANTAMAX_POKEMON_IDS } from '@/constants/validGigantamaxSprites.ts';
 

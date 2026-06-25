@@ -6,17 +6,11 @@ import { useEditColorModal } from '@/composables/useEditColorModal';
 import { useEventHighlightDebounce } from '@/composables/useEventHighlightDebounce';
 import { useHideEventModal } from '@/composables/useHideEventModal';
 import { useEventsStore } from '@/stores/events';
+import { type MajorCalendarEventVariant, getMajorCalendarEventVariant, isMajorCalendarEventType } from '@/utils/eventMajor';
 import { formatEventName } from '@/utils/eventName';
 import { getEventPokemonImages } from '@/utils/eventPokemon';
-import {
-    type MajorCalendarEventVariant,
-    type PogoEvent,
-    getEventTypeInfo,
-    getMajorCalendarEventVariant,
-    getRaidSubType,
-    hasEventExtras,
-    isMajorCalendarEventType,
-} from '@/utils/eventTypes';
+import { getRaidSubType, hasEventExtras } from '@/utils/eventSubtype';
+import { type PogoEvent, getEventTypeInfo } from '@/utils/eventTypes';
 import { buildRaidTierGroupsWithImages } from '@/utils/raidTierGroups';
 import { buildCollapsedScheduleDayGroups, buildTimelineScheduleDaySectionsWithTierGroups } from '@/utils/timelineSchedule';
 

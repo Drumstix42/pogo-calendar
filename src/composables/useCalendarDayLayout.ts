@@ -3,7 +3,9 @@ import { computed } from 'vue';
 
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { useEventsStore } from '@/stores/events';
-import { type PogoEvent, isMajorCalendarEventType, parseEventDate } from '@/utils/eventTypes';
+import { parseEventDate } from '@/utils/eventDate';
+import { isMajorCalendarEventType } from '@/utils/eventMajor';
+import { type PogoEvent } from '@/utils/eventTypes';
 
 export interface EventSlot {
     event: PogoEvent;
