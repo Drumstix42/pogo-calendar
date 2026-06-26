@@ -121,7 +121,7 @@ Priority: ordered roughly by size × tangle. Tackle top-down; they're largely in
 | 6   | [EventTimeline.vue](src/components/Calendar/EventTimeline/EventTimeline.vue)                       | 542                     | ✅     | 74 (orchestrator); see notes      | P3       |
 | 7   | [EditEventColorModal.vue](src/components/Calendar/EditEventColorModal.vue)                         | 430                     | ✅     | 211 (orchestrator); see notes     | P3       |
 | 8   | [eventTypes.ts](src/utils/eventTypes.ts)                                                           | 849 (board's 747 stale) | ✅     | 449 (types + registry); see notes | P3       |
-| 9   | [eventPokemon.ts](src/utils/eventPokemon.ts)                                                       | 566                     | ⬜     | —                                 | P3       |
+| 9   | [eventPokemon.ts](src/utils/eventPokemon.ts)                                                       | 691 (board's 566 stale) | ✅     | 97 (dispatcher); see notes        | P3       |
 | 10  | [EventTimeDisplay.vue](src/components/Calendar/EventTimeDisplay.vue)                               | 353                     | ⬜     | —                                 | P4       |
 | 11  | [EventOptions.vue](src/components/CalendarOptions/EventOptions.vue)                                | 331                     | ⬜     | —                                 | P4       |
 | 12  | [HideEventModal.vue](src/components/Calendar/HideEventModal.vue)                                   | 363                     | ✅     | 220; adopted BaseModal (in #7)    | P4       |
@@ -539,9 +539,59 @@ seams below are **initial hypotheses from the first survey** — verify against 
 
 ### 9. eventPokemon.ts
 
-- **Suggested seams (verify):** per-event-type resolver functions could split by category; keep
-  `getEventPokemonImages()` as the single entry point.
-- **Findings:** _(none yet)_
+- **Why:** 691 lines (board's 566 was stale) in one util mixing four concerns: the two image types,
+  ~230 lines of pure title/name parsing, the name→sprite-URL layer, and a single **~316-line**
+  `getEventPokemonImages()` whose body was a long ordered sequence of per-event-type `if` branches.
+- **Manual checks:** pure-util split, behavior-preserving — no markup/CSS changed. Smoke-check
+  Pokemon sprites across event types: raid bosses (calendar bars + timeline + tooltip), raid-day /
+  raid-hour title-parsed sprites, spotlight hour, community day, max battles (Gigantamax + Dynamax),
+  PokéStop showcases, max-mondays. Confirm tiered raid sprites + fallback images still resolve.
+- **Realized split** (eventPokemon.ts 691 → **97-line entry/dispatcher**). Five focused siblings
+  under `src/utils/` (public import paths kept stable — consumers still import from `eventPokemon`):
+    - `eventPokemon.ts` (97 — the `getEventPokemonImages()` **dispatcher** + the `hasExtraData` guard +
+      `hasEventPokemonImage`/`getMultiDayPokemonImages`; re-exports `parsePokemonNameAndSuffix` and the
+      two image types).
+    - `eventPokemonTypes.ts` (17 — leaf type module: `PokemonImageData`, `PokemonImageOptions`, and the
+      `EventWithExtraData` narrowed-event type; imports only `type PogoEvent`).
+    - `eventPokemonNames.ts` (241 — pure title→name parsing: `parseEventPokemonNames`, the four
+      `extract*` helpers, `extractPokemonNameFromRaidBattle`, `parsePokemonNameAndSuffix` +
+      `REGIONAL_FORM_SUFFIXES`). No CDN/mapper dependency → fully testable.
+    - `eventSprite.ts` (87 — name→URL layer: `getSpriteUrl`, `getRaidBossesWithTierFallback`,
+      `getPokemonImagesFromBosses`).
+    - `eventPokemonResolvers.ts` (358 — one `resolve<Type>Images()` per event-type branch; owns
+      `RAID_DAY_TITLE_EXCEPTIONS` + `GMAX_FORM_VARIANTS`).
+- **Dispatcher contract (behavior preservation):** each resolver returns `PokemonImageData[] | null`
+  — an array (possibly empty) when that branch decides the result, `null` when the original code fell
+  through to the next branch. The dispatcher runs them in the **exact original order** with the same
+  `eventType` guards and `if (result) return result;`. This maps 1:1 onto the old fall-through,
+  including the empty-`[]` short-circuits (raid-day exceptions, type-based PokéStop showcases) and the
+  `event`/spotlight overlap (both run for an `isSpotlightSubEvent`). Empty arrays are truthy, so an
+  intentional `[]` still stops the dispatch.
+- **Findings:**
+    - **Likely-dead exports:** `hasEventPokemonImage` and `getMultiDayPokemonImages` have **no callers**
+      anywhere in `src/`. Left intact (behavior-preserving, possible public API); removal candidates.
+    - **`parsePokemonNameAndSuffix` re-exported, not relocated-with-break:** its canonical home is now
+      `eventPokemonNames.ts`, but it's `export`ed from `eventPokemon.ts` (its documented path, though no
+      external code imports it today) to keep paths stable. AGENTS.md updated to reflect both.
+    - **`extraData` invariant encoded in the type (best practice):** the entry point's guard is now the
+      type-guard `hasExtraData(event): event is EventWithExtraData`, so after `if (!hasExtraData(event))
+      return []` the dispatcher passes a `PogoEvent & { extraData: NonNullable<…> }` to every resolver.
+      Resolvers are typed `(event: EventWithExtraData, …)` and read `event.extraData.X` with **no
+      defensive `?.`** — the invariant (extraData always present when a resolver runs) is expressed and
+      checked instead of asserted. Behavior-identical (the `?.` never short-circuited at runtime).
+    - **No import cycle:** the two image types + `EventWithExtraData` live in a dedicated leaf module
+      `eventPokemonTypes.ts` (imports only `type PogoEvent`). `eventPokemon.ts`, `eventSprite.ts`, and
+      `eventPokemonResolvers.ts` all import types *from the leaf* and re-export for path stability — every
+      module edge points one direction (toward the leaf), so there's no eventPokemon↔sub-module back-edge.
+- **Follow-up (deferred):**
+    - **Gmax sprite path → `pokemonMapper.ts` (the pre-existing `GMAX_FORM_VARIANTS` TODO):** max-battles
+      Gigantamax events bypass the normal 5-tier CDN chain — `resolveMaxBattleImages` hand-builds a URL
+      against a one-off CDN (`HybridShivam/Pokemon`) using `GMAX_FORM_VARIANTS` (now in
+      `eventPokemonResolvers.ts`) + `GIGANTAMAX_POKEMON_IDS`. **Not a safe mechanical move:** the table is
+      used for *both* title-form parsing (`patterns`) and filename selection (`default`), so a clean
+      migration must split "title→form" (stays in the names/resolver layer) from "id+form→URL" (moves to
+      `pokemonMapper`/`eventSprite`) — a real design change on a rarely-fired path. Left as-is to keep this
+      refactor behavior-preserving.
 
 ### 10–11
 

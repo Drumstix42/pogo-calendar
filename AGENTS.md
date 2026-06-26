@@ -33,15 +33,23 @@ Adding a new event type: add an entry to `EVENT_TYPES`, then handle it in `getEv
 
 ### Pokemon Image Resolution per Event Type (`src/utils/eventPokemon.ts`)
 
-`getEventPokemonImages()` is the single entry point. Each event type checks `extraData` first, then falls back to title parsing. Boss/spawn data is preferred over title parsing when available.
+`getEventPokemonImages()` (in `eventPokemon.ts`) is the single entry point. It dispatches to per-event-type resolvers in priority order; each resolver returns an image array (the result) or `null` to fall through to the next matching branch. Each resolver checks `extraData` first, then falls back to title parsing. Boss/spawn data is preferred over title parsing when available.
+
+The logic is split across focused sibling modules:
+
+- **`eventPokemon.ts`** — the `getEventPokemonImages()` dispatcher (re-exports `parsePokemonNameAndSuffix` and the image types for path stability).
+- **`eventPokemonResolvers.ts`** — one `resolve<Type>Images()` per event-type branch (raid-battles, raid-day, spotlight, max-battles, etc.); owns `RAID_DAY_TITLE_EXCEPTIONS` and `GMAX_FORM_VARIANTS`. Resolvers take `EventWithExtraData` (narrowed by the dispatcher's `hasExtraData` guard).
+- **`eventPokemonNames.ts`** — pure title→name parsing: `parseEventPokemonNames`, the `extract*` helpers, and `parsePokemonNameAndSuffix`.
+- **`eventSprite.ts`** — name→sprite-URL layer: `getSpriteUrl`, `getRaidBossesWithTierFallback`, `getPokemonImagesFromBosses`.
+- **`eventPokemonTypes.ts`** — leaf type module: `PokemonImageData`, `PokemonImageOptions`, `EventWithExtraData`.
 
 #### Raid Day title parsing
 
 Regex pattern captures the Pokemon name and an optional modifier (`Mega`, `Super Mega`, `Fusion`) between the name and "Raid Day". "Super Mega" is event marketing, not a game classification — treat it identically to "Mega": apply the mega suffix and prepend `"Mega "` to the display name.
 
-`RAID_DAY_TITLE_EXCEPTIONS` skips events that match the pattern but have no single Pokémon.
+`RAID_DAY_TITLE_EXCEPTIONS` (in `eventPokemonResolvers.ts`) skips events that match the pattern but have no single Pokémon.
 
-### `parsePokemonNameAndSuffix()` — name → sprite slug
+### `parsePokemonNameAndSuffix()` — name → sprite slug (`src/utils/eventPokemonNames.ts`)
 
 Handles prefix/suffix patterns: `Mega`, `Mega X/Y`, `Primal`, `Shadow` (no suffix — base sprite used), forme prefixes, and parenthetical forms.
 
