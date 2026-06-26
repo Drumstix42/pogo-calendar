@@ -85,3 +85,20 @@ export function getPokemonImagesFromBosses(event: PogoEvent, options?: PokemonIm
 
     return images;
 }
+
+// Parse a list of Pokemon names and resolve a sprite image for each (skipping unparseable names).
+// `megaFallback` (set from event context, e.g. a Mega raid) applies `-mega` to names that carry no
+// explicit form suffix of their own.
+export function getSpriteImagesFromNames(names: string[], options?: PokemonImageOptions, megaFallback = false): PokemonImageData[] {
+    const images: PokemonImageData[] = [];
+
+    for (const name of names) {
+        const parsed = parsePokemonNameAndSuffix(name);
+        if (!parsed) continue;
+
+        const suffix = parsed.suffix ?? (megaFallback ? '-mega' : undefined);
+        images.push({ name, imageUrl: getSpriteUrl(parsed.pokemonName, suffix, options) });
+    }
+
+    return images;
+}

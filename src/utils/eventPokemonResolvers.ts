@@ -8,7 +8,7 @@ import {
     parsePokemonNameAndSuffix,
 } from './eventPokemonNames';
 import type { EventWithExtraData, PokemonImageData, PokemonImageOptions } from './eventPokemonTypes';
-import { getPokemonImagesFromBosses, getRaidBossesWithTierFallback, getSpriteUrl } from './eventSprite';
+import { getPokemonImagesFromBosses, getRaidBossesWithTierFallback, getSpriteImagesFromNames, getSpriteUrl } from './eventSprite';
 import { getRaidSubType } from './eventSubtype';
 import { getPokemonId } from './pokemonMapper.ts';
 import { GIGANTAMAX_POKEMON_IDS } from '@/constants/validGigantamaxSprites.ts';
@@ -65,24 +65,7 @@ export function resolveRaidBattleImages(event: EventWithExtraData, options?: Pok
         const raidSubType = getRaidSubType(event);
         const isMega = raidSubType === 'mega-raids' || raidSubType === 'super-mega-raids';
         const pokemonNames = parseEventPokemonNames(pokemonName);
-        const images: PokemonImageData[] = [];
-
-        for (const name of pokemonNames) {
-            const parsedData = parsePokemonNameAndSuffix(name);
-            if (parsedData) {
-                let spriteUrl: string | null = null;
-
-                // If we have a custom suffix (like -mega), use it directly
-                if (parsedData.suffix) {
-                    spriteUrl = getSpriteUrl(parsedData.pokemonName, parsedData.suffix, options);
-                } else {
-                    const suffix = isMega ? '-mega' : undefined;
-                    spriteUrl = getSpriteUrl(parsedData.pokemonName, suffix, options);
-                }
-
-                images.push({ name: name, imageUrl: spriteUrl });
-            }
-        }
+        const images = getSpriteImagesFromNames(pokemonNames, options, isMega);
 
         if (images.length > 0) {
             return images;
@@ -107,25 +90,7 @@ export function resolveRaidHourImages(event: EventWithExtraData, options?: Pokem
         return null;
     }
 
-    const images: PokemonImageData[] = [];
-
-    for (const pokemonNameString of pokemonNames) {
-        const parsedData = parsePokemonNameAndSuffix(pokemonNameString);
-        if (parsedData) {
-            let spriteUrl: string | null = null;
-
-            // If we have a custom suffix (like -megax, -megay), use it directly
-            if (parsedData.suffix) {
-                spriteUrl = getSpriteUrl(parsedData.pokemonName, parsedData.suffix, options);
-            } else {
-                spriteUrl = getSpriteUrl(parsedData.pokemonName, undefined, options);
-            }
-
-            // Always add to images array, even if spriteUrl is null
-            images.push({ name: pokemonNameString, imageUrl: spriteUrl });
-        }
-    }
-
+    const images = getSpriteImagesFromNames(pokemonNames, options);
     return images.length > 0 ? images : null;
 }
 
@@ -210,16 +175,7 @@ export function resolveSpotlightImages(event: EventWithExtraData, options?: Poke
     }
 
     const pokemonNames = extractPokemonNamesFromSpotlightHour(event.name);
-
-    for (const pokemonName of pokemonNames) {
-        const parsedData = parsePokemonNameAndSuffix(pokemonName);
-        if (!parsedData) {
-            continue;
-        }
-
-        const spriteUrl = getSpriteUrl(parsedData.pokemonName, parsedData.suffix, options);
-        images.push({ name: pokemonName, imageUrl: spriteUrl });
-    }
+    images.push(...getSpriteImagesFromNames(pokemonNames, options));
 
     return images.length > 0 ? images : null;
 }
@@ -324,26 +280,7 @@ export function resolvePokestopShowcaseImages(event: EventWithExtraData, options
         return [];
     }
 
+    // Always return all parsed Pokemon, even those whose sprite URL resolves to null.
     const pokemonNames = parseEventPokemonNames(pokemonNameString);
-    const images: PokemonImageData[] = [];
-
-    for (const name of pokemonNames) {
-        const parsedData = parsePokemonNameAndSuffix(name);
-        if (parsedData) {
-            let spriteUrl: string | null = null;
-
-            // If we have a custom suffix (like forms), use it directly
-            if (parsedData.suffix) {
-                spriteUrl = getSpriteUrl(parsedData.pokemonName, parsedData.suffix, options);
-            } else {
-                spriteUrl = getSpriteUrl(parsedData.pokemonName, undefined, options);
-            }
-
-            // Always add to images array, even if spriteUrl is null
-            // This ensures all Pokemon from the event name are represented
-            images.push({ name: name, imageUrl: spriteUrl });
-        }
-    }
-
-    return images;
+    return getSpriteImagesFromNames(pokemonNames, options);
 }

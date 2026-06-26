@@ -556,9 +556,9 @@ seams below are **initial hypotheses from the first survey** — verify against 
     - `eventPokemonNames.ts` (241 — pure title→name parsing: `parseEventPokemonNames`, the four
       `extract*` helpers, `extractPokemonNameFromRaidBattle`, `parsePokemonNameAndSuffix` +
       `REGIONAL_FORM_SUFFIXES`). No CDN/mapper dependency → fully testable.
-    - `eventSprite.ts` (87 — name→URL layer: `getSpriteUrl`, `getRaidBossesWithTierFallback`,
-      `getPokemonImagesFromBosses`).
-    - `eventPokemonResolvers.ts` (358 — one `resolve<Type>Images()` per event-type branch; owns
+    - `eventSprite.ts` (104 — name→URL layer: `getSpriteUrl`, `getRaidBossesWithTierFallback`,
+      `getPokemonImagesFromBosses`, `getSpriteImagesFromNames`).
+    - `eventPokemonResolvers.ts` (286 — one `resolve<Type>Images()` per event-type branch; owns
       `RAID_DAY_TITLE_EXCEPTIONS` + `GMAX_FORM_VARIANTS`).
 - **Dispatcher contract (behavior preservation):** each resolver returns `PokemonImageData[] | null`
   — an array (possibly empty) when that branch decides the result, `null` when the original code fell
@@ -568,6 +568,18 @@ seams below are **initial hypotheses from the first survey** — verify against 
   `event`/spotlight overlap (both run for an `isSpotlightSubEvent`). Empty arrays are truthy, so an
   intentional `[]` still stops the dispatch.
 - **Findings:**
+    - **Reuse: `getSpriteImagesFromNames` (post-split cleanup).** Four resolvers (`resolveRaidBattleImages`,
+      `resolveRaidHourImages`, `resolveSpotlightImages` title-fallback, `resolvePokestopShowcaseImages`) ran
+      the same "parse each name → resolve sprite → push `{ name, imageUrl }`, skip unparseable" loop. Folded
+      into one helper in `eventSprite.ts` (peer to `getPokemonImagesFromBosses`). The only variation —
+      raid-battles applying `-mega` to suffix-less names when the event is a Mega raid — is an explicit
+      `megaFallback` param (set from `raidSubType`, kept legible at the call site rather than smuggled into
+      `options`). Behavior-identical (`parsed.suffix` is always non-empty-or-absent, so the old
+      `if (suffix) … else …` collapses to `parsed.suffix ?? (megaFallback ? '-mega' : undefined)`).
+      `eventPokemonResolvers.ts` 358 → 286.
+    - **Dead config field:** `PokemonImageOptions.isMega` is **read** by `getSpriteUrl` but **set by no
+      caller**. We deliberately did _not_ route the raid-battles mega flag through it (it's event-derived
+      classification, not a rendering option), so the field stays unused — removal candidate.
     - **Likely-dead exports:** `hasEventPokemonImage` and `getMultiDayPokemonImages` have **no callers**
       anywhere in `src/`. Left intact (behavior-preserving, possible public API); removal candidates.
     - **`parsePokemonNameAndSuffix` re-exported, not relocated-with-break:** its canonical home is now
@@ -575,20 +587,20 @@ seams below are **initial hypotheses from the first survey** — verify against 
       external code imports it today) to keep paths stable. AGENTS.md updated to reflect both.
     - **`extraData` invariant encoded in the type (best practice):** the entry point's guard is now the
       type-guard `hasExtraData(event): event is EventWithExtraData`, so after `if (!hasExtraData(event))
-      return []` the dispatcher passes a `PogoEvent & { extraData: NonNullable<…> }` to every resolver.
+return []` the dispatcher passes a `PogoEvent & { extraData: NonNullable<…> }` to every resolver.
       Resolvers are typed `(event: EventWithExtraData, …)` and read `event.extraData.X` with **no
       defensive `?.`** — the invariant (extraData always present when a resolver runs) is expressed and
       checked instead of asserted. Behavior-identical (the `?.` never short-circuited at runtime).
     - **No import cycle:** the two image types + `EventWithExtraData` live in a dedicated leaf module
       `eventPokemonTypes.ts` (imports only `type PogoEvent`). `eventPokemon.ts`, `eventSprite.ts`, and
-      `eventPokemonResolvers.ts` all import types *from the leaf* and re-export for path stability — every
+      `eventPokemonResolvers.ts` all import types _from the leaf_ and re-export for path stability — every
       module edge points one direction (toward the leaf), so there's no eventPokemon↔sub-module back-edge.
 - **Follow-up (deferred):**
     - **Gmax sprite path → `pokemonMapper.ts` (the pre-existing `GMAX_FORM_VARIANTS` TODO):** max-battles
       Gigantamax events bypass the normal 5-tier CDN chain — `resolveMaxBattleImages` hand-builds a URL
       against a one-off CDN (`HybridShivam/Pokemon`) using `GMAX_FORM_VARIANTS` (now in
       `eventPokemonResolvers.ts`) + `GIGANTAMAX_POKEMON_IDS`. **Not a safe mechanical move:** the table is
-      used for *both* title-form parsing (`patterns`) and filename selection (`default`), so a clean
+      used for _both_ title-form parsing (`patterns`) and filename selection (`default`), so a clean
       migration must split "title→form" (stays in the names/resolver layer) from "id+form→URL" (moves to
       `pokemonMapper`/`eventSprite`) — a real design change on a rarely-fired path. Left as-is to keep this
       refactor behavior-preserving.
