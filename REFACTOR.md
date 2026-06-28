@@ -123,7 +123,7 @@ Priority: ordered roughly by size × tangle. Tackle top-down; they're largely in
 | 8   | [eventTypes.ts](src/utils/eventTypes.ts)                                                           | 849 (board's 747 stale) | ✅     | 449 (types + registry); see notes | P3       |
 | 9   | [eventPokemon.ts](src/utils/eventPokemon.ts)                                                       | 691 (board's 566 stale) | ✅     | 97 (dispatcher); see notes        | P3       |
 | 10  | [EventTimeDisplay.vue](src/components/Calendar/EventTimeDisplay.vue)                               | 389 (board's 353 stale) | ✅     | 171 (component); see notes        | P4       |
-| 11  | [EventOptions.vue](src/components/CalendarOptions/EventOptions.vue)                                | 385 (board's 331 stale) | ⬜     | —                                 | P4       |
+| 11  | [EventOptions.vue](src/components/CalendarOptions/EventOptions.vue)                                | 385 (board's 331 stale) | ✅     | 148 (orchestrator); see notes     | P4       |
 | 12  | [HideEventModal.vue](src/components/Calendar/HideEventModal.vue)                                   | 363                     | ✅     | 220; adopted BaseModal (in #7)    | P4       |
 | 13  | [EventExtras.vue](src/components/Calendar/EventExtras.vue)                                         | 340                     | ⬜     | —                                 | P4       |
 
@@ -646,25 +646,42 @@ return []` the dispatcher passes a `PogoEvent & { extraData: NonNullable<…> }`
 - **Why:** 385 lines (board's 331 stale) with two template regions — the event-display options (font slider +
   2 toggles) and a nested "Local Timezone Override" `CollapsibleSection` (~65 template lines, ~85 of the ~110
   CSS lines, and the entire manual-offset logic cluster).
-- **Proposed split:**
-    - **Stage 1 — extract the timezone region:** **new**
-      `src/components/CalendarOptions/TimezoneOverrideOptions.vue` — the nested `CollapsibleSection` + stepper/
-      slider/chip/reset controls, all `manualOffset*` logic (ref, debounce, increment/decrement/input/reset,
-      the auto-expand watch, `adjustedNowLabel`, `effectiveTimezoneLabel`), and all `.manual-offset-*` /
-      `.btn-stepper` CSS. EventOptions.vue keeps the font slider + two toggles + their small CSS.
-    - **Stage 2 — dedup (connected-component cleanup):** EventOptions' local `localManualOffsetLabel()` is a
-      **byte-identical reimplementation** of the store getter `calendarSettings.manualTimeOffsetLabel`
-      (calendarSettings.ts:103–121), which [TimeOffsetIndicator.vue](src/components/Calendar/TimeOffsetIndicator.vue)
-      already uses. The extracted child drops its copy and uses the store getter.
-- **Notes (record as findings):** `normalizeManualOffset()` also duplicates the store's `setManualTimeOffsetHours`
-  clamping (note, don't necessarily change). `adjustedNowLabel` intentionally reads the _local_ in-progress
-  slider ref (not the committed store offset `useDisplayTime` uses), so it can't fold into `useDisplayTime` —
-  leave in the child and record why. `effectiveTimezoneLabel` already delegates to the shared
-  `getEffectiveTimezoneLabel` util (same as TimeOffsetIndicator) — no change needed.
-- **Manual checks:** font-size slider (live calendar feedback + auto-expand/scroll of calendar section); group-
-  similar-events + season-daily-bonuses toggles persist; timezone override (stepper ±1, slider, chip label +
-  active dot, "Display time"/tz line, reset link/chip, auto-expand when offset set); persistence. Light + dark,
-  mobile + desktop.
+- **Manual checks:** ✅ font-size slider (live calendar feedback + auto-expand/scroll of calendar section);
+  ✅ group-similar-events + season-daily-bonuses toggles persist; ✅ timezone override (stepper ±1, slider,
+  chip label + active dot, "Display time"/tz line, reset link/chip, auto-expand when offset set); ✅ chip
+  updates live while dragging; ✅ TimeOffsetIndicator label unchanged; persistence. (Verified light + dark,
+  mobile + desktop.)
+- **Realized split** (EventOptions.vue 385 → **148-line orchestrator**; keeps the font slider + two toggles +
+  their handlers + the `.form-label`/`.bar-size--label`/`.event-bar-size-container`/`.slider-container` CSS,
+  renders `<TimezoneOverrideOptions />`):
+    - Sub-component `src/components/CalendarOptions/TimezoneOverrideOptions.vue` (~237 — the nested
+      `Local Timezone Override` `CollapsibleSection` + stepper/slider/chip/reset markup; all `manualOffset*`
+      logic (ref, 150ms debounce, `applyManualOffset`/`normalizeManualOffset`/increment/decrement/input/reset,
+      the store-sync watch + the auto-expand watch, `adjustedNowLabel`, `effectiveTimezoneLabel`,
+      `localManualOffsetLabel`); the `useCurrentTime`/`dayjs`/`getEffectiveTimezoneLabel` imports; and all
+      `.manual-offset-*` + `.btn-stepper` CSS). Kept **flat** in `CalendarOptions/` beside the other section
+      components (only one child extracted) rather than promoting EventOptions to a folder.
+    - Util `src/utils/timezoneLabel.ts` gained `formatManualOffsetLabel(offsetHours)` (the offset → `Local ±Hh`
+      formatter). **Adopted by both** the store getter `calendarSettings.manualTimeOffsetLabel` _and_ the child's
+      chip, replacing two byte-identical copies.
+- **Findings:**
+    - **Dedup approach (deviation from the proposed note, intentional):** the note suggested the child "use the
+      store getter." Rejected — the store getter reads the **committed** `manualTimeOffsetHours`, but the chip
+      reads the **in-progress local ref** (updates live on every slider input, before the 150ms debounce
+      commits). Switching the chip to the store getter would make the label lag during a drag — reintroducing
+      the very lag the debounce exists to hide. Instead extracted the shared _pure formatter_ both call with
+      their own value; behavior-identical, duplication gone. The 150ms debounce is untouched (it governs only
+      the store write, not the label).
+    - **`normalizeManualOffset()` still duplicates the store's `setManualTimeOffsetHours` clamping**
+      (`Math.round(h*2)/2` + clamp to ±14) — left in the child (note only, not changed; behavior-preserving).
+    - **`adjustedNowLabel()` deliberately reads the local in-progress ref** (not the committed store offset that
+      `useDisplayTime` uses), so it can't fold into `useDisplayTime` — kept in the child by design.
+    - **`effectiveTimezoneLabel()`** already delegates to the shared `getEffectiveTimezoneLabel` util (same as
+      TimeOffsetIndicator) — no change.
+    - **Cross-boundary CSS unaffected:** the parent's `slider-interacting` machinery
+      ([CalendarOptions.vue](src/components/CalendarOptions/CalendarOptions.vue)) targets only `#eventBarFontSize`
+      (font slider, stays in EventOptions) and the `.event-options-section` class on EventOptions' root — both
+      stay put, so the extraction doesn't disturb it. The timezone slider isn't wired to `slider-interacting`.
 
 ### 13. EventExtras.vue
 

@@ -3,6 +3,7 @@ import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
 
 import { STORAGE_KEYS } from '@/constants/storage';
+import { formatManualOffsetLabel } from '@/utils/timezoneLabel';
 
 export type FirstDayOfWeek = 'Sunday' | 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday';
 
@@ -100,25 +101,7 @@ export const useCalendarSettingsStore = defineStore('calendarSettings', () => {
 
     const hasManualTimeOffset = computed(() => manualTimeOffsetHours.value !== 0);
 
-    const manualTimeOffsetLabel = computed(() => {
-        const offset = manualTimeOffsetHours.value;
-        if (offset === 0) return 'Local time';
-
-        const sign = offset > 0 ? '+' : '-';
-        const absoluteOffset = Math.abs(offset);
-        const wholeHours = Math.floor(absoluteOffset);
-        const hasHalfHour = absoluteOffset % 1 !== 0;
-
-        if (hasHalfHour && wholeHours === 0) {
-            return `Local ${sign}30m`;
-        }
-
-        if (hasHalfHour) {
-            return `Local ${sign}${wholeHours}h 30m`;
-        }
-
-        return `Local ${sign}${wholeHours}h`;
-    });
+    const manualTimeOffsetLabel = computed(() => formatManualOffsetLabel(manualTimeOffsetHours.value));
 
     // Actions
     const setFirstDayOfWeek = (day: FirstDayOfWeek) => {
