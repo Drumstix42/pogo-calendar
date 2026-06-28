@@ -122,13 +122,19 @@ Priority: ordered roughly by size × tangle. Tackle top-down; they're largely in
 | 7   | [EditEventColorModal.vue](src/components/Calendar/EditEventColorModal.vue)                         | 430                     | ✅     | 211 (orchestrator); see notes     | P3       |
 | 8   | [eventTypes.ts](src/utils/eventTypes.ts)                                                           | 849 (board's 747 stale) | ✅     | 449 (types + registry); see notes | P3       |
 | 9   | [eventPokemon.ts](src/utils/eventPokemon.ts)                                                       | 691 (board's 566 stale) | ✅     | 97 (dispatcher); see notes        | P3       |
-| 10  | [EventTimeDisplay.vue](src/components/Calendar/EventTimeDisplay.vue)                               | 353                     | ⬜     | —                                 | P4       |
-| 11  | [EventOptions.vue](src/components/CalendarOptions/EventOptions.vue)                                | 331                     | ⬜     | —                                 | P4       |
+| 10  | [EventTimeDisplay.vue](src/components/Calendar/EventTimeDisplay.vue)                               | 389 (board's 353 stale) | ✅     | 171 (component); see notes        | P4       |
+| 11  | [EventOptions.vue](src/components/CalendarOptions/EventOptions.vue)                                | 385 (board's 331 stale) | ⬜     | —                                 | P4       |
 | 12  | [HideEventModal.vue](src/components/Calendar/HideEventModal.vue)                                   | 363                     | ✅     | 220; adopted BaseModal (in #7)    | P4       |
+| 13  | [EventExtras.vue](src/components/Calendar/EventExtras.vue)                                         | 340                     | ⬜     | —                                 | P4       |
 
 **Explicitly out of scope** (large but they're data, not logic — leave alone unless asked):
 `constants/pokemonFormMap.ts`, `constants/validAnimatedSprites.ts`, `constants/validStaticSprites.ts`,
 `constants/pokemonEntries.ts`.
+
+**Optional follow-up (not yet a row):** [eventRaidHours.ts](src/utils/eventRaidHours.ts) (435) is a pure
+util (raid-schedule date parsing + schedule building) that could be split by concern like #8/#9 — but
+it's already in testable shape (no Vue reactivity), so it's lower-value than the components above.
+[stores/events.ts](src/stores/events.ts) (424) is a store, outside the component-refactor charter.
 
 ---
 
@@ -567,34 +573,28 @@ seams below are **initial hypotheses from the first survey** — verify against 
   including the empty-`[]` short-circuits (raid-day exceptions, type-based PokéStop showcases) and the
   `event`/spotlight overlap (both run for an `isSpotlightSubEvent`). Empty arrays are truthy, so an
   intentional `[]` still stops the dispatch.
-- **Findings:**
-    - **Reuse: `getSpriteImagesFromNames` (post-split cleanup).** Four resolvers (`resolveRaidBattleImages`,
-      `resolveRaidHourImages`, `resolveSpotlightImages` title-fallback, `resolvePokestopShowcaseImages`) ran
-      the same "parse each name → resolve sprite → push `{ name, imageUrl }`, skip unparseable" loop. Folded
-      into one helper in `eventSprite.ts` (peer to `getPokemonImagesFromBosses`). The only variation —
-      raid-battles applying `-mega` to suffix-less names when the event is a Mega raid — is an explicit
-      `megaFallback` param (set from `raidSubType`, kept legible at the call site rather than smuggled into
-      `options`). Behavior-identical (`parsed.suffix` is always non-empty-or-absent, so the old
-      `if (suffix) … else …` collapses to `parsed.suffix ?? (megaFallback ? '-mega' : undefined)`).
-      `eventPokemonResolvers.ts` 358 → 286.
-    - **Dead config field:** `PokemonImageOptions.isMega` is **read** by `getSpriteUrl` but **set by no
-      caller**. We deliberately did _not_ route the raid-battles mega flag through it (it's event-derived
-      classification, not a rendering option), so the field stays unused — removal candidate.
-    - **Likely-dead exports:** `hasEventPokemonImage` and `getMultiDayPokemonImages` have **no callers**
-      anywhere in `src/`. Left intact (behavior-preserving, possible public API); removal candidates.
-    - **`parsePokemonNameAndSuffix` re-exported, not relocated-with-break:** its canonical home is now
-      `eventPokemonNames.ts`, but it's `export`ed from `eventPokemon.ts` (its documented path, though no
-      external code imports it today) to keep paths stable. AGENTS.md updated to reflect both.
-    - **`extraData` invariant encoded in the type (best practice):** the entry point's guard is now the
-      type-guard `hasExtraData(event): event is EventWithExtraData`, so after `if (!hasExtraData(event))
+- **Findings:** - **Reuse: `getSpriteImagesFromNames` (post-split cleanup).** Four resolvers (`resolveRaidBattleImages`,
+  `resolveRaidHourImages`, `resolveSpotlightImages` title-fallback, `resolvePokestopShowcaseImages`) ran
+  the same "parse each name → resolve sprite → push `{ name, imageUrl }`, skip unparseable" loop. Folded
+  into one helper in `eventSprite.ts` (peer to `getPokemonImagesFromBosses`). The only variation —
+  raid-battles applying `-mega` to suffix-less names when the event is a Mega raid — is an explicit
+  `megaFallback` param (set from `raidSubType`, kept legible at the call site rather than smuggled into
+  `options`). Behavior-identical (`parsed.suffix` is always non-empty-or-absent, so the old
+  `if (suffix) … else …` collapses to `parsed.suffix ?? (megaFallback ? '-mega' : undefined)`).
+  `eventPokemonResolvers.ts` 358 → 286. - **Dead config field:** `PokemonImageOptions.isMega` is **read** by `getSpriteUrl` but **set by no
+  caller**. We deliberately did _not_ route the raid-battles mega flag through it (it's event-derived
+  classification, not a rendering option), so the field stays unused — removal candidate. - **Likely-dead exports:** `hasEventPokemonImage` and `getMultiDayPokemonImages` have **no callers**
+  anywhere in `src/`. Left intact (behavior-preserving, possible public API); removal candidates. - **`parsePokemonNameAndSuffix` re-exported, not relocated-with-break:** its canonical home is now
+  `eventPokemonNames.ts`, but it's `export`ed from `eventPokemon.ts` (its documented path, though no
+  external code imports it today) to keep paths stable. AGENTS.md updated to reflect both. - **`extraData` invariant encoded in the type (best practice):** the entry point's guard is now the
+  type-guard `hasExtraData(event): event is EventWithExtraData`, so after `if (!hasExtraData(event))
 return []` the dispatcher passes a `PogoEvent & { extraData: NonNullable<…> }` to every resolver.
-      Resolvers are typed `(event: EventWithExtraData, …)` and read `event.extraData.X` with **no
-      defensive `?.`** — the invariant (extraData always present when a resolver runs) is expressed and
-      checked instead of asserted. Behavior-identical (the `?.` never short-circuited at runtime).
-    - **No import cycle:** the two image types + `EventWithExtraData` live in a dedicated leaf module
-      `eventPokemonTypes.ts` (imports only `type PogoEvent`). `eventPokemon.ts`, `eventSprite.ts`, and
-      `eventPokemonResolvers.ts` all import types _from the leaf_ and re-export for path stability — every
-      module edge points one direction (toward the leaf), so there's no eventPokemon↔sub-module back-edge.
+  Resolvers are typed `(event: EventWithExtraData, …)` and read `event.extraData.X` with **no
+  defensive `?.`** — the invariant (extraData always present when a resolver runs) is expressed and
+  checked instead of asserted. Behavior-identical (the `?.` never short-circuited at runtime). - **No import cycle:** the two image types + `EventWithExtraData` live in a dedicated leaf module
+  `eventPokemonTypes.ts` (imports only `type PogoEvent`). `eventPokemon.ts`, `eventSprite.ts`, and
+  `eventPokemonResolvers.ts` all import types _from the leaf_ and re-export for path stability — every
+  module edge points one direction (toward the leaf), so there's no eventPokemon↔sub-module back-edge.
 - **Follow-up (deferred):**
     - **Gmax sprite path → `pokemonMapper.ts` (the pre-existing `GMAX_FORM_VARIANTS` TODO):** max-battles
       Gigantamax events bypass the normal 5-tier CDN chain — `resolveMaxBattleImages` hand-builds a URL
@@ -605,9 +605,73 @@ return []` the dispatcher passes a `PogoEvent & { extraData: NonNullable<…> }`
       `pokemonMapper`/`eventSprite`) — a real design change on a rarely-fired path. Left as-is to keep this
       refactor behavior-preserving.
 
-### 10–11
+### 10. EventTimeDisplay.vue
 
-- Scope when reached. Likely smaller, may turn out to be ⏭️ if already cohesive.
+- **Why:** 389 lines (board's 353 stale). Template (~38) and CSS (~85) are thin and cohesive; the bloat is
+  two large **pure** computeds in the script — `timeDisplayParts` (~113) and `statusInfo` (~93) — plus the
+  `formatSingleDayTimes` helper. All are pure functions of `(startDate, endDate, now, isSingleDay)` with no
+  Vue reactivity → ideal to lift to a util for testability (principle 5).
+- **Realized split** (EventTimeDisplay.vue 389 → **171-line component**; single stage, pure-logic extraction,
+  no template/CSS change — rendered output byte-identical):
+    - **New** `src/utils/eventTimeDisplay.ts` (~290 — `buildTimeDisplayParts(start, end, now, isSingleDay)`,
+      `buildEventStatusInfo(start, end, now, isSingleDay)`, `formatSingleDayTimes(start, end)` + the
+      `TimeDisplayParts`/`EventStatusInfo`/`EventStatusType` types). No Vue reactivity → testable; imports only
+      `type { Dayjs }`.
+    - The component keeps the template, CSS, store/`useDisplayTime` wiring, the `isSingleDay` computed, a new
+      `resolvedDates` computed (the metadata-or-`parseEventDate` fallback, previously duplicated in both
+      computeds — now resolved once), and two thin computeds that delegate to the utils.
+- **Manual checks:** time row + status line across event states (upcoming / live / ended) for both single-day
+  and multi-day events; the "Live • " prefix and day-count prefixes; relative timing (mins/hours/days, today/
+  tomorrow); past-time dimming + completed styling. Rendered in TimelineEvent + EventTooltip. Light + dark.
+- **Findings:** - **Repetition left as-is (behavior-preserving):** both builders have heavy internal repetition — 3
+  near-identical return objects per branch in `buildTimeDisplayParts`, and `isSingleDay ? 'Starts…' :
+'starts…'` (capitalization-only) doubled throughout `buildEventStatusInfo`. The verbatim move keeps
+  behavior identical; collapsing them (e.g. a focus-flag table, or one cased string + `.toLowerCase()`)
+  is a possible follow-up but would change the shape enough to warrant its own review. - **Dedup on the way out:** the start/end-date resolution (`metadata?.startDate ?? parseEventDate(...)`)
+  was duplicated in both old computeds; lifted to one `resolvedDates` computed. Behavior-identical. - **Post-extraction cleanup of `buildEventStatusInfo` (approved, behavior-preserving, ~95 → ~60 lines):**
+  `totalDays` + its `prefix` string (computed identically in all three branches) lifted to the top; the
+  live branch's `livePrefix` (rebuilt 5× with an `if (isSingleDay)/else` per sub-case) collapsed to one
+  `const livePrefix = isSingleDay ? 'Live • ' : prefix`. **Dead sub-expression removed:** the original
+  `livePrefix = totalDays ? '… days • Live • ' : 'Live • '` was only ever evaluated inside `if (isSingleDay)`
+  blocks, where `totalDays` is always `null` — so the `'… days • Live • '` branch was unreachable and
+  `livePrefix` always resolved to `'Live • '`. Behavior identical. - **Deferred (needs sign-off):** `buildTimeDisplayParts` still has its 6 near-identical return objects.
+  They collapse to a 3-entry `PHASE_FLAGS` table keyed on ended/live/upcoming + a `{ ...PHASE_FLAGS[phase] }`
+  spread (~113 → ~30 lines). Output is byte-identical; the one caveat is that multi-day _upcoming_
+  `focusPrefix` would flip `false → true` in the returned object — never rendered (multi-day `prefix` is
+  `''`, so the prefix span is `v-if`'d out and `focusPrefix` is never read), only observable by asserting
+  on the raw object. Left for explicit approval.
+
+### 11. EventOptions.vue
+
+- **Why:** 385 lines (board's 331 stale) with two template regions — the event-display options (font slider +
+  2 toggles) and a nested "Local Timezone Override" `CollapsibleSection` (~65 template lines, ~85 of the ~110
+  CSS lines, and the entire manual-offset logic cluster).
+- **Proposed split:**
+    - **Stage 1 — extract the timezone region:** **new**
+      `src/components/CalendarOptions/TimezoneOverrideOptions.vue` — the nested `CollapsibleSection` + stepper/
+      slider/chip/reset controls, all `manualOffset*` logic (ref, debounce, increment/decrement/input/reset,
+      the auto-expand watch, `adjustedNowLabel`, `effectiveTimezoneLabel`), and all `.manual-offset-*` /
+      `.btn-stepper` CSS. EventOptions.vue keeps the font slider + two toggles + their small CSS.
+    - **Stage 2 — dedup (connected-component cleanup):** EventOptions' local `localManualOffsetLabel()` is a
+      **byte-identical reimplementation** of the store getter `calendarSettings.manualTimeOffsetLabel`
+      (calendarSettings.ts:103–121), which [TimeOffsetIndicator.vue](src/components/Calendar/TimeOffsetIndicator.vue)
+      already uses. The extracted child drops its copy and uses the store getter.
+- **Notes (record as findings):** `normalizeManualOffset()` also duplicates the store's `setManualTimeOffsetHours`
+  clamping (note, don't necessarily change). `adjustedNowLabel` intentionally reads the _local_ in-progress
+  slider ref (not the committed store offset `useDisplayTime` uses), so it can't fold into `useDisplayTime` —
+  leave in the child and record why. `effectiveTimezoneLabel` already delegates to the shared
+  `getEffectiveTimezoneLabel` util (same as TimeOffsetIndicator) — no change needed.
+- **Manual checks:** font-size slider (live calendar feedback + auto-expand/scroll of calendar section); group-
+  similar-events + season-daily-bonuses toggles persist; timezone override (stepper ±1, slider, chip label +
+  active dot, "Display time"/tz line, reset link/chip, auto-expand when offset set); persistence. Light + dark,
+  mobile + desktop.
+
+### 13. EventExtras.vue
+
+- **Why:** 340 lines with five distinct bonus regions (spotlight / raid-hour / community-day w/ scroll-shadow
+  logic / season / event-bonuses) plus its own scroll-state handlers. Multiple responsibilities.
+- **Scope when reached.** Candidate seams: per-region sub-components; the community-day scroll-shadow logic
+  (`updateScrollState` + `canScrollUp/Down`) is a reusable composable candidate.
 
 ### 12. HideEventModal.vue
 
