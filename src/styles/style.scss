@@ -455,21 +455,22 @@ body {
         position: absolute;
         left: 0;
         right: 0;
-        height: 5px;
+        height: 9px;
         pointer-events: none;
         z-index: 10;
         opacity: 0;
         transition: opacity 0.5s ease;
     }
 
+    /* Radial (elliptical) fade so the shadow bows deepest in the middle and tapers toward the edges. */
     &::before {
         top: 0;
-        background: linear-gradient(to bottom, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0));
+        background: radial-gradient(65% 100% at 50% 0%, var(--calendar-cell-bg), rgba(0, 0, 0, 0));
     }
 
     &::after {
         bottom: 0;
-        background: linear-gradient(to top, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0));
+        background: radial-gradient(65% 100% at 50% 100%, var(--calendar-cell-bg), rgba(0, 0, 0, 0));
     }
 
     &.can-scroll-up::before {
@@ -481,14 +482,27 @@ body {
     }
 }
 
-[data-bs-theme='dark'] {
-    .scroll-shadow-hints {
-        &::before {
-            background: linear-gradient(to bottom, rgba(200, 200, 200, 0.1), rgba(200, 200, 200, 0));
-        }
+/* Shared bonus list row (event extras: community-day / event / season bonuses) */
+.bonus-item {
+    display: flex;
+    align-items: start;
+    gap: 0.4rem;
+    margin-bottom: 0.18rem;
+}
 
-        &::after {
-            background: linear-gradient(to top, rgba(200, 200, 200, 0.1), rgba(200, 200, 200, 0));
-        }
-    }
+.bonus-item:last-child {
+    margin-bottom: 0;
+}
+
+.bonus-icon {
+    width: 15px;
+    height: 15px;
+    flex-shrink: 0;
+    object-fit: contain;
+}
+
+.bonus-text {
+    font-size: 0.7rem;
+    color: color-mix(in srgb, var(--bs-body-color) 80%, transparent);
+    line-height: 1.1;
 }

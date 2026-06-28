@@ -125,7 +125,7 @@ Priority: ordered roughly by size × tangle. Tackle top-down; they're largely in
 | 10  | [EventTimeDisplay.vue](src/components/Calendar/EventTimeDisplay.vue)                               | 389 (board's 353 stale) | ✅     | 171 (component); see notes        | P4       |
 | 11  | [EventOptions.vue](src/components/CalendarOptions/EventOptions.vue)                                | 385 (board's 331 stale) | ✅     | 148 (orchestrator); see notes     | P4       |
 | 12  | [HideEventModal.vue](src/components/Calendar/HideEventModal.vue)                                   | 363                     | ✅     | 220; adopted BaseModal (in #7)    | P4       |
-| 13  | [EventExtras.vue](src/components/Calendar/EventExtras.vue)                                         | 340                     | ⬜     | —                                 | P4       |
+| 13  | [EventExtras.vue](src/components/Calendar/EventExtras/EventExtras.vue)                             | 340                     | ✅     | 40 (orchestrator); see notes      | P4       |
 
 **Explicitly out of scope** (large but they're data, not logic — leave alone unless asked):
 `constants/pokemonFormMap.ts`, `constants/validAnimatedSprites.ts`, `constants/validStaticSprites.ts`,
@@ -687,8 +687,49 @@ return []` the dispatcher passes a `PogoEvent & { extraData: NonNullable<…> }`
 
 - **Why:** 340 lines with five distinct bonus regions (spotlight / raid-hour / community-day w/ scroll-shadow
   logic / season / event-bonuses) plus its own scroll-state handlers. Multiple responsibilities.
-- **Scope when reached.** Candidate seams: per-region sub-components; the community-day scroll-shadow logic
-  (`updateScrollState` + `canScrollUp/Down`) is a reusable composable candidate.
+- **Manual checks:** ✅ spotlight-hour bonus card (XP/Stardust/Candy icon by text + accent border); ✅ raid-hour
+  sub-event bonus list; ✅ community-day bonuses (icons + text, italic disclaimers, scroll-shadow gradients
+  toggling on the 97px list); ✅ season Daily Discoveries + season bonuses (rows still styled via the lifted
+  global rules; scroll-shadow on the 260px daily list); ✅ event time-range bonuses (GO Fest — time-range labels,
+  earliest-first sort, scroll-shadow on the 120px list); ✅ accent border tracks a custom color override. Rendered
+  at both call sites (TimelineEvent expanded extras + EventTooltip). (Verify light + dark, mobile + desktop.)
+- **Realized split** (EventExtras.vue 340 → **40-line orchestrator**, promoted to
+  `src/components/Calendar/EventExtras/`; the orchestrator keeps only the `hasContent` gate + the `seasonData`
+  slice and composes the five regions in their original render order):
+    - Sub-components in `EventExtras/`: `SpotlightBonus.vue` (79 — spotlight card + the XP/Stardust/Candy icon
+      resolver), `RaidHourBonuses.vue` (53 — raid-hour bonus list), `CommunityDayBonuses.vue` (103 — community-day
+      bonuses + disclaimers + scroll-shadow), `EventBonuses.vue` (120 — time-range bonuses + `parseBonusStartTimeMinutes`
+        - earliest-first sort), and the pre-existing `SeasonBonuses.vue` (moved in, 259 → 235).
+    - Composable `src/composables/useScrollShadow.ts` (30 — `{ canScrollUp, canScrollDown, updateScrollState }`;
+      drives the global `.scroll-shadow-hints` affordance). **Caller owns the template ref and passes it in**
+      (`useScrollShadow(elementRef)`) — see findings.
+    - Each region sub-component takes `event` and self-guards with a `v-if` on its root (renders nothing when its
+      slice is absent), and computes its own `eventColor` accent (matching `SeasonBonuses`' internal `seasonColor`).
+      `SeasonBonuses` kept its existing `season`-slice interface (settled component, left un-touched), so the
+      orchestrator retains the small `seasonData` computed to feed it.
+- **Findings:**
+    - **vue-tsc template-ref gotcha (informed the composable shape):** a `<script setup>` binding used _only_ as a
+      template string ref (`ref="x"`) does **not** count as a usage for `noUnusedLocals` — `vue-tsc` raises TS6133
+      even though the template uses it. The original `bonusListRef` escaped this only because `updateScrollState`
+      also read `.value` in-script. So `useScrollShadow` takes the ref as a parameter (caller owns it, idiomatic
+      VueUse-style target binding) rather than returning it — the ref is then a real script usage at the call site.
+    - **Shared CSS lifted to global (approved):** `.bonus-item`/`.bonus-item:last-child`/`.bonus-icon`/`.bonus-text`
+      were byte-identical across the community-day + event regions and `SeasonBonuses`; moved to `style.scss` and the
+      three components now rely on the global rules. `SeasonBonuses` keeps only its `.season-bonus-tier .bonus-item`
+      `padding-left` override locally. (Specificity is fine — removing the scoped copies leaves only the global
+      `.bonus-item`, and the season override is a more-specific selector setting a property the global doesn't.)
+    - **Small per-component duplication left as-is (noted, not lifted):** `.bonus-content` is identical in
+      `SpotlightBonus` + `RaidHourBonuses`; `.bonus-header` is identical in `CommunityDayBonuses` + `EventBonuses`;
+      and the `.spotlight-bonus` / `.raid-hour-bonuses` card surfaces are byte-identical (differ only by class
+      name). Each is a small cohesive per-card block; left duplicated to keep the split behavior-preserving and the
+      components self-contained (same call made for card shells in #1–#3). Candidates if they ever diverge or spread.
+    - **Enhancement applied (`useScrollShadow` rolled out to the other scrollable extras — intentional behavior
+      change, user-requested):** the scroll-shadow affordance previously existed only on community-day. Adopted the
+      composable in the two remaining scrollable lists in the family — `EventBonuses` (`.event-bonus-list`, 120px) and
+      `SeasonBonuses` (`.season-daily-list`, 260px) — by wrapping each in a `.scroll-shadow-hints` container and wiring
+      `@scroll` + the `can-scroll-up/down` classes. `SeasonBonuses` reuses its existing `listRef` (already used for
+      highlighted-day centering); the centering `scrollTop` write fires `@scroll`, so the shadow state stays in sync.
+      This is the one **non-behavior-preserving** part of the feature (new gradient hints where there were none).
 
 ### 12. HideEventModal.vue
 

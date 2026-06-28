@@ -119,7 +119,7 @@ import { useEventsStore } from '@/stores/events';
 import { formatEventName } from '@/utils/eventName';
 import { type PogoEvent } from '@/utils/eventTypes';
 
-import EventExtras from '@/components/Calendar/EventExtras.vue';
+import EventExtras from '@/components/Calendar/EventExtras/EventExtras.vue';
 import EventTimeDisplay from '@/components/Calendar/EventTimeDisplay.vue';
 import PokemonEventImages from '@/components/Calendar/PokemonEventImages.vue';
 import TimelineCollapsedSchedule from '@/components/Calendar/TimelineEvent/TimelineCollapsedSchedule.vue';

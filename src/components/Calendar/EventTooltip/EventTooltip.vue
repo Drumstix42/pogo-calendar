@@ -157,7 +157,7 @@ import { getGroupedEvents } from '@/utils/eventGrouping';
 import { formatEventName } from '@/utils/eventName';
 import { type PogoEvent } from '@/utils/eventTypes';
 
-import EventExtras from '../EventExtras.vue';
+import EventExtras from '../EventExtras/EventExtras.vue';
 import EventTimeDisplay from '../EventTimeDisplay.vue';
 import PokemonEventImages from '../PokemonEventImages.vue';
 import RaidTierGroupImages from '../RaidTierGroupImages.vue';
