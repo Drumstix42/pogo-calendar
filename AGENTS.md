@@ -18,6 +18,18 @@ behavior these docs describe, propose the matching doc update in the same change
 
 ---
 
+## Commit messages
+
+- Use a conventional prefix such as `fix:`, `feat:`, `chore:`, `refactor:`, or `docs:`.
+- Keep the subject line under 50 characters and write it in the imperative mood.
+- Use bullet points in the body for high-level functional changes and why they matter, focusing on
+  user-facing impact.
+- When the change scope is small, prefer a single concise bullet in the body.
+- Avoid low-level implementation details in the commit body (file names, line counts, internal symbols).
+- Prefer the git command line over tooling.
+
+---
+
 ## Event Data
 
 Scraped from LeekDuck via [ScrapedDuck](https://github.com/bigfoott/ScrapedDuck):
