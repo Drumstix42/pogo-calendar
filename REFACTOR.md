@@ -132,7 +132,7 @@ remaining large files. Same recipe + verification protocol apply.
 
 | #   | Feature / file                                                           | Lines (T/script/style) | Status | Result | Priority |
 | --- | ------------------------------------------------------------------------ | ---------------------- | ------ | ------ | -------- |
-| 14  | [CalendarGrid.vue](src/components/Calendar/CalendarGrid.vue)             | 344 / ~270 / ~40       | ⬜     | —      | P2       |
+| 14  | [CalendarGrid.vue](src/components/Calendar/CalendarGrid.vue)             | 344 / ~270 / ~40       | ✅     | 57 (orchestrator); see notes      | P2       |
 | 15  | [stores/events.ts](src/stores/events.ts)                                 | 424                    | ⬜     | —      | P3       |
 | 16  | [PokemonEventImages.vue](src/components/Calendar/PokemonEventImages.vue) | 246 / ~123 / ~75       | ⬜     | —      | P4       |
 
@@ -764,10 +764,36 @@ return []` the dispatcher passes a `PogoEvent & { extraData: NonNullable<…> }`
     - Adopt the shared `EventSlot` type from `useCalendarDayLayout.ts`; delete the local duplicate.
     - The `calendarDays` month-grid computed (first-day-of-week alignment) could become a small helper.
     - **Convention:** the helpers use `const fn = () =>`; convert to `function fn()` per repo style.
-- **Manual checks:** multi-day bars span/position/stack correctly — slot packing across same-type slots,
-  raid sub-type compatibility, grouped events, and time-overlap conflicts; month grid renders with
-  correct first-day-of-week, today marker, current-month vs. adjacent-month dimming; URL month/year
-  navigation. Light + dark, mobile + desktop.
+- **Manual checks:** ✅ multi-day bars span/position/stack correctly — slot packing across same-type
+  slots, raid sub-type compatibility, grouped events, and time-overlap conflicts; ✅ month grid renders
+  with correct first-day-of-week, today marker, current-month vs. adjacent-month dimming; ✅ URL
+  month/year navigation. (UI confirmed by user.)
+- **Realized split** (CalendarGrid.vue 344 → **57-line orchestrator**; keeps the template, grid CSS,
+  store/composable wiring, `dayHeaders` + the thin `calendarDays` computed):
+    - Composable `src/composables/useCalendarGridSlots.ts` (~205 — owns `multiDayEventsForCalendar` +
+      `eventSlots` + the slot helpers `shouldShareSlot`/`findAvailableSlotForEventType`/
+      `findNextAvailableSlot`/`hasConflictInSlot`, all converted `const fn = () =>` → `function fn()`;
+      takes a `() => CalendarDayCell[]` getter, reads `eventsStore`/`eventFilter`/`calendarSettings`).
+      Sibling to `useCalendarDayLayout.ts` (same `EventSlot` domain + store-reactive pattern) — a pure
+      util was considered but would force a util→composable `EventSlot` type import or re-duplicate it.
+    - Util `src/utils/calendarGrid.ts` (~55 — pure `buildCalendarDays(referenceDay, { year, month,
+      firstDayIndex })` + the `CalendarDayCell` type; no Vue/store deps → testable). Object-arg form per
+      repo preference (≤2 args, one an options object).
+    - **Duplicate `EventSlot` interface deleted** — both grid components now import the canonical type
+      from `useCalendarDayLayout.ts` (resolves the follow-up flagged in #1).
+- **Findings:**
+    - **Offset-fallback consistency (fixed):** `multiDayEventsForCalendar`'s overlap-filter `parseEventDate`
+      fallback omitted `manualTimeOffsetHours` while every other fallback in the file passed it. Added the
+      arg. **Behavior-preserving** — the `?? parseEventDate(...)` branch is effectively dead: `eventMetadata`
+      covers every raw event and grouped representatives are `{ ...sortedGroup[0] }` (real `eventID`), so
+      `processedEvents` always has metadata and the fallback never fires.
+    - **Non-mutating sort (fixed):** `eventSlots` did `events.sort(...)` on the `multiDayEventsForCalendar`
+      computed value → switched to `[...events].sort(...)` (the same footgun #8 removed in `eventSort.ts`).
+      Safe today (the filter returns a fresh array) but no longer mutates a computed's value.
+    - **Follow-up (deferred):** the `?? parseEventDate(...)` fallbacks throughout the composable are dead —
+      metadata is an invariant for `processedEvents`. Could drop them and type `startDate`/`endDate` as
+      always-present (the `hasExtraData`-guard shape from #9), removing ~6 fallback expressions. Left as-is
+      to stay behavior-preserving; worth a small follow-up.
 
 ### 15. stores/events.ts
 
