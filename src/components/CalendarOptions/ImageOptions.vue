@@ -153,11 +153,6 @@ const handleSingleDaySpritesToggle = (event: Event) => {
     gap: 0.5rem;
 }
 
-.form-check.form-switch {
-    display: flex;
-    align-items: center;
-}
-
 .form-check-input {
     margin-top: 0;
 }

@@ -127,14 +127,18 @@ Priority: ordered roughly by size × tangle. Tackle top-down; they're largely in
 | 12  | [HideEventModal.vue](src/components/Calendar/HideEventModal.vue)                                   | 363                     | ✅     | 220; adopted BaseModal (in #7)    | P4       |
 | 13  | [EventExtras.vue](src/components/Calendar/EventExtras/EventExtras.vue)                             | 340                     | ✅     | 40 (orchestrator); see notes      | P4       |
 
+**Second survey (added after rows 1–13 settled):** new candidates found in a fresh sweep of the
+remaining large files. Same recipe + verification protocol apply.
+
+| #   | Feature / file                                                           | Lines (T/script/style) | Status | Result | Priority |
+| --- | ------------------------------------------------------------------------ | ---------------------- | ------ | ------ | -------- |
+| 14  | [CalendarGrid.vue](src/components/Calendar/CalendarGrid.vue)             | 344 / ~270 / ~40       | ⬜     | —      | P2       |
+| 15  | [stores/events.ts](src/stores/events.ts)                                 | 424                    | ⬜     | —      | P3       |
+| 16  | [PokemonEventImages.vue](src/components/Calendar/PokemonEventImages.vue) | 246 / ~123 / ~75       | ⬜     | —      | P4       |
+
 **Explicitly out of scope** (large but they're data, not logic — leave alone unless asked):
 `constants/pokemonFormMap.ts`, `constants/validAnimatedSprites.ts`, `constants/validStaticSprites.ts`,
 `constants/pokemonEntries.ts`.
-
-**Optional follow-up (not yet a row):** [eventRaidHours.ts](src/utils/eventRaidHours.ts) (435) is a pure
-util (raid-schedule date parsing + schedule building) that could be split by concern like #8/#9 — but
-it's already in testable shape (no Vue reactivity), so it's lower-value than the components above.
-[stores/events.ts](src/stores/events.ts) (424) is a store, outside the component-refactor charter.
 
 ---
 
@@ -683,6 +687,20 @@ return []` the dispatcher passes a `PogoEvent & { extraData: NonNullable<…> }`
       (font slider, stays in EventOptions) and the `.event-options-section` class on EventOptions' root — both
       stay put, so the extraction doesn't disturb it. The timezone slider isn't wired to `slider-interacting`.
 
+### 12. HideEventModal.vue
+
+- **Settled as part of #7.** Adopted the shared `src/components/BaseModal.vue` extracted there,
+  dropping its duplicated shell template + handlers (`handleBackdropClick`/`handleKeydown`/show-watch/
+  `onBeforeUnmount`) and ~140 lines of shell CSS (363 → 220). Body content (hide buttons, timeline-filter
+  switch, cancel) + their styles stay local.
+- **Intentional visual change (approved):** the close (X) button was restyled from the local
+  fade-on-hover `.btn-close` to the shared `btn-icon-ghost` (the house style used in 11 other
+  components) that `BaseModal` standardizes on. Verified light + dark, mobile + desktop.
+- **Kept local:** `.modal-body p` text styling (its `<p>` is the only one across both modals; resolves
+  against BaseModal's slotted `.modal-body` via Vue's rightmost-selector scoping).
+- **Pre-existing (not changed):** the `.form-check-input:checked`/`:focus` rules here duplicate global
+  `style.scss` rules — left as-is (behavior-preserving); candidate for cleanup if #12 is revisited.
+
 ### 13. EventExtras.vue
 
 - **Why:** 340 lines with five distinct bonus regions (spotlight / raid-hour / community-day w/ scroll-shadow
@@ -731,16 +749,76 @@ return []` the dispatcher passes a `PogoEvent & { extraData: NonNullable<…> }`
       highlighted-day centering); the centering `scrollTop` write fires `@scroll`, so the shadow state stays in sync.
       This is the one **non-behavior-preserving** part of the feature (new gradient hints where there were none).
 
-### 12. HideEventModal.vue
+### 14. CalendarGrid.vue
 
-- **Settled as part of #7.** Adopted the shared `src/components/BaseModal.vue` extracted there,
-  dropping its duplicated shell template + handlers (`handleBackdropClick`/`handleKeydown`/show-watch/
-  `onBeforeUnmount`) and ~140 lines of shell CSS (363 → 220). Body content (hide buttons, timeline-filter
-  switch, cancel) + their styles stay local.
-- **Intentional visual change (approved):** the close (X) button was restyled from the local
-  fade-on-hover `.btn-close` to the shared `btn-icon-ghost` (the house style used in 11 other
-  components) that `BaseModal` standardizes on. Verified light + dark, mobile + desktop.
-- **Kept local:** `.modal-body p` text styling (its `<p>` is the only one across both modals; resolves
-  against BaseModal's slotted `.modal-body` via Vue's rightmost-selector scoping).
-- **Pre-existing (not changed):** the `.form-check-input:checked`/`:focus` rules here duplicate global
-  `style.scss` rules — left as-is (behavior-preserving); candidate for cleanup if #12 is revisited.
+- **Why:** 344 lines, but template (~28) and CSS (~40) are thin — the bulk is **~270 lines of pure
+  multi-day slot-packing logic** in the script. This is the same "lift pure logic into a testable
+  composable/util" shape as #1/#6/#8–#10, and it's the only remaining untracked file that fits the
+  charter cleanly. Also carries a **duplicate `EventSlot` interface** (flagged in #1's findings) that
+  should adopt the one already exported from `useCalendarDayLayout.ts`.
+- **Suggested seams (verify):**
+    - Extract the slot-assignment algorithm — `multiDayEventsForCalendar`, `eventSlots`,
+      `shouldShareSlot`, `findAvailableSlotForEventType`, `findNextAvailableSlot`, `hasConflictInSlot` —
+      into `useCalendarGridSlots.ts`, **or**, since it's nearly pure (reads events/metadata/settings),
+      a `src/utils/` function taking those as args for full testability with the store as a thin wrapper.
+    - Adopt the shared `EventSlot` type from `useCalendarDayLayout.ts`; delete the local duplicate.
+    - The `calendarDays` month-grid computed (first-day-of-week alignment) could become a small helper.
+    - **Convention:** the helpers use `const fn = () =>`; convert to `function fn()` per repo style.
+- **Manual checks:** multi-day bars span/position/stack correctly — slot packing across same-type slots,
+  raid sub-type compatibility, grouped events, and time-overlap conflicts; month grid renders with
+  correct first-day-of-week, today marker, current-month vs. adjacent-month dimming; URL month/year
+  navigation. Light + dark, mobile + desktop.
+
+### 15. stores/events.ts
+
+- **Why:** 424 lines. A store (outside the original component charter), but it carries real dedup +
+  complexity worth a row: a **byte-identical `sortTierLabel` copy** and **inline tier-group building**
+  that duplicate `raidTierGroups.ts` (the #2 share extracted these for EventTooltip/TimelineEvent but
+  missed the store copy); a dense `eventMetadata` computed (~57 lines) and `processedEvents` grouping
+  (~64 lines); and debug `console.log` noise in `fetchEvents`.
+- **Suggested seams (verify):**
+    - **Quick win (completes #2):** replace the local `sortTierLabel` + the inline tier-map build in
+      `eventMetadata` with `sortTierLabel`/`buildTierGroupsFromBosses` from `raidTierGroups.ts`.
+    - Consider lifting the per-event `eventMetadata` builder into a pure util (testable), keeping the
+      store as the reactive wrapper.
+    - Consider lifting the `processedEvents` grouping into a util (parallels #8's `eventGrouping.ts`).
+    - Trim/guard the `fetchEvents` debug logging.
+- **Manual checks:** events load + render across calendar grid / timeline / tooltip; group-similar
+  toggle; metadata-derived fields unchanged (multi-day, past/future, spotlight bonus, raid tier groups);
+  month navigation. Light + dark.
+
+### 16. PokemonEventImages.vue
+
+- **Why:** 246 lines, script-heavy. The Dynamax/Gigantamax **title-regex classification**
+  (`showDynamaxOverlay`/`showGigantamaxEffect`) is title parsing that belongs in the eventPokemon/
+  eventName layer alongside the existing GMAX detection it mirrors; `showOverflowBadge`/
+  `overflowBadgeCount` share a **duplicated tier-exclusion-overflow** block.
+- **Suggested seams (verify):**
+    - Move the max-battle name-regex classification (Dynamax vs. Gigantamax) to a util — co-locate with
+      the GMAX logic in `eventPokemonResolvers.ts`/`eventName.ts` rather than re-parsing the title here.
+    - Collapse the duplicated tier-exclusion-overflow expression shared by `showOverflowBadge` and
+      `overflowBadgeCount` into one computed.
+- **Manual checks:** sprite rows across event types; dynamax overlay (max-mondays + Dynamax max-battles),
+  gigantamax effect (Gigantamax max-battles), shadow effect (shadow raids); "+more" indicator and the
+  overflow badge (tier-exclusion path + mobile path) with left/right alignment; placeholder. Light +
+  dark, mobile + desktop.
+
+---
+
+## Optional follow-ups (not full rows)
+
+Lower-value than the rows above — already in testable shape or genuinely out of charter. Listed so
+they aren't re-discovered cold.
+
+### eventRaidHours.ts
+
+- **Status:** ⬜ Optional. 435 lines, a **pure util** (no Vue reactivity → already testable), which is
+  why it ranks below the component rows.
+- **Why it could split:** two distinct concerns live together — (1) raid-schedule **date/time parsing +
+  section building** (`parseRaidScheduleDate`, `parseRaidHourTime`, `parseTimeStartSortKey`,
+  `formatScheduleSectionTitle`, `matchesScheduleDate`, `dedupeBosses`, `getRaidScheduleSectionsForDate`,
+  `getRaidScheduleBossesForDate`) and (2) **pseudo-event generation** (`generateEventRaidHourSubEvents`,
+  `generateEventSpotlightSubEvents`, with `formatPokemonList`/`formatSpotlightEventName`). Splitting by
+  concern (like #8/#9) would isolate the parsing helpers for testing.
+- **Why deferred:** behavior-preserving and already pure, so it buys testability/readability but no
+  complexity-per-file reduction in a Vue component. Pick up only if the parsing layer grows or needs tests.
