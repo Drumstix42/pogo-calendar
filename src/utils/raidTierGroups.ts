@@ -34,7 +34,7 @@ export function sortTierLabel(a: string, b: string): number {
 /**
  * Groups bosses by their `raidType` (defaulting to "Other"), sorted via {@link sortTierLabel}.
  */
-export function buildTierGroupsFromBosses(bosses: PokemonBoss[]) {
+export function buildTierGroupsFromBosses(bosses: PokemonBoss[] | undefined) {
     if (!bosses || bosses.length === 0) {
         return undefined;
     }

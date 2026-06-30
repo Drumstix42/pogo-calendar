@@ -130,11 +130,11 @@ Priority: ordered roughly by size × tangle. Tackle top-down; they're largely in
 **Second survey (added after rows 1–13 settled):** new candidates found in a fresh sweep of the
 remaining large files. Same recipe + verification protocol apply.
 
-| #   | Feature / file                                                           | Lines (T/script/style) | Status | Result | Priority |
-| --- | ------------------------------------------------------------------------ | ---------------------- | ------ | ------ | -------- |
-| 14  | [CalendarGrid.vue](src/components/Calendar/CalendarGrid.vue)             | 344 / ~270 / ~40       | ✅     | 57 (orchestrator); see notes      | P2       |
-| 15  | [stores/events.ts](src/stores/events.ts)                                 | 424                    | ⬜     | —      | P3       |
-| 16  | [PokemonEventImages.vue](src/components/Calendar/PokemonEventImages.vue) | 246 / ~123 / ~75       | ⬜     | —      | P4       |
+| #   | Feature / file                                                           | Lines (T/script/style) | Status | Result                       | Priority |
+| --- | ------------------------------------------------------------------------ | ---------------------- | ------ | ---------------------------- | -------- |
+| 14  | [CalendarGrid.vue](src/components/Calendar/CalendarGrid.vue)             | 344 / ~270 / ~40       | ✅     | 57 (orchestrator); see notes | P2       |
+| 15  | [stores/events.ts](src/stores/events.ts)                                 | 424                    | ✅     | 308 (store); see notes       | P3       |
+| 16  | [PokemonEventImages.vue](src/components/Calendar/PokemonEventImages.vue) | 246 / ~123 / ~75       | ⬜     | —                            | P4       |
 
 **Explicitly out of scope** (large but they're data, not logic — leave alone unless asked):
 `constants/pokemonFormMap.ts`, `constants/validAnimatedSprites.ts`, `constants/validStaticSprites.ts`,
@@ -777,7 +777,7 @@ return []` the dispatcher passes a `PogoEvent & { extraData: NonNullable<…> }`
       Sibling to `useCalendarDayLayout.ts` (same `EventSlot` domain + store-reactive pattern) — a pure
       util was considered but would force a util→composable `EventSlot` type import or re-duplicate it.
     - Util `src/utils/calendarGrid.ts` (~55 — pure `buildCalendarDays(referenceDay, { year, month,
-      firstDayIndex })` + the `CalendarDayCell` type; no Vue/store deps → testable). Object-arg form per
+firstDayIndex })` + the `CalendarDayCell` type; no Vue/store deps → testable). Object-arg form per
       repo preference (≤2 args, one an options object).
     - **Duplicate `EventSlot` interface deleted** — both grid components now import the canonical type
       from `useCalendarDayLayout.ts` (resolves the follow-up flagged in #1).
@@ -812,6 +812,34 @@ return []` the dispatcher passes a `PogoEvent & { extraData: NonNullable<…> }`
 - **Manual checks:** events load + render across calendar grid / timeline / tooltip; group-similar
   toggle; metadata-derived fields unchanged (multi-day, past/future, spotlight bonus, raid tier groups);
   month navigation. Light + dark.
+- **Realized split** (events.ts 424 → **308-line store**; the public API + all 18 consumers are
+  untouched — this lifts pure derivation out, leaving the store as the reactive wrapper):
+    - **Dedup completed (#2 quick win):** the byte-identical local `sortTierLabel` (16 lines) and the
+      inline tier-map build inside `eventMetadata` were replaced by `buildTierGroupsFromBosses` from
+      `src/utils/raidTierGroups.ts` (the share #2 extracted for EventTooltip/TimelineEvent but missed
+      here). Dropped the now-unused `PokemonBoss`/`RaidBossTierGroup` imports.
+    - **New** `src/utils/eventMetadata.ts` (41 — pure `buildEventMetadata(event, { now,
+manualOffsetHours, color })` → one `EventMetadata`). No store dependency (the reactive color
+      override + offset-adjusted "now" are passed in by the store), so it's fully testable. The store's
+      `eventMetadata` computed keeps the `events.value.forEach` loop, per-event color resolution via
+      `eventTypeColorsStore`, and the grouping second pass that reads `processedEvents`.
+    - **Grouping → `src/utils/eventGrouping.ts`** (41 → 109): added pure `groupEventsBySimilarity(events,
+enabled)` (the representative-event grouping, verbatim move). The store's `processedEvents` computed
+      collapsed from ~64 lines to a one-liner delegating to it. Lives in the existing grouping module
+      (read-side helpers already there); no import cycle (`eventName`/`eventSubtype`/`eventTypes` are all
+      leaves).
+- **Findings:**
+    - **`buildTierGroupsFromBosses` param widened** to `PokemonBoss[] | undefined` — the store passes
+      `event.extraData?.raidbattles?.bosses` (possibly `undefined`), and the function's own
+      `if (!bosses || bosses.length === 0) return undefined` guard already handled it at runtime; the
+      type just didn't admit it. Backward-compatible (the other 3 callers pass concrete arrays).
+      Behavior-preserving.
+    - **In-place sort mutation (fixed):** `groupEventsBySimilarity`'s `group.sort(...)` → `[...group].sort(...)`
+      (the same footgun #8/#14 removed elsewhere). Since the old in-place sort meant `_groupedEvents` and
+      `getSmartGroupDisplayName` both received the _sorted_ array, both references were redirected to
+      `sortedGroup` — keeping the output byte-identical while no longer mutating the input array.
+    - **Logging left as-is (per request):** the `fetchEvents` debug `console.log`s (sample-event dump +
+      per-month count + load/parse summaries) were intentionally **not** trimmed this pass.
 
 ### 16. PokemonEventImages.vue
 
