@@ -82,7 +82,8 @@ Split into focused sibling modules:
 - `eventPokemon.ts` — the dispatcher + `hasExtraData` guard (re-exports `parsePokemonNameAndSuffix`
   and the image types for path stability).
 - `eventPokemonResolvers.ts` — one `resolve<Type>Images()` per event-type branch; owns
-  `RAID_DAY_TITLE_EXCEPTIONS` and `GMAX_FORM_VARIANTS`.
+  `RAID_DAY_TITLE_EXCEPTIONS` and the `GMAX_FORM_IN_TITLE` regex (title→form parsing only — the Gmax
+  sprite-URL/filename mapping lives in `pokemonMapper.ts` via `getGigantamaxSpriteUrl()`).
 - `eventPokemonNames.ts` — pure title→name parsing, including `parsePokemonNameAndSuffix` (prefix/
   suffix forms: Mega/Mega X-Y, Primal, Shadow, parenthetical forms) and several hard-coded special
   cases (Deoxys, Genesect, crowned forms). See the function for specifics.
@@ -110,6 +111,11 @@ tier-2 PokeMiners URL via `swapUrlBase()` — same filename, different folder/ho
 primary isn't a tier-2 URL). PokeMiners form suffixes use `f` prefix + uppercase (`fMEGA`, `fBURN`);
 alias `crownedsword`/`crownedshield` → `CROWNED`. Static sprite name: normalize (Unicode-aware —
 handles accented characters and gender symbols) → strip non-alphanumeric → append suffix.
+
+Gigantamax sprites are a **separate path**: `getGigantamaxSpriteUrl(name, formSlug?)` builds a URL
+against a standalone CDN (HybridShivam) gated by `GIGANTAMAX_POKEMON_IDS`. It does **not** join the
+tiered fallback above (the `@error` chain only derives from tier-2 URLs), so an unknown filename 404s
+to the placeholder.
 
 ---
 

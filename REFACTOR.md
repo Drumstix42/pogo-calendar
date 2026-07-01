@@ -600,15 +600,13 @@ return []` the dispatcher passes a `PogoEvent & { extraData: NonNullable<…> }`
   `eventPokemonTypes.ts` (imports only `type PogoEvent`). `eventPokemon.ts`, `eventSprite.ts`, and
   `eventPokemonResolvers.ts` all import types _from the leaf_ and re-export for path stability — every
   module edge points one direction (toward the leaf), so there's no eventPokemon↔sub-module back-edge.
-- **Follow-up (deferred):**
+- **Follow-up (deferred → DONE in #16d):**
     - **Gmax sprite path → `pokemonMapper.ts` (the pre-existing `GMAX_FORM_VARIANTS` TODO):** max-battles
-      Gigantamax events bypass the normal 5-tier CDN chain — `resolveMaxBattleImages` hand-builds a URL
-      against a one-off CDN (`HybridShivam/Pokemon`) using `GMAX_FORM_VARIANTS` (now in
-      `eventPokemonResolvers.ts`) + `GIGANTAMAX_POKEMON_IDS`. **Not a safe mechanical move:** the table is
-      used for _both_ title-form parsing (`patterns`) and filename selection (`default`), so a clean
-      migration must split "title→form" (stays in the names/resolver layer) from "id+form→URL" (moves to
-      `pokemonMapper`/`eventSprite`) — a real design change on a rarely-fired path. Left as-is to keep this
-      refactor behavior-preserving.
+      Gigantamax events bypass the normal 5-tier CDN chain — `resolveMaxBattleImages` hand-built a URL
+      against a one-off CDN (`HybridShivam/Pokemon`) using `GMAX_FORM_VARIANTS` + `GIGANTAMAX_POKEMON_IDS`.
+      **Not a safe mechanical move:** the table was used for _both_ title-form parsing (`patterns`) and
+      filename selection (`default`), so a clean migration had to split "title→form" (stays in the
+      resolver layer) from "id+form→URL" (moves to `pokemonMapper`). Done in #16d below.
 
 ### 10. EventTimeDisplay.vue
 
@@ -966,6 +964,25 @@ Small polish done alongside 16a/16b:
   module-level const (was re-allocated per evaluation).
 - **`useEventTooltip` naming** — dropped the do-nothing `spriteEffectFor` passthrough; grouped-event
   bindings call `getEventSpriteEffect` directly.
+
+#### 16d. Gmax sprite URL → `pokemonMapper.ts` (resolves the #9 TODO, behavior-preserving)
+
+Splits the two concerns the old `GMAX_FORM_VARIANTS` table conflated:
+
+- **Title→form stays in the resolver:** `resolveGigantamaxImage` uses one `GMAX_FORM_IN_TITLE` regex to
+  detect + strip a multi-form suffix (`"Toxtricity Low Key"` → base `Toxtricity`, slug `low-key`).
+- **id/form→URL moves to `pokemonMapper.ts`:** new `getGigantamaxSpriteUrl(name, formSlug?)` owns the
+  `HYBRIDSHIVAM_GMAX_PREFIX` constant, the `GIGANTAMAX_FORM_FILENAMES` map (the filename data lifted out
+  of `GMAX_FORM_VARIANTS`), the `${id}-Gmax.png` default convention, and the `GIGANTAMAX_POKEMON_IDS`
+  gate (import moved here). Returns `null` when the Pokemon has no Gmax asset.
+- The resolver dropped its `getPokemonId` + `GIGANTAMAX_POKEMON_IDS` imports — URL construction is no
+  longer its concern. AGENTS.md updated (resolver owns `GMAX_FORM_IN_TITLE`; mapper owns the URL path).
+- **Finding (recorded, not changed):** the Gmax CDN is standalone and, unlike every other sprite, has
+  **no fallback tier** — the `@error` chain only derives from PokeMiners tier-2 URLs, so a 404 drops
+  straight to the placeholder. Documented in the mapper + AGENTS.md; a future improvement, not in scope.
+- **Verified:** `type-check` + `lint` + prettier clean. Behavior-preserving (same URLs for all current
+  inputs; realistic title forms normalize to the same slugs). **Manual verify:** a Gigantamax Max Battle
+  event (single- and multi-form, e.g. Toxtricity/Urshifu) still shows the Gmax sprite + overlay.
 
 ---
 

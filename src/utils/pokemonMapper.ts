@@ -1,6 +1,7 @@
 import { POKEMON_NAME_TO_ID } from '@/constants/pokemonEntries';
 import { POKEMON_FORM_MAP } from '@/constants/pokemonFormMap';
 import { VALID_ANIMATED_SPRITES } from '@/constants/validAnimatedSprites';
+import { GIGANTAMAX_POKEMON_IDS } from '@/constants/validGigantamaxSprites';
 import { VALID_STATIC_SPRITES } from '@/constants/validStaticSprites';
 
 export type PokemonName = keyof typeof POKEMON_NAME_TO_ID;
@@ -226,6 +227,31 @@ export function getSprite256FallbackUrl(spriteUrl: string): string | null {
 
 export function getSpriteFallbackUrl(spriteUrl: string): string | null {
     return swapUrlBase(spriteUrl, POKEMINERS_URL_PREFIX, POKEMINERS_MIRROR_CDN);
+}
+
+// Gigantamax sprites live on a standalone CDN (no PokeMiners/mgrann coverage), so they don't
+// participate in the tiered `@error` fallback above — an unknown filename resolves to a 404.
+const HYBRIDSHIVAM_GMAX_PREFIX = 'https://raw.githubusercontent.com/HybridShivam/Pokemon/master/assets/images/';
+
+// Filenames for Pokemon with multiple Gigantamax forms; all other Gmax Pokemon use `${id}-Gmax.png`.
+// `forms` is keyed by the normalized form slug parsed from the event title (e.g. "low-key").
+const GIGANTAMAX_FORM_FILENAMES: Record<number, { default: string; forms: Record<string, string> }> = {
+    849: { default: '849-Amped-Gmax.png', forms: { 'low-key': '849-Low-Key-Gmax.png' } }, // Toxtricity
+    892: { default: '892-Single-Strike-Gmax.png', forms: { 'rapid-strike': '892-Rapid-Strike-Gmax.png' } }, // Urshifu
+};
+
+// Gigantamax sprite URL for a Pokemon (by name), with an optional multi-form slug ("low-key",
+// "rapid-strike"). Returns null when the Pokemon has no Gigantamax asset.
+export function getGigantamaxSpriteUrl(pokemonName: string, formSlug?: string): string | null {
+    const pokemonId = getPokemonId(pokemonName);
+    if (pokemonId == null || !GIGANTAMAX_POKEMON_IDS.has(pokemonId)) {
+        return null;
+    }
+
+    const formData = GIGANTAMAX_FORM_FILENAMES[pokemonId];
+    const filename = formData ? (formSlug && formData.forms[formSlug]) || formData.default : `${String(pokemonId).padStart(3, '0')}-Gmax.png`;
+
+    return `${HYBRIDSHIVAM_GMAX_PREFIX}${filename}`;
 }
 
 // Get available PokeMiners form suffixes for a Pokemon
