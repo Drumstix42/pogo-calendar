@@ -11,13 +11,14 @@
                 :show-tooltip="true"
                 :show-c-p="true"
                 :event-type="eventType"
-                :is-shadow="isShadow"
+                :effect="effect"
             />
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
+import { type SpriteEffect } from '@/utils/eventPokemon';
 import { type EventTypeKey } from '@/utils/eventTypes';
 import { type RaidTierGroupWithImages } from '@/utils/raidTierGroups';
 
@@ -27,7 +28,7 @@ interface Props {
     groups: RaidTierGroupWithImages[] | null | undefined;
     height: number;
     eventType: EventTypeKey;
-    isShadow: boolean;
+    effect?: SpriteEffect;
     useAnimated: boolean;
 }
 

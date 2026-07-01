@@ -53,7 +53,6 @@
                 <PokemonEventImages
                     v-if="calendarSettings.useSingleDayEventSprites"
                     :event="event"
-                    :event-name="displayName"
                     :height="singleDayPokemonHeight"
                     :show-placeholder="true"
                     :show-overflow-counter="true"

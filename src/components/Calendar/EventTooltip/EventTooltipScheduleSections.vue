@@ -12,17 +12,12 @@
                 <span v-if="section.time" class="schedule-time">{{ section.time }}</span>
             </template>
         </div>
-        <RaidTierGroupImages
-            :groups="section.tierGroups"
-            :height="height"
-            :event-type="eventType"
-            :is-shadow="isShadow"
-            :use-animated="useAnimated"
-        />
+        <RaidTierGroupImages :groups="section.tierGroups" :height="height" :event-type="eventType" :effect="effect" :use-animated="useAnimated" />
     </div>
 </template>
 
 <script setup lang="ts">
+import { type SpriteEffect } from '@/utils/eventPokemon';
 import { type EventTypeKey } from '@/utils/eventTypes';
 import { type RaidTierGroupWithImages } from '@/utils/raidTierGroups';
 
@@ -45,7 +40,7 @@ interface Props {
     targetDayName?: string;
     height: number;
     eventType: EventTypeKey;
-    isShadow: boolean;
+    effect?: SpriteEffect;
     useAnimated: boolean;
 }
 

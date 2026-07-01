@@ -8,8 +8,8 @@ import { useHideEventModal } from '@/composables/useHideEventModal';
 import { useEventsStore } from '@/stores/events';
 import { type MajorCalendarEventVariant, getMajorCalendarEventVariant, isMajorCalendarEventType } from '@/utils/eventMajor';
 import { formatEventName } from '@/utils/eventName';
-import { getEventPokemonImages } from '@/utils/eventPokemon';
-import { getRaidSubType, hasEventExtras } from '@/utils/eventSubtype';
+import { getEventPokemonImages, getEventSpriteEffect } from '@/utils/eventPokemon';
+import { hasEventExtras } from '@/utils/eventSubtype';
 import { type PogoEvent, getEventTypeInfo } from '@/utils/eventTypes';
 import { buildRaidTierGroupsWithImages } from '@/utils/raidTierGroups';
 import { buildCollapsedScheduleDayGroups, buildTimelineScheduleDaySectionsWithTierGroups } from '@/utils/timelineSchedule';
@@ -82,9 +82,7 @@ export function useTimelineEvent(props: TimelineEventProps, emit: TimelineEventE
         return pokemonCount.value > 0 || Boolean(collapsedScheduleDayGroups.value?.length);
     });
 
-    const isShadowRaid = computed(() => {
-        return getRaidSubType(props.event) === 'shadow-raids';
-    });
+    const spriteEffect = computed(() => getEventSpriteEffect(props.event));
 
     const defaultTierGroupsWithImages = computed(() => {
         return buildRaidTierGroupsWithImages(eventsStore.eventMetadata[props.event.eventID]?.raidBossTierGroups, props.isActive);
@@ -139,7 +137,7 @@ export function useTimelineEvent(props: TimelineEventProps, emit: TimelineEventE
         parentEventName,
         pokemonCount,
         collapsedScheduleDayGroups,
-        isShadowRaid,
+        spriteEffect,
         defaultTierGroupsWithImages,
         timelineScheduleDaySectionsWithTierGroups,
         showCollapsedScheduleDays,

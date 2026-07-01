@@ -268,7 +268,8 @@ seams below are **initial hypotheses from the first survey** — verify against 
       timeline 0.75rem — left un-unified to stay behavior-preserving).
     - Composable `src/composables/useEventTooltip.ts` (167 — `(props)`-bound schedule/tier resolution +
       display helpers: parent-name lookup, per-event tier/section builders, `scheduleDaySectionsWithTierGroups`,
-      `getMajorTooltipClass`, `isShadowRaid`, `scheduleTargetDayName`, `highlightDayOfWeek`).
+      `getMajorTooltipClass`, `spriteEffect` (was `isShadowRaid`; see #16a), `scheduleTargetDayName`,
+      `highlightDayOfWeek`).
     - Util `src/utils/eventTooltipSchedule.ts` (113 — pure `buildFullRaidScheduleDaySections(event, useAnimated)`
         - the `TooltipScheduleSection`/`TooltipScheduleDaySection` types). Deliberately **not** merged with
           `timelineSchedule.ts` (diverges: no `raidHours`, plain default labels, `sortKey: 0`).
@@ -877,12 +878,94 @@ enabled)` (the representative-event grouping, verbatim move). The store's `proce
   name). Only the regex/matcher was shared — each call site still passes its original string, so
   output is identical.
 - **Findings:**
-    - **Latent inconsistency (pre-existing, not changed):** the Dynamax/Gigantamax overlay is
-      classified from the _display_ name while the sprite is chosen from the _raw_ name — for grouped
-      events these could theoretically diverge. Sharing the matcher doesn't change which string each
-      side passes; flagged only.
+    - **Latent inconsistency (pre-existing) — RESOLVED in the follow-up below:** the Dynamax/Gigantamax
+      overlay was classified from the _display_ name while the sprite was chosen from the _raw_ name —
+      for grouped events these could diverge. The follow-up moves effect classification onto the resolved
+      sprite data (event-based), removing the divergence.
     - **Hardcoded `relevantEventTypes` list** in `shouldShowPlaceholder` overlaps the dispatcher's
       event-type branches — possible future drift; left as-is.
+
+#### 16a. Sprite-effect model → per-sprite `effect` (follow-up, behavior-changing)
+
+Continuation of #16, done as a separate change (own commits). Moves the sprite visual-effect
+classification out of the component entirely and onto the resolved sprite data, and adds multi-Pokemon
+Gigantamax support. **Not behavior-preserving** — verify in the running app.
+
+- **Root cause addressed:** the effect (Dynamax/Gigantamax/shadow) is a property of the _event_, but the
+  component re-derived it by parsing a caller-supplied display string (`props.eventName`), while the
+  image was chosen from `event.name`. Two parses of one fact from two inputs → the divergence above.
+- **Design (the per-image "stronger variant"):**
+    - `PokemonImageData` gains an optional `effect?: SpriteEffect` (`'dynamax' | 'gigantamax' | 'shadow'`)
+      in [eventPokemonTypes.ts](src/utils/eventPokemonTypes.ts). Effects now ride on the resolved sprite.
+    - `getEventSpriteEffect(event)` ([eventPokemonResolvers.ts](src/utils/eventPokemonResolvers.ts), re-exported
+      from `eventPokemon.ts`) is the single event-level classifier for the _uniform_ effects (shadow via
+      subtype, dynamax via max-mondays / Dynamax max-battle title). The dispatcher
+      ([getEventPokemonImages](src/utils/eventPokemon.ts)) stamps it onto any image a resolver didn't already
+      mark per-sprite (`applyEventEffect`).
+    - **Gigantamax is per-sprite, not event-level:** it's asset-dependent per Pokemon, so
+      `resolveMaxBattleImages` stamps `effect: 'gigantamax'` only on names that resolve to a Gmax asset
+      (`resolveGigantamaxImage`); names without one fall back to a plain sprite with no overlay.
+    - **Multi-Pokemon Gigantamax:** the Gigantamax branch now splits the captured name via
+      `parseEventPokemonNames` and resolves each — "Gigantamax A and B Max Battle Day" renders both, each
+      with its own effect.
+    - **Component is now a near-pure renderer:** `PokemonEventImages.vue` dropped `showDynamaxOverlay`/
+      `showShadowEffect`/`showGigantamaxEffect` (and the title parsing) — it binds `:is-*` from
+      `pokemonData.effect`. Its **`eventName` prop was removed** (it existed only for that classification),
+      updating all 5 call sites (`SingleDayEvent`, `TimelineEvent`, `MultiDayEventBar` ×2, `EventTooltip`).
+      The placeholder (no sprite to carry an effect) reads `getEventSpriteEffect(event)`.
+- **Behavior changes to verify (manual):**
+    - Multi-Pokemon Gigantamax events render one sprite per named Pokemon (previously only single-name
+      titles resolved; multi-name fell through).
+    - **Single-name Gigantamax with no Gmax asset:** now shows that Pokemon's plain base sprite (no
+      overlay) instead of the generic event image with a Gigantamax cloud. This is the intended
+      per-sprite-availability fix, but it changes what renders in the pre-asset window — eyeball it.
+    - Grouped-event divergence is gone (effects derive from `event`, not the caller's display string).
+- **Verified:** `type-check` + `lint` clean; prettier clean. **Manual app verification still pending.**
+
+#### 16b. Unify the shadow effect onto the sprite-effect model (follow-up)
+
+Completes 16a by folding the parallel raid-tier rendering path onto the same `effect` model, so there's
+one mechanism instead of two. Behavior-preserving.
+
+- **Before:** shadow was carried two ways — per-sprite `PokemonImageData.effect` (16a, the
+  `PokemonEventImages` path) **and** a separate `isShadow` boolean threaded as a prop through
+  `RaidTierGroupImages` ← `EventTooltip` / `TimelineEvent` / `TimelineCollapsedSchedule` /
+  `EventTooltipScheduleSections` / `TimelineRaidSchedule`, sourced from ad-hoc `isShadowRaid` computeds
+  (`getRaidSubType(event) === 'shadow-raids'`) duplicated in `useEventTooltip`/`useTimelineEvent`.
+- **After:**
+    - [PokemonImage.vue](src/components/Calendar/PokemonImage.vue)'s three boolean effect props
+      (`isDynamax`/`isShadow`/`isGigantamax`) collapse to a **single `effect?: SpriteEffect`** prop.
+      It reads `resolvedEffect = pokemonData?.effect ?? effect` — per-sprite effect (from the resolver)
+      wins; the prop is the event-level fallback for images that don't carry one (raid tier groups,
+      placeholder). `PokemonEventImages`'s per-sprite bindings disappear entirely (the data carries it).
+    - The `isShadow` boolean prop across the five raid-tier components becomes `effect?: SpriteEffect`,
+      threaded from a single **`spriteEffect` = `getEventSpriteEffect(event)`** computed. The duplicated
+      `isShadowRaid`/`isShadowRaidEvent` in `useEventTooltip`/`useTimelineEvent` are gone;
+      `getEventSpriteEffect` is the single source of truth (called directly for grouped events in the
+      tooltip). `getRaidSubType` dropped from `useTimelineEvent` (was only used for that computed).
+- **Why the prop stays for the raid path (not stamped per-boss):** shadow is genuinely event-uniform, so
+  threading one `effect` value is correct; stamping it onto every boss image would denormalize an
+  event-level fact and force every tier-group builder to know the event's shadow state. Per-sprite is
+  reserved for Gigantamax, where it actually varies (16a).
+- **Verified:** `type-check` + `lint` + prettier clean. **Manual app verification still pending** (shadow
+  raid overlays in tooltip + timeline, collapsed + expanded schedules).
+
+#### 16c. Incidental cleanups (behavior-preserving)
+
+Small polish done alongside 16a/16b:
+
+- **`SPRITE_EFFECTS` const** — `SpriteEffect` is now derived from a `const SPRITE_EFFECTS = {…} as const`
+  object (in `eventPokemonTypes.ts`, re-exported from `eventPokemon.ts`); the resolver and
+  `PokemonImage` reference `SPRITE_EFFECTS.DYNAMAX` etc. instead of bare string literals.
+- **Dispatcher rewritten as a lookup table** — `getEventPokemonImages` replaced its ~50-line
+  `if/return` chain with an `eventType → resolver` record (`IMAGE_RESOLVERS`) plus a single explicit
+  spotlight-sub-event fallback and one `applyEventEffect` tail call. Behavior identical (the
+  `null`-fallthrough is preserved: a spotlight sub-event's primary resolver declines for lack of boss
+  data, then the fallback runs the spotlight resolver).
+- **`PLACEHOLDER_EVENT_TYPES`** lifted out of the `shouldShowPlaceholder` computed body to a
+  module-level const (was re-allocated per evaluation).
+- **`useEventTooltip` naming** — dropped the do-nothing `spriteEffectFor` passthrough; grouped-event
+  bindings call `getEventSpriteEffect` directly.
 
 ---
 

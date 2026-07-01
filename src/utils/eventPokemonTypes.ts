@@ -6,10 +6,21 @@ export interface PokemonImageOptions {
     excludeTiers?: string[];
 }
 
+// Visual overlay applied to a resolved sprite. Owned by the resolver/dispatcher layer so the
+// rendering component doesn't re-derive it from the event title.
+export const SPRITE_EFFECTS = {
+    DYNAMAX: 'dynamax',
+    GIGANTAMAX: 'gigantamax',
+    SHADOW: 'shadow',
+} as const;
+
+export type SpriteEffect = (typeof SPRITE_EFFECTS)[keyof typeof SPRITE_EFFECTS];
+
 export interface PokemonImageData {
     name: string;
     imageUrl: string | null;
     fallbackImageUrl?: string | null;
+    effect?: SpriteEffect;
 }
 
 // A PogoEvent guaranteed to carry `extraData`. The entry point narrows to this (via `hasExtraData`)

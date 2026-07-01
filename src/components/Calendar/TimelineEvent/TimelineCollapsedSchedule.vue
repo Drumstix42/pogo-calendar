@@ -12,7 +12,7 @@
                     :show-tooltip="true"
                     :show-c-p="false"
                     :event-type="eventType"
-                    :is-shadow="isShadow"
+                    :effect="effect"
                 />
             </div>
         </div>
@@ -20,6 +20,7 @@
 </template>
 
 <script setup lang="ts">
+import { type SpriteEffect } from '@/utils/eventPokemon';
 import { type EventTypeKey } from '@/utils/eventTypes';
 import { type CollapsedScheduleDayGroup } from '@/utils/timelineSchedule';
 
@@ -28,7 +29,7 @@ import PokemonImage from '@/components/Calendar/PokemonImage.vue';
 interface Props {
     dayGroups: CollapsedScheduleDayGroup[] | undefined;
     eventType: EventTypeKey;
-    isShadow: boolean;
+    effect?: SpriteEffect;
 }
 
 defineProps<Props>();

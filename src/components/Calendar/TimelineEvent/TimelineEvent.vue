@@ -61,7 +61,6 @@
                     <PokemonEventImages
                         v-if="showInlinePokemonImages"
                         :event="event"
-                        :event-name="formatEventName(event.name)"
                         :height="40"
                         :use-animated="props.isActive ? true : false"
                         :show-placeholder="true"
@@ -75,7 +74,7 @@
                         v-else-if="showCollapsedScheduleDays"
                         :day-groups="collapsedScheduleDayGroups"
                         :event-type="event.eventType"
-                        :is-shadow="isShadowRaid"
+                        :effect="spriteEffect"
                     />
                 </div>
 
@@ -91,7 +90,7 @@
                     :day-sections="timelineScheduleDaySectionsWithTierGroups"
                     :default-tier-groups="defaultTierGroupsWithImages"
                     :event-type="event.eventType"
-                    :is-shadow="isShadowRaid"
+                    :effect="spriteEffect"
                 />
             </div>
 
@@ -155,7 +154,7 @@ const {
     parentEventName,
     pokemonCount,
     collapsedScheduleDayGroups,
-    isShadowRaid,
+    spriteEffect,
     defaultTierGroupsWithImages,
     timelineScheduleDaySectionsWithTierGroups,
     showCollapsedScheduleDays,

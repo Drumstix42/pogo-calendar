@@ -41,21 +41,10 @@
                     v-if="calendarSettings.useMultiDayEventSprites && !isMajorCalendarEventType(event.eventType) && shouldShowMultiDaySprites(event)"
                 >
                     <template v-if="calendarSettings.groupSimilarEvents && hasGroupedEvents(event)">
-                        <PokemonEventImages
-                            :event="event"
-                            :event-name="formatEventName(event.name)"
-                            :height="iconHeight"
-                            :limit="2"
-                            :exclude-tiers="['Tier 1', 'Tier 3']"
-                        />
+                        <PokemonEventImages :event="event" :height="iconHeight" :limit="2" :exclude-tiers="['Tier 1', 'Tier 3']" />
                     </template>
                     <template v-else>
-                        <PokemonEventImages
-                            :event="event"
-                            :event-name="getEventDisplayName(event)"
-                            :height="iconHeight"
-                            :exclude-tiers="['Tier 1', 'Tier 3']"
-                        />
+                        <PokemonEventImages :event="event" :height="iconHeight" :exclude-tiers="['Tier 1', 'Tier 3']" />
                     </template>
                 </template>
 
@@ -81,7 +70,6 @@ import { useEventsStore } from '@/stores/events';
 import { getEventCount, getEventDisplayName, shouldShowBadge, shouldShowMultiDaySprites } from '@/utils/eventDisplay';
 import { hasGroupedEvents } from '@/utils/eventGrouping';
 import { isMajorCalendarEventType } from '@/utils/eventMajor';
-import { formatEventName } from '@/utils/eventName';
 import { type PogoEvent } from '@/utils/eventTypes';
 
 import EventTooltip from '@/components/Calendar/EventTooltip/EventTooltip.vue';

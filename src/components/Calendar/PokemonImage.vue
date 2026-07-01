@@ -4,16 +4,16 @@
             <div
                 class="pokemon-container"
                 :class="{
-                    'has-dynamax-overlay': isDynamax,
-                    'has-shadow-effect': isShadow,
-                    'has-gigantamax-effect': isGigantamax,
+                    'has-dynamax-overlay': resolvedEffect === SPRITE_EFFECTS.DYNAMAX,
+                    'has-shadow-effect': resolvedEffect === SPRITE_EFFECTS.SHADOW,
+                    'has-gigantamax-effect': resolvedEffect === SPRITE_EFFECTS.GIGANTAMAX,
                     'placeholder-container': isPlaceholder || !currentImageSrc,
                 }"
             >
-                <div v-if="isDynamax" class="dynamax-overlay" :class="{ animated: useAnimated }">
+                <div v-if="resolvedEffect === SPRITE_EFFECTS.DYNAMAX" class="dynamax-overlay" :class="{ animated: useAnimated }">
                     <img src="/images/overlay/dynamax-clouds.png" alt="Dynamax effect" class="dynamax-clouds" />
                 </div>
-                <div v-if="isShadow" class="shadow-overlay" :class="{ animated: useAnimated }">
+                <div v-if="resolvedEffect === SPRITE_EFFECTS.SHADOW" class="shadow-overlay" :class="{ animated: useAnimated }">
                     <img src="/images/overlay/shadow-aura.png" alt="Shadow effect" class="shadow-aura" />
                 </div>
 
@@ -57,7 +57,8 @@
 import { BadgeQuestionMark, CircleHelpIcon } from '@lucide/vue';
 import { computed, ref, watch } from 'vue';
 
-import type { PokemonImageData } from '@/utils/eventPokemon';
+import { SPRITE_EFFECTS } from '@/utils/eventPokemon';
+import type { PokemonImageData, SpriteEffect } from '@/utils/eventPokemon';
 import { getSprite256FallbackUrl, getSpriteFallbackUrl } from '@/utils/pokemonMapper';
 
 import PokemonCPBadge from './PokemonCPBadge.vue';
@@ -71,9 +72,12 @@ interface Props {
     eventType: string;
     isRaidHourSubEvent?: boolean;
     isSpotlightSubEvent?: boolean;
-    isDynamax?: boolean;
-    isShadow?: boolean;
-    isGigantamax?: boolean;
+    /**
+     * Overlay for this sprite. `pokemonData.effect` (per-sprite, from the resolver) takes precedence;
+     * this prop is the event-level fallback for callers whose image data doesn't carry one (raid tier
+     * groups, placeholder).
+     */
+    effect?: SpriteEffect;
     isPlaceholder?: boolean;
 }
 
@@ -85,13 +89,14 @@ const props = withDefaults(defineProps<Props>(), {
     showCP: false,
     isRaidHourSubEvent: false,
     isSpotlightSubEvent: false,
-    isDynamax: false,
-    isShadow: false,
-    isGigantamax: false,
+    effect: undefined,
     isPlaceholder: false,
 });
 
 const errorLevel = ref(0);
+
+// Per-sprite effect wins; fall back to the event-level prop.
+const resolvedEffect = computed(() => props.pokemonData?.effect ?? props.effect);
 
 const altFolderUrl = computed(() => {
     const url = props.pokemonData?.imageUrl;

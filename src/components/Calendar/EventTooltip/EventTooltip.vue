@@ -33,7 +33,6 @@
                         <PokemonEventImages
                             v-if="!getTierGroupsWithImagesForEvent(groupedEvent)"
                             :event="groupedEvent"
-                            :event-name="formatEventName(groupedEvent.name)"
                             :height="50"
                             :use-animated="calendarSettings.useAnimatedImages"
                             :show-tooltips="true"
@@ -48,7 +47,7 @@
                                 :target-day-name="scheduleTargetDayName"
                                 :height="50"
                                 :event-type="groupedEvent.eventType"
-                                :is-shadow="isShadowRaidEvent(groupedEvent)"
+                                :effect="getEventSpriteEffect(groupedEvent)"
                                 :use-animated="calendarSettings.useAnimatedImages"
                             />
                         </div>
@@ -58,7 +57,7 @@
                                 :groups="getTierGroupsWithImagesForEvent(groupedEvent)"
                                 :height="50"
                                 :event-type="groupedEvent.eventType"
-                                :is-shadow="isShadowRaidEvent(groupedEvent)"
+                                :effect="getEventSpriteEffect(groupedEvent)"
                                 :use-animated="calendarSettings.useAnimatedImages"
                             />
                         </div>
@@ -79,7 +78,6 @@
                     <PokemonEventImages
                         v-if="!tierGroupsWithImages"
                         :event="event"
-                        :event-name="formatEventName(event.name)"
                         :height="60"
                         :use-animated="calendarSettings.useAnimatedImages"
                         :show-placeholder="isSingleDay"
@@ -104,7 +102,7 @@
                         label-mode="plain"
                         :height="60"
                         :event-type="event.eventType"
-                        :is-shadow="isShadowRaid"
+                        :effect="spriteEffect"
                         :use-animated="calendarSettings.useAnimatedImages"
                     />
                 </div>
@@ -117,7 +115,7 @@
                     :target-day-name="scheduleTargetDayName"
                     :height="60"
                     :event-type="event.eventType"
-                    :is-shadow="isShadowRaid"
+                    :effect="spriteEffect"
                     :use-animated="calendarSettings.useAnimatedImages"
                 />
             </div>
@@ -127,7 +125,7 @@
                     :groups="tierGroupsWithImages"
                     :height="60"
                     :event-type="event.eventType"
-                    :is-shadow="isShadowRaid"
+                    :effect="spriteEffect"
                     :use-animated="calendarSettings.useAnimatedImages"
                 />
             </div>
@@ -155,6 +153,7 @@ import { useEventTooltip } from '@/composables/useEventTooltip';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { getGroupedEvents } from '@/utils/eventGrouping';
 import { formatEventName } from '@/utils/eventName';
+import { getEventSpriteEffect } from '@/utils/eventPokemon';
 import { type PogoEvent } from '@/utils/eventTypes';
 
 import EventExtras from '../EventExtras/EventExtras.vue';
@@ -187,9 +186,8 @@ const {
     getTierGroupsWithImagesForEvent,
     getScheduleSectionsWithTierGroupsForEvent,
     scheduleDaySectionsWithTierGroups,
-    isShadowRaidEvent,
     getMajorTooltipClass,
-    isShadowRaid,
+    spriteEffect,
     tierGroupsWithImages,
     scheduleSectionsWithTierGroups,
     scheduleTargetDayName,

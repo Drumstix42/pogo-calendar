@@ -5,6 +5,7 @@ import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { useEventsStore } from '@/stores/events';
 import { type MajorCalendarEventVariant, getMajorCalendarEventVariant, isMajorCalendarEventType } from '@/utils/eventMajor';
 import { formatEventName } from '@/utils/eventName';
+import { getEventSpriteEffect } from '@/utils/eventPokemon';
 import { getRaidScheduleBossesForDate, getRaidScheduleSectionsForDate } from '@/utils/eventRaidHours';
 import { getRaidSubType, isEventWithSubtype } from '@/utils/eventSubtype';
 import { buildFullRaidScheduleDaySections } from '@/utils/eventTooltipSchedule';
@@ -96,10 +97,6 @@ export function useEventTooltip(props: UseEventTooltipOptions) {
         return buildFullRaidScheduleDaySections(props.event, calendarSettings.useAnimatedImages);
     });
 
-    function isShadowRaidEvent(event: PogoEvent) {
-        return getRaidSubType(event) === 'shadow-raids';
-    }
-
     function isMajorEvent(event: PogoEvent) {
         return isMajorCalendarEventType(event.eventType);
     }
@@ -124,9 +121,7 @@ export function useEventTooltip(props: UseEventTooltipOptions) {
         };
     }
 
-    const isShadowRaid = computed(() => {
-        return isShadowRaidEvent(props.event);
-    });
+    const spriteEffect = computed(() => getEventSpriteEffect(props.event));
 
     const tierGroupsWithImages = computed(() => {
         return getTierGroupsWithImagesForEvent(props.event);
@@ -151,9 +146,8 @@ export function useEventTooltip(props: UseEventTooltipOptions) {
         getTierGroupsWithImagesForEvent,
         getScheduleSectionsWithTierGroupsForEvent,
         scheduleDaySectionsWithTierGroups,
-        isShadowRaidEvent,
         getMajorTooltipClass,
-        isShadowRaid,
+        spriteEffect,
         tierGroupsWithImages,
         scheduleSectionsWithTierGroups,
         scheduleTargetDayName,

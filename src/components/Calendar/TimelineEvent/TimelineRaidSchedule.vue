@@ -10,18 +10,19 @@
                     <span v-if="section.time" class="schedule-time">{{ section.time }}</span>
                 </div>
 
-                <RaidTierGroupImages :groups="section.tierGroups" :height="60" :event-type="eventType" :is-shadow="isShadow" :use-animated="true" />
+                <RaidTierGroupImages :groups="section.tierGroups" :height="60" :event-type="eventType" :effect="effect" :use-animated="true" />
             </div>
         </div>
     </div>
 
     <!-- Fallback raid boss tier groups -->
     <div v-else-if="defaultTierGroups" class="raid-boss-tiers">
-        <RaidTierGroupImages :groups="defaultTierGroups" :height="60" :event-type="eventType" :is-shadow="isShadow" :use-animated="true" />
+        <RaidTierGroupImages :groups="defaultTierGroups" :height="60" :event-type="eventType" :effect="effect" :use-animated="true" />
     </div>
 </template>
 
 <script setup lang="ts">
+import { type SpriteEffect } from '@/utils/eventPokemon';
 import { type EventTypeKey } from '@/utils/eventTypes';
 import { type RaidTierGroupWithImages } from '@/utils/raidTierGroups';
 import { type TimelineScheduleDaySection } from '@/utils/timelineSchedule';
@@ -32,7 +33,7 @@ interface Props {
     daySections: TimelineScheduleDaySection[] | undefined;
     defaultTierGroups: RaidTierGroupWithImages[] | null;
     eventType: EventTypeKey;
-    isShadow: boolean;
+    effect?: SpriteEffect;
 }
 
 defineProps<Props>();

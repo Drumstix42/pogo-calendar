@@ -9,15 +9,29 @@ import {
     parseGigantamaxMaxBattleName,
     parsePokemonNameAndSuffix,
 } from './eventPokemonNames';
-import type { EventWithExtraData, PokemonImageData, PokemonImageOptions } from './eventPokemonTypes';
+import { SPRITE_EFFECTS } from './eventPokemonTypes';
+import type { EventWithExtraData, PokemonImageData, PokemonImageOptions, SpriteEffect } from './eventPokemonTypes';
 import { getPokemonImagesFromBosses, getRaidBossesWithTierFallback, getSpriteImagesFromNames, getSpriteUrl } from './eventSprite';
 import { getRaidSubType } from './eventSubtype';
+import { type PogoEvent } from './eventTypes';
 import { getPokemonId } from './pokemonMapper.ts';
 import { GIGANTAMAX_POKEMON_IDS } from '@/constants/validGigantamaxSprites.ts';
 
 // Each resolver maps one event-type branch to its Pokemon images, returning `null` to signal
 // "this branch produced nothing — fall through to the next" (preserving getEventPokemonImages'
 // original ordered fall-through). An empty array is a deliberate result and stops the dispatch.
+
+// Event-level sprite effect, derived from the event (not a caller-supplied display string). The
+// dispatcher applies this to resolved images that don't already carry a per-sprite effect, and the
+// rendering component reads it for its placeholder (which has no image to carry one). Gigantamax is
+// deliberately absent: it's asset-dependent per Pokemon, so `resolveMaxBattleImages` stamps it
+// per-sprite instead (a named Pokemon with no Gigantamax asset gets a plain sprite, no overlay).
+export function getEventSpriteEffect(event: PogoEvent): SpriteEffect | undefined {
+    if (getRaidSubType(event) === 'shadow-raids') return SPRITE_EFFECTS.SHADOW;
+    if (event.eventType === 'max-mondays') return SPRITE_EFFECTS.DYNAMAX;
+    if (event.eventType === 'max-battles' && parseDynamaxMaxBattleName(formatEventName(event.name))) return SPRITE_EFFECTS.DYNAMAX;
+    return undefined;
+}
 
 const RAID_DAY_TITLE_EXCEPTIONS = new Set(['fashion raid day']);
 
@@ -202,50 +216,62 @@ export function resolveCommunityDayImages(event: EventWithExtraData, options?: P
     return images.length > 0 ? images : null;
 }
 
+// Resolve a single Gigantamax-named Pokemon to its sprite. Returns a Gmax sprite (stamped with the
+// `gigantamax` effect) when a Gmax asset exists for the Pokemon; otherwise falls back to the plain
+// sprite with no effect, so events naming a mix of Gmax and non-Gmax Pokemon render correctly.
+function resolveGigantamaxImage(pokemonName: string, options?: PokemonImageOptions): PokemonImageData {
+    // Extract base Pokemon name for ID lookup (e.g., "Toxtricity Low Key" → "Toxtricity")
+    const normalizedName = pokemonName.toLowerCase().replace(/\s+/g, '-');
+    let basePokemonName = pokemonName;
+    let matchedFormFilename: string | null = null;
+
+    // Check each Pokemon with form variants
+    for (const formVariant of Object.values(GMAX_FORM_VARIANTS)) {
+        const matchedForm = Object.entries(formVariant.patterns).find(([pattern]) => normalizedName.includes(pattern));
+
+        if (matchedForm) {
+            // Found a form match - extract base name by removing the form text
+            // Handle various formats: "Toxtricity Low Key", "Toxtricity (Low Key)", "Toxtricity (Low Key Form)"
+            basePokemonName = pokemonName.replace(/[\s(]+(low[\s-]?key|single[\s-]?strike|rapid[\s-]?strike)[\s)]*(?:form)?[\s)]*/gi, '').trim();
+            matchedFormFilename = matchedForm[1];
+            break;
+        }
+    }
+
+    const pokemonId = getPokemonId(basePokemonName);
+
+    // Check if we have a Gigantamax sprite for this Pokemon
+    if (pokemonId && GIGANTAMAX_POKEMON_IDS.has(pokemonId)) {
+        let gmaxFilename: string;
+
+        // Use the matched form filename if found, otherwise check for default form
+        if (matchedFormFilename) {
+            gmaxFilename = matchedFormFilename;
+        } else {
+            const formVariant = GMAX_FORM_VARIANTS[pokemonId];
+            gmaxFilename = formVariant ? formVariant.default : `${String(pokemonId).padStart(3, '0')}-Gmax.png`;
+        }
+
+        const gmaxUrl = `https://raw.githubusercontent.com/HybridShivam/Pokemon/master/assets/images/${gmaxFilename}`;
+        return { name: `Gigantamax ${pokemonName}`, imageUrl: gmaxUrl, effect: SPRITE_EFFECTS.GIGANTAMAX };
+    }
+
+    // No Gigantamax asset for this Pokemon - fall back to its plain sprite (no overlay).
+    const parsed = parsePokemonNameAndSuffix(pokemonName);
+    const spriteUrl = parsed ? getSpriteUrl(parsed.pokemonName, parsed.suffix, options) : null;
+    return { name: pokemonName, imageUrl: spriteUrl };
+}
+
 // Max battles - Gigantamax/Dynamax title patterns, then the main event image.
 export function resolveMaxBattleImages(event: EventWithExtraData, options?: PokemonImageOptions): PokemonImageData[] | null {
     const eventName = formatEventName(event.name);
 
-    // Check for Gigantamax Pokemon pattern: "Gigantamax <Pokemon Name> Max Battle Day"
+    // Gigantamax pattern: "Gigantamax <Pokemon Name(s)> Max Battle Day" (may name multiple Pokemon).
     const gigantamaxName = parseGigantamaxMaxBattleName(eventName);
     if (gigantamaxName) {
-        const pokemonName = gigantamaxName;
-
-        // Extract base Pokemon name for ID lookup (e.g., "Toxtricity Low Key" → "Toxtricity")
-        // Try to match known form patterns first
-        const normalizedName = pokemonName.toLowerCase().replace(/\s+/g, '-');
-        let basePokemonName = pokemonName;
-        let matchedFormFilename: string | null = null;
-
-        // Check each Pokemon with form variants
-        for (const formVariant of Object.values(GMAX_FORM_VARIANTS)) {
-            const matchedForm = Object.entries(formVariant.patterns).find(([pattern]) => normalizedName.includes(pattern));
-
-            if (matchedForm) {
-                // Found a form match - extract base name by removing the form text
-                // Handle various formats: "Toxtricity Low Key", "Toxtricity (Low Key)", "Toxtricity (Low Key Form)"
-                basePokemonName = pokemonName.replace(/[\s(]+(low[\s-]?key|single[\s-]?strike|rapid[\s-]?strike)[\s)]*(?:form)?[\s)]*/gi, '').trim();
-                matchedFormFilename = matchedForm[1];
-                break;
-            }
-        }
-
-        const pokemonId = getPokemonId(basePokemonName);
-
-        // Check if we have a Gigantamax sprite for this Pokemon
-        if (pokemonId && GIGANTAMAX_POKEMON_IDS.has(pokemonId)) {
-            let gmaxFilename: string;
-
-            // Use the matched form filename if found, otherwise check for default form
-            if (matchedFormFilename) {
-                gmaxFilename = matchedFormFilename;
-            } else {
-                const formVariant = GMAX_FORM_VARIANTS[pokemonId];
-                gmaxFilename = formVariant ? formVariant.default : `${String(pokemonId).padStart(3, '0')}-Gmax.png`;
-            }
-
-            const gmaxUrl = `https://raw.githubusercontent.com/HybridShivam/Pokemon/master/assets/images/${gmaxFilename}`;
-            return [{ name: `Gigantamax ${pokemonName}`, imageUrl: gmaxUrl }];
+        const images = parseEventPokemonNames(gigantamaxName).map(name => resolveGigantamaxImage(name, options));
+        if (images.length > 0) {
+            return images;
         }
     }
 
