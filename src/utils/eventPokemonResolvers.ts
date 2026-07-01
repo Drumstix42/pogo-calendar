@@ -4,7 +4,9 @@ import {
     extractPokemonNameFromRaidBattle,
     extractPokemonNamesFromRaidHour,
     extractPokemonNamesFromSpotlightHour,
+    parseDynamaxMaxBattleName,
     parseEventPokemonNames,
+    parseGigantamaxMaxBattleName,
     parsePokemonNameAndSuffix,
 } from './eventPokemonNames';
 import type { EventWithExtraData, PokemonImageData, PokemonImageOptions } from './eventPokemonTypes';
@@ -205,9 +207,9 @@ export function resolveMaxBattleImages(event: EventWithExtraData, options?: Poke
     const eventName = formatEventName(event.name);
 
     // Check for Gigantamax Pokemon pattern: "Gigantamax <Pokemon Name> Max Battle Day"
-    const gigantamaxMatch = eventName.match(/^Gigantamax\s+(.+?)\s+Max\s+Battle\s+Day$/i);
-    if (gigantamaxMatch) {
-        const pokemonName = gigantamaxMatch[1].trim();
+    const gigantamaxName = parseGigantamaxMaxBattleName(eventName);
+    if (gigantamaxName) {
+        const pokemonName = gigantamaxName;
 
         // Extract base Pokemon name for ID lookup (e.g., "Toxtricity Low Key" → "Toxtricity")
         // Try to match known form patterns first
@@ -248,11 +250,10 @@ export function resolveMaxBattleImages(event: EventWithExtraData, options?: Poke
     }
 
     // Check for regular Dynamax pattern: "Dynamax <Pokemon> Max Battle Weekend/Day"
-    const dynamaxMatch = eventName.match(/^Dynamax\s+(.+?)\s+Max\s+Battle\s+(?:Weekend|Day)$/i);
-    if (dynamaxMatch) {
-        const pokemonName = dynamaxMatch[1].trim();
-        const spriteUrl = getSpriteUrl(pokemonName, undefined, options);
-        return [{ name: pokemonName, imageUrl: spriteUrl }];
+    const dynamaxName = parseDynamaxMaxBattleName(eventName);
+    if (dynamaxName) {
+        const spriteUrl = getSpriteUrl(dynamaxName, undefined, options);
+        return [{ name: dynamaxName, imageUrl: spriteUrl }];
     }
 
     // Fallback to event image if available (e.g., "Max Battle Weekend" with no specific Pokemon)

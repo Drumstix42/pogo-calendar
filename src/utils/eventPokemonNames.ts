@@ -72,6 +72,21 @@ export function extractPokemonNameFromMaxMonday(eventName: string): string | nul
     return match ? match[1].trim() : null;
 }
 
+// Single source of truth for the max-battle title patterns. Returns the captured Pokemon name
+// (e.g. "Toxtricity Low Key") for a matching title, else null. Shared by the max-battle image
+// resolver and the component's Dynamax/Gigantamax effect flags.
+export function parseGigantamaxMaxBattleName(eventName: string): string | null {
+    // Pattern: "Gigantamax <Pokemon Name> Max Battle Day"
+    const match = eventName.match(/^Gigantamax\s+(.+?)\s+Max\s+Battle\s+Day$/i);
+    return match ? match[1].trim() : null;
+}
+
+export function parseDynamaxMaxBattleName(eventName: string): string | null {
+    // Pattern: "Dynamax <Pokemon Name> Max Battle Weekend/Day"
+    const match = eventName.match(/^Dynamax\s+(.+?)\s+Max\s+Battle\s+(?:Weekend|Day)$/i);
+    return match ? match[1].trim() : null;
+}
+
 export function extractPokemonNamesFromSpotlightHour(eventName: string): string[] {
     const decodedEventName = formatEventName(eventName);
 

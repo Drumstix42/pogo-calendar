@@ -134,7 +134,7 @@ remaining large files. Same recipe + verification protocol apply.
 | --- | ------------------------------------------------------------------------ | ---------------------- | ------ | ---------------------------- | -------- |
 | 14  | [CalendarGrid.vue](src/components/Calendar/CalendarGrid.vue)             | 344 / ~270 / ~40       | ✅     | 57 (orchestrator); see notes | P2       |
 | 15  | [stores/events.ts](src/stores/events.ts)                                 | 424                    | ✅     | 308 (store); see notes       | P3       |
-| 16  | [PokemonEventImages.vue](src/components/Calendar/PokemonEventImages.vue) | 246 / ~123 / ~75       | ⬜     | —                            | P4       |
+| 16  | [PokemonEventImages.vue](src/components/Calendar/PokemonEventImages.vue) | 246 / ~123 / ~75       | ✅     | 232; see notes               | P4       |
 
 **Explicitly out of scope** (large but they're data, not logic — leave alone unless asked):
 `constants/pokemonFormMap.ts`, `constants/validAnimatedSprites.ts`, `constants/validStaticSprites.ts`,
@@ -856,6 +856,33 @@ enabled)` (the representative-event grouping, verbatim move). The store's `proce
   gigantamax effect (Gigantamax max-battles), shadow effect (shadow raids); "+more" indicator and the
   overflow badge (tier-exclusion path + mobile path) with left/right alignment; placeholder. Light +
   dark, mobile + desktop.
+- **Realized split** (PokemonEventImages.vue 246 → **232 lines**; two small in-place seams, no new
+  component/composable — the remaining computeds are tightly bound to `props`/breakpoints and don't
+  lift cleanly, and the file was already under the ~300 soft target, so sharding for line-count alone
+  was avoided). No template/CSS change; behavior-preserving.
+    - **Max-battle title classification deduped into the names layer:** added
+      `parseGigantamaxMaxBattleName(name)` / `parseDynamaxMaxBattleName(name)` to
+      [eventPokemonNames.ts](src/utils/eventPokemonNames.ts) (single source of truth for the two
+      `Max Battle` title regexes, beside the existing `extractPokemonNameFromMaxMonday`). Adopted by
+      **both** the component's `showDynamaxOverlay`/`showGigantamaxEffect` flags **and**
+      [resolveMaxBattleImages()](src/utils/eventPokemonResolvers.ts), replacing the byte-identical
+      inline regexes that were duplicated across the two files.
+    - **Overflow expression collapsed:** the byte-identical tier-exclusion-overflow block that opened
+      both `showOverflowBadge` and `overflowBadgeCount` is now one `hasTierExclusionOverflow` computed
+      consumed by both.
+- **Behavior preservation (input strings unchanged):** the component classifies effects from
+  `props.eventName` (the _display_ name — callers pass `formatEventName(event.name)`, except
+  `SingleDayEvent` passes `displayName` and `MultiDayEventBar`'s ungrouped branch passes
+  `getEventDisplayName(event)`), while the resolver parses `formatEventName(event.name)` (the _raw_
+  name). Only the regex/matcher was shared — each call site still passes its original string, so
+  output is identical.
+- **Findings:**
+    - **Latent inconsistency (pre-existing, not changed):** the Dynamax/Gigantamax overlay is
+      classified from the _display_ name while the sprite is chosen from the _raw_ name — for grouped
+      events these could theoretically diverge. Sharing the matcher doesn't change which string each
+      side passes; flagged only.
+    - **Hardcoded `relevantEventTypes` list** in `shouldShowPlaceholder` overlaps the dispatcher's
+      event-type branches — possible future drift; left as-is.
 
 ---
 

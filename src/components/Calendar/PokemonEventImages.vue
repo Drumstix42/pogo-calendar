@@ -48,6 +48,7 @@ import { breakpointsBootstrapV5, useBreakpoints } from '@vueuse/core';
 import { computed } from 'vue';
 
 import { type PokemonImageData, getEventPokemonImages } from '@/utils/eventPokemon';
+import { parseDynamaxMaxBattleName, parseGigantamaxMaxBattleName } from '@/utils/eventPokemonNames';
 import { getRaidSubType } from '@/utils/eventSubtype';
 import { type PogoEvent } from '@/utils/eventTypes';
 
@@ -115,10 +116,7 @@ const showDynamaxOverlay = computed(() => {
 
     // For max-battles, only show if it's a regular Dynamax (not Gigantamax)
     if (props.event.eventType === 'max-battles') {
-        const eventName = props.eventName;
-        const gigantamaxMatch = eventName.match(/^Gigantamax\s+(.+?)\s+Max\s+Battle\s+Day$/i);
-        const dynamaxMatch = eventName.match(/^Dynamax\s+(.+?)\s+Max\s+Battle\s+(?:Weekend|Day)$/i);
-        return dynamaxMatch !== null && gigantamaxMatch === null;
+        return parseDynamaxMaxBattleName(props.eventName) !== null && parseGigantamaxMaxBattleName(props.eventName) === null;
     }
 
     return false;
@@ -127,20 +125,20 @@ const showShadowEffect = computed(() => getRaidSubType(props.event) === 'shadow-
 const showGigantamaxEffect = computed(() => {
     if (props.event.eventType !== 'max-battles') return false;
 
-    const eventName = props.eventName;
-    const gigantamaxMatch = eventName.match(/^Gigantamax\s+(.+?)\s+Max\s+Battle\s+Day$/i);
-    return gigantamaxMatch !== null;
+    return parseGigantamaxMaxBattleName(props.eventName) !== null;
+});
+
+// True when tier exclusions are actively hiding raid bosses from the rendered set.
+const hasTierExclusionOverflow = computed(() => {
+    const totalRaidBosses = props.event.extraData?.raidbattles?.bosses?.length ?? 0;
+    return (
+        totalRaidBosses > pokemonImages.value.length && Boolean(props.excludeTiers && props.excludeTiers.length > 0) && pokemonImages.value.length > 0
+    );
 });
 
 const showOverflowBadge = computed(() => {
-    const totalRaidBosses = props.event.extraData?.raidbattles?.bosses?.length ?? 0;
-    const hasTierExclusionOverflow =
-        totalRaidBosses > pokemonImages.value.length &&
-        Boolean(props.excludeTiers && props.excludeTiers.length > 0) &&
-        pokemonImages.value.length > 0;
-
     // Always show when tier exclusions are actively hiding raid bosses.
-    if (hasTierExclusionOverflow) return true;
+    if (hasTierExclusionOverflow.value) return true;
 
     // Otherwise only show if explicitly enabled via prop.
     if (!props.showOverflowCounter) return false;
@@ -153,15 +151,9 @@ const showOverflowBadge = computed(() => {
 });
 
 const overflowBadgeCount = computed(() => {
-    const totalRaidBosses = props.event.extraData?.raidbattles?.bosses?.length ?? 0;
-    const hasTierExclusionOverflow =
-        totalRaidBosses > pokemonImages.value.length &&
-        Boolean(props.excludeTiers && props.excludeTiers.length > 0) &&
-        pokemonImages.value.length > 0;
-
     // For tier-based overflow, show total available bosses so hidden count is implied.
-    if (hasTierExclusionOverflow) {
-        return totalRaidBosses;
+    if (hasTierExclusionOverflow.value) {
+        return props.event.extraData?.raidbattles?.bosses?.length ?? 0;
     }
 
     return displayedImages.value.length;
