@@ -137,6 +137,8 @@ export interface PogoEvent {
         // Plain-text bonus lines for generated raid-hour sub-events (distinct from `bonuses`).
         raidHourBonuses?: string[];
         isRaidHourSubEvent?: boolean;
+        isSpotlightSubEvent?: boolean;
+        parentEventId?: string;
         [key: string]: any;
     };
 

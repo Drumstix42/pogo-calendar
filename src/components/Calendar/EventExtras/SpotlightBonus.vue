@@ -13,6 +13,7 @@ import { computed } from 'vue';
 
 import { useEventTypeColorsStore } from '@/stores/eventTypeColors';
 import { type PogoEvent } from '@/utils/eventTypes';
+import { getSpotlightBonusInfo, getSpotlightBonusTypeIcon } from '@/utils/spotlightBonus';
 
 interface Props {
     event: PogoEvent;
@@ -33,21 +34,8 @@ const bonus = computed(() => {
 });
 
 const bonusIcon = computed(() => {
-    if (!bonus.value) return null;
-
-    const text = bonus.value;
-
-    if (/xp/i.test(text)) {
-        return '/images/icons/xp.png';
-    }
-    if (/stardust/i.test(text)) {
-        return '/images/icons/stardust.png';
-    }
-    if (/candy/i.test(text)) {
-        return '/images/icons/candy.png';
-    }
-
-    return null;
+    const info = getSpotlightBonusInfo(props.event);
+    return info ? getSpotlightBonusTypeIcon(info.bonusType) : null;
 });
 </script>
 

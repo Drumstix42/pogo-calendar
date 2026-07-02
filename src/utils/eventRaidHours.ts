@@ -26,6 +26,11 @@ export function parseRaidScheduleDate(dateString: string, parentEventStart: stri
         const dateStr = `${month} ${day}, ${parentYear}`;
         const parsed = dayjs(dateStr, 'MMMM D, YYYY');
         if (parsed.isValid()) {
+            // If the date falls before the event start, the schedule crosses a year boundary (e.g. Dec→Jan)
+            if (parsed.isBefore(parentStart, 'day')) {
+                const nextYear = dayjs(`${month} ${day}, ${parentYear + 1}`, 'MMMM D, YYYY');
+                if (nextYear.isValid()) return nextYear;
+            }
             return parsed;
         }
     }
@@ -48,7 +53,7 @@ export function parseRaidScheduleDate(dateString: string, parentEventStart: stri
         if (targetDayNum !== undefined) {
             // Find the first occurrence of this day within the event range
             let current = parentStart.startOf('day');
-            const maxSearchDays = 7; // Assume event is within 7 days
+            const maxSearchDays = parentEnd.diff(parentStart, 'day') + 2;
 
             for (let i = 0; i < maxSearchDays; i++) {
                 if (current.day() === targetDayNum && current.isSameOrBefore(parentEnd)) {
@@ -66,6 +71,10 @@ export function parseRaidScheduleDate(dateString: string, parentEventStart: stri
         const dateStr = `${month} ${day}, ${parentYear}`;
         const parsed = dayjs(dateStr, 'MMMM D, YYYY');
         if (parsed.isValid()) {
+            if (parsed.isBefore(parentStart, 'day')) {
+                const nextYear = dayjs(`${month} ${day}, ${parentYear + 1}`, 'MMMM D, YYYY');
+                if (nextYear.isValid()) return nextYear;
+            }
             return parsed;
         }
     }

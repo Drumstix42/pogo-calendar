@@ -27,7 +27,7 @@ export function useCalendarDayLayout(getDayInstance: () => Dayjs, getEventSlots:
     const multiDayEventIconHeight = computed(() => multiDayEventBarHeight.value - 2);
 
     // calculate week boundaries based on configured first day
-    const getWeekBoundaries = (referenceDay: Dayjs) => {
+    function getWeekBoundaries(referenceDay: Dayjs) {
         const firstDayIndex = calendarSettings.firstDayIndex;
 
         // Find the start of the week for this day
@@ -39,7 +39,7 @@ export function useCalendarDayLayout(getDayInstance: () => Dayjs, getEventSlots:
         const weekEnd = weekStart.add(6, 'day');
 
         return { weekStart, weekEnd };
-    };
+    }
 
     // Compact slot assignments for this specific week to remove gaps
     const weekCompactSlots = computed(() => {
@@ -116,19 +116,19 @@ export function useCalendarDayLayout(getDayInstance: () => Dayjs, getEventSlots:
         return (maxCompactIndex + 1) * (multiDayEventBarHeight.value + MULTI_DAY_EVENT_BAR_MARGIN);
     });
 
-    const getEventSlotData = (event: PogoEvent) => {
+    function getEventSlotData(event: PogoEvent) {
         return getEventSlots().find(slot => slot.event.eventID === event.eventID);
-    };
+    }
 
-    const getEventSlotTop = (event: PogoEvent): number => {
+    function getEventSlotTop(event: PogoEvent) {
         const compactSlot = weekCompactSlots.value.get(event.eventID);
         if (!compactSlot) return 0;
 
         // Uses height + margin to calculate the top position
         return compactSlot.compactSlotIndex * (multiDayEventBarHeight.value + MULTI_DAY_EVENT_BAR_MARGIN);
-    };
+    }
 
-    const getMultiDayEventBarClass = (event: PogoEvent, currentDay: Dayjs): string => {
+    function getMultiDayEventBarClass(event: PogoEvent, currentDay: Dayjs) {
         const slotData = getEventSlotData(event);
         if (!slotData || !slotData.shouldRenderOnDay(currentDay)) return '';
 
@@ -171,9 +171,9 @@ export function useCalendarDayLayout(getDayInstance: () => Dayjs, getEventSlots:
         }
 
         return classes.join(' ');
-    };
+    }
 
-    const getEventPosition = (event: PogoEvent, currentDay: Dayjs): { left: string; width: string } => {
+    function getEventPosition(event: PogoEvent, currentDay: Dayjs) {
         const slotData = getEventSlotData(event);
         if (!slotData || !slotData.shouldRenderOnDay(currentDay)) {
             return { left: '0%', width: '100%' };
@@ -241,7 +241,7 @@ export function useCalendarDayLayout(getDayInstance: () => Dayjs, getEventSlots:
             left: `${leftPercentage}%`,
             width: `calc(${Math.max(widthPercentage, 5)}% + 0px${gapAdjustment})`,
         };
-    };
+    }
 
     return {
         multiDayEventBarHeight,

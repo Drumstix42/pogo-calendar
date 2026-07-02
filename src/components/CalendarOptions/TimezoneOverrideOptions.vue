@@ -101,17 +101,11 @@ const effectiveTimezoneLabel = () => {
     return getEffectiveTimezoneLabel(manualOffsetHours.value);
 };
 
-function normalizeManualOffset(hours: number) {
-    const rounded = Math.round(hours * 2) / 2;
-    return Math.max(-14, Math.min(14, rounded));
-}
-
 const localManualOffsetLabel = () => formatManualOffsetLabel(manualOffsetHours.value);
 
 function applyManualOffset(nextOffset: number) {
-    const normalizedOffset = normalizeManualOffset(nextOffset);
-    manualOffsetHours.value = normalizedOffset;
-    debouncedUpdateManualOffset(normalizedOffset);
+    manualOffsetHours.value = nextOffset;
+    debouncedUpdateManualOffset(nextOffset);
 }
 
 function decrementManualOffset() {
