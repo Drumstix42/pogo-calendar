@@ -32,7 +32,7 @@ export const getGroupedEventsCount = (event: PogoEvent): number => {
  */
 export function groupEventsBySimilarity(events: PogoEvent[], enabled: boolean): PogoEvent[] {
     if (!enabled) {
-        return events; // No grouping - return events as-is
+        return [...events]; // No grouping - return events as-is
     }
 
     // Group events by: eventType + start + end (accounting for raid subtypes)
