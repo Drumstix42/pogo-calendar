@@ -993,13 +993,22 @@ they aren't re-discovered cold.
 
 ### eventRaidHours.ts
 
-- **Status:** ⬜ Optional. 435 lines, a **pure util** (no Vue reactivity → already testable), which is
-  why it ranks below the component rows.
-- **Why it could split:** two distinct concerns live together — (1) raid-schedule **date/time parsing +
-  section building** (`parseRaidScheduleDate`, `parseRaidHourTime`, `parseTimeStartSortKey`,
-  `formatScheduleSectionTitle`, `matchesScheduleDate`, `dedupeBosses`, `getRaidScheduleSectionsForDate`,
-  `getRaidScheduleBossesForDate`) and (2) **pseudo-event generation** (`generateEventRaidHourSubEvents`,
-  `generateEventSpotlightSubEvents`, with `formatPokemonList`/`formatSpotlightEventName`). Splitting by
-  concern (like #8/#9) would isolate the parsing helpers for testing.
-- **Why deferred:** behavior-preserving and already pure, so it buys testability/readability but no
-  complexity-per-file reduction in a Vue component. Pick up only if the parsing layer grows or needs tests.
+- **Status:** ✅ Settled. 435 → **226-line parsing/section module**; see notes.
+- **Realized split** (behavior-preserving; pure-util, no template/CSS change):
+    - `eventRaidHours.ts` (226 — date parsing + section building: `parseRaidScheduleDate` (exported),
+      `parseTimeStartSortKey` (exported), `formatScheduleSectionTitle`, `matchesScheduleDate`,
+      `dedupeBosses`, `RaidScheduleSection`, `getRaidScheduleSectionsForDate`,
+      `getRaidScheduleBossesForDate`).
+    - **New** `src/utils/eventSubEvents.ts` (215 — pseudo-event generation: `parseRaidHourTime`,
+      `formatPokemonList`, `formatSpotlightEventName`, `generateEventRaidHourSubEvents`,
+      `generateEventSpotlightSubEvents`; imports `parseRaidScheduleDate` from `eventRaidHours`).
+    - `stores/events.ts` import updated to `eventSubEvents`.
+    - **Dedup (connected component):** `parseTimeStartSortKey` was byte-identical in `timelineSchedule.ts`;
+      removed the copy there and imported from `eventRaidHours.ts`.
+- **Manual checks:** pure-util split — smoke-check raid-hour and spotlight sub-events on the calendar/
+  timeline; raid schedule sections in tooltip and single-day view.
+- **Findings:**
+    - `parseRaidHourTime` is generator-only (section building never needed it), so it moved entirely
+      to `eventSubEvents.ts` and is no longer exported.
+    - `parseRaidScheduleDate` is shared by both concerns — exported from `eventRaidHours.ts` and
+      imported by `eventSubEvents.ts`.

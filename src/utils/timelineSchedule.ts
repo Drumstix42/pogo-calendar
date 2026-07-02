@@ -1,28 +1,6 @@
+import { parseTimeStartSortKey } from './eventRaidHours';
 import type { PogoEvent, PokemonBoss, RaidScheduleEntry } from './eventTypes';
 import { buildRaidTierGroupsWithImages, buildTierGroupsFromBosses, sortTierLabel } from './raidTierGroups';
-
-function parseTimeStartSortKey(timeString?: string): number {
-    if (!timeString) {
-        return Number.MAX_SAFE_INTEGER;
-    }
-
-    const match = timeString.match(/(\d+):(\d+)\s*(a\.m\.|p\.m\.|am|pm)/i);
-    if (!match) {
-        return Number.MAX_SAFE_INTEGER;
-    }
-
-    const [, hourStr, minuteStr, period] = match;
-    let hour = parseInt(hourStr, 10);
-    const minute = parseInt(minuteStr, 10);
-
-    if (period.toLowerCase().includes('p') && hour !== 12) {
-        hour += 12;
-    } else if (period.toLowerCase().includes('a') && hour === 12) {
-        hour = 0;
-    }
-
-    return hour * 60 + minute;
-}
 
 function formatScheduleSectionLabel(label?: string, isAllDay: boolean = false): string {
     const normalizedLabel = label?.trim();
