@@ -1,5 +1,5 @@
 <template>
-    <CollapsibleSection title="Local Timezone Override" storage-key="calendarSettings/event-options-time-override">
+    <CollapsibleSection title="Local Timezone Override" :storage-key="manualOffsetStorageKey">
         <label for="manualTimeOffsetHours" class="form-label">Displayed event time adjustment</label>
         <small class="text-muted d-block mb-2 fst-italic">For participating/traveling across time zones.</small>
 
