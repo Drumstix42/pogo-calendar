@@ -1,84 +1,66 @@
 <template>
-    <Teleport to="body">
-        <Transition name="modal">
-            <div v-if="show" class="modal-backdrop" @click="handleBackdropClick">
-                <div class="modal-dialog" @click.stop>
-                    <div class="modal-content">
-                        <!-- Modal Header -->
-                        <div class="modal-header">
-                            <h5 class="modal-title">Hide Event</h5>
-                            <button type="button" class="btn-close" aria-label="Close" @click="closeModal">
-                                <X :size="20" />
-                            </button>
-                        </div>
+    <BaseModal :show="show" title="Hide Event" @close="closeModal">
+        <p class="mb-3">Choose how you want to hide this event:</p>
 
-                        <!-- Modal Body -->
-                        <div class="modal-body">
-                            <p class="mb-3">Choose how you want to hide this event:</p>
-
-                            <div class="d-grid gap-2">
-                                <!-- Hide by Type Button -->
-                                <button
-                                    type="button"
-                                    class="btn btn-hide-type"
-                                    :style="{
-                                        backgroundColor: eventColor,
-                                        borderColor: eventColorDark,
-                                        color: 'white',
-                                    }"
-                                    @click="hideByType"
-                                >
-                                    <div class="btn-content">
-                                        <span class="btn-label">Hide <em>all</em> events for:</span>
-                                        <span class="btn-value">{{ eventTypeName }}</span>
-                                    </div>
-                                </button>
-
-                                <!-- Hide Individual Event Button -->
-                                <button type="button" class="btn btn-outline-secondary btn-hide-event" @click="hideById">
-                                    <div class="btn-content">
-                                        <span class="btn-label">Hide only <em>this</em> event:</span>
-                                        <span class="btn-value">{{ eventName }}</span>
-                                    </div>
-                                </button>
-                            </div>
-
-                            <!-- Timeline Filter Toggle -->
-                            <div class="timeline-filter-section mt-3 pt-3">
-                                <div class="form-check form-switch">
-                                    <input
-                                        id="modalFiltersApplyToTimeline"
-                                        class="form-check-input"
-                                        type="checkbox"
-                                        role="switch"
-                                        :checked="calendarSettings.filtersApplyToTimeline"
-                                        @change="handleTimelineFilterToggle"
-                                    />
-                                    <label for="modalFiltersApplyToTimeline" class="form-check-label">Apply filters to Timeline</label>
-                                </div>
-                                <small class="text-muted d-block mt-1">Control whether hidden events are also filtered from the timeline</small>
-                            </div>
-
-                            <!-- Cancel Button -->
-                            <div class="d-flex gap-2 mt-3 pt-3 border-top">
-                                <button type="button" class="btn btn-secondary flex-grow-1" @click="closeModal">Cancel</button>
-                            </div>
-                        </div>
-                    </div>
+        <div class="d-grid gap-2">
+            <!-- Hide by Type Button -->
+            <button
+                type="button"
+                class="btn btn-hide-type"
+                :style="{
+                    backgroundColor: eventColor,
+                    borderColor: eventColorDark,
+                    color: 'white',
+                }"
+                @click="hideByType"
+            >
+                <div class="btn-content">
+                    <span class="btn-label">Hide <em>all</em> events for:</span>
+                    <span class="btn-value">{{ eventTypeName }}</span>
                 </div>
+            </button>
+
+            <!-- Hide Individual Event Button -->
+            <button type="button" class="btn btn-outline-secondary btn-hide-event" @click="hideById">
+                <div class="btn-content">
+                    <span class="btn-label">Hide only <em>this</em> event:</span>
+                    <span class="btn-value">{{ eventName }}</span>
+                </div>
+            </button>
+        </div>
+
+        <!-- Timeline Filter Toggle -->
+        <div class="timeline-filter-section mt-3 pt-3">
+            <div class="form-check form-switch">
+                <input
+                    id="modalFiltersApplyToTimeline"
+                    class="form-check-input"
+                    type="checkbox"
+                    role="switch"
+                    :checked="calendarSettings.filtersApplyToTimeline"
+                    @change="handleTimelineFilterToggle"
+                />
+                <label for="modalFiltersApplyToTimeline" class="form-check-label">Apply filters to Timeline</label>
             </div>
-        </Transition>
-    </Teleport>
+            <small class="text-muted d-block mt-1">Control whether hidden events are also filtered from the timeline</small>
+        </div>
+
+        <!-- Cancel Button -->
+        <div class="d-flex gap-2 mt-3 pt-3 border-top">
+            <button type="button" class="btn btn-secondary flex-grow-1" @click="closeModal">Cancel</button>
+        </div>
+    </BaseModal>
 </template>
 
 <script setup lang="ts">
-import { X } from '@lucide/vue';
-import { computed, onBeforeUnmount, watch } from 'vue';
+import { computed } from 'vue';
 
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { useEventsStore } from '@/stores/events';
 import { formatEventName } from '@/utils/eventName';
 import { type EventTypeKey, type PogoEvent, getEventTypeInfo } from '@/utils/eventTypes';
+
+import BaseModal from '@/components/BaseModal.vue';
 
 interface Props {
     show: boolean;
@@ -106,16 +88,6 @@ function closeModal() {
     emit('close');
 }
 
-function handleBackdropClick() {
-    closeModal();
-}
-
-function handleKeydown(event: KeyboardEvent) {
-    if (event.key === 'Escape' && !event.defaultPrevented && props.show) {
-        closeModal();
-    }
-}
-
 function handleTimelineFilterToggle(event: Event) {
     const target = event.target as HTMLInputElement;
     calendarSettings.setFiltersApplyToTimeline(target.checked);
@@ -130,98 +102,9 @@ function hideById() {
     emit('hide-by-id', props.event.eventID, eventName.value);
     closeModal();
 }
-
-watch(
-    () => props.show,
-    newShow => {
-        if (newShow) {
-            window.addEventListener('keydown', handleKeydown);
-        } else {
-            window.removeEventListener('keydown', handleKeydown);
-        }
-    },
-    { immediate: true },
-);
-
-onBeforeUnmount(() => {
-    window.removeEventListener('keydown', handleKeydown);
-});
 </script>
 
 <style scoped>
-/* Modal backdrop */
-.modal-backdrop {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 10055;
-    backdrop-filter: blur(2px);
-}
-
-/* Modal dialog */
-.modal-dialog {
-    max-width: 500px;
-    width: 90%;
-    margin: 1rem;
-}
-
-/* Modal content */
-.modal-content {
-    background-color: var(--bs-body-bg);
-    border: 1px solid var(--bs-border-color);
-    border-radius: 0.5rem;
-    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-}
-
-/* Modal header */
-.modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem 1.25rem;
-    border-bottom: 1px solid var(--bs-border-color);
-}
-
-.modal-title {
-    margin: 0;
-    font-size: 1.1rem;
-    font-weight: 500;
-    color: var(--bs-body-color);
-}
-
-.btn-close {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0.25rem;
-    background: transparent;
-    border: 0;
-    border-radius: 0.375rem;
-    opacity: 0.5;
-    cursor: pointer;
-    color: var(--bs-body-color);
-    transition: opacity 0.2s ease;
-}
-
-.btn-close:hover {
-    opacity: 1;
-}
-
-[data-bs-theme='dark'] .btn-close {
-    color: var(--bs-body-color);
-}
-
-/* Modal body */
-.modal-body {
-    padding: 1.25rem;
-}
-
 .modal-body p {
     color: var(--bs-body-color);
     font-size: 0.95rem;
@@ -320,34 +203,8 @@ onBeforeUnmount(() => {
     border-color: var(--bs-focus-ring-color);
 }
 
-/* Modal transitions */
-.modal-enter-active,
-.modal-leave-active {
-    transition: opacity 0.2s ease;
-}
-
-.modal-enter-active .modal-dialog,
-.modal-leave-active .modal-dialog {
-    transition: transform 0.2s ease;
-}
-
-.modal-enter-from,
-.modal-leave-to {
-    opacity: 0;
-}
-
-.modal-enter-from .modal-dialog,
-.modal-leave-to .modal-dialog {
-    transform: scale(0.95);
-}
-
 /* Responsive adjustments */
 @media (max-width: 576px) {
-    .modal-dialog {
-        width: 95%;
-        margin: 0.5rem;
-    }
-
     .btn-content {
         gap: 0.15rem;
     }

@@ -82,7 +82,7 @@
                             This website is not affiliated with
                             <a class="link-secondary" href="https://pokemongo.com/" target="_blank" rel="noopener noreferrer">Pokémon GO</a> and is
                             intended to fall under Fair Use doctrine, similar to any other informational site such as a wiki. Pokémon and its
-                            trademarks are ©1995-2025 Nintendo, Creatures, and GAMEFREAK. <br />All images and names are owned and trademarked by
+                            trademarks are ©1995-2026 Nintendo, Creatures, and GAMEFREAK. <br />All images and names are owned and trademarked by
                             Nintendo, Niantic, The Pokémon Company, and GAMEFREAK and are property of their respective owners.
                         </p>
                     </div>
@@ -97,9 +97,10 @@
 
 <script setup lang="ts">
 import { Settings } from '@lucide/vue';
-import { computed, onMounted, watch } from 'vue';
+import { onMounted, watch } from 'vue';
 
 import { useCurrentTime } from '@/composables/useCurrentTime';
+import { useDisplayTime } from '@/composables/useDisplayTime';
 import { useUrlSync } from '@/composables/useUrlSync';
 import { useAppStore } from '@/stores/app';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
@@ -121,11 +122,8 @@ const appStore = useAppStore();
 
 const calendarSettings = useCalendarSettingsStore();
 const { urlMonth, urlYear } = useUrlSync();
-const { liveMinute, liveHour } = useCurrentTime();
-
-const displayToday = computed(() => {
-    return liveMinute.value.add(calendarSettings.manualTimeOffsetHours * 60, 'minute').startOf('day');
-});
+const { liveHour } = useCurrentTime();
+const { displayToday } = useDisplayTime();
 
 // Check for app updates on mount and hourly
 onMounted(() => {

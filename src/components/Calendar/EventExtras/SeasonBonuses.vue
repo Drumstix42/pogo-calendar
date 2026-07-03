@@ -3,22 +3,30 @@
         <!-- Daily Discoveries -->
         <div v-if="sortedDailyBonuses.length" class="season-section">
             <div class="season-header"><strong>Daily Discoveries</strong></div>
-            <div ref="listRef" class="season-daily-list">
-                <div
-                    v-for="day in sortedDailyBonuses"
-                    :key="day.dayOfWeek"
-                    :ref="day.dayOfWeek === highlightDayOfWeek ? setHighlightedRef : undefined"
-                    class="season-daily-day"
-                    :class="{ 'is-highlighted': day.dayOfWeek === highlightDayOfWeek }"
-                >
-                    <div class="season-daily-day-name">{{ day.day }}</div>
-                    <div v-for="(group, index) in day.bonuses" :key="index" class="season-daily-group">
-                        <div v-if="group.title" class="season-daily-group-title">{{ group.title }}</div>
-                        <ul class="season-daily-items">
-                            <li v-for="item in group.items" :key="item" class="season-daily-item">{{ item }}</li>
-                        </ul>
+            <div
+                class="scroll-shadow-hints"
+                :class="{
+                    'can-scroll-up': canScrollUp,
+                    'can-scroll-down': canScrollDown,
+                }"
+            >
+                <div ref="listRef" class="season-daily-list" @scroll="updateScrollState">
+                    <div
+                        v-for="day in sortedDailyBonuses"
+                        :key="day.dayOfWeek"
+                        :ref="day.dayOfWeek === highlightDayOfWeek ? setHighlightedRef : undefined"
+                        class="season-daily-day"
+                        :class="{ 'is-highlighted': day.dayOfWeek === highlightDayOfWeek }"
+                    >
+                        <div class="season-daily-day-name">{{ day.day }}</div>
+                        <div v-for="(group, index) in day.bonuses" :key="index" class="season-daily-group">
+                            <div v-if="group.title" class="season-daily-group-title">{{ group.title }}</div>
+                            <ul class="season-daily-items">
+                                <li v-for="item in group.items" :key="item" class="season-daily-item">{{ item }}</li>
+                            </ul>
+                        </div>
+                        <div v-if="day.footnote" class="season-daily-footnote">{{ day.footnote }}</div>
                     </div>
-                    <div v-if="day.footnote" class="season-daily-footnote">{{ day.footnote }}</div>
                 </div>
             </div>
         </div>
@@ -50,6 +58,7 @@
 <script setup lang="ts">
 import { type ComponentPublicInstance, computed, nextTick, onMounted, ref, watch } from 'vue';
 
+import { useScrollShadow } from '@/composables/useScrollShadow';
 import { useEventTypeColorsStore } from '@/stores/eventTypeColors';
 import { type SeasonBonusEntry, type SeasonData } from '@/utils/eventTypes';
 
@@ -69,6 +78,8 @@ const seasonColor = computed(() => eventTypeColorsStore.getEventTypeColor('seaso
 
 const listRef = ref<HTMLElement | null>(null);
 const highlightedRef = ref<HTMLElement | null>(null);
+
+const { canScrollUp, canScrollDown, updateScrollState } = useScrollShadow(listRef);
 
 const setHighlightedRef = (el: Element | ComponentPublicInstance | null) => {
     highlightedRef.value = (el as HTMLElement) ?? null;
@@ -231,29 +242,5 @@ const milestoneTiers = computed(() => {
     .bonus-item {
         padding-left: 0.25rem;
     }
-}
-
-.bonus-item {
-    display: flex;
-    align-items: start;
-    gap: 0.4rem;
-    margin-bottom: 0.18rem;
-}
-
-.bonus-item:last-child {
-    margin-bottom: 0;
-}
-
-.bonus-icon {
-    width: 15px;
-    height: 15px;
-    flex-shrink: 0;
-    object-fit: contain;
-}
-
-.bonus-text {
-    font-size: 0.7rem;
-    color: color-mix(in srgb, var(--bs-body-color) 80%, transparent);
-    line-height: 1.1;
 }
 </style>

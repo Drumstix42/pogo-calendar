@@ -15,7 +15,7 @@
 import { computed } from 'vue';
 
 import { usePokemonDataStore } from '@/stores/pokemonData';
-import { MAJOR_CALENDAR_EVENT_TYPES } from '@/utils/eventTypes';
+import { MAJOR_CALENDAR_EVENT_TYPES } from '@/utils/eventMajor';
 import { calculateRaidCP, formatCPDisplay } from '@/utils/pokemonCP';
 
 interface Props {

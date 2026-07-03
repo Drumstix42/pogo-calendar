@@ -1,11 +1,6 @@
-import dayjs from 'dayjs';
-import utc from 'dayjs/plugin/utc';
+import type { Dayjs } from 'dayjs';
 
-import { DATE_FORMAT } from './dateFormat';
-import { formatEventName } from './eventName';
-import { useEventTypeColorsStore } from '@/stores/eventTypeColors';
-
-dayjs.extend(utc);
+import type { SpotlightBonusInfo } from './spotlightBonus';
 
 export interface EventTypeInfo {
     name: string;
@@ -142,8 +137,54 @@ export interface PogoEvent {
         // Plain-text bonus lines for generated raid-hour sub-events (distinct from `bonuses`).
         raidHourBonuses?: string[];
         isRaidHourSubEvent?: boolean;
+        isSpotlightSubEvent?: boolean;
+        parentEventId?: string;
         [key: string]: any;
     };
+
+    // Internal markers stamped at runtime by the events store when grouping is enabled
+    // (a representative event carries the collapsed group). Not present in the scraped feed.
+    _isGrouped?: boolean;
+    _groupedEvents?: PogoEvent[];
+    _displayName?: string;
+}
+
+export interface RaidBossTierGroup {
+    label: string;
+    bosses: PokemonBoss[];
+}
+
+/** Precomputed, cached per-event metadata derived by the events store. */
+export interface EventMetadata {
+    // Precomputed dates
+    startDate: Dayjs;
+    endDate: Dayjs;
+
+    // Classifications
+    isMultiDayEvent: boolean;
+    isSingleDayEvent: boolean;
+    isPastEvent: boolean;
+    isFutureEvent: boolean;
+
+    // Type information
+    typeInfo: EventTypeInfoWithoutColor;
+    color: string;
+
+    // Display helpers
+    formattedStartTime: string;
+    displayName: string;
+
+    // Spotlight bonus (for spotlight hour events)
+    spotlightBonus?: SpotlightBonusInfo | null;
+    spotlightBonusIconUrl?: string | null;
+
+    // Raid boss groupings by tier (for events with raidbattles data)
+    raidBossTierGroups?: RaidBossTierGroup[];
+
+    // Grouping metadata (for when grouping is enabled)
+    isGrouped?: boolean;
+    groupedEvents?: PogoEvent[];
+    groupCount?: number;
 }
 
 // Note: When adding new event types, also update the $event-types list in src/styles/style.scss
@@ -386,42 +427,6 @@ export const EVENT_TYPES: Record<string, EventTypeInfo> = {
     },
 };
 
-export const MAJOR_CALENDAR_EVENT_TYPES = ['pokemon-go-fest', 'pokemon-go-tour', 'wild-area'] as const;
-export type MajorCalendarEventType = (typeof MAJOR_CALENDAR_EVENT_TYPES)[number];
-export type MajorCalendarEventVariant = 'global' | 'location-specific';
-
-export function isMajorCalendarEventType(eventType: string): eventType is MajorCalendarEventType {
-    return MAJOR_CALENDAR_EVENT_TYPES.includes(eventType as MajorCalendarEventType);
-}
-
-function getMajorEventSearchText(event: PogoEvent) {
-    return [event.eventID ?? '', event.name ?? '', event.link ?? ''].join(' ').toLowerCase();
-}
-
-export function getMajorCalendarEventVariant(event: PogoEvent): MajorCalendarEventVariant {
-    if (!isMajorCalendarEventType(event.eventType)) {
-        return 'location-specific';
-    }
-
-    const text = getMajorEventSearchText(event);
-
-    if (text.includes('global')) {
-        return 'global';
-    }
-
-    return 'location-specific';
-}
-
-export function getMajorCalendarEventVariantLabel(event: PogoEvent): string {
-    const variant = getMajorCalendarEventVariant(event);
-
-    if (variant === 'global') {
-        return 'Global';
-    }
-
-    return 'Location-specific';
-}
-
 // Type for valid event type keys
 export type EventTypeKey = keyof typeof EVENT_TYPES;
 
@@ -435,80 +440,10 @@ export const TimelineCategory = {
 
 export type TimelineCategoryKey = (typeof TimelineCategory)[keyof typeof TimelineCategory];
 
-// Event types that support sub-typing/categorization
-export const EVENTS_WITH_SUBTYPE = ['raid-battles', 'raid-weekend', 'raid-day'] as const;
-export type EventWithSubtype = (typeof EVENTS_WITH_SUBTYPE)[number];
-
-/** Subtypes are a custom categorization for specific event types */
-export function isEventWithSubtype(eventType: EventTypeKey) {
-    return EVENTS_WITH_SUBTYPE.includes(eventType as EventWithSubtype);
-}
-
-export function getRaidSubType(event: PogoEvent): string {
-    // Check for raid hour sub-events (pseudo events generated from parent events)
-    const isRaidHourSubEvent = event.extraData?.isRaidHourSubEvent === true;
-
-    if (!isEventWithSubtype(event.eventType) && !isRaidHourSubEvent) {
-        return ''; // Not applicable for non-raid events
-    }
-
-    const eventName = event.name.toLowerCase();
-
-    if (eventName.includes('shadow')) {
-        return 'shadow-raids';
-    } else if (eventName.includes('super mega')) {
-        return 'super-mega-raids';
-    } else if (eventName.includes('primal')) {
-        return 'primal-raids';
-    } else if (eventName.includes('mega')) {
-        return 'mega-raids';
-    } else if (eventName.includes('raid battles') || eventName.includes('raid weekend')) {
-        return 'raid-battles';
-    }
-    return ''; // Default case, no specific sub-type
-}
-
-/** Whether the event has any bonus content for EventExtras to render. */
-export function hasEventExtras(event: PogoEvent): boolean {
-    const extra = event.extraData;
-    if (!extra) return false;
-
-    const hasSpotlightBonus = event.eventType === 'pokemon-spotlight-hour' && Boolean(extra.spotlight?.bonus);
-    const hasRaidHourBonuses = Boolean(extra.isRaidHourSubEvent && extra.raidHourBonuses);
-    const hasCommunityDayBonuses = event.eventType === 'community-day' && Boolean(extra.communityday?.bonuses);
-    const hasSeason = event.eventType === 'season' && Boolean(extra.season);
-    const hasEventBonuses = Boolean(extra.bonuses?.some(group => group.items?.length));
-
-    return hasSpotlightBonus || hasRaidHourBonuses || hasCommunityDayBonuses || hasSeason || hasEventBonuses;
-}
-
-/** Higher number = higher priority for raid sub-type sorting */
-export function getRaidSubTypePriority(event: PogoEvent): number {
-    if (!isEventWithSubtype(event.eventType)) {
-        return 0; // Not applicable for non-raid events
-    }
-
-    const subType = getRaidSubType(event);
-    switch (subType) {
-        case 'super-mega-raids':
-            return 4;
-        case 'shadow-raids':
-            return 3;
-        case 'raid-battles':
-            return 2;
-        case 'mega-raids':
-        case 'primal-raids':
-            return 1;
-        default:
-            return 0;
-    }
-}
-
 export const getEventTypeInfo = (eventType: string): EventTypeInfoWithoutColor => {
     const info = EVENT_TYPES[eventType] || {
         // replaces dashes with spaces and capitalizes each word
         name: eventType.replace(/-/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()),
-        color: '#757575', // Default grey
         priority: 5,
         category: 'events-and-misc',
     };
@@ -517,332 +452,5 @@ export const getEventTypeInfo = (eventType: string): EventTypeInfoWithoutColor =
         name: info.name,
         priority: info.priority,
         category: info.category,
-    };
-};
-
-// Sort events by priority (higher number = higher priority)
-export const sortEventsByPriority = (events: PogoEvent[]): PogoEvent[] => {
-    return events.sort((a: PogoEvent, b: PogoEvent) => {
-        const aPriority = getEventTypeInfo(a.eventType).priority;
-        const bPriority = getEventTypeInfo(b.eventType).priority;
-        return bPriority - aPriority;
-    });
-};
-
-// Sort events by timing and priority for timeline display
-export const sortEventsByTimingAndPriority = (events: PogoEvent[], eventMetadata: Record<string, any>): PogoEvent[] => {
-    return events.sort((a, b) => {
-        const aMetadata = eventMetadata[a.eventID];
-        const bMetadata = eventMetadata[b.eventID];
-
-        if (!aMetadata || !bMetadata) return 0;
-
-        // Determine if events are currently happening (not past, not future)
-        const aIsHappening = !aMetadata.isPastEvent && !aMetadata.isFutureEvent;
-        const bIsHappening = !bMetadata.isPastEvent && !bMetadata.isFutureEvent;
-
-        // 1. Events happening now come first
-        if (aIsHappening && !bIsHappening) return -1;
-        if (!aIsHappening && bIsHappening) return 1;
-
-        // 2. For events happening now, sort by end time (ending soonest first)
-        if (aIsHappening && bIsHappening) {
-            const endTimeDiff = aMetadata.endDate.diff(bMetadata.endDate);
-            if (endTimeDiff !== 0) return endTimeDiff;
-
-            // Tiebreaker: higher priority events first
-            const aPriority = getEventTypeInfo(a.eventType).priority;
-            const bPriority = getEventTypeInfo(b.eventType).priority;
-            return bPriority - aPriority;
-        }
-
-        // 3. For future events, sort by start time (starting soonest first)
-        const startTimeDiff = aMetadata.startDate.diff(bMetadata.startDate);
-        if (startTimeDiff !== 0) return startTimeDiff;
-
-        // Tiebreaker: higher priority events first
-        const aPriority = getEventTypeInfo(a.eventType).priority;
-        const bPriority = getEventTypeInfo(b.eventType).priority;
-        return bPriority - aPriority;
-    });
-};
-
-// Event display types
-export interface EventGroup {
-    eventType: string;
-    events: PogoEvent[];
-    displayName: string;
-    color: string;
-    isMultiDay: boolean;
-    startDate: dayjs.Dayjs;
-    endDate: dayjs.Dayjs;
-}
-
-export interface CalendarEventDisplay {
-    singleDayEvents: PogoEvent[];
-    multiDayEvents: PogoEvent[];
-    eventGroups: EventGroup[];
-}
-
-// Event classification utilities
-export const isMultiDayEvent = (event: PogoEvent): boolean => {
-    const startDate = parseEventDate(event.start).startOf('day');
-    const endDate = parseEventDate(event.end).startOf('day');
-    return !startDate.isSame(endDate, 'day');
-};
-
-export const isSameDayEvent = (event: PogoEvent): boolean => {
-    return !isMultiDayEvent(event);
-};
-
-// Event grouping for events that occur at the same time
-export const shouldGroupEvents = (events: PogoEvent[]): boolean => {
-    // Only group if there are 2 or more events
-    if (events.length < 2) return false;
-
-    // For single-day events, only group if they have identical start AND end times
-    const firstEvent = events[0];
-    if (isSameDayEvent(firstEvent)) {
-        const firstStartTime = parseEventDate(firstEvent.start);
-        const firstEndTime = parseEventDate(firstEvent.end);
-        return events.every(event => {
-            const eventStartTime = parseEventDate(event.start);
-            const eventEndTime = parseEventDate(event.end);
-            return isSameDayEvent(event) && firstStartTime.isSame(eventStartTime, 'minute') && firstEndTime.isSame(eventEndTime, 'minute');
-        });
-    }
-
-    // For multi-day events, group if they have identical start AND end times
-    const firstEventType = firstEvent.eventType;
-    const firstStartTime = parseEventDate(firstEvent.start);
-    const firstEndTime = parseEventDate(firstEvent.end);
-    return events.every(event => {
-        const eventStartTime = parseEventDate(event.start);
-        const eventEndTime = parseEventDate(event.end);
-        return (
-            event.eventType === firstEventType &&
-            isMultiDayEvent(event) &&
-            firstStartTime.isSame(eventStartTime, 'minute') &&
-            firstEndTime.isSame(eventEndTime, 'minute')
-        );
-    });
-};
-
-// TODO: migrate to events store, since we're utilizing pinia store here. Also `getCalendarEventsForDate` method.
-export const groupEventsByType = (events: PogoEvent[]): EventGroup[] => {
-    const eventTypeColorsStore = useEventTypeColorsStore();
-    const groups = new Map<string, PogoEvent[]>();
-
-    // First, group by event type
-    events.forEach(event => {
-        if (!groups.has(event.eventType)) {
-            groups.set(event.eventType, []);
-        }
-        groups.get(event.eventType)!.push(event);
-    });
-
-    const result: EventGroup[] = [];
-
-    // Then, within each type, group by timing
-    groups.forEach((typeEvents, eventType) => {
-        if (typeEvents.length === 1) {
-            // Single event, no grouping needed
-            const event = typeEvents[0];
-            result.push({
-                eventType,
-                events: [event],
-                displayName: formatEventName(event.name), // Use actual event name for single events
-                color: eventTypeColorsStore.getEventTypeColor(eventType),
-                isMultiDay: isMultiDayEvent(event),
-                startDate: parseEventDate(event.start),
-                endDate: parseEventDate(event.end),
-            });
-        } else {
-            // Multiple events of same type - group by timing
-            const sortedEvents = typeEvents.sort((a, b) => dayjs(a.start).valueOf() - dayjs(b.start).valueOf());
-
-            // For single-day events, group by exact start AND end time
-            if (isSameDayEvent(sortedEvents[0])) {
-                const timeGroups = new Map<string, PogoEvent[]>();
-
-                sortedEvents.forEach(event => {
-                    const startTime = parseEventDate(event.start).format('YYYY-MM-DD HH:mm');
-                    const endTime = parseEventDate(event.end).format('YYYY-MM-DD HH:mm');
-                    const timeKey = `${startTime}_${endTime}`;
-                    if (!timeGroups.has(timeKey)) {
-                        timeGroups.set(timeKey, []);
-                    }
-                    timeGroups.get(timeKey)!.push(event);
-                });
-
-                timeGroups.forEach(timeEvents => {
-                    if (timeEvents.length === 1) {
-                        // Single event at this time
-                        const event = timeEvents[0];
-                        result.push({
-                            eventType,
-                            events: [event],
-                            displayName: formatEventName(event.name),
-                            color: eventTypeColorsStore.getEventTypeColor(eventType),
-                            isMultiDay: false,
-                            startDate: parseEventDate(event.start),
-                            endDate: parseEventDate(event.end),
-                        });
-                    } else {
-                        // Multiple events at same time - group them
-                        result.push({
-                            eventType,
-                            events: timeEvents,
-                            displayName: getEventTypeInfo(eventType).name, // Use type name for grouped events
-                            color: eventTypeColorsStore.getEventTypeColor(eventType),
-                            isMultiDay: false,
-                            startDate: parseEventDate(timeEvents[0].start),
-                            endDate: parseEventDate(timeEvents[timeEvents.length - 1].end),
-                        });
-                    }
-                });
-            } else {
-                // For multi-day events, group by exact start AND end time (same as single-day)
-                const timeGroups = new Map<string, PogoEvent[]>();
-
-                sortedEvents.forEach(event => {
-                    const startTime = parseEventDate(event.start).format('YYYY-MM-DD HH:mm');
-                    const endTime = parseEventDate(event.end).format('YYYY-MM-DD HH:mm');
-                    const timeKey = `${startTime}_${endTime}`;
-                    if (!timeGroups.has(timeKey)) {
-                        timeGroups.set(timeKey, []);
-                    }
-                    timeGroups.get(timeKey)!.push(event);
-                });
-
-                timeGroups.forEach(timeEvents => {
-                    if (timeEvents.length === 1) {
-                        // Single event at this time
-                        const event = timeEvents[0];
-                        result.push({
-                            eventType,
-                            events: [event],
-                            displayName: formatEventName(event.name),
-                            color: eventTypeColorsStore.getEventTypeColor(eventType),
-                            isMultiDay: true,
-                            startDate: parseEventDate(event.start),
-                            endDate: parseEventDate(event.end),
-                        });
-                    } else {
-                        // Multiple events at same time - group them
-                        result.push({
-                            eventType,
-                            events: timeEvents,
-                            displayName: getEventTypeInfo(eventType).name, // Use type name for grouped events
-                            color: eventTypeColorsStore.getEventTypeColor(eventType),
-                            isMultiDay: true,
-                            startDate: parseEventDate(timeEvents[0].start),
-                            endDate: parseEventDate(timeEvents[timeEvents.length - 1].end),
-                        });
-                    }
-                });
-            }
-        }
-    });
-
-    return result;
-};
-
-export const getGroupedEvents = (event: PogoEvent, options?: { limit?: number }): PogoEvent[] => {
-    const groupedEvents = (event as any)._groupedEvents || [event];
-
-    if (options?.limit && options.limit > 0) {
-        return groupedEvents.slice(0, options.limit);
-    }
-
-    return groupedEvents;
-};
-
-export const hasGroupedEvents = (event: PogoEvent): boolean => {
-    return (event as any)._isGrouped === true;
-};
-
-export const getGroupedEventsCount = (event: PogoEvent): number => {
-    const groupedEvents = (event as any)._groupedEvents;
-    return Array.isArray(groupedEvents) ? groupedEvents.length : 1;
-};
-
-export const parseEventDate = (dateStr: string, manualOffsetHours: number = 0): dayjs.Dayjs => {
-    // Check if the date string is in UTC format (ends with Z)
-    let parsedDate: dayjs.Dayjs;
-    if (dateStr.endsWith('Z')) {
-        parsedDate = dayjs.utc(dateStr).local();
-    } else {
-        // If not UTC, treat as local time
-        parsedDate = dayjs(dateStr);
-    }
-
-    if (manualOffsetHours === 0) {
-        return parsedDate;
-    }
-
-    return parsedDate.add(manualOffsetHours * 60, 'minute');
-};
-
-export const formatEventTime = (dateStr: string, manualOffsetHours: number = 0): string => {
-    const eventDate = parseEventDate(dateStr, manualOffsetHours);
-    const minutes = eventDate.minute();
-
-    // Only show minutes if they're not zero
-    if (minutes === 0) {
-        return eventDate.format('ha');
-    } else {
-        return eventDate.format('h:mma');
-    }
-};
-
-export const getEventsForDate = (events: PogoEvent[], date: Date | string | dayjs.Dayjs, manualOffsetHours: number = 0): PogoEvent[] => {
-    const targetDate = dayjs(date);
-    const targetDateStr = targetDate.format(DATE_FORMAT.CALENDAR_DATE);
-
-    return events.filter((event: PogoEvent) => {
-        if (!event.start || !event.end) return false;
-
-        const startDate = parseEventDate(event.start, manualOffsetHours);
-        const endDate = parseEventDate(event.end, manualOffsetHours);
-
-        const startDateStr = startDate.format(DATE_FORMAT.CALENDAR_DATE);
-        const endDateStr = endDate.format(DATE_FORMAT.CALENDAR_DATE);
-
-        return targetDateStr >= startDateStr && targetDateStr <= endDateStr;
-    });
-};
-
-// Get events organized for calendar display
-export const getCalendarEventsForDate = (events: PogoEvent[], date: Date | string | dayjs.Dayjs): CalendarEventDisplay => {
-    const eventsForDate = getEventsForDate(events, date);
-
-    // Group all events by type first, then apply intelligent grouping
-    const eventGroups = groupEventsByType(eventsForDate);
-
-    // Separate individual events from grouped events
-    const singleDayEvents: PogoEvent[] = [];
-    const multiDayEvents: PogoEvent[] = [];
-    const groupedEvents: EventGroup[] = [];
-
-    eventGroups.forEach(group => {
-        if (group.events.length === 1) {
-            // Single event - add to appropriate category
-            const event = group.events[0];
-            if (isSameDayEvent(event)) {
-                singleDayEvents.push(event);
-            } else {
-                multiDayEvents.push(event);
-            }
-        } else {
-            // Multiple events - this is a true group
-            groupedEvents.push(group);
-        }
-    });
-
-    return {
-        singleDayEvents: sortEventsByPriority(singleDayEvents),
-        multiDayEvents: sortEventsByPriority(multiDayEvents),
-        eventGroups: groupedEvents,
     };
 };

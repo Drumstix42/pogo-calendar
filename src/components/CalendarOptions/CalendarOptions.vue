@@ -22,7 +22,7 @@
 import { Settings, X } from '@lucide/vue';
 import { onMounted, onUnmounted } from 'vue';
 
-import EventFilterOptions from './EventFilterOptions.vue';
+import EventFilterOptions from './EventFilterOptions/EventFilterOptions.vue';
 import EventOptions from './EventOptions.vue';
 import FirstDaySelector from './FirstDaySelector.vue';
 import ImageOptions from './ImageOptions.vue';

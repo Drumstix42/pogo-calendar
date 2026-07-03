@@ -21,13 +21,13 @@ agent at this file and the feature's row, and it has everything it needs.
    code, **note it** (in the PR description and/or the feature's "Findings" notes) rather than
    silently changing behavior. The user decides whether to action it.
 5. **No test suite exists.** Verification is type-check + lint + manual. Extract logic in a
-   *testable shape* (pure functions, composables) so tests can be added later. Type-check is a
+   _testable shape_ (pure functions, composables) so tests can be added later. Type-check is a
    gate for when the refactor is well under way / near complete — not something to run after every
    small edit. (The user watches the IDE for type errors in-flight and will flag them.)
 6. **Refactor in small, independently verifiable stages.** Prefer a sequence of small extractions —
    each leaving the app in a working, manually-confirmable state — over one big-bang rewrite. With
    no test suite to localize a regression, the size of a single step is the size of your debugging
-   haystack. Keep each step to *one seam* so that if behavior breaks, the cause is obviously the
+   haystack. Keep each step to _one seam_ so that if behavior breaks, the cause is obviously the
    last thing you did. Checkpoint (commit, or pause for the user to eyeball) between stages so a
    single step can be reverted without losing the rest. Big-bang is acceptable only for a genuinely
    atomic change that can't be decomposed — the rare exception, called out explicitly.
@@ -65,16 +65,16 @@ Follow these steps for each feature. They assume a fresh conversation.
 4. **Scan connected/related components.** Don't analyze the target in isolation. Look at what it
    imports, what imports it, and its siblings that do similar work (e.g. the timeline pair, the
    shared tooltip, a modal + its existing composable). For each, ask:
-   - Is there **duplicated or near-duplicated logic** that should be extracted once and shared,
-     rather than extracted into this component's private composable?
-   - Would a sub-component or composable being created here be **reusable by a neighbor**, and
-     should it therefore live in a shared location (`src/composables/`, `src/utils/`, a shared
-     component) instead of the feature's folder?
-   - Will this refactor **leave a sibling diverging** in a way worth folding into scope (or noting
-     as a follow-up row)?
-   Decide deliberately whether to pull a neighbor into scope, extract shared code both can adopt,
-   or just record the opportunity. **Widening scope needs the user's sign-off in step 5** — flag
-   it; don't silently expand the refactor.
+    - Is there **duplicated or near-duplicated logic** that should be extracted once and shared,
+      rather than extracted into this component's private composable?
+    - Would a sub-component or composable being created here be **reusable by a neighbor**, and
+      should it therefore live in a shared location (`src/composables/`, `src/utils/`, a shared
+      component) instead of the feature's folder?
+    - Will this refactor **leave a sibling diverging** in a way worth folding into scope (or noting
+      as a follow-up row)?
+      Decide deliberately whether to pull a neighbor into scope, extract shared code both can adopt,
+      or just record the opportunity. **Widening scope needs the user's sign-off in step 5** — flag
+      it; don't silently expand the refactor.
 5. **Propose the split to the user** (file list: new components/composables, what moves where, and
    any connected-component scope from step 4) **and wait for confirmation** before editing. This
    matches the repo's "outline first for larger changes" workflow.
@@ -111,20 +111,30 @@ Status legend: ⬜ Not started · 🟡 In progress · ✅ Settled · ⏭️ Skip
 
 Priority: ordered roughly by size × tangle. Tackle top-down; they're largely independent.
 
-| # | Feature / file | Lines (T/script/style) | Status | Result | Priority |
-|---|----------------|------------------------|--------|--------|----------|
-| 1 | [CalendarDay.vue](src/components/Calendar/CalendarDay.vue) | 1320 / ~494 / ~820 | ⬜ | — | P1 |
-| 2 | [TimelineEvent.vue](src/components/Calendar/TimelineEvent.vue) | 931 / ~424 / ~469 | ⬜ | — | P1 |
-| 3 | [EventTooltip.vue](src/components/Calendar/EventTooltip.vue) | 795 / ~347 / ~290 | ⬜ | — | P2 |
-| 4 | [Calendar.vue (page)](src/pages/Calendar.vue) | 525 / ~213 / ~265 | ⬜ | — | P2 |
-| 5 | [EventFilterOptions.vue](src/components/CalendarOptions/EventFilterOptions.vue) | 516 | ⬜ | — | P2 |
-| 6 | [EventTimeline.vue](src/components/Calendar/EventTimeline.vue) | 453 | ⬜ | — | P3 |
-| 7 | [EditEventColorModal.vue](src/components/Calendar/EditEventColorModal.vue) | 430 | ⬜ | — | P3 |
-| 8 | [eventTypes.ts](src/utils/eventTypes.ts) | 747 | ⬜ | — | P3 |
-| 9 | [eventPokemon.ts](src/utils/eventPokemon.ts) | 566 | ⬜ | — | P3 |
-| 10 | [EventTimeDisplay.vue](src/components/Calendar/EventTimeDisplay.vue) | 353 | ⬜ | — | P4 |
-| 11 | [EventOptions.vue](src/components/CalendarOptions/EventOptions.vue) | 331 | ⬜ | — | P4 |
-| 12 | [HideEventModal.vue](src/components/Calendar/HideEventModal.vue) | 308 | ⬜ | — | P4 |
+| #   | Feature / file                                                                                     | Lines (T/script/style)  | Status | Result                            | Priority |
+| --- | -------------------------------------------------------------------------------------------------- | ----------------------- | ------ | --------------------------------- | -------- |
+| 1   | [CalendarDay.vue](src/components/Calendar/CalendarDay/CalendarDay.vue)                             | 1320 / ~494 / ~820      | ✅     | 226 (orchestrator); see notes     | P1       |
+| 2   | [TimelineEvent.vue](src/components/Calendar/TimelineEvent/TimelineEvent.vue)                       | 931 / ~424 / ~469       | ✅     | 428 (orchestrator); see notes     | P1       |
+| 3   | [EventTooltip.vue](src/components/Calendar/EventTooltip/EventTooltip.vue)                          | 795 / ~347 / ~290       | ✅     | 382 (orchestrator); see notes     | P2       |
+| 4   | [Calendar.vue (page)](src/pages/Calendar.vue)                                                      | 525 / ~213 / ~265       | ✅     | 312 (orchestrator); see notes     | P2       |
+| 5   | [EventFilterOptions.vue](src/components/CalendarOptions/EventFilterOptions/EventFilterOptions.vue) | 516                     | ✅     | 114 (orchestrator); see notes     | P2       |
+| 6   | [EventTimeline.vue](src/components/Calendar/EventTimeline/EventTimeline.vue)                       | 542                     | ✅     | 74 (orchestrator); see notes      | P3       |
+| 7   | [EditEventColorModal.vue](src/components/Calendar/EditEventColorModal.vue)                         | 430                     | ✅     | 211 (orchestrator); see notes     | P3       |
+| 8   | [eventTypes.ts](src/utils/eventTypes.ts)                                                           | 849 (board's 747 stale) | ✅     | 449 (types + registry); see notes | P3       |
+| 9   | [eventPokemon.ts](src/utils/eventPokemon.ts)                                                       | 691 (board's 566 stale) | ✅     | 97 (dispatcher); see notes        | P3       |
+| 10  | [EventTimeDisplay.vue](src/components/Calendar/EventTimeDisplay.vue)                               | 389 (board's 353 stale) | ✅     | 171 (component); see notes        | P4       |
+| 11  | [EventOptions.vue](src/components/CalendarOptions/EventOptions.vue)                                | 385 (board's 331 stale) | ✅     | 148 (orchestrator); see notes     | P4       |
+| 12  | [HideEventModal.vue](src/components/Calendar/HideEventModal.vue)                                   | 363                     | ✅     | 220; adopted BaseModal (in #7)    | P4       |
+| 13  | [EventExtras.vue](src/components/Calendar/EventExtras/EventExtras.vue)                             | 340                     | ✅     | 40 (orchestrator); see notes      | P4       |
+
+**Second survey (added after rows 1–13 settled):** new candidates found in a fresh sweep of the
+remaining large files. Same recipe + verification protocol apply.
+
+| #   | Feature / file                                                           | Lines (T/script/style) | Status | Result                       | Priority |
+| --- | ------------------------------------------------------------------------ | ---------------------- | ------ | ---------------------------- | -------- |
+| 14  | [CalendarGrid.vue](src/components/Calendar/CalendarGrid.vue)             | 344 / ~270 / ~40       | ✅     | 57 (orchestrator); see notes | P2       |
+| 15  | [stores/events.ts](src/stores/events.ts)                                 | 424                    | ✅     | 308 (store); see notes       | P3       |
+| 16  | [PokemonEventImages.vue](src/components/Calendar/PokemonEventImages.vue) | 246 / ~123 / ~75       | ✅     | 232; see notes               | P4       |
 
 **Explicitly out of scope** (large but they're data, not logic — leave alone unless asked):
 `constants/pokemonFormMap.ts`, `constants/validAnimatedSprites.ts`, `constants/validStaticSprites.ts`,
@@ -142,55 +152,327 @@ seams below are **initial hypotheses from the first survey** — verify against 
 - **Why:** Largest file; ~820 lines of scoped CSS in one component; dense template with multi-day
   bar positioning logic, major-event handling, single-day events, loading skeleton, tooltips.
 - **Suggested seams (verify):**
-  - `MultiDayEventBar.vue` — the multi-day bar slot region + its positioning/`:style`/`:class` CSS.
-  - `useCalendarDayEvents.ts` — `calendarEvents`, `majorDailyDisplayEvents`, week-boundary and
-    slot-positioning helpers (`getWeekBoundaries`, `getEventSlotTop`, `getEventPosition`, etc.).
-  - Possibly a single-day events region component.
-  - Promote to a `CalendarDay/` folder once it has 2+ parts.
-- **Manual checks:** multi-day bars span/position correctly across week boundaries; grouped events;
+    - `MultiDayEventBar.vue` — the multi-day bar slot region + its positioning/`:style`/`:class` CSS.
+    - `useCalendarDayEvents.ts` — `calendarEvents`, `majorDailyDisplayEvents`, week-boundary and
+      slot-positioning helpers (`getWeekBoundaries`, `getEventSlotTop`, `getEventPosition`, etc.).
+    - Possibly a single-day events region component.
+    - Promote to a `CalendarDay/` folder once it has 2+ parts.
+- **Manual checks:** ✅ multi-day bars span/position correctly across week boundaries; grouped events;
   badges/overflow counts; major event daily display; loading skeleton; tooltips on hover (desktop)
-  and tap (touch); past-event styling; highlight-on-hover sync.
-- **Findings:** _(none yet)_
+  and tap (touch); past-event styling; highlight-on-hover sync. (Verified light + dark, mobile +
+  desktop breakpoints across stages 5 & 6.)
+- **Realized split** (CalendarDay.vue 1320 → **226-line orchestrator**):
+    - Sub-components in `src/components/Calendar/CalendarDay/`: `CalendarDay.vue` (orchestrator),
+      `MultiDayEventBar.vue` (280), `SingleDayEvent.vue` (577).
+    - Composables in `src/composables/`: `useCalendarDayLayout.ts` (255 — week boundaries, compact-slot
+      packing, bar positioning/classes/sizing; exports the shared `EventSlot` type),
+      `useCalendarDaySingleEvents.ts` (98 — single-day list + major-daily projections),
+      `useDailyEventDisplay.ts` (59 — per-event helpers: source id, variant, display name, details),
+      `useCalendarDayEventInteraction.ts` (48 — shared hover/tooltip/tap handlers),
+      `useEventHighlightDebounce.ts` (44 — **shared with TimelineEvent**, replaced a duplicated impl).
+    - Util `src/utils/eventDisplay.ts` (29 — `getEventDisplayName`/`getEventCount`/`shouldShowBadge`/
+      `shouldShowMultiDaySprites`).
+    - Shared `.calendar-event-badge` base moved to global `src/styles/style.scss` (alongside the other
+      global calendar-event styles).
+- **Findings:**
+    - **Dead CSS removed (~95 lines):** `.composite-*`, `.tooltip-wrapper`, `.segment-content`,
+      `.composite-event-container` and the `.*.composite-*` cap overrides — no markup referenced them.
+    - **Dead computed field removed:** `calendarEvents.multiDayEvents` (+ its `multiDay` filter/sort)
+      was computed but never read — the rendered multi-day list comes from `eventSlots` via the layout
+      composable.
+    - **Dead selector dropped:** `.multi-day-event-bar:hover .event-name-container` (multi-day bars
+      have no `.event-name-container` element).
+    - **`SingleDayEvent.vue` is 577 lines (over the ~300 soft target):** ~440 of those are scoped CSS,
+      dominated by the `.major-daily-display-event` card variants across 5 breakpoints + the
+      `.spotlight-bonus-icons` block. It's one cohesive region (the major-daily entry is the same
+      `.single-day-event` element with extra classes/`::after`, not a separable template seam).
+      _Follow-up option:_ lift the major-daily-card CSS into an SCSS partial if it grows further.
+    - **Behavior note (debounce):** highlight debounce is now per-bar/per-block (each instance owns its
+      timeout) instead of one shared timer per cell. Equivalent for sibling elements (browser fires
+      `mouseleave` before `mouseenter`); only differs under overlapping/nested hover, which doesn't occur.
+    - **Possibly-dead `:deep(.event-toggle-button)` rules** (now in both sub-components) — `EventToggleButton`
+      isn't rendered here; left intact (behavior-preserving), worth confirming before removal.
+    - **Connected-component follow-up:** [CalendarGrid.vue](src/components/Calendar/CalendarGrid.vue)
+      has its own duplicate `EventSlot` interface; it could adopt the one now exported from
+      `useCalendarDayLayout.ts`.
+    - **Tooling (incidental):** `eslint .` was scanning `dist/`; added `@eslint/compat` +
+      `includeIgnoreFile('.gitignore')` so ESLint mirrors `.gitignore`.
 
 ### 2. TimelineEvent.vue
 
 - **Why:** 931 lines, uses `lang="scss"`; single event row in the timeline with heavy state.
-- **Suggested seams (verify):** active/popper region; logic → `useTimelineEvent.ts`.
-- **Manual checks:** timeline event rendering, active state, popper, responsiveness.
-- **Findings:** _(none yet)_
+- **Manual checks:** ✅ header (badge color, expand chevron hover-fade, palette/hide buttons when
+  expanded); ✅ collapsed multi-day raid schedule (compact per-day boss list); ✅ expanded raid
+  schedule (day sections, all-day/timed label colors, time pills, tier groups, animated sprites);
+  ✅ fallback tier groups; ✅ shadow-raid overlay; ✅ inline pokemon row + overflow; ✅ highlight-on-
+  hover (xxl sidebar). (Verified light + dark across stages 4 & 5.)
+- **Realized split** (TimelineEvent.vue 931 → **428-line orchestrator**, promoted to
+  `src/components/Calendar/TimelineEvent/`):
+    - Sub-components in `TimelineEvent/`: `TimelineEvent.vue` (orchestrator — keeps the card shell +
+      major-timeline CSS + body name/spotlight + bottom link), `TimelineEventHeader.vue` (141 —
+      badge/color-edit/hide/expand header bar + its CSS), `TimelineRaidSchedule.vue` (179 — expanded
+      schedule, both day-section and fallback-tier variants, + all `.schedule-*`/`.tier-*` CSS),
+      `TimelineCollapsedSchedule.vue` (63 — compact per-day boss list for the non-active card).
+    - Composable `src/composables/useTimelineEvent.ts` (158 — display computeds, action handlers,
+      and the guarded highlight debounce; takes `(props, emit)`).
+    - Util `src/utils/timelineSchedule.ts` (232 — `buildTimelineScheduleDaySectionsWithTierGroups`
+      and `buildCollapsedScheduleDayGroups` plus the private time-sort/label helpers; exports the
+      `TimelineScheduleDaySection` and `CollapsedScheduleDayGroup` types).
+    - Shared into `src/utils/raidTierGroups.ts`: `sortTierLabel` + `buildTierGroupsFromBosses`
+      (were **byte-identical duplicates** in `EventTooltip.vue` — both now import them).
+- **Findings:**
+    - **Dedup done (connected component):** [EventTooltip.vue](src/components/Calendar/EventTooltip.vue)
+      had identical `sortTierLabel`/`buildTierGroupsFromBosses` copies; both files now use the shared
+      versions in `raidTierGroups.ts`. EventTooltip's _schedule-day_ builder genuinely diverges
+      (no `raidHours`, different default labels, `sortKey: 0`) so it was left in place — not shareable.
+    - **Cross-boundary CSS:** the card-shell rule `.timeline-event-card:hover .expand-toggle` now
+      reaches the child header via `:deep(.expand-toggle)`. `--event-color` (inline on the card) still
+      cascades into all children since CSS custom properties ignore scoping.
+    - **Two schedule components, not one:** collapsed vs. expanded render in different slots with
+      different layouts, so a single component with a `variant` branch was avoided. The trivial 3-line
+      `.tier-images` rule is duplicated in each (not worth centralizing).
+    - **Orchestrator still 428 lines (over the ~300 soft target):** ~258 of those are scoped CSS,
+      almost entirely the cohesive card shell — `.timeline-event-card` + the `major-timeline`
+      gradient/`::after` mask variants across 3 breakpoints + dark theme. This is the orchestrator's
+      own card surface, not a separable seam. _Follow-up option:_ lift the major-timeline card CSS to
+      an SCSS partial if it grows.
+    - **Spotlight bonus icons (deferred):** the `.spotlight-bonus-icons` block here duplicates the
+      _logic_ of [SpotlightBonusIcons.vue](src/components/Calendar/CalendarDay/SpotlightBonusIcons.vue)
+      but with different styling (15px inline row vs. 13px absolutely-positioned in calendar cells).
+      Left as-is to avoid disturbing the just-settled CalendarDay component; a shared icon-only
+      component (size prop, consumer-owned positioning) is a possible follow-up.
+    - **Typing smell (noted, not changed):** `(event as any)._isGrouped` in the bottom-link guard.
 
 ### 3. EventTooltip.vue
 
 - **Why:** 795 lines; shared tooltip content rendered from multiple call sites.
-- **Suggested seams (verify):** sub-sections of tooltip body; formatting logic → util/composable.
-- **Manual checks:** tooltip content across event types (raids, spawns, research, seasonal).
-- **Findings:** _(none yet)_
+- **Manual checks:** tooltip content across event types (raids, spawns, research, seasonal) at all four
+  call sites — CalendarDay single-day + multi-day bar, `SeasonDailyChip`, `EventDetailOffcanvas`
+  (the `:scrollable="false"` variant). Confirm sticky schedule headers while scrolling, grouped-day
+  tooltips, and the Timeline sidebar (expanded day-sections + fallback tiers, collapsed card) since it
+  now shares the tier-image leaf. Light + dark.
+- **Realized split** (EventTooltip.vue 795 → **382-line orchestrator**, promoted to
+  `src/components/Calendar/EventTooltip/`):
+    - Sub-components in `EventTooltip/`: `EventTooltip.vue` (orchestrator — root shell, grouped + single
+      event cards, the major-tooltip mask CSS, body/extras/bottom-link), `EventTooltipHeader.vue` (101 —
+      type-name bar + color-edit + hide button, owns its modal handlers + CSS),
+      `EventTooltipScheduleSections.vue` (143 — the `.schedule-section` list with a `labelMode` prop
+      covering both the `fallback` variant (single/grouped, day-name aware, inline label color) and the
+      `plain` variant (multi-day schedule, pre-formatted `labelText`, CSS-driven all-day color); owns all
+      `.schedule-section*`/`.schedule-label`/`.schedule-time` CSS).
+    - Shared component `src/components/Calendar/RaidTierGroupImages.vue` (45 — the `.tier-group` →
+      `.tier-images` → `PokemonImage` loop). **Adopted by both EventTooltip and
+      [TimelineRaidSchedule.vue](src/components/Calendar/TimelineEvent/TimelineRaidSchedule.vue)** (180 →
+      144), replacing 7 near-duplicate loops total. Owns only the identical `.tier-images` rule; each
+      consumer keeps its own `.tier-group`/`.tier-label` values via `:deep()` (tooltip 0.8rem labels vs.
+      timeline 0.75rem — left un-unified to stay behavior-preserving).
+    - Composable `src/composables/useEventTooltip.ts` (167 — `(props)`-bound schedule/tier resolution +
+      display helpers: parent-name lookup, per-event tier/section builders, `scheduleDaySectionsWithTierGroups`,
+      `getMajorTooltipClass`, `spriteEffect` (was `isShadowRaid`; see #16a), `scheduleTargetDayName`,
+      `highlightDayOfWeek`).
+    - Util `src/utils/eventTooltipSchedule.ts` (113 — pure `buildFullRaidScheduleDaySections(event, useAnimated)`
+        - the `TooltipScheduleSection`/`TooltipScheduleDaySection` types). Deliberately **not** merged with
+          `timelineSchedule.ts` (diverges: no `raidHours`, plain default labels, `sortKey: 0`).
+- **Findings:**
+    - **Scope adjusted (no `EventTooltipGroupedEvents.vue`):** the proposed grouped-events component was
+      dropped after implementation showed the grouped and single event cards **share ~90 lines of CSS**
+      (`.event-time-info` + the `major-tooltip-*` mask variants across 3 breakpoints + dark, `.event-content`,
+      `.event-text`, `.grouped-event-name`, `.parent-event-name`). Splitting them would duplicate that
+      cohesive card surface across two scoped files — a maintenance hazard, not a complexity win. Both cards
+      stay in the orchestrator; the schedule-section list (the genuinely-repeated seam) was extracted instead.
+    - **Orchestrator still 382 lines (over the ~300 soft target):** ~190 of those are the cohesive event-card
+      scoped CSS (above). Like #1/#2's card shells, this is one surface, not a separable seam.
+    - **Cross-boundary CSS handled with `:deep()`:** sticky-header backgrounds key off the root
+      `.event-tooltip.is-scrollable` but the `.schedule-section-header` now lives in the child, so those
+      rules became `.event-tooltip.is-scrollable :deep(.schedule-section-header)`. Base `.tier-group`/
+      `.tier-label` styling reaches the leaf the same way; the `.schedule-section`-contextual tier margins
+      moved into the schedule-sections child.
+    - **`getScheduleLabelStyle` simplified on the way out:** the old helper ignored its `label` arg (only
+      `isAllDay` mattered) and both fallback `<span>` branches produced identical inline styles — collapsed
+      to one span + one `labelStyle(isAllDay)` in the child.
+    - **Typing smell (carried over, not changed):** `(event as any)._isGrouped` guards in the template.
+    - **Follow-up option:** the tier-image leaf could fully own `.tier-group`/`.tier-label` if the tooltip
+      (0.8rem) and timeline (0.75rem) label sizes + group gaps were unified — a small intentional visual
+      tweak, deferred to avoid changing the just-settled Timeline component's output here.
 
 ### 4. Calendar.vue (page)
 
-- **Why:** 525-line page orchestrator; likely mixing layout, header controls, and wiring.
-- **Suggested seams (verify):** extract toolbar/header regions; move orchestration logic to
-  composables.
-- **Manual checks:** month navigation, URL sync, options panel, overall layout.
-- **Findings:** _(none yet)_
+- **Why:** 525-line page orchestrator mixing self-contained UI regions (time-offset banner, filter
+  summary, two teleported offcanvas wrappers) with data-fetch lifecycle and overlay/keyboard wiring.
+  The bulk was CSS — most of it owned by the two offcanvas regions, not the page layout.
+- **Manual checks:** ✅ month navigation + URL sync; ✅ options offcanvas open/close (gear, backdrop,
+  `Esc`, close button), slide-in, **slider-interacting** state, mobile full-width; ✅ event-detail
+  bottom drawer on touch (open/backdrop-close/close button + body scroll lock); ✅ time-offset banner
+  (set a manual offset → label/value/tz + Reset); ✅ filter summary (counts/pluralization, desktop
+  tooltip, touch "Tap to open" line, click scrolls to filters); ✅ timeline sidebar layout at ≥1400px.
+  _(Verify light + dark, mobile + desktop.)_
+- **Realized split** (Calendar.vue 525 → **312-line orchestrator**; keeps the page-grid layout +
+  CSS, store/modal wiring, settings↔URL sync, `selectedEvent` computeds, Escape handler):
+    - Sub-components in `src/components/Calendar/`: `TimeOffsetIndicator.vue` (60 — banner + its
+      `effectiveTimezoneLabel` helper, reads `calendarSettings`), `FilterSummary.vue` (62 — filter
+      summary button + its `v-if` guard, reads `eventFilter`/`isTouchDevice`, emits `open-filters`),
+      `CalendarOptionsOffcanvas.vue` (77 — Teleport/Transition/backdrop wrapping `CalendarOptions`;
+      `:show` + `@close`), `EventDetailDrawer.vue` (92 — Teleport/Transition/backdrop wrapping the
+      existing `EventDetailOffcanvas`; `:show`/`:event`/`:is-single-day`/`:target-date` + `@close`).
+    - Composable `src/composables/useCalendarDataRefresh.ts` (45 — on-mount events/seasons fetch +
+      `liveHour`/`windowFocused` refetch watches; encapsulates `useCurrentTime`/`useWindowFocus`/
+      `useSeasonsStore`).
+    - Shared `.offcanvas-fade-*` backdrop-fade base lifted to global `src/styles/style.scss` (used by
+      both offcanvas wrappers); each wrapper keeps its own panel-transform rules scoped.
+- **Findings:**
+    - **Constraint preserved (cross-component CSS):** `CalendarOptions.vue` has a **global** `<style>`
+      block (`.slider-interacting .calendar-options-offcanvas` / `.calendar-options-backdrop`) reaching
+      the page's offcanvas. Class names were kept identical in `CalendarOptionsOffcanvas.vue` so those
+      rules still apply. Worth noting for any future rename.
+    - **Modernization applied (approved, mild behavior change):** the manual `keydown`
+      `addEventListener`/`removeEventListener` (onMounted/onUnmounted) → VueUse `useEventListener`; the
+      body-overflow `watchEffect` → VueUse `useScrollLock(document.body)` driven by a `watchEffect`. Both
+      `onMounted`/`onUnmounted` hooks were removed. `useScrollLock` changes the lock _mechanism_ (adds
+      iOS touch handling, restores original overflow on unmount) — intentional, verify body scroll lock
+      on touch.
+    - **Left intentionally in the orchestrator:** the settings↔URL two-way sync + `isInitialSync`/100ms
+      delay (drives the slide-in animation on a deep-linked `?settings=1` load) and the Escape-priority
+      handler (tooltips → blocking overlays/native color picker → close settings). Cohesive page glue,
+      entangled with `useUrlSync`/modals/`selectedEventId`; extracting to a composable would need a wide
+      interface (and `useUrlSync` can't be called twice — it double-registers its month/year watchers)
+      for no real complexity win. _Stage 6 deliberately skipped._
 
 ### 5. EventFilterOptions.vue
 
-- **Why:** 516 lines of filter UI.
-- **Suggested seams (verify):** per-category filter group sub-component; selection logic → composable.
-- **Manual checks:** toggling event types, category groups, persistence, toasts.
-- **Findings:** _(none yet)_
+- **Why:** 516 lines of filter UI (timeline toggle + All/None stats + category filter grid + hidden-events
+  list), CSS-dominated.
+- **Manual checks:** ✅ toggling event types; ✅ All/None buttons + count text; ✅ hover-highlight on calendar
+  (body `data-filter-hover-event-type`); ✅ palette color-edit button (custom-color dot); ✅ hidden-events list +
+  show; ✅ "Apply filters to Timeline" switch; persistence. (Verified light + dark, mobile + desktop.)
+- **Realized split** (EventFilterOptions.vue 516 → **114-line orchestrator**, promoted to
+  `src/components/CalendarOptions/EventFilterOptions/`; keeps the timeline toggle, All/None stats bar,
+  helper text + their CSS, composes grid + hidden-list):
+    - Sub-components in `EventFilterOptions/`: `EventTypeFilterGrid.vue` (74 — grid container + category
+      groups + the body-attr hover-highlight handlers + grid CSS; renders the item), `EventTypeFilterItem.vue`
+      (230 — the single filter `<label>`: checkbox area + colored content + palette color-edit button + all
+      `.filter-item*`/`.filter-content`/`.filter-color-edit-btn` CSS), `HiddenEventsList.vue` (116 — hidden-events
+      region + its CSS).
+    - Composable `src/composables/useHiddenEvents.ts` (60 — `{ hiddenEvents, showHiddenEvent }`; single source
+      of truth via the stores, consumed by both orchestrator (count) and `HiddenEventsList` (render + action)).
+    - Util `src/utils/eventTypeGroups.ts` (36 — pure `groupEventTypesByCategory()` + `CATEGORY_DISPLAY_NAMES`;
+      kept out of the already-overloaded `eventTypes.ts` (row #8)).
+- **Findings:**
+    - **Highlight stays grid-owned** via native event fallthrough (`@mouseenter`/`@mouseleave` on
+      `<EventTypeFilterItem>`), keeping the `data-filter-hover-event-type` body-attribute coupling in one place;
+      the global consumer at `style.scss:310` is untouched.
+    - **`eventGroups` is now a plain const** (was a `computed`) — it derives only from the static `EVENT_TYPES`,
+      so behavior is identical. The new util also replaces the old convoluted reverse-lookup-by-title category
+      sort with a direct key-ordered sort.
+    - **Dead code removed:** the no-op `ref="filterGridContainer"` (no matching `ref()` in script);
+      the `.hidden-events-title` CSS rule (no markup referenced it); a commented-out
+      `.filter-color-edit-btn.has-custom-color` block.
+    - **Typing tightened:** `showHiddenEvent`'s `event: any` → `PogoEvent | null` (via `useHiddenEvents`), and
+      the helper now takes the whole `HiddenEventEntry` instead of three redundant args.
+    - **Convention/cleanup (approved):** `handleTimelineFilterToggle` arrow → `function` declaration; redundant
+      double `eventMetadata[id]` read collapsed to the local `metadata` var.
+    - **`EventTypeFilterItem.vue` is 230 lines (over the ~300 soft target is fine, but ~175 are CSS):** one
+      cohesive styled element, not a separable seam — same situation accepted in #1–#3.
 
 ### 6. EventTimeline.vue
 
-- **Suggested seams (verify):** timeline layout vs. row rendering; shares concerns with #2.
-- **Findings:** _(none yet)_
+- **Why:** 542 lines (board's 453 was stale) mixing three concerns: event categorization/grouping
+  data, imperative scroll-into-view on expand, and per-category rendering with most of the CSS.
+- **Manual checks:** ✅ four categories render with count badges (Today / Ongoing / Upcoming &
+  Future date-grouped); ✅ collapse/expand persists (`timeline/category-<key>`); ✅ expand-event
+  scrolls into view (standalone + ≥1400px sidebar — different scroll containers); ✅ sticky category
+  headers park at correct offset (standalone under navbar vs. sidebar); ✅ "No single-day events
+  today" message + "N events hidden by filters" indicator; ✅ fade transitions. (Verified light + dark.)
+- **Realized split** (EventTimeline.vue 542 → **74-line orchestrator**, promoted to
+  `src/components/Calendar/EventTimeline/`; keeps the `.event-timeline` shell + sticky CSS-var defs +
+  `.timeline-events`/`.no-events`, composes the category loop):
+    - Sub-component in `EventTimeline/`: `TimelineCategorySection.vue` (248 — one `CollapsibleSection`:
+      title slot, both render variants (flat list for Today/Ongoing, date-grouped for Upcoming/Future),
+      no-events-today message, hidden-events indicator + all category-level CSS). Props
+      `(category, categoryEvents, dateGroups, totalCount, hiddenCount, activeEventId)`, emits `activate`.
+    - Composable `src/composables/useTimelineCategories.ts` (194 — `filteredEvents`, the `eventData`
+      categorization+counts, `groupedByDate`, the 3 extracted computeds, and the exported
+      `eventCategories` const + `TimelineDateGroup` type).
+    - Composable `src/composables/useTimelineActiveEvent.ts` (30 — `activeEventId` + `setActiveEvent`
+      with the scroll-on-expand; `setActiveEvent` arrow → `function` per convention).
+    - Util `src/utils/timelineScroll.ts` (51 — pure `getScrollContainer`/`scrollCardIntoView` +
+      `TIMELINE_TITLE_BUFFER_PX`; no Vue reactivity → testable).
+- **Findings:**
+    - **Sticky CSS vars cross the new boundary cleanly:** `--tl-sticky-top` etc. stay defined on
+      `.event-timeline` in the orchestrator and inherit into `TimelineCategorySection` (custom props
+      ignore scope), so the child's `:deep(.timeline-category-header) { top: var(--tl-sticky-top) }`
+      still resolves. No change needed.
+    - **Dead/non-functional CSS (moved as-is, behavior-preserving):** `.category-section-content`
+      `{ padding: 0 !important }` never matched — it targets the class `CollapsibleSection` applies
+      inside _its own_ template scope, so the parent's scoped selector can't reach it. The real
+      padding reset is `:deep(.section-content)`. Candidate for removal (in both this and any consumer).
+    - **Cleanups:** dropped the two constant `:key` bindings on the inner TransitionGroups (redundant
+      now that each category is its own instance); removed the dead commented-out
+      `.date-group { overflow: hidden; }` block.
+    - **No dedup with #2:** the scroll logic here is bespoke (scrollable-container + sticky-buffer
+      aware); the other `scrollIntoView` call sites use the native `el.scrollIntoView()` — not shareable.
+- **Fixes applied (post-refactor, approved):**
+    - **Empty-state bug fixed:** the `v-if="Object.keys(categorizedEvents).length === 0"` guard was
+      _always false_ (the categorized record always has all four keys), so "No upcoming events found"
+      was unreachable. Replaced with a `hasAnyEvents` computed (true when any category total > 0; based
+      on totals so a fully-filtered view still shows its per-category hidden indicators). **Visible
+      behavior change:** the message now renders when the 60-day window genuinely has no events.
+    - **`groupedByDate` narrowed:** now typed `Partial<Record<…>>` and only builds the UPCOMING/FUTURE
+      keys it ever populated; the orchestrator passes `groupedByDate[key] ?? []` (TODAY/ONGOING got `[]`
+      before too — behavior-preserving).
+    - **Record-init dedup:** the three identical four-key records in `eventData` now come from an
+      `emptyCategoryRecord<T>(fill)` helper.
+- **Deferred:**
+    - **`.category-section-content` dead CSS** — non-functional `:deep`-scope mismatch (real reset is
+      `:deep(.section-content)`); left in place, safe to delete later.
+    - **`sortEventsByTimingAndPriority` `any`-typed metadata** — best fixed alongside relocating
+      `EventMetadata` in **#8** (details recorded under #8's notes).
+- **Connected-component dedup done (`useDisplayTime`):** the
+  `liveMinute.value.add(manualTimeOffsetHours * 60, 'minute')` (`displayNow`) + `.startOf('day')`
+  (`displayToday`) expression was duplicated across 8 sites. Extracted to
+  `src/composables/useDisplayTime.ts` (`{ displayNow, displayToday }` computeds) and adopted by
+  `App.vue`, `CalendarGrid.vue`, `CalendarHeader.vue`, `EventTimeDisplay.vue`, `SeasonDailyChip.vue`,
+  `stores/seasons.ts`, `stores/events.ts` (its private `getDisplayNow()` now returns `displayNow.value`),
+  and `useTimelineCategories.ts`. Behavior-preserving; the stores call the composable at setup (no new
+  import cycle — `useDisplayTime` only depends on `calendarSettings` + `useCurrentTime`).
 
 ### 7. EditEventColorModal.vue
 
-- **Suggested seams (verify):** color-picker (`@jaames/iro`) wrapper component; modal logic →
-  `useEditColorModal` (already exists — check overlap).
-- **Findings:** _(none yet)_
+- **Why:** 430 lines mixing the modal shell (Teleport/Transition/backdrop + Escape + offcanvas
+  `inert` handling), the `@jaames/iro` picker (instance lifecycle + hex input + validation, all
+  interlocked), and the modal-specific preview/default/save UI. ~218 of those lines were CSS,
+  ~140 of which was a modal shell **duplicated near-verbatim** in `HideEventModal.vue` (#12).
+- **Manual checks:** ✅ picker wheel + value slider; ✅ hex typing (valid updates wheel/New preview,
+  invalid shows red border); ✅ Current bar resets to original, swatch / "Set to Default" reset to
+  default; ✅ Save persists (and removes the override when equal to default); ✅ Escape / backdrop /
+  X close; ✅ scrollable layout on a short viewport; ✅ opening from the options offcanvas suspends
+  its focus trap (`inert`). (Verified light + dark, mobile + desktop.)
+- **Realized split** (EditEventColorModal.vue 430 → **211-line orchestrator**; keeps preview
+  comparison, default swatch + "Set to Default", save, reset handlers, and the open-snapshot watch):
+    - Shared component `src/components/BaseModal.vue` (195 — generic modal shell: Teleport/Transition/
+      backdrop/dialog/content/header + close button + Escape + backdrop-click + `inert` handling + all
+      shell CSS). Props `show`/`title`/`scrollable`/`inertSelector`; `close` emit; default body slot.
+      Lives at the **components root** alongside `CollapsibleSection.vue`/`ThemeSelector.vue` (app-wide,
+      zero calendar coupling). **Adopted by both EditEventColorModal and `HideEventModal.vue` (#12).**
+    - Sub-component `src/components/Calendar/ColorPickerField.vue` (156 — iro wheel/value-slider + hex
+      input as `v-model:modelValue` (hex string); owns the iro instance lifecycle, `handleHexInput`/
+      `isValidHex`, `isHexInputValid`, and the picker/hex/`:deep(.IroSlider)` CSS). iro now inits/destroys
+      on the child's own mount/unmount (it mounts with the modal's `v-if`), so the parent watch only
+      snapshots the color + nothing else. The default-color button is passed in via the default slot.
+    - Util `src/utils/dom.ts` (6 — `setElementInert(el, inert)`, a Vue-free `el?.toggleAttribute('inert', …)`
+      helper; new generic-DOM home, as no existing domain util fit).
+- **Findings:**
+    - **Dead CSS removed:** the `.modal-body p` rule had no `<p>` in this modal's body (it was carried
+      over from the shared shell; the real `<p>` consumer is HideEventModal, which kept its own copy).
+    - **Behavior note (picker lifecycle):** the iro picker is now created/destroyed by `ColorPickerField`'s
+      mount/unmount instead of a `show`-watch + `nextTick`. Equivalent (the field only renders inside the
+      modal's `v-if="show"`); reset/default/hex all flow through `v-model` (parent reassigns `currentColor`
+      → child's `modelValue` watch drives the iro instance, guarded against redundant sets).
+    - **`inert` is the right primitive (no library):** there is **no focus-trap library** in the repo; the
+      offcanvas is a plain Teleport using Bootstrap `.offcanvas` CSS classes. `inert` is the modern platform
+      primitive for "suspend a subtree," so no VueUse/`useFocusTrap` change was warranted.
+    - **Cross-boundary CSS:** all shell selectors moved to `BaseModal`. Slotted body content keeps its
+      styles in each consumer; HideEventModal's `.modal-body p` still resolves because Vue scopes only the
+      rightmost selector (`.modal-body p[data-v-hide]` matches BaseModal's `.modal-body` + the slotted `p`).
 
 ### 8. eventTypes.ts
 
@@ -198,14 +480,535 @@ seams below are **initial hypotheses from the first survey** — verify against 
 - **Suggested seams (verify):** split data (`EVENT_TYPES`, keys, categories) from behavior
   (date parsing, grouping, sorting, major-event helpers). Keep public import paths stable or update
   all call sites.
-- **Findings:** _(none yet)_
+- **Carried-in opportunities (from #6):**
+    - **`sortEventsByTimingAndPriority(events, eventMetadata: Record<string, any>)` typing
+      (eventTypes.ts:533):** the `any`-typed metadata should be `Record<string, EventMetadata>`.
+      `EventMetadata` currently lives in `stores/events.ts` (line ~58), so typing it directly from
+      here would be backwards layering (util → store) — even a type-only import only avoids the
+      _runtime_ cycle, not the smell. The clean fix is to **relocate `EventMetadata` into
+      `eventTypes.ts`** (or a shared `types` module) as part of this split, then the param types itself
+      naturally. Worth checking whether `EventMetadata`'s own deps (`EventTypeInfoWithoutColor`, etc.)
+      already live here, which would make the move low-friction.
+    - **Note the layering rule generally:** several `utils/` consumers pass `eventsStore.eventMetadata`
+      into helpers here; centralizing the `EventMetadata` type in this file (not the store) keeps the
+      dependency direction store → util.
+- **Manual checks:** pure-util split, behavior-preserving — no rendering/markup/CSS changed. Smoke-check
+  the calendar grid (single-day + multi-day bars, grouped events render), the timeline sidebar (category
+  sort/timing order), major-event variant badges, spotlight/CP badges, and the event tooltip/extras. Type
+  union + registry unchanged, so colors/priorities/categories are untouched.
+- **Realized split** (eventTypes.ts 849 → **449-line module**; keeps the domain-model interfaces,
+  the `EVENT_TYPES` registry table, `EventTypeKey`, `TimelineCategory`/`TimelineCategoryKey`, and
+  `getEventTypeInfo` — the symbols imported nearly everywhere, so ~40 `PogoEvent`/`EventTypeKey`/
+  `EVENT_TYPES` import lines stayed stable). All call sites updated (no barrel; per repo convention).
+  Five focused pure-util siblings under `src/utils/`:
+    - `eventDate.ts` (46 — `parseEventDate`, `formatEventTime`, `isMultiDayEvent`, `isSameDayEvent`;
+      owns its own `dayjs.extend(utc)`).
+    - `eventMajor.ts` (37 — `MAJOR_CALENDAR_EVENT_TYPES` + variant types/helpers).
+    - `eventSubtype.ts` (70 — `EVENTS_WITH_SUBTYPE`/`isEventWithSubtype`/`getRaidSubType`/
+      `getRaidSubTypePriority` + `hasEventExtras`).
+    - `eventSort.ts` (48 — `sortEventsByPriority`, `sortEventsByTimingAndPriority`).
+    - `eventGrouping.ts` (248 — `EventGroup`/`CalendarEventDisplay` types + `shouldGroupEvents`/
+      `groupEventsByType`/`getGroupedEvents`/`hasGroupedEvents`/`getGroupedEventsCount`/`getEventsForDate`/
+      `getCalendarEventsForDate`).
+- **EventMetadata relocated (carried-in #6 opportunity, done):** `EventMetadata` + `RaidBossTierGroup`
+  moved from `stores/events.ts` into `eventTypes.ts`; `sortEventsByTimingAndPriority`'s param tightened
+  from `Record<string, any>` → `Record<string, EventMetadata>`. Fixes the store→util layering smell. The
+  store now imports both types back from `eventTypes.ts`. Used `import type { Dayjs }` (type-only) for the
+  date fields so no runtime `dayjs` import was reintroduced into the now-lighter `eventTypes.ts`.
+- **Findings:**
+    - **Type-only import cycle (benign):** `eventTypes.ts` now imports `type SpotlightBonusInfo` from
+      `spotlightBonus.ts`, which imports `type PogoEvent` back. Purely type-level (erased at compile),
+      no runtime cycle; vue-tsc is clean.
+    - **Dead grouping trio removed (follow-up #2, ~190 lines):** `shouldGroupEvents`, `groupEventsByType`,
+      and `getCalendarEventsForDate` had **no callers** (the calendar grouping migrated into the events
+      store long ago — per `groupEventsByType`'s own TODO). Deleted along with the now-orphaned
+      `EventGroup`/`CalendarEventDisplay` types; `eventGrouping.ts` shrank **248 → 41 lines** (now just
+      `getGroupedEvents`/`hasGroupedEvents`/`getGroupedEventsCount`/`getEventsForDate`) and dropped its
+      `useEventTypeColorsStore`/`formatEventName`/`getEventTypeInfo`/`sortEventsByPriority`/`eventDate`
+      imports.
+    - **Grouping-augmentation fields typed (follow-up #1):** added `_isGrouped`/`_groupedEvents`/
+      `_displayName` as optional internal fields on `PogoEvent` (stamped by the events store). Removed
+      **all 15 `(event as any)._*` casts** across `eventGrouping.ts`, `eventDisplay.ts`, `events.ts`,
+      `CalendarGrid.vue`, `EventTooltip.vue`, `TimelineEvent.vue`, `EventDetailOffcanvas.vue`,
+      `MultiDayEventBar.vue`. Resolves the typing smell flagged in #2/#3 too. (`_isMajorDailyDisplay`/
+      `_sourceEventID` left on `DailyMajorDisplayEvent`, which already types them.)
+    - **Type-only import cycle (benign):** `eventTypes.ts` now imports `type SpotlightBonusInfo` from
+      `spotlightBonus.ts`, which imports `type PogoEvent` back. Purely type-level (erased at compile),
+      no runtime cycle; vue-tsc is clean.
+    - **Likely-dead export:** `getMajorCalendarEventVariantLabel` (eventMajor.ts) has no callers
+      (pre-existing — not introduced here). Candidate for removal.
+    - **Cleanups (follow-up #3):** dropped the dead `color: '#757575'` field from the `getEventTypeInfo`
+      fallback (its return is `EventTypeInfoWithoutColor` — the live grey fallback for unmapped events is
+      owned by `eventTypeColors.ts` `getEventTypeColor()`, untouched). Made `sortEventsByPriority` +
+      `sortEventsByTimingAndPriority` **pure** (`[...events].sort(...)`) — all 3 callers already pass
+      fresh arrays and consume the return value, so behavior-preserving; removes a latent mutation
+      footgun for a shared util.
+    - **`eventTypes.ts` still 449 lines, but ~200 is the `EVENT_TYPES` data table** and ~210 is domain
+      interfaces — data + types, not logic (comparable to the explicitly-out-of-scope constant files).
+      The behavioral tangle is gone. Could shrink further by moving the domain-model interfaces to a
+      `types`-only module, but that would churn the ~30 `PogoEvent` type-import sites for little gain.
 
 ### 9. eventPokemon.ts
 
-- **Suggested seams (verify):** per-event-type resolver functions could split by category; keep
-  `getEventPokemonImages()` as the single entry point.
-- **Findings:** _(none yet)_
+- **Why:** 691 lines (board's 566 was stale) in one util mixing four concerns: the two image types,
+  ~230 lines of pure title/name parsing, the name→sprite-URL layer, and a single **~316-line**
+  `getEventPokemonImages()` whose body was a long ordered sequence of per-event-type `if` branches.
+- **Manual checks:** pure-util split, behavior-preserving — no markup/CSS changed. Smoke-check
+  Pokemon sprites across event types: raid bosses (calendar bars + timeline + tooltip), raid-day /
+  raid-hour title-parsed sprites, spotlight hour, community day, max battles (Gigantamax + Dynamax),
+  PokéStop showcases, max-mondays. Confirm tiered raid sprites + fallback images still resolve.
+- **Realized split** (eventPokemon.ts 691 → **97-line entry/dispatcher**). Five focused siblings
+  under `src/utils/` (public import paths kept stable — consumers still import from `eventPokemon`):
+    - `eventPokemon.ts` (97 — the `getEventPokemonImages()` **dispatcher** + the `hasExtraData` guard +
+      `hasEventPokemonImage`/`getMultiDayPokemonImages`; re-exports `parsePokemonNameAndSuffix` and the
+      two image types).
+    - `eventPokemonTypes.ts` (17 — leaf type module: `PokemonImageData`, `PokemonImageOptions`, and the
+      `EventWithExtraData` narrowed-event type; imports only `type PogoEvent`).
+    - `eventPokemonNames.ts` (241 — pure title→name parsing: `parseEventPokemonNames`, the four
+      `extract*` helpers, `extractPokemonNameFromRaidBattle`, `parsePokemonNameAndSuffix` +
+      `REGIONAL_FORM_SUFFIXES`). No CDN/mapper dependency → fully testable.
+    - `eventSprite.ts` (104 — name→URL layer: `getSpriteUrl`, `getRaidBossesWithTierFallback`,
+      `getPokemonImagesFromBosses`, `getSpriteImagesFromNames`).
+    - `eventPokemonResolvers.ts` (286 — one `resolve<Type>Images()` per event-type branch; owns
+      `RAID_DAY_TITLE_EXCEPTIONS` + `GMAX_FORM_VARIANTS`).
+- **Dispatcher contract (behavior preservation):** each resolver returns `PokemonImageData[] | null`
+  — an array (possibly empty) when that branch decides the result, `null` when the original code fell
+  through to the next branch. The dispatcher runs them in the **exact original order** with the same
+  `eventType` guards and `if (result) return result;`. This maps 1:1 onto the old fall-through,
+  including the empty-`[]` short-circuits (raid-day exceptions, type-based PokéStop showcases) and the
+  `event`/spotlight overlap (both run for an `isSpotlightSubEvent`). Empty arrays are truthy, so an
+  intentional `[]` still stops the dispatch.
+- **Findings:** - **Reuse: `getSpriteImagesFromNames` (post-split cleanup).** Four resolvers (`resolveRaidBattleImages`,
+  `resolveRaidHourImages`, `resolveSpotlightImages` title-fallback, `resolvePokestopShowcaseImages`) ran
+  the same "parse each name → resolve sprite → push `{ name, imageUrl }`, skip unparseable" loop. Folded
+  into one helper in `eventSprite.ts` (peer to `getPokemonImagesFromBosses`). The only variation —
+  raid-battles applying `-mega` to suffix-less names when the event is a Mega raid — is an explicit
+  `megaFallback` param (set from `raidSubType`, kept legible at the call site rather than smuggled into
+  `options`). Behavior-identical (`parsed.suffix` is always non-empty-or-absent, so the old
+  `if (suffix) … else …` collapses to `parsed.suffix ?? (megaFallback ? '-mega' : undefined)`).
+  `eventPokemonResolvers.ts` 358 → 286. - **Dead config field:** `PokemonImageOptions.isMega` is **read** by `getSpriteUrl` but **set by no
+  caller**. We deliberately did _not_ route the raid-battles mega flag through it (it's event-derived
+  classification, not a rendering option), so the field stays unused — removal candidate. - **Likely-dead exports:** `hasEventPokemonImage` and `getMultiDayPokemonImages` have **no callers**
+  anywhere in `src/`. Left intact (behavior-preserving, possible public API); removal candidates. - **`parsePokemonNameAndSuffix` re-exported, not relocated-with-break:** its canonical home is now
+  `eventPokemonNames.ts`, but it's `export`ed from `eventPokemon.ts` (its documented path, though no
+  external code imports it today) to keep paths stable. AGENTS.md updated to reflect both. - **`extraData` invariant encoded in the type (best practice):** the entry point's guard is now the
+  type-guard `hasExtraData(event): event is EventWithExtraData`, so after `if (!hasExtraData(event))
+return []` the dispatcher passes a `PogoEvent & { extraData: NonNullable<…> }` to every resolver.
+  Resolvers are typed `(event: EventWithExtraData, …)` and read `event.extraData.X` with **no
+  defensive `?.`** — the invariant (extraData always present when a resolver runs) is expressed and
+  checked instead of asserted. Behavior-identical (the `?.` never short-circuited at runtime). - **No import cycle:** the two image types + `EventWithExtraData` live in a dedicated leaf module
+  `eventPokemonTypes.ts` (imports only `type PogoEvent`). `eventPokemon.ts`, `eventSprite.ts`, and
+  `eventPokemonResolvers.ts` all import types _from the leaf_ and re-export for path stability — every
+  module edge points one direction (toward the leaf), so there's no eventPokemon↔sub-module back-edge.
+- **Follow-up (deferred → DONE in #16d):**
+    - **Gmax sprite path → `pokemonMapper.ts` (the pre-existing `GMAX_FORM_VARIANTS` TODO):** max-battles
+      Gigantamax events bypass the normal 5-tier CDN chain — `resolveMaxBattleImages` hand-built a URL
+      against a one-off CDN (`HybridShivam/Pokemon`) using `GMAX_FORM_VARIANTS` + `GIGANTAMAX_POKEMON_IDS`.
+      **Not a safe mechanical move:** the table was used for _both_ title-form parsing (`patterns`) and
+      filename selection (`default`), so a clean migration had to split "title→form" (stays in the
+      resolver layer) from "id+form→URL" (moves to `pokemonMapper`). Done in #16d below.
 
-### 10–12
+### 10. EventTimeDisplay.vue
 
-- Scope when reached. Likely smaller, may turn out to be ⏭️ if already cohesive.
+- **Why:** 389 lines (board's 353 stale). Template (~38) and CSS (~85) are thin and cohesive; the bloat is
+  two large **pure** computeds in the script — `timeDisplayParts` (~113) and `statusInfo` (~93) — plus the
+  `formatSingleDayTimes` helper. All are pure functions of `(startDate, endDate, now, isSingleDay)` with no
+  Vue reactivity → ideal to lift to a util for testability (principle 5).
+- **Realized split** (EventTimeDisplay.vue 389 → **171-line component**; single stage, pure-logic extraction,
+  no template/CSS change — rendered output byte-identical):
+    - **New** `src/utils/eventTimeDisplay.ts` (~290 — `buildTimeDisplayParts(start, end, now, isSingleDay)`,
+      `buildEventStatusInfo(start, end, now, isSingleDay)`, `formatSingleDayTimes(start, end)` + the
+      `TimeDisplayParts`/`EventStatusInfo`/`EventStatusType` types). No Vue reactivity → testable; imports only
+      `type { Dayjs }`.
+    - The component keeps the template, CSS, store/`useDisplayTime` wiring, the `isSingleDay` computed, a new
+      `resolvedDates` computed (the metadata-or-`parseEventDate` fallback, previously duplicated in both
+      computeds — now resolved once), and two thin computeds that delegate to the utils.
+- **Manual checks:** time row + status line across event states (upcoming / live / ended) for both single-day
+  and multi-day events; the "Live • " prefix and day-count prefixes; relative timing (mins/hours/days, today/
+  tomorrow); past-time dimming + completed styling. Rendered in TimelineEvent + EventTooltip. Light + dark.
+- **Findings:** - **Repetition left as-is (behavior-preserving):** both builders have heavy internal repetition — 3
+  near-identical return objects per branch in `buildTimeDisplayParts`, and `isSingleDay ? 'Starts…' :
+'starts…'` (capitalization-only) doubled throughout `buildEventStatusInfo`. The verbatim move keeps
+  behavior identical; collapsing them (e.g. a focus-flag table, or one cased string + `.toLowerCase()`)
+  is a possible follow-up but would change the shape enough to warrant its own review. - **Dedup on the way out:** the start/end-date resolution (`metadata?.startDate ?? parseEventDate(...)`)
+  was duplicated in both old computeds; lifted to one `resolvedDates` computed. Behavior-identical. - **Post-extraction cleanup of `buildEventStatusInfo` (approved, behavior-preserving, ~95 → ~60 lines):**
+  `totalDays` + its `prefix` string (computed identically in all three branches) lifted to the top; the
+  live branch's `livePrefix` (rebuilt 5× with an `if (isSingleDay)/else` per sub-case) collapsed to one
+  `const livePrefix = isSingleDay ? 'Live • ' : prefix`. **Dead sub-expression removed:** the original
+  `livePrefix = totalDays ? '… days • Live • ' : 'Live • '` was only ever evaluated inside `if (isSingleDay)`
+  blocks, where `totalDays` is always `null` — so the `'… days • Live • '` branch was unreachable and
+  `livePrefix` always resolved to `'Live • '`. Behavior identical. - **Deferred (needs sign-off):** `buildTimeDisplayParts` still has its 6 near-identical return objects.
+  They collapse to a 3-entry `PHASE_FLAGS` table keyed on ended/live/upcoming + a `{ ...PHASE_FLAGS[phase] }`
+  spread (~113 → ~30 lines). Output is byte-identical; the one caveat is that multi-day _upcoming_
+  `focusPrefix` would flip `false → true` in the returned object — never rendered (multi-day `prefix` is
+  `''`, so the prefix span is `v-if`'d out and `focusPrefix` is never read), only observable by asserting
+  on the raw object. Left for explicit approval.
+
+### 11. EventOptions.vue
+
+- **Why:** 385 lines (board's 331 stale) with two template regions — the event-display options (font slider +
+  2 toggles) and a nested "Local Timezone Override" `CollapsibleSection` (~65 template lines, ~85 of the ~110
+  CSS lines, and the entire manual-offset logic cluster).
+- **Manual checks:** ✅ font-size slider (live calendar feedback + auto-expand/scroll of calendar section);
+  ✅ group-similar-events + season-daily-bonuses toggles persist; ✅ timezone override (stepper ±1, slider,
+  chip label + active dot, "Display time"/tz line, reset link/chip, auto-expand when offset set); ✅ chip
+  updates live while dragging; ✅ TimeOffsetIndicator label unchanged; persistence. (Verified light + dark,
+  mobile + desktop.)
+- **Realized split** (EventOptions.vue 385 → **148-line orchestrator**; keeps the font slider + two toggles +
+  their handlers + the `.form-label`/`.bar-size--label`/`.event-bar-size-container`/`.slider-container` CSS,
+  renders `<TimezoneOverrideOptions />`):
+    - Sub-component `src/components/CalendarOptions/TimezoneOverrideOptions.vue` (~237 — the nested
+      `Local Timezone Override` `CollapsibleSection` + stepper/slider/chip/reset markup; all `manualOffset*`
+      logic (ref, 150ms debounce, `applyManualOffset`/`normalizeManualOffset`/increment/decrement/input/reset,
+      the store-sync watch + the auto-expand watch, `adjustedNowLabel`, `effectiveTimezoneLabel`,
+      `localManualOffsetLabel`); the `useCurrentTime`/`dayjs`/`getEffectiveTimezoneLabel` imports; and all
+      `.manual-offset-*` + `.btn-stepper` CSS). Kept **flat** in `CalendarOptions/` beside the other section
+      components (only one child extracted) rather than promoting EventOptions to a folder.
+    - Util `src/utils/timezoneLabel.ts` gained `formatManualOffsetLabel(offsetHours)` (the offset → `Local ±Hh`
+      formatter). **Adopted by both** the store getter `calendarSettings.manualTimeOffsetLabel` _and_ the child's
+      chip, replacing two byte-identical copies.
+- **Findings:**
+    - **Dedup approach (deviation from the proposed note, intentional):** the note suggested the child "use the
+      store getter." Rejected — the store getter reads the **committed** `manualTimeOffsetHours`, but the chip
+      reads the **in-progress local ref** (updates live on every slider input, before the 150ms debounce
+      commits). Switching the chip to the store getter would make the label lag during a drag — reintroducing
+      the very lag the debounce exists to hide. Instead extracted the shared _pure formatter_ both call with
+      their own value; behavior-identical, duplication gone. The 150ms debounce is untouched (it governs only
+      the store write, not the label).
+    - **`normalizeManualOffset()` still duplicates the store's `setManualTimeOffsetHours` clamping**
+      (`Math.round(h*2)/2` + clamp to ±14) — left in the child (note only, not changed; behavior-preserving).
+    - **`adjustedNowLabel()` deliberately reads the local in-progress ref** (not the committed store offset that
+      `useDisplayTime` uses), so it can't fold into `useDisplayTime` — kept in the child by design.
+    - **`effectiveTimezoneLabel()`** already delegates to the shared `getEffectiveTimezoneLabel` util (same as
+      TimeOffsetIndicator) — no change.
+    - **Cross-boundary CSS unaffected:** the parent's `slider-interacting` machinery
+      ([CalendarOptions.vue](src/components/CalendarOptions/CalendarOptions.vue)) targets only `#eventBarFontSize`
+      (font slider, stays in EventOptions) and the `.event-options-section` class on EventOptions' root — both
+      stay put, so the extraction doesn't disturb it. The timezone slider isn't wired to `slider-interacting`.
+
+### 12. HideEventModal.vue
+
+- **Settled as part of #7.** Adopted the shared `src/components/BaseModal.vue` extracted there,
+  dropping its duplicated shell template + handlers (`handleBackdropClick`/`handleKeydown`/show-watch/
+  `onBeforeUnmount`) and ~140 lines of shell CSS (363 → 220). Body content (hide buttons, timeline-filter
+  switch, cancel) + their styles stay local.
+- **Intentional visual change (approved):** the close (X) button was restyled from the local
+  fade-on-hover `.btn-close` to the shared `btn-icon-ghost` (the house style used in 11 other
+  components) that `BaseModal` standardizes on. Verified light + dark, mobile + desktop.
+- **Kept local:** `.modal-body p` text styling (its `<p>` is the only one across both modals; resolves
+  against BaseModal's slotted `.modal-body` via Vue's rightmost-selector scoping).
+- **Pre-existing (not changed):** the `.form-check-input:checked`/`:focus` rules here duplicate global
+  `style.scss` rules — left as-is (behavior-preserving); candidate for cleanup if #12 is revisited.
+
+### 13. EventExtras.vue
+
+- **Why:** 340 lines with five distinct bonus regions (spotlight / raid-hour / community-day w/ scroll-shadow
+  logic / season / event-bonuses) plus its own scroll-state handlers. Multiple responsibilities.
+- **Manual checks:** ✅ spotlight-hour bonus card (XP/Stardust/Candy icon by text + accent border); ✅ raid-hour
+  sub-event bonus list; ✅ community-day bonuses (icons + text, italic disclaimers, scroll-shadow gradients
+  toggling on the 97px list); ✅ season Daily Discoveries + season bonuses (rows still styled via the lifted
+  global rules; scroll-shadow on the 260px daily list); ✅ event time-range bonuses (GO Fest — time-range labels,
+  earliest-first sort, scroll-shadow on the 120px list); ✅ accent border tracks a custom color override. Rendered
+  at both call sites (TimelineEvent expanded extras + EventTooltip). (Verify light + dark, mobile + desktop.)
+- **Realized split** (EventExtras.vue 340 → **40-line orchestrator**, promoted to
+  `src/components/Calendar/EventExtras/`; the orchestrator keeps only the `hasContent` gate + the `seasonData`
+  slice and composes the five regions in their original render order):
+    - Sub-components in `EventExtras/`: `SpotlightBonus.vue` (79 — spotlight card + the XP/Stardust/Candy icon
+      resolver), `RaidHourBonuses.vue` (53 — raid-hour bonus list), `CommunityDayBonuses.vue` (103 — community-day
+      bonuses + disclaimers + scroll-shadow), `EventBonuses.vue` (120 — time-range bonuses + `parseBonusStartTimeMinutes`
+        - earliest-first sort), and the pre-existing `SeasonBonuses.vue` (moved in, 259 → 235).
+    - Composable `src/composables/useScrollShadow.ts` (30 — `{ canScrollUp, canScrollDown, updateScrollState }`;
+      drives the global `.scroll-shadow-hints` affordance). **Caller owns the template ref and passes it in**
+      (`useScrollShadow(elementRef)`) — see findings.
+    - Each region sub-component takes `event` and self-guards with a `v-if` on its root (renders nothing when its
+      slice is absent), and computes its own `eventColor` accent (matching `SeasonBonuses`' internal `seasonColor`).
+      `SeasonBonuses` kept its existing `season`-slice interface (settled component, left un-touched), so the
+      orchestrator retains the small `seasonData` computed to feed it.
+- **Findings:**
+    - **vue-tsc template-ref gotcha (informed the composable shape):** a `<script setup>` binding used _only_ as a
+      template string ref (`ref="x"`) does **not** count as a usage for `noUnusedLocals` — `vue-tsc` raises TS6133
+      even though the template uses it. The original `bonusListRef` escaped this only because `updateScrollState`
+      also read `.value` in-script. So `useScrollShadow` takes the ref as a parameter (caller owns it, idiomatic
+      VueUse-style target binding) rather than returning it — the ref is then a real script usage at the call site.
+    - **Shared CSS lifted to global (approved):** `.bonus-item`/`.bonus-item:last-child`/`.bonus-icon`/`.bonus-text`
+      were byte-identical across the community-day + event regions and `SeasonBonuses`; moved to `style.scss` and the
+      three components now rely on the global rules. `SeasonBonuses` keeps only its `.season-bonus-tier .bonus-item`
+      `padding-left` override locally. (Specificity is fine — removing the scoped copies leaves only the global
+      `.bonus-item`, and the season override is a more-specific selector setting a property the global doesn't.)
+    - **Small per-component duplication left as-is (noted, not lifted):** `.bonus-content` is identical in
+      `SpotlightBonus` + `RaidHourBonuses`; `.bonus-header` is identical in `CommunityDayBonuses` + `EventBonuses`;
+      and the `.spotlight-bonus` / `.raid-hour-bonuses` card surfaces are byte-identical (differ only by class
+      name). Each is a small cohesive per-card block; left duplicated to keep the split behavior-preserving and the
+      components self-contained (same call made for card shells in #1–#3). Candidates if they ever diverge or spread.
+    - **Enhancement applied (`useScrollShadow` rolled out to the other scrollable extras — intentional behavior
+      change, user-requested):** the scroll-shadow affordance previously existed only on community-day. Adopted the
+      composable in the two remaining scrollable lists in the family — `EventBonuses` (`.event-bonus-list`, 120px) and
+      `SeasonBonuses` (`.season-daily-list`, 260px) — by wrapping each in a `.scroll-shadow-hints` container and wiring
+      `@scroll` + the `can-scroll-up/down` classes. `SeasonBonuses` reuses its existing `listRef` (already used for
+      highlighted-day centering); the centering `scrollTop` write fires `@scroll`, so the shadow state stays in sync.
+      This is the one **non-behavior-preserving** part of the feature (new gradient hints where there were none).
+
+### 14. CalendarGrid.vue
+
+- **Why:** 344 lines, but template (~28) and CSS (~40) are thin — the bulk is **~270 lines of pure
+  multi-day slot-packing logic** in the script. This is the same "lift pure logic into a testable
+  composable/util" shape as #1/#6/#8–#10, and it's the only remaining untracked file that fits the
+  charter cleanly. Also carries a **duplicate `EventSlot` interface** (flagged in #1's findings) that
+  should adopt the one already exported from `useCalendarDayLayout.ts`.
+- **Suggested seams (verify):**
+    - Extract the slot-assignment algorithm — `multiDayEventsForCalendar`, `eventSlots`,
+      `shouldShareSlot`, `findAvailableSlotForEventType`, `findNextAvailableSlot`, `hasConflictInSlot` —
+      into `useCalendarGridSlots.ts`, **or**, since it's nearly pure (reads events/metadata/settings),
+      a `src/utils/` function taking those as args for full testability with the store as a thin wrapper.
+    - Adopt the shared `EventSlot` type from `useCalendarDayLayout.ts`; delete the local duplicate.
+    - The `calendarDays` month-grid computed (first-day-of-week alignment) could become a small helper.
+    - **Convention:** the helpers use `const fn = () =>`; convert to `function fn()` per repo style.
+- **Manual checks:** ✅ multi-day bars span/position/stack correctly — slot packing across same-type
+  slots, raid sub-type compatibility, grouped events, and time-overlap conflicts; ✅ month grid renders
+  with correct first-day-of-week, today marker, current-month vs. adjacent-month dimming; ✅ URL
+  month/year navigation. (UI confirmed by user.)
+- **Realized split** (CalendarGrid.vue 344 → **57-line orchestrator**; keeps the template, grid CSS,
+  store/composable wiring, `dayHeaders` + the thin `calendarDays` computed):
+    - Composable `src/composables/useCalendarGridSlots.ts` (~205 — owns `multiDayEventsForCalendar` +
+      `eventSlots` + the slot helpers `shouldShareSlot`/`findAvailableSlotForEventType`/
+      `findNextAvailableSlot`/`hasConflictInSlot`, all converted `const fn = () =>` → `function fn()`;
+      takes a `() => CalendarDayCell[]` getter, reads `eventsStore`/`eventFilter`/`calendarSettings`).
+      Sibling to `useCalendarDayLayout.ts` (same `EventSlot` domain + store-reactive pattern) — a pure
+      util was considered but would force a util→composable `EventSlot` type import or re-duplicate it.
+    - Util `src/utils/calendarGrid.ts` (~55 — pure `buildCalendarDays(referenceDay, { year, month,
+firstDayIndex })` + the `CalendarDayCell` type; no Vue/store deps → testable). Object-arg form per
+      repo preference (≤2 args, one an options object).
+    - **Duplicate `EventSlot` interface deleted** — both grid components now import the canonical type
+      from `useCalendarDayLayout.ts` (resolves the follow-up flagged in #1).
+- **Findings:**
+    - **Offset-fallback consistency (fixed):** `multiDayEventsForCalendar`'s overlap-filter `parseEventDate`
+      fallback omitted `manualTimeOffsetHours` while every other fallback in the file passed it. Added the
+      arg. **Behavior-preserving** — the `?? parseEventDate(...)` branch is effectively dead: `eventMetadata`
+      covers every raw event and grouped representatives are `{ ...sortedGroup[0] }` (real `eventID`), so
+      `processedEvents` always has metadata and the fallback never fires.
+    - **Non-mutating sort (fixed):** `eventSlots` did `events.sort(...)` on the `multiDayEventsForCalendar`
+      computed value → switched to `[...events].sort(...)` (the same footgun #8 removed in `eventSort.ts`).
+      Safe today (the filter returns a fresh array) but no longer mutates a computed's value.
+    - **Follow-up (deferred):** the `?? parseEventDate(...)` fallbacks throughout the composable are dead —
+      metadata is an invariant for `processedEvents`. Could drop them and type `startDate`/`endDate` as
+      always-present (the `hasExtraData`-guard shape from #9), removing ~6 fallback expressions. Left as-is
+      to stay behavior-preserving; worth a small follow-up.
+
+### 15. stores/events.ts
+
+- **Why:** 424 lines. A store (outside the original component charter), but it carries real dedup +
+  complexity worth a row: a **byte-identical `sortTierLabel` copy** and **inline tier-group building**
+  that duplicate `raidTierGroups.ts` (the #2 share extracted these for EventTooltip/TimelineEvent but
+  missed the store copy); a dense `eventMetadata` computed (~57 lines) and `processedEvents` grouping
+  (~64 lines); and debug `console.log` noise in `fetchEvents`.
+- **Suggested seams (verify):**
+    - **Quick win (completes #2):** replace the local `sortTierLabel` + the inline tier-map build in
+      `eventMetadata` with `sortTierLabel`/`buildTierGroupsFromBosses` from `raidTierGroups.ts`.
+    - Consider lifting the per-event `eventMetadata` builder into a pure util (testable), keeping the
+      store as the reactive wrapper.
+    - Consider lifting the `processedEvents` grouping into a util (parallels #8's `eventGrouping.ts`).
+    - Trim/guard the `fetchEvents` debug logging.
+- **Manual checks:** events load + render across calendar grid / timeline / tooltip; group-similar
+  toggle; metadata-derived fields unchanged (multi-day, past/future, spotlight bonus, raid tier groups);
+  month navigation. Light + dark.
+- **Realized split** (events.ts 424 → **308-line store**; the public API + all 18 consumers are
+  untouched — this lifts pure derivation out, leaving the store as the reactive wrapper):
+    - **Dedup completed (#2 quick win):** the byte-identical local `sortTierLabel` (16 lines) and the
+      inline tier-map build inside `eventMetadata` were replaced by `buildTierGroupsFromBosses` from
+      `src/utils/raidTierGroups.ts` (the share #2 extracted for EventTooltip/TimelineEvent but missed
+      here). Dropped the now-unused `PokemonBoss`/`RaidBossTierGroup` imports.
+    - **New** `src/utils/eventMetadata.ts` (41 — pure `buildEventMetadata(event, { now,
+manualOffsetHours, color })` → one `EventMetadata`). No store dependency (the reactive color
+      override + offset-adjusted "now" are passed in by the store), so it's fully testable. The store's
+      `eventMetadata` computed keeps the `events.value.forEach` loop, per-event color resolution via
+      `eventTypeColorsStore`, and the grouping second pass that reads `processedEvents`.
+    - **Grouping → `src/utils/eventGrouping.ts`** (41 → 109): added pure `groupEventsBySimilarity(events,
+enabled)` (the representative-event grouping, verbatim move). The store's `processedEvents` computed
+      collapsed from ~64 lines to a one-liner delegating to it. Lives in the existing grouping module
+      (read-side helpers already there); no import cycle (`eventName`/`eventSubtype`/`eventTypes` are all
+      leaves).
+- **Findings:**
+    - **`buildTierGroupsFromBosses` param widened** to `PokemonBoss[] | undefined` — the store passes
+      `event.extraData?.raidbattles?.bosses` (possibly `undefined`), and the function's own
+      `if (!bosses || bosses.length === 0) return undefined` guard already handled it at runtime; the
+      type just didn't admit it. Backward-compatible (the other 3 callers pass concrete arrays).
+      Behavior-preserving.
+    - **In-place sort mutation (fixed):** `groupEventsBySimilarity`'s `group.sort(...)` → `[...group].sort(...)`
+      (the same footgun #8/#14 removed elsewhere). Since the old in-place sort meant `_groupedEvents` and
+      `getSmartGroupDisplayName` both received the _sorted_ array, both references were redirected to
+      `sortedGroup` — keeping the output byte-identical while no longer mutating the input array.
+    - **Logging left as-is (per request):** the `fetchEvents` debug `console.log`s (sample-event dump +
+      per-month count + load/parse summaries) were intentionally **not** trimmed this pass.
+
+### 16. PokemonEventImages.vue
+
+- **Why:** 246 lines, script-heavy. The Dynamax/Gigantamax **title-regex classification**
+  (`showDynamaxOverlay`/`showGigantamaxEffect`) is title parsing that belongs in the eventPokemon/
+  eventName layer alongside the existing GMAX detection it mirrors; `showOverflowBadge`/
+  `overflowBadgeCount` share a **duplicated tier-exclusion-overflow** block.
+- **Suggested seams (verify):**
+    - Move the max-battle name-regex classification (Dynamax vs. Gigantamax) to a util — co-locate with
+      the GMAX logic in `eventPokemonResolvers.ts`/`eventName.ts` rather than re-parsing the title here.
+    - Collapse the duplicated tier-exclusion-overflow expression shared by `showOverflowBadge` and
+      `overflowBadgeCount` into one computed.
+- **Manual checks:** sprite rows across event types; dynamax overlay (max-mondays + Dynamax max-battles),
+  gigantamax effect (Gigantamax max-battles), shadow effect (shadow raids); "+more" indicator and the
+  overflow badge (tier-exclusion path + mobile path) with left/right alignment; placeholder. Light +
+  dark, mobile + desktop.
+- **Realized split** (PokemonEventImages.vue 246 → **232 lines**; two small in-place seams, no new
+  component/composable — the remaining computeds are tightly bound to `props`/breakpoints and don't
+  lift cleanly, and the file was already under the ~300 soft target, so sharding for line-count alone
+  was avoided). No template/CSS change; behavior-preserving.
+    - **Max-battle title classification deduped into the names layer:** added
+      `parseGigantamaxMaxBattleName(name)` / `parseDynamaxMaxBattleName(name)` to
+      [eventPokemonNames.ts](src/utils/eventPokemonNames.ts) (single source of truth for the two
+      `Max Battle` title regexes, beside the existing `extractPokemonNameFromMaxMonday`). Adopted by
+      **both** the component's `showDynamaxOverlay`/`showGigantamaxEffect` flags **and**
+      [resolveMaxBattleImages()](src/utils/eventPokemonResolvers.ts), replacing the byte-identical
+      inline regexes that were duplicated across the two files.
+    - **Overflow expression collapsed:** the byte-identical tier-exclusion-overflow block that opened
+      both `showOverflowBadge` and `overflowBadgeCount` is now one `hasTierExclusionOverflow` computed
+      consumed by both.
+- **Behavior preservation (input strings unchanged):** the component classifies effects from
+  `props.eventName` (the _display_ name — callers pass `formatEventName(event.name)`, except
+  `SingleDayEvent` passes `displayName` and `MultiDayEventBar`'s ungrouped branch passes
+  `getEventDisplayName(event)`), while the resolver parses `formatEventName(event.name)` (the _raw_
+  name). Only the regex/matcher was shared — each call site still passes its original string, so
+  output is identical.
+- **Findings:**
+    - **Latent inconsistency (pre-existing) — RESOLVED in the follow-up below:** the Dynamax/Gigantamax
+      overlay was classified from the _display_ name while the sprite was chosen from the _raw_ name —
+      for grouped events these could diverge. The follow-up moves effect classification onto the resolved
+      sprite data (event-based), removing the divergence.
+    - **Hardcoded `relevantEventTypes` list** in `shouldShowPlaceholder` overlaps the dispatcher's
+      event-type branches — possible future drift; left as-is.
+
+#### 16a. Sprite-effect model → per-sprite `effect` (follow-up, behavior-changing)
+
+Continuation of #16, done as a separate change (own commits). Moves the sprite visual-effect
+classification out of the component entirely and onto the resolved sprite data, and adds multi-Pokemon
+Gigantamax support. **Not behavior-preserving** — verify in the running app.
+
+- **Root cause addressed:** the effect (Dynamax/Gigantamax/shadow) is a property of the _event_, but the
+  component re-derived it by parsing a caller-supplied display string (`props.eventName`), while the
+  image was chosen from `event.name`. Two parses of one fact from two inputs → the divergence above.
+- **Design (the per-image "stronger variant"):**
+    - `PokemonImageData` gains an optional `effect?: SpriteEffect` (`'dynamax' | 'gigantamax' | 'shadow'`)
+      in [eventPokemonTypes.ts](src/utils/eventPokemonTypes.ts). Effects now ride on the resolved sprite.
+    - `getEventSpriteEffect(event)` ([eventPokemonResolvers.ts](src/utils/eventPokemonResolvers.ts), re-exported
+      from `eventPokemon.ts`) is the single event-level classifier for the _uniform_ effects (shadow via
+      subtype, dynamax via max-mondays / Dynamax max-battle title). The dispatcher
+      ([getEventPokemonImages](src/utils/eventPokemon.ts)) stamps it onto any image a resolver didn't already
+      mark per-sprite (`applyEventEffect`).
+    - **Gigantamax is per-sprite, not event-level:** it's asset-dependent per Pokemon, so
+      `resolveMaxBattleImages` stamps `effect: 'gigantamax'` only on names that resolve to a Gmax asset
+      (`resolveGigantamaxImage`); names without one fall back to a plain sprite with no overlay.
+    - **Multi-Pokemon Gigantamax:** the Gigantamax branch now splits the captured name via
+      `parseEventPokemonNames` and resolves each — "Gigantamax A and B Max Battle Day" renders both, each
+      with its own effect.
+    - **Component is now a near-pure renderer:** `PokemonEventImages.vue` dropped `showDynamaxOverlay`/
+      `showShadowEffect`/`showGigantamaxEffect` (and the title parsing) — it binds `:is-*` from
+      `pokemonData.effect`. Its **`eventName` prop was removed** (it existed only for that classification),
+      updating all 5 call sites (`SingleDayEvent`, `TimelineEvent`, `MultiDayEventBar` ×2, `EventTooltip`).
+      The placeholder (no sprite to carry an effect) reads `getEventSpriteEffect(event)`.
+- **Behavior changes to verify (manual):**
+    - Multi-Pokemon Gigantamax events render one sprite per named Pokemon (previously only single-name
+      titles resolved; multi-name fell through).
+    - **Single-name Gigantamax with no Gmax asset:** now shows that Pokemon's plain base sprite (no
+      overlay) instead of the generic event image with a Gigantamax cloud. This is the intended
+      per-sprite-availability fix, but it changes what renders in the pre-asset window — eyeball it.
+    - Grouped-event divergence is gone (effects derive from `event`, not the caller's display string).
+- **Verified:** `type-check` + `lint` clean; prettier clean. **Manual app verification still pending.**
+
+#### 16b. Unify the shadow effect onto the sprite-effect model (follow-up)
+
+Completes 16a by folding the parallel raid-tier rendering path onto the same `effect` model, so there's
+one mechanism instead of two. Behavior-preserving.
+
+- **Before:** shadow was carried two ways — per-sprite `PokemonImageData.effect` (16a, the
+  `PokemonEventImages` path) **and** a separate `isShadow` boolean threaded as a prop through
+  `RaidTierGroupImages` ← `EventTooltip` / `TimelineEvent` / `TimelineCollapsedSchedule` /
+  `EventTooltipScheduleSections` / `TimelineRaidSchedule`, sourced from ad-hoc `isShadowRaid` computeds
+  (`getRaidSubType(event) === 'shadow-raids'`) duplicated in `useEventTooltip`/`useTimelineEvent`.
+- **After:**
+    - [PokemonImage.vue](src/components/Calendar/PokemonImage.vue)'s three boolean effect props
+      (`isDynamax`/`isShadow`/`isGigantamax`) collapse to a **single `effect?: SpriteEffect`** prop.
+      It reads `resolvedEffect = pokemonData?.effect ?? effect` — per-sprite effect (from the resolver)
+      wins; the prop is the event-level fallback for images that don't carry one (raid tier groups,
+      placeholder). `PokemonEventImages`'s per-sprite bindings disappear entirely (the data carries it).
+    - The `isShadow` boolean prop across the five raid-tier components becomes `effect?: SpriteEffect`,
+      threaded from a single **`spriteEffect` = `getEventSpriteEffect(event)`** computed. The duplicated
+      `isShadowRaid`/`isShadowRaidEvent` in `useEventTooltip`/`useTimelineEvent` are gone;
+      `getEventSpriteEffect` is the single source of truth (called directly for grouped events in the
+      tooltip). `getRaidSubType` dropped from `useTimelineEvent` (was only used for that computed).
+- **Why the prop stays for the raid path (not stamped per-boss):** shadow is genuinely event-uniform, so
+  threading one `effect` value is correct; stamping it onto every boss image would denormalize an
+  event-level fact and force every tier-group builder to know the event's shadow state. Per-sprite is
+  reserved for Gigantamax, where it actually varies (16a).
+- **Verified:** `type-check` + `lint` + prettier clean. **Manual app verification still pending** (shadow
+  raid overlays in tooltip + timeline, collapsed + expanded schedules).
+
+#### 16c. Incidental cleanups (behavior-preserving)
+
+Small polish done alongside 16a/16b:
+
+- **`SPRITE_EFFECTS` const** — `SpriteEffect` is now derived from a `const SPRITE_EFFECTS = {…} as const`
+  object (in `eventPokemonTypes.ts`, re-exported from `eventPokemon.ts`); the resolver and
+  `PokemonImage` reference `SPRITE_EFFECTS.DYNAMAX` etc. instead of bare string literals.
+- **Dispatcher rewritten as a lookup table** — `getEventPokemonImages` replaced its ~50-line
+  `if/return` chain with an `eventType → resolver` record (`IMAGE_RESOLVERS`) plus a single explicit
+  spotlight-sub-event fallback and one `applyEventEffect` tail call. Behavior identical (the
+  `null`-fallthrough is preserved: a spotlight sub-event's primary resolver declines for lack of boss
+  data, then the fallback runs the spotlight resolver).
+- **`PLACEHOLDER_EVENT_TYPES`** lifted out of the `shouldShowPlaceholder` computed body to a
+  module-level const (was re-allocated per evaluation).
+- **`useEventTooltip` naming** — dropped the do-nothing `spriteEffectFor` passthrough; grouped-event
+  bindings call `getEventSpriteEffect` directly.
+
+#### 16d. Gmax sprite URL → `pokemonMapper.ts` (resolves the #9 TODO, behavior-preserving)
+
+Splits the two concerns the old `GMAX_FORM_VARIANTS` table conflated:
+
+- **Title→form stays in the resolver:** `resolveGigantamaxImage` uses one `GMAX_FORM_IN_TITLE` regex to
+  detect + strip a multi-form suffix (`"Toxtricity Low Key"` → base `Toxtricity`, slug `low-key`).
+- **id/form→URL moves to `pokemonMapper.ts`:** new `getGigantamaxSpriteUrl(name, formSlug?)` owns the
+  `HYBRIDSHIVAM_GMAX_PREFIX` constant, the `GIGANTAMAX_FORM_FILENAMES` map (the filename data lifted out
+  of `GMAX_FORM_VARIANTS`), the `${id}-Gmax.png` default convention, and the `GIGANTAMAX_POKEMON_IDS`
+  gate (import moved here). Returns `null` when the Pokemon has no Gmax asset.
+- The resolver dropped its `getPokemonId` + `GIGANTAMAX_POKEMON_IDS` imports — URL construction is no
+  longer its concern. AGENTS.md updated (resolver owns `GMAX_FORM_IN_TITLE`; mapper owns the URL path).
+- **Finding (recorded, not changed):** the Gmax CDN is standalone and, unlike every other sprite, has
+  **no fallback tier** — the `@error` chain only derives from PokeMiners tier-2 URLs, so a 404 drops
+  straight to the placeholder. Documented in the mapper + AGENTS.md; a future improvement, not in scope.
+- **Verified:** `type-check` + `lint` + prettier clean. Behavior-preserving (same URLs for all current
+  inputs; realistic title forms normalize to the same slugs). **Manual verify:** a Gigantamax Max Battle
+  event (single- and multi-form, e.g. Toxtricity/Urshifu) still shows the Gmax sprite + overlay.
+
+---
+
+## Optional follow-ups (not full rows)
+
+Lower-value than the rows above — already in testable shape or genuinely out of charter. Listed so
+they aren't re-discovered cold.
+
+### eventRaidHours.ts
+
+- **Status:** ✅ Settled. 435 → **226-line parsing/section module**; see notes.
+- **Realized split** (behavior-preserving; pure-util, no template/CSS change):
+    - `eventRaidHours.ts` (226 — date parsing + section building: `parseRaidScheduleDate` (exported),
+      `parseTimeStartSortKey` (exported), `formatScheduleSectionTitle`, `matchesScheduleDate`,
+      `dedupeBosses`, `RaidScheduleSection`, `getRaidScheduleSectionsForDate`,
+      `getRaidScheduleBossesForDate`).
+    - **New** `src/utils/eventSubEvents.ts` (215 — pseudo-event generation: `parseRaidHourTime`,
+      `formatPokemonList`, `formatSpotlightEventName`, `generateEventRaidHourSubEvents`,
+      `generateEventSpotlightSubEvents`; imports `parseRaidScheduleDate` from `eventRaidHours`).
+    - `stores/events.ts` import updated to `eventSubEvents`.
+    - **Dedup (connected component):** `parseTimeStartSortKey` was byte-identical in `timelineSchedule.ts`;
+      removed the copy there and imported from `eventRaidHours.ts`.
+- **Manual checks:** pure-util split — smoke-check raid-hour and spotlight sub-events on the calendar/
+  timeline; raid schedule sections in tooltip and single-day view.
+- **Findings:**
+    - `parseRaidHourTime` is generator-only (section building never needed it), so it moved entirely
+      to `eventSubEvents.ts` and is no longer exported.
+    - `parseRaidScheduleDate` is shared by both concerns — exported from `eventRaidHours.ts` and
+      imported by `eventSubEvents.ts`.

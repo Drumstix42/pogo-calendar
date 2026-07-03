@@ -25,8 +25,8 @@
 import { type Dayjs } from 'dayjs';
 import { computed } from 'vue';
 
-import { useCurrentTime } from '@/composables/useCurrentTime';
 import { useDeviceDetection } from '@/composables/useDeviceDetection';
+import { useDisplayTime } from '@/composables/useDisplayTime';
 import { useUrlSync } from '@/composables/useUrlSync';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { useEventTypeColorsStore } from '@/stores/eventTypeColors';
@@ -35,7 +35,7 @@ import { useSeasonsStore } from '@/stores/seasons';
 import { type PogoEvent } from '@/utils/eventTypes';
 import { formatSeasonChipLabel } from '@/utils/seasonChipLabel';
 
-import EventTooltip from './EventTooltip.vue';
+import EventTooltip from './EventTooltip/EventTooltip.vue';
 
 interface Props {
     dayInstance: Dayjs;
@@ -51,10 +51,8 @@ const calendarSettings = useCalendarSettingsStore();
 // The season event type's configured color (respects user overrides) — used as the chip text color.
 const seasonColor = computed(() => eventTypeColorsStore.getEventTypeColor('season'));
 const { isTouchDevice } = useDeviceDetection();
-const { liveMinute } = useCurrentTime();
+const { displayToday } = useDisplayTime();
 const { selectEvent } = useUrlSync();
-
-const displayToday = computed(() => liveMinute.value.add(calendarSettings.manualTimeOffsetHours * 60, 'minute').startOf('day'));
 
 const isInCurrentWeek = computed(() => {
     const firstDayIndex = calendarSettings.firstDayIndex;

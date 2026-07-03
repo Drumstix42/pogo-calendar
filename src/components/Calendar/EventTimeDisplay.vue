@@ -42,10 +42,12 @@
 import { ArrowLeftRight } from '@lucide/vue';
 import { computed } from 'vue';
 
-import { useCurrentTime } from '@/composables/useCurrentTime';
+import { useDisplayTime } from '@/composables/useDisplayTime';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { useEventsStore } from '@/stores/events';
-import { type PogoEvent, parseEventDate } from '@/utils/eventTypes';
+import { parseEventDate } from '@/utils/eventDate';
+import { buildEventStatusInfo, buildTimeDisplayParts } from '@/utils/eventTimeDisplay';
+import { type PogoEvent } from '@/utils/eventTypes';
 
 interface Props {
     event: PogoEvent;
@@ -59,251 +61,27 @@ const props = withDefaults(defineProps<Props>(), {
 const eventsStore = useEventsStore();
 const calendarSettings = useCalendarSettingsStore();
 
-// Get reactive current time that updates every minute
-const { liveMinute } = useCurrentTime();
-
-const displayNow = computed(() => {
-    return liveMinute.value.add(calendarSettings.manualTimeOffsetHours * 60, 'minute');
-});
+const { displayNow } = useDisplayTime();
 
 const isSingleDay = computed(() => {
     return eventsStore.eventMetadata[props.event.eventID]?.isSingleDayEvent ?? false;
 });
 
-const formatSingleDayTimes = (startDate: ReturnType<typeof parseEventDate>, endDate: ReturnType<typeof parseEventDate>) => {
-    const startTime = startDate.minute() === 0 ? startDate.format('ha') : startDate.format('h:mma');
-    const endTime = endDate.minute() === 0 ? endDate.format('ha') : endDate.format('h:mma');
-
-    // Parse the times to check if they're in the same AM/PM period
-    const startPeriod = startDate.format('A'); // 'AM' or 'PM'
-    const endPeriod = endDate.format('A'); // 'AM' or 'PM'
-
-    // If both times are in the same AM/PM period, omit AM/PM from start time
-    if (startPeriod === endPeriod) {
-        const startTimeWithoutPeriod = startDate.minute() === 0 ? startDate.format('h') : startDate.format('h:mm');
-        return {
-            startTime: startTimeWithoutPeriod,
-            endTime: endTime,
-        };
-    }
-
-    // Different periods, keep both AM/PM
-    return {
-        startTime: startTime,
-        endTime: endTime,
-    };
-};
-
-const timeDisplayParts = computed(() => {
-    const currentTime = displayNow.value;
+const resolvedDates = computed(() => {
     const metadata = eventsStore.eventMetadata[props.event.eventID];
     const startDate = metadata?.startDate ?? parseEventDate(props.event.start, calendarSettings.manualTimeOffsetHours);
     const endDate = metadata?.endDate ?? parseEventDate(props.event.end, calendarSettings.manualTimeOffsetHours);
-
-    if (isSingleDay.value) {
-        // Single day: "Tue Oct 7 • 6–7pm"
-        const dayOfWeek = startDate.format('ddd');
-        const dateStr = startDate.format('MMM D');
-        const datePrefix = `${dayOfWeek} ${dateStr} • `;
-
-        const eventStart = startDate;
-        const eventEnd = endDate;
-
-        // Get formatted times with smart AM/PM handling
-        const { startTime, endTime } = formatSingleDayTimes(startDate, endDate);
-
-        if (currentTime.isAfter(eventEnd)) {
-            // Event is completely over - both times are past
-            return {
-                prefix: datePrefix,
-                startTime,
-                separator: '-',
-                endTime,
-                focusPrefix: false,
-                focusStart: false,
-                focusEnd: false,
-                startIsPast: true,
-                endIsPast: true,
-                isCompleted: true,
-            };
-        } else if (currentTime.isAfter(eventStart) && currentTime.isBefore(eventEnd)) {
-            // Event is live - highlight end time only
-            return {
-                prefix: datePrefix,
-                startTime,
-                separator: '-',
-                endTime,
-                focusPrefix: false,
-                focusStart: false,
-                focusEnd: true,
-                startIsPast: true,
-                endIsPast: false,
-                isCompleted: false,
-            };
-        } else {
-            // Event hasn't started - highlight the date prefix and start hour for upcoming single-day events
-            return {
-                prefix: datePrefix,
-                startTime,
-                separator: '-',
-                endTime,
-                focusPrefix: true,
-                focusStart: true,
-                focusEnd: false,
-                startIsPast: false,
-                endIsPast: false,
-                isCompleted: false,
-            };
-        }
-    } else {
-        // Multi-day: "Sep 7, 12am → Nov 30, 11:59pm"
-        const startDateStr = startDate.format('MMM D, h:mma').replace(':00', '');
-        const endDateStr = endDate.format('MMM D, h:mma').replace(':00', '');
-
-        const eventStart = startDate;
-        const eventEnd = endDate;
-
-        if (currentTime.isAfter(eventEnd)) {
-            // Event is completely over - both times are past
-            return {
-                prefix: '',
-                startTime: startDateStr,
-                separator: ' → ',
-                endTime: endDateStr,
-                focusPrefix: false,
-                focusStart: false,
-                focusEnd: false,
-                startIsPast: true,
-                endIsPast: true,
-                isCompleted: true,
-            };
-        } else if (currentTime.isAfter(eventStart) && currentTime.isBefore(eventEnd)) {
-            // Event is live - start time is past, end time is future
-            return {
-                prefix: '',
-                startTime: startDateStr,
-                separator: ' → ',
-                endTime: endDateStr,
-                focusPrefix: false,
-                focusStart: false,
-                focusEnd: true,
-                startIsPast: true,
-                endIsPast: false,
-                isCompleted: false,
-            };
-        } else {
-            // Event hasn't started - highlight start time for multi-day events
-            return {
-                prefix: '',
-                startTime: startDateStr,
-                separator: ' → ',
-                endTime: endDateStr,
-                focusPrefix: false,
-                focusStart: true,
-                focusEnd: false,
-                startIsPast: false,
-                endIsPast: false,
-                isCompleted: false,
-            };
-        }
-    }
+    return { startDate, endDate };
 });
+
+const timeDisplayParts = computed(() =>
+    buildTimeDisplayParts(resolvedDates.value.startDate, resolvedDates.value.endDate, displayNow.value, isSingleDay.value),
+);
 
 // Status text for relative timing info
-const statusInfo = computed(() => {
-    const currentTime = displayNow.value;
-    const metadata = eventsStore.eventMetadata[props.event.eventID];
-    const eventStart = metadata?.startDate ?? parseEventDate(props.event.start, calendarSettings.manualTimeOffsetHours);
-    const eventEnd = metadata?.endDate ?? parseEventDate(props.event.end, calendarSettings.manualTimeOffsetHours);
-    const isSingleDay = metadata?.isSingleDayEvent ?? false;
-
-    // Check if event is completely over
-    if (currentTime.isAfter(eventEnd)) {
-        const totalDays = isSingleDay ? null : eventEnd.diff(eventStart, 'day') + 1;
-        const prefix = totalDays ? `${totalDays} day${totalDays > 1 ? 's' : ''} • ` : null;
-        const text = isSingleDay ? 'Event ended' : 'event ended';
-        return { prefix, text, type: 'ended' };
-    }
-    // Check if event hasn't started yet
-    else if (eventStart.isAfter(currentTime)) {
-        const daysUntilStart = eventStart.startOf('day').diff(currentTime.startOf('day'), 'day');
-        const totalDays = isSingleDay ? null : eventEnd.diff(eventStart, 'day') + 1;
-        const prefix = totalDays ? `${totalDays} day${totalDays > 1 ? 's' : ''} • ` : null;
-
-        if (eventStart.startOf('day').isSame(currentTime.startOf('day'))) {
-            // Starts today
-            const hoursUntilStart = eventStart.diff(currentTime, 'hour', true);
-            if (hoursUntilStart < 1) {
-                const minutesUntilStart = Math.ceil(eventStart.diff(currentTime, 'minute', true));
-                const text = isSingleDay ? `Starts in ${minutesUntilStart}m` : `starts in ${minutesUntilStart}m`;
-                return { prefix, text, type: 'upcoming' };
-            } else {
-                const roundedHours = Math.ceil(hoursUntilStart);
-                const text = isSingleDay ? `Starts in ${roundedHours}h` : `starts in ${roundedHours}h`;
-                return { prefix, text, type: 'upcoming' };
-            }
-        } else if (daysUntilStart === 1) {
-            const text = isSingleDay ? 'Starts tomorrow' : 'starts tomorrow';
-            return { prefix, text, type: 'upcoming' };
-        } else {
-            const text = isSingleDay ? `Starts in ${daysUntilStart}d` : `starts in ${daysUntilStart}d`;
-            return { prefix, text, type: 'normal' };
-        }
-    }
-    // Check if event is currently live
-    else if (currentTime.isAfter(eventStart) && currentTime.isBefore(eventEnd)) {
-        const daysUntilEnd = eventEnd.startOf('day').diff(currentTime.startOf('day'), 'day');
-
-        // Calculate total days for multi-day events
-        const totalDays = isSingleDay ? null : eventEnd.diff(eventStart, 'day') + 1;
-        const prefix = totalDays ? `${totalDays} day${totalDays > 1 ? 's' : ''} • ` : null;
-
-        if (eventEnd.startOf('day').isSame(currentTime.startOf('day'))) {
-            // Ends today
-            const hoursUntilEnd = eventEnd.diff(currentTime, 'hour', true);
-            if (hoursUntilEnd < 1) {
-                const minutesUntilEnd = Math.ceil(eventEnd.diff(currentTime, 'minute', true));
-                if (isSingleDay) {
-                    const livePrefix = totalDays ? `${totalDays} day${totalDays > 1 ? 's' : ''} • Live • ` : 'Live • ';
-                    return { prefix: livePrefix, text: `ends in ${minutesUntilEnd}m`, type: 'urgent' };
-                } else {
-                    return { prefix, text: `ends in ${minutesUntilEnd}m`, type: 'urgent' };
-                }
-            } else {
-                const roundedHours = Math.ceil(hoursUntilEnd);
-                if (isSingleDay) {
-                    const livePrefix = totalDays ? `${totalDays} day${totalDays > 1 ? 's' : ''} • Live • ` : 'Live • ';
-                    return { prefix: livePrefix, text: `ends in ${roundedHours}h`, type: 'urgent' };
-                } else {
-                    return { prefix, text: `ends in ${roundedHours}h`, type: 'urgent' };
-                }
-            }
-        } else if (daysUntilEnd === 1) {
-            if (isSingleDay) {
-                const livePrefix = totalDays ? `${totalDays} day${totalDays > 1 ? 's' : ''} • Live • ` : 'Live • ';
-                return { prefix: livePrefix, text: 'ends tomorrow', type: 'urgent' };
-            } else {
-                return { prefix, text: 'ends tomorrow', type: 'urgent' };
-            }
-        } else if (daysUntilEnd > 1) {
-            if (isSingleDay) {
-                const livePrefix = totalDays ? `${totalDays} day${totalDays > 1 ? 's' : ''} • Live • ` : 'Live • ';
-                return { prefix: livePrefix, text: `ends in ${daysUntilEnd}d`, type: 'normal' };
-            } else {
-                return { prefix, text: `ends in ${daysUntilEnd}d`, type: 'normal' };
-            }
-        } else {
-            if (isSingleDay) {
-                const livePrefix = totalDays ? `${totalDays} day${totalDays > 1 ? 's' : ''} • Live • ` : 'Live • ';
-                return { prefix: livePrefix, text: 'ends today', type: 'urgent' };
-            } else {
-                return { prefix, text: 'ends today', type: 'urgent' };
-            }
-        }
-    }
-
-    return null;
-});
+const statusInfo = computed(() =>
+    buildEventStatusInfo(resolvedDates.value.startDate, resolvedDates.value.endDate, displayNow.value, isSingleDay.value),
+);
 </script>
 
 <style lang="scss" scoped>

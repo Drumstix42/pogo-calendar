@@ -6,21 +6,13 @@ import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
 
 import { DATE_FORMAT } from '../utils/dateFormat';
-import { formatEventName, getSmartGroupDisplayName } from '../utils/eventName';
-import { generateEventRaidHourSubEvents, generateEventSpotlightSubEvents } from '../utils/eventRaidHours';
-import {
-    EventTypeInfoWithoutColor,
-    type PogoEvent,
-    type PokemonBoss,
-    formatEventTime,
-    getEventTypeInfo,
-    getRaidSubType,
-    isEventWithSubtype,
-    parseEventDate,
-    sortEventsByPriority,
-} from '../utils/eventTypes';
-import { type SpotlightBonusInfo, getSpotlightBonusInfo, getSpotlightBonusTypeIcon } from '../utils/spotlightBonus';
-import { useCurrentTime } from '@/composables/useCurrentTime';
+import { parseEventDate } from '../utils/eventDate';
+import { groupEventsBySimilarity } from '../utils/eventGrouping';
+import { buildEventMetadata } from '../utils/eventMetadata';
+import { sortEventsByPriority } from '../utils/eventSort';
+import { generateEventRaidHourSubEvents, generateEventSpotlightSubEvents } from '../utils/eventSubEvents';
+import { type EventMetadata, EventTypeInfoWithoutColor, type PogoEvent, getEventTypeInfo } from '../utils/eventTypes';
+import { useDisplayTime } from '@/composables/useDisplayTime';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { useEventTypeColorsStore } from '@/stores/eventTypeColors';
 
@@ -29,62 +21,8 @@ dayjs.extend(utc); // Adds UTC timezone support for parsing/converting dates
 dayjs.extend(isSameOrBefore); // Adds comparison method for date <= checks
 dayjs.extend(isSameOrAfter); // Adds comparison method for date >= checks
 
-export interface RaidBossTierGroup {
-    label: string;
-    bosses: PokemonBoss[];
-}
-
-// "Super Mega" should always sort above numeric tiers, then "Tier N" labels sort numerically,
-// and all other labels sort alphabetically after that.
-function sortTierLabel(a: string, b: string): number {
-    const normalizedA = a.trim().toLowerCase();
-    const normalizedB = b.trim().toLowerCase();
-
-    if (normalizedA === 'super mega' && normalizedB !== 'super mega') return -1;
-    if (normalizedB === 'super mega' && normalizedA !== 'super mega') return 1;
-
-    const tierA = a.match(/^Tier (\d+)$/i);
-    const tierB = b.match(/^Tier (\d+)$/i);
-    if (tierA && tierB) return parseInt(tierB[1]) - parseInt(tierA[1]);
-    if (tierA) return -1;
-    if (tierB) return 1;
-    return a.localeCompare(b);
-}
-
 interface EventWithTypeInfo extends PogoEvent {
     typeInfo: EventTypeInfoWithoutColor;
-}
-
-export interface EventMetadata {
-    // Precomputed dates
-    startDate: dayjs.Dayjs;
-    endDate: dayjs.Dayjs;
-
-    // Classifications
-    isMultiDayEvent: boolean;
-    isSingleDayEvent: boolean;
-    isPastEvent: boolean;
-    isFutureEvent: boolean;
-
-    // Type information
-    typeInfo: EventTypeInfoWithoutColor;
-    color: string;
-
-    // Display helpers
-    formattedStartTime: string;
-    displayName: string;
-
-    // Spotlight bonus (for spotlight hour events)
-    spotlightBonus?: SpotlightBonusInfo | null;
-    spotlightBonusIconUrl?: string | null;
-
-    // Raid boss groupings by tier (for events with raidbattles data)
-    raidBossTierGroups?: RaidBossTierGroup[];
-
-    // Grouping metadata (for when grouping is enabled)
-    isGrouped?: boolean;
-    groupedEvents?: PogoEvent[];
-    groupCount?: number;
 }
 
 //const SCRAPED_EVENTS_URL = 'https://raw.githubusercontent.com/bigfoott/ScrapedDuck/data/events.min.json';
@@ -99,12 +37,12 @@ export const useEventsStore = defineStore('eventsStore', () => {
     const currentMonth = ref(dayjs().month());
     const currentYear = ref(dayjs().year());
 
-    // Get reactive current time for event status calculations
-    const { liveMinute } = useCurrentTime();
+    // Reactive "now", adjusted by the user's manual time offset, for event status calculations
+    const { displayNow } = useDisplayTime();
     const calendarSettings = useCalendarSettingsStore();
 
     function getDisplayNow() {
-        return liveMinute.value.add(calendarSettings.manualTimeOffsetHours * 60, 'minute');
+        return displayNow.value;
     }
 
     // Getters (computed)
@@ -185,49 +123,19 @@ export const useEventsStore = defineStore('eventsStore', () => {
 
         // First pass: create metadata for all raw events
         events.value.forEach(event => {
-            const startDate = parseEventDate(event.start, manualOffsetHours);
-            const endDate = parseEventDate(event.end, manualOffsetHours);
-            const typeInfo = getEventTypeInfo(event.eventType);
-            const isMultiDay = !startDate.startOf('day').isSame(endDate.startOf('day'));
-            const spotlightBonus = getSpotlightBonusInfo(event);
-
-            const bosses = event.extraData?.raidbattles?.bosses;
-            let raidBossTierGroups: RaidBossTierGroup[] | undefined;
-            if (bosses && bosses.length > 0) {
-                const tierMap = new Map<string, PokemonBoss[]>();
-                for (const boss of bosses) {
-                    const label = boss.raidType || 'Other';
-                    if (!tierMap.has(label)) tierMap.set(label, []);
-                    tierMap.get(label)!.push(boss);
-                }
-                raidBossTierGroups = Array.from(tierMap.entries())
-                    .sort(([a], [b]) => sortTierLabel(a, b))
-                    .map(([label, groupedBosses]) => ({ label, bosses: groupedBosses }));
-            }
-
-            metadata[event.eventID] = {
-                displayName: formatEventName(event.name),
-                startDate,
-                endDate,
-                typeInfo,
+            metadata[event.eventID] = buildEventMetadata(event, {
+                now,
+                manualOffsetHours,
                 color: eventTypeColorsStore.getEventTypeColor(event.eventType),
-                formattedStartTime: formatEventTime(event.start, manualOffsetHours),
-                isMultiDayEvent: isMultiDay,
-                isSingleDayEvent: !isMultiDay,
-                isPastEvent: endDate.isBefore(now),
-                isFutureEvent: startDate.isAfter(now),
-                spotlightBonus,
-                spotlightBonusIconUrl: spotlightBonus ? getSpotlightBonusTypeIcon(spotlightBonus.bonusType) : null,
-                raidBossTierGroups,
-            };
+            });
         });
 
         // Second pass: add grouping metadata for processed events
         processedEvents.value.forEach(event => {
-            if ((event as any)._isGrouped && metadata[event.eventID]) {
+            if (event._isGrouped && metadata[event.eventID]) {
                 metadata[event.eventID].isGrouped = true;
-                metadata[event.eventID].groupedEvents = (event as any)._groupedEvents;
-                metadata[event.eventID].groupCount = (event as any)._groupedEvents?.length || 0;
+                metadata[event.eventID].groupedEvents = event._groupedEvents;
+                metadata[event.eventID].groupCount = event._groupedEvents?.length || 0;
             }
         });
 
@@ -239,68 +147,7 @@ export const useEventsStore = defineStore('eventsStore', () => {
      * Returns all events with _isGrouped, _groupedEvents, and _displayName properties when applicable.
      */
     const processedEvents = computed((): PogoEvent[] => {
-        const allEvents = events.value;
-
-        if (!calendarSettings.groupSimilarEvents) {
-            return allEvents; // No grouping - return events as-is
-        }
-
-        // Group events by: eventType + start + end (accounting for raid subtypes)
-        const eventGroups = new Map<string, PogoEvent[]>();
-
-        allEvents.forEach(event => {
-            // Create more specific grouping key for events with subtypes
-            let groupingType = event.eventType;
-            if (isEventWithSubtype(event.eventType)) {
-                const raidSubType = getRaidSubType(event);
-                if (raidSubType) {
-                    groupingType = raidSubType;
-                }
-            }
-
-            const timeKey = `${groupingType}:${event.start}:${event.end}`;
-            if (!eventGroups.has(timeKey)) {
-                eventGroups.set(timeKey, []);
-            }
-            eventGroups.get(timeKey)!.push(event);
-        });
-
-        // Convert groups to representative events
-        const representativeEvents = Array.from(eventGroups.values()).map(group => {
-            if (group.length === 1) {
-                return group[0]; // Single event - no grouping needed
-            }
-
-            // Multiple identical events - create grouped representative
-            // Sort the group to ensure consistent representative selection
-            const sortedGroup = group.sort((a, b) => {
-                // First by event type priority
-                const aPriority = getEventTypeInfo(a.eventType).priority;
-                const bPriority = getEventTypeInfo(b.eventType).priority;
-                if (aPriority !== bPriority) {
-                    return bPriority - aPriority; // Higher priority first
-                }
-
-                // Then by extraData richness (more keys = more complete event data)
-                const aDataCount = a.extraData ? Object.keys(a.extraData).length : 0;
-                const bDataCount = b.extraData ? Object.keys(b.extraData).length : 0;
-                if (aDataCount !== bDataCount) {
-                    return bDataCount - aDataCount; // More data first
-                }
-
-                // Finally by event name for consistency
-                return formatEventName(a.name).localeCompare(formatEventName(b.name));
-            });
-
-            const representative = { ...sortedGroup[0] };
-            (representative as any)._isGrouped = true;
-            (representative as any)._groupedEvents = group;
-            (representative as any)._displayName = getSmartGroupDisplayName(group);
-
-            return representative;
-        });
-
-        return representativeEvents;
+        return groupEventsBySimilarity(events.value, calendarSettings.groupSimilarEvents);
     });
 
     // Actions (including function-based getters)
