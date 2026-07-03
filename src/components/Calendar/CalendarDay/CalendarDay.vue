@@ -10,7 +10,12 @@
         <!-- border overlay -->
         <div v-if="showRightBorder" class="calendar-day-border-overlay"></div>
 
-        <div class="day-number">{{ date }}</div>
+        <div class="day-number-row">
+            <div class="day-number">{{ date }}</div>
+
+            <!-- Pokemon GO anniversary marker (July 6, every year) -->
+            <BirthdayBadge v-if="isBirthday" :is-today="isToday" :year="year" />
+        </div>
 
         <!-- Season "Daily Discovery" chip (current week only) -->
         <SeasonDailyChip :day-instance="dayInstance" />
@@ -74,11 +79,14 @@
 
 <script setup lang="ts">
 import { type Dayjs } from 'dayjs';
+import { computed } from 'vue';
 
 import { type EventSlot, useCalendarDayLayout } from '@/composables/useCalendarDayLayout';
 import { useCalendarDaySingleEvents } from '@/composables/useCalendarDaySingleEvents';
 import { useEventsStore } from '@/stores/events';
+import { isPokemonGoBirthday } from '@/utils/specialDates';
 
+import BirthdayBadge from '@/components/Calendar/CalendarDay/BirthdayBadge.vue';
 import MultiDayEventBar from '@/components/Calendar/CalendarDay/MultiDayEventBar.vue';
 import SingleDayEvent from '@/components/Calendar/CalendarDay/SingleDayEvent.vue';
 import SeasonDailyChip from '@/components/Calendar/SeasonDailyChip.vue';
@@ -96,6 +104,8 @@ interface Props {
 
 const props = defineProps<Props>();
 const eventsStore = useEventsStore();
+
+const isBirthday = computed(() => isPokemonGoBirthday(props.dayInstance));
 
 // Multi-day bar layout (slot packing + positioning across week boundaries)
 const {
@@ -156,6 +166,13 @@ const { singleDayEvents } = useCalendarDaySingleEvents(() => props.dayInstance);
     color: white;
 }
 
+.day-number-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 2px 0 2px 2px;
+}
+
 .day-number {
     display: inline-flex;
     align-items: center;
@@ -164,7 +181,7 @@ const { singleDayEvents } = useCalendarDaySingleEvents(() => props.dayInstance);
     height: 21px;
     border-radius: 50%;
     font-size: 0.875rem;
-    margin: 2px 0 2px 2px;
+    flex-shrink: 0;
 }
 
 /* Multi-day events (background layer) */
