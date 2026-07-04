@@ -171,6 +171,7 @@ const { singleDayEvents } = useCalendarDaySingleEvents(() => props.dayInstance);
     align-items: center;
     gap: 6px;
     margin: 2px 0 2px 2px;
+    font-size: 0; /* removes some extra spacing between the day number row and the multi-day event bars */
 }
 
 .day-number {
