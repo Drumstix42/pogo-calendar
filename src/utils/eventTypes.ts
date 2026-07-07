@@ -357,6 +357,12 @@ export const EVENT_TYPES: Record<string, EventTypeInfo> = {
         priority: 62,
         category: 'events-and-misc',
     },
+    'twitch-drops': {
+        name: 'Twitch Drops',
+        color: '#6441a5', // Twitch purple
+        priority: 44,
+        category: 'events-and-misc',
+    },
 
     // Battle Events
     'go-battle-league': {
