@@ -9,7 +9,7 @@ interface VersionInfo {
 }
 
 // dev mode: set to true to force show update message on load
-const DEV_FORCE_UPDATE_MESSAGE = true;
+const DEV_FORCE_UPDATE_MESSAGE = false;
 
 export const useAppStore = defineStore('app', () => {
     const currentVersion = ref<number | null>(null);
@@ -59,6 +59,8 @@ export const useAppStore = defineStore('app', () => {
                 content:
                     'A new version of the app is available. Please <strong><a href="#" onclick="window.location.reload(true); return false;">reload the page</a></strong>.',
                 dismissible: true,
+                // A deploy can land while a first-time visitor is still on the page, making them just as outdated as anyone else.
+                showToNewUsers: true,
             });
         }
     }

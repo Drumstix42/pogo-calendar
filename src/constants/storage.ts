@@ -16,6 +16,7 @@ export const STORAGE_KEYS = {
     FILTERS_APPLY_TO_TIMELINE: createStorageKey('filters-apply-to-timeline'),
     FIRST_DAY_OF_WEEK: createStorageKey('first-day-of-week'),
     GROUP_SIMILAR_EVENTS: createStorageKey('group-similar-events'),
+    HAS_VISITED_BEFORE: createStorageKey('has-visited-before'),
     HIDDEN_EVENT_IDS: createStorageKey('hidden-event-ids'),
     MANUAL_TIME_OFFSET_HOURS: createStorageKey('manual-time-offset-hours'),
     SHOW_SEASON_DAILY_BONUSES: createStorageKey('show-season-daily-bonuses'),

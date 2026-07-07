@@ -1,4 +1,5 @@
 import { useLocalStorage } from '@vueuse/core';
+import dayjs from 'dayjs';
 import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
 
@@ -10,11 +11,21 @@ export interface UserMessage {
     type: 'info' | 'success' | 'warning' | 'danger';
     content: string;
     dismissible: boolean;
+    /** ISO date (YYYY-MM-DD) after which the message stops surfacing, regardless of dismissal state. */
+    expiresAt?: string;
+    /** Whether to show this message to a first-time visitor. Defaults to false (most messages are announcements aimed at returning users). */
+    showToNewUsers?: boolean;
 }
 
 export const useUserMessagesStore = defineStore('userMessages', () => {
     const dismissedVersions = useLocalStorage<Record<string, string>>(STORAGE_KEYS.DISMISSED_MESSAGE_VERSIONS, {});
     const runtimeMessages = ref<UserMessage[]>([]);
+
+    // Captured once per session, before we mark this browser as visited, so a first-time
+    // visitor is treated as "new" for the whole session even if they dismiss something.
+    const hasVisitedBefore = useLocalStorage<boolean>(STORAGE_KEYS.HAS_VISITED_BEFORE, false);
+    const isNewUser = !hasVisitedBefore.value;
+    hasVisitedBefore.value = true;
 
     const messages: UserMessage[] = [
         {
@@ -23,22 +34,37 @@ export const useUserMessagesStore = defineStore('userMessages', () => {
             type: 'info',
             content: 'Configure your Calendar and Event Settings using the <strong>Settings cog</strong> in the top right.',
             dismissible: true,
+            showToNewUsers: true,
+        },
+        {
+            id: 'add-to-calendar-message',
+            version: '2026-07-07-001',
+            type: 'info',
+            content:
+                'You can now add event reminders to your own calendar. Look for the <strong>bell icon</strong> on detailed event views to add it to your web calendar, or download an .ics file.',
+            dismissible: true,
+            expiresAt: '2026-09-07',
         },
     ];
 
-    const activeMessages = computed(() => {
-        const staticMessages = messages.filter(message => {
-            const dismissedVersion = dismissedVersions.value[message.id];
-            return !dismissedVersion || dismissedVersion !== message.version;
-        });
+    function isMessageActive(message: UserMessage) {
+        const dismissedVersion = dismissedVersions.value[message.id];
+        if (dismissedVersion === message.version) {
+            return false;
+        }
 
-        const activeRuntimeMessages = runtimeMessages.value.filter(message => {
-            const dismissedVersion = dismissedVersions.value[message.id];
-            return !dismissedVersion || dismissedVersion !== message.version;
-        });
+        if (isNewUser && !message.showToNewUsers) {
+            return false;
+        }
 
-        return [...staticMessages, ...activeRuntimeMessages];
-    });
+        if (message.expiresAt && dayjs().isAfter(dayjs(message.expiresAt), 'day')) {
+            return false;
+        }
+
+        return true;
+    }
+
+    const activeMessages = computed(() => [...messages, ...runtimeMessages.value].filter(isMessageActive));
 
     function dismissMessage(id: string, version: string) {
         // check if it's a runtime message - just remove it from the array
