@@ -36,9 +36,13 @@
             @apply-hide="handleMenuHide(event.eventID)"
         >
             <div class="multi-day-event-bar--inner">
+                <TwitchIcon v-if="event.eventType === 'twitch-drops'" :size="iconHeight" class="twitch-drops-icon" />
+
                 <!-- Show Pokemon images for grouped or individual events -->
                 <template
-                    v-if="calendarSettings.useMultiDayEventSprites && !isMajorCalendarEventType(event.eventType) && shouldShowMultiDaySprites(event)"
+                    v-else-if="
+                        calendarSettings.useMultiDayEventSprites && !isMajorCalendarEventType(event.eventType) && shouldShowMultiDaySprites(event)
+                    "
                 >
                     <template v-if="calendarSettings.groupSimilarEvents && hasGroupedEvents(event)">
                         <PokemonEventImages :event="event" :height="iconHeight" :limit="2" :exclude-tiers="['Tier 1', 'Tier 3']" />
@@ -74,6 +78,7 @@ import { type PogoEvent } from '@/utils/eventTypes';
 
 import EventTooltip from '@/components/Calendar/EventTooltip/EventTooltip.vue';
 import PokemonEventImages from '@/components/Calendar/PokemonEventImages.vue';
+import TwitchIcon from '@/components/Icons/TwitchIcon.vue';
 
 interface Props {
     event: PogoEvent;
@@ -165,6 +170,10 @@ const iconHeight = computed(() => calendarSettings.eventBarHeight - 2);
     max-width: 50px;
     overflow: visible;
     flex-wrap: nowrap;
+}
+
+.multi-day-event-bar--inner .twitch-drops-icon {
+    flex-shrink: 0;
 }
 
 .multi-day-event-bar .event-name {

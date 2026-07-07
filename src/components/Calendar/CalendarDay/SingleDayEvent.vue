@@ -50,8 +50,14 @@
                         :icon-url="metadata?.spotlightBonusIconUrl"
                     />
                 </div>
+                <TwitchIcon
+                    v-if="event.eventType === 'twitch-drops'"
+                    :size="twitchIconHeight"
+                    class="twitch-drops-icon"
+                    :style="{ color: metadata?.color }"
+                />
                 <PokemonEventImages
-                    v-if="calendarSettings.useSingleDayEventSprites"
+                    v-else-if="calendarSettings.useSingleDayEventSprites"
                     :event="event"
                     :height="singleDayPokemonHeight"
                     :show-placeholder="true"
@@ -82,6 +88,7 @@ import { type PogoEvent } from '@/utils/eventTypes';
 import SpotlightBonusIcons from '@/components/Calendar/CalendarDay/SpotlightBonusIcons.vue';
 import EventTooltip from '@/components/Calendar/EventTooltip/EventTooltip.vue';
 import PokemonEventImages from '@/components/Calendar/PokemonEventImages.vue';
+import TwitchIcon from '@/components/Icons/TwitchIcon.vue';
 
 interface Props {
     event: PogoEvent;
@@ -123,6 +130,7 @@ const singleDayPokemonHeight = computed(() => {
     }
     return 40; // < 1200px
 });
+const twitchIconHeight = computed(() => singleDayPokemonHeight.value - 10);
 
 const sourceEventId = computed(() => getSourceEventID(props.event));
 const metadata = computed(() => getEventMetadataForDisplay(props.event));
@@ -199,6 +207,10 @@ const eventCount = computed(() => getEventCount(props.event));
 
 .single-day-event :deep(.pokemon-images.wrap-multiple) {
     min-width: max(80px, 100%);
+}
+
+.single-day-event .twitch-drops-icon {
+    flex-shrink: 0;
 }
 
 .single-day-event :deep(.overflow-counter-badge) {
