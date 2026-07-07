@@ -146,6 +146,29 @@ export const useUrlSync = () => {
         router.replace({ query: currentQuery });
     }
 
+    // ============================================
+    // Add to Calendar Modal State
+    // ============================================
+    const addToCalendarEventId = computed(() => {
+        const eventId = route.query.addToCalendar;
+        return typeof eventId === 'string' ? eventId : undefined;
+    });
+
+    function openAddToCalendar(eventId: string) {
+        router.push({
+            query: {
+                ...route.query,
+                addToCalendar: eventId,
+            },
+        });
+    }
+
+    function closeAddToCalendar() {
+        const currentQuery = { ...route.query };
+        delete currentQuery.addToCalendar;
+        router.replace({ query: currentQuery });
+    }
+
     return {
         // Calendar navigation
         urlMonth,
@@ -162,5 +185,10 @@ export const useUrlSync = () => {
         selectedEventDay,
         selectEvent,
         clearEvent,
+
+        // Add to Calendar modal
+        addToCalendarEventId,
+        openAddToCalendar,
+        closeAddToCalendar,
     };
 };

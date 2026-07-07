@@ -9,8 +9,13 @@ import { useUrlSync } from '@/composables/useUrlSync';
 // Callers pass the already-resolved (source) event id.
 export function useCalendarDayEventInteraction(getDayInstance: () => Dayjs) {
     const { isTouchDevice } = useDeviceDetection();
-    const { selectEvent, clearEvent, selectedEventId } = useUrlSync();
+    const { selectEvent, clearEvent, selectedEventId, selectedEventDay } = useUrlSync();
     const { debouncedHighlightEventID, debouncedClearEventIDHighlight } = useEventHighlightDebounce();
+
+    // Desktop: was this event/day the one deep-linked via ?event=&eventDay= on load?
+    function isSelectedFromUrl(eventId: string) {
+        return !isTouchDevice.value && selectedEventId.value === eventId && selectedEventDay.value === getDayInstance().format('YYYY-MM-DD');
+    }
 
     const tooltipOptionsDefaults = computed(() => ({
         autoHide: isTouchDevice.value,
@@ -44,5 +49,6 @@ export function useCalendarDayEventInteraction(getDayInstance: () => Dayjs) {
         handleEventClick,
         handleMenuShow,
         handleMenuHide,
+        isSelectedFromUrl,
     };
 }

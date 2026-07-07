@@ -1,8 +1,18 @@
 <template>
     <BaseModal :show="show" title="Add to Calendar" @close="closeModal">
-        <div class="event-summary mb-3 pb-3 border-bottom">
+        <div
+            class="event-type-bar"
+            :style="{
+                backgroundColor: eventTypeColor,
+                borderLeftColor: `color-mix(in srgb, ${eventTypeColor} 70%, black)`,
+            }"
+        >
+            <span class="event-type-name">{{ eventTypeName }}</span>
+        </div>
+
+        <div class="event-summary mb-3 pb-3 px-2 border-bottom">
             <div class="event-summary-name">{{ eventName }}</div>
-            <div class="event-summary-dates">{{ eventDateRange }}</div>
+            <EventTimeDisplay :event="event" />
         </div>
 
         <div class="d-grid gap-2">
@@ -37,13 +47,14 @@
 import { Download, ExternalLink } from '@lucide/vue';
 import { computed } from 'vue';
 
+import { useEventsStore } from '@/stores/events';
 import { getGoogleCalendarUrl, getOffice365Url, getOutlookComUrl, getYahooCalendarUrl } from '@/utils/calendarLinks';
-import { formatEventDateRange } from '@/utils/dateFormat';
 import { formatEventName } from '@/utils/eventName';
-import type { PogoEvent } from '@/utils/eventTypes';
+import { type PogoEvent, getEventTypeInfo } from '@/utils/eventTypes';
 import { downloadEventIcs } from '@/utils/icsExport';
 
 import BaseModal from '@/components/BaseModal.vue';
+import EventTimeDisplay from '@/components/Calendar/EventTimeDisplay.vue';
 
 interface Props {
     show: boolean;
@@ -57,8 +68,11 @@ interface Emits {
 const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
 
+const eventsStore = useEventsStore();
+
 const eventName = computed(() => formatEventName(props.event.name));
-const eventDateRange = computed(() => formatEventDateRange(props.event.start, props.event.end));
+const eventTypeName = computed(() => getEventTypeInfo(props.event.eventType).name);
+const eventTypeColor = computed(() => eventsStore.eventMetadata[props.event.eventID]?.color);
 
 const googleUrl = computed(() => getGoogleCalendarUrl(props.event));
 const outlookComUrl = computed(() => getOutlookComUrl(props.event));
@@ -76,14 +90,22 @@ function handleDownloadIcs() {
 </script>
 
 <style scoped>
+.event-type-bar {
+    font-size: 0.8rem;
+    line-height: 1.2;
+    font-weight: 600;
+    color: #ffffff;
+    margin-bottom: 0.75rem;
+    padding: 0.4rem 0.6rem 0.4rem 0.5rem;
+    border-radius: 4px;
+    border-left: 3px solid;
+    text-shadow: 1px 2px 2px rgba(0, 0, 0, 0.3);
+}
+
 .event-summary-name {
     font-weight: 600;
     color: var(--bs-body-color);
-}
-
-.event-summary-dates {
-    font-size: 0.85rem;
-    color: var(--bs-secondary-color);
+    margin-bottom: 0.5rem;
 }
 
 .btn-calendar-provider {

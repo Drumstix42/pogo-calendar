@@ -1,5 +1,6 @@
 <template>
     <VMenu
+        v-model:shown="menuShown"
         :disabled="isTouchDevice"
         placement="top"
         :delay="tooltipOptionsDefaults.delay"
@@ -76,7 +77,7 @@
 <script setup lang="ts">
 import { breakpointsBootstrapV5, useBreakpoints } from '@vueuse/core';
 import { type Dayjs } from 'dayjs';
-import { computed } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 
 import { useCalendarDayEventInteraction } from '@/composables/useCalendarDayEventInteraction';
 import { useDailyEventDisplay } from '@/composables/useDailyEventDisplay';
@@ -118,6 +119,7 @@ const {
     handleEventClick,
     handleMenuShow,
     handleMenuHide,
+    isSelectedFromUrl,
 } = useCalendarDayEventInteraction(() => props.dayInstance);
 
 // Pokemon image height based on breakpoint
@@ -140,6 +142,14 @@ const displayName = computed(() => getEventDisplayNameForSingleDay(props.event))
 const detailsEvent = computed(() => getEventForDetails(props.event));
 const showBadge = computed(() => shouldShowBadge(props.event));
 const eventCount = computed(() => getEventCount(props.event));
+
+// Auto-open the tooltip when this event/day was deep-linked via ?event=&eventDay= on load
+const menuShown = ref(false);
+onMounted(() => {
+    if (isSelectedFromUrl(sourceEventId.value)) {
+        menuShown.value = true;
+    }
+});
 </script>
 
 <style scoped>

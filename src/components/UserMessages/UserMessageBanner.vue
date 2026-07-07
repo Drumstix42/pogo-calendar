@@ -27,6 +27,7 @@
 
 <script setup lang="ts">
 import { AlertCircle, AlertTriangle, CheckCircle2, Info } from '@lucide/vue';
+import { recomputeAllPoppers } from 'floating-vue';
 import { nextTick, ref, watch } from 'vue';
 
 import { useUserMessagesStore } from '@/stores/userMessages';
@@ -75,6 +76,13 @@ watch(
 function handleDismiss(id: string, version: string) {
     userMessages.dismissMessage(id, version);
 }
+
+// Banner insertion/removal shifts the whole page below it; nudge any open tooltip
+// back onto its anchor rather than leaving it floating at its pre-shift position.
+watch(showMessages, async () => {
+    await nextTick();
+    recomputeAllPoppers();
+});
 </script>
 
 <style scoped>

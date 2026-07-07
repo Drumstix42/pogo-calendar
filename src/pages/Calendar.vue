@@ -113,7 +113,17 @@ const hideEventModal = useHideEventModal();
 const editColorModal = useEditColorModal();
 const addToCalendarModal = useAddToCalendarModal();
 const { hideEventTypeWithToast, hideEventByIdWithToast } = useEventFilterToasts();
-const { settingsOpen, openSettings, closeSettings, selectedEventId, selectedEventDay, clearEvent } = useUrlSync();
+const {
+    settingsOpen,
+    openSettings,
+    closeSettings,
+    selectedEventId,
+    selectedEventDay,
+    clearEvent,
+    addToCalendarEventId,
+    openAddToCalendar,
+    closeAddToCalendar,
+} = useUrlSync();
 const { isTouchDevice } = useDeviceDetection();
 
 useCalendarDataRefresh();
@@ -150,6 +160,39 @@ watch(
             openSettings();
         } else if (!isExpanded && settingsOpen.value) {
             closeSettings();
+        }
+    },
+);
+
+// Add to Calendar modal ⇄ URL sync
+// Resolve reactively (not just on URL change) — events may still be loading when the URL is first read.
+const addToCalendarEventFromUrl = computed(() => {
+    if (!addToCalendarEventId.value) {
+        return undefined;
+    }
+    return eventsStore.getProcessedEventById(addToCalendarEventId.value);
+});
+
+watch(
+    addToCalendarEventFromUrl,
+    event => {
+        if (event) {
+            addToCalendarModal.openModal(event);
+        } else if (!addToCalendarEventId.value && addToCalendarModal.showModal.value) {
+            addToCalendarModal.closeModal();
+        }
+    },
+    { immediate: true },
+);
+
+// Sync store changes back to URL (for programmatic opens, e.g. from the event tooltip)
+watch(
+    () => addToCalendarModal.showModal.value,
+    isOpen => {
+        if (isOpen && addToCalendarModal.currentEvent.value && !addToCalendarEventId.value) {
+            openAddToCalendar(addToCalendarModal.currentEvent.value.eventID);
+        } else if (!isOpen && addToCalendarEventId.value) {
+            closeAddToCalendar();
         }
     },
 );

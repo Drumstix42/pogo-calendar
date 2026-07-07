@@ -26,6 +26,7 @@
         @click="handleEventClick(event.eventID)"
     >
         <VMenu
+            v-model:shown="menuShown"
             :disabled="isTouchDevice"
             placement="top"
             :delay="tooltipOptionsDefaults.delay"
@@ -65,7 +66,7 @@
 
 <script setup lang="ts">
 import { type Dayjs } from 'dayjs';
-import { computed } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 
 import { useCalendarDayEventInteraction } from '@/composables/useCalendarDayEventInteraction';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
@@ -103,10 +104,19 @@ const {
     handleEventClick,
     handleMenuShow,
     handleMenuHide,
+    isSelectedFromUrl,
 } = useCalendarDayEventInteraction(() => props.dayInstance);
 
 const metadata = computed(() => eventsStore.eventMetadata[props.event.eventID]);
 const iconHeight = computed(() => calendarSettings.eventBarHeight - 2);
+
+// Auto-open the tooltip when this event/day was deep-linked via ?event=&eventDay= on load
+const menuShown = ref(false);
+onMounted(() => {
+    if (isSelectedFromUrl(props.event.eventID)) {
+        menuShown.value = true;
+    }
+});
 </script>
 
 <style scoped>
