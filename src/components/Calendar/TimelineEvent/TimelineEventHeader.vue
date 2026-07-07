@@ -10,6 +10,15 @@
             <template v-if="isActive">
                 <VTooltip :disabled="isTouchDevice" placement="top" :delay="{ show: 50, hide: 0 }" distance="10">
                     <template #popper>
+                        <div class="tooltip-text">Add to calendar</div>
+                    </template>
+                    <button type="button" class="timeline-color-edit-btn" @click.stop="emit('addToCalendar')">
+                        <BellPlus :size="13" />
+                    </button>
+                </VTooltip>
+
+                <VTooltip :disabled="isTouchDevice" placement="top" :delay="{ show: 50, hide: 0 }" distance="10">
+                    <template #popper>
                         <div class="tooltip-text">Customize event type color</div>
                     </template>
                     <button type="button" class="timeline-color-edit-btn" @click.stop="emit('editColor')">
@@ -31,7 +40,7 @@
 </template>
 
 <script setup lang="ts">
-import { ChevronsDownUp, ChevronsUpDown, Palette } from '@lucide/vue';
+import { BellPlus, ChevronsDownUp, ChevronsUpDown, Palette } from '@lucide/vue';
 
 import { type EventTypeKey } from '@/utils/eventTypes';
 
@@ -46,6 +55,7 @@ interface Props {
 
 interface Emits {
     toggle: [];
+    addToCalendar: [];
     editColor: [];
     hide: [];
 }

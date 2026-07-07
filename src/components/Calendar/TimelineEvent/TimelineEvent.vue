@@ -22,6 +22,7 @@
             :is-active="props.isActive"
             :is-touch-device="isTouchDevice"
             @toggle="toggleActive"
+            @add-to-calendar="openAddToCalendarModal"
             @edit-color="openColorModal"
             @hide="openHideModal"
         />
@@ -145,6 +146,7 @@ const eventHighlight = useEventHighlightStore();
 const {
     isTouchDevice,
     openColorModal,
+    openAddToCalendarModal,
     toggleActive,
     openHideModal,
     debouncedHighlightEventID,
