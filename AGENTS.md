@@ -40,6 +40,7 @@ When a code change alters behavior described here, propose the matching doc upda
 - When the change scope is small, prefer a single concise bullet in the body.
 - Avoid low-level implementation details in the commit body (file names, line counts, internal symbols).
 - Prefer the git command line over tooling.
+- Do not add a `Co-Authored-By` trailer or any AI attribution footer to commit messages.
 
 ## Tech stack
 
