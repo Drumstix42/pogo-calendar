@@ -21,12 +21,6 @@ export const useUserMessagesStore = defineStore('userMessages', () => {
     const dismissedVersions = useLocalStorage<Record<string, string>>(STORAGE_KEYS.DISMISSED_MESSAGE_VERSIONS, {});
     const runtimeMessages = ref<UserMessage[]>([]);
 
-    // Captured once per session, before we mark this browser as visited, so a first-time
-    // visitor is treated as "new" for the whole session even if they dismiss something.
-    const hasVisitedBefore = useLocalStorage<boolean>(STORAGE_KEYS.HAS_VISITED_BEFORE, false);
-    const isNewUser = !hasVisitedBefore.value;
-    hasVisitedBefore.value = true;
-
     const messages: UserMessage[] = [
         {
             id: 'welcome-message',
@@ -46,6 +40,22 @@ export const useUserMessagesStore = defineStore('userMessages', () => {
             expiresAt: '2026-09-07',
         },
     ];
+
+    // Captured once per session, before we mark this browser as visited. Also requires no prior
+    // dismissal history, so an existing user isn't misflagged as new just because this flag is new.
+    const hasVisitedBefore = useLocalStorage<boolean>(STORAGE_KEYS.HAS_VISITED_BEFORE, false);
+    const isNewUser = !hasVisitedBefore.value && Object.keys(dismissedVersions.value).length === 0;
+    hasVisitedBefore.value = true;
+
+    if (isNewUser) {
+        // Pre-dismiss messages a new user shouldn't see, so they don't resurface once this
+        // session's "new" status goes away on their next visit or reload.
+        messages.forEach(message => {
+            if (!message.showToNewUsers) {
+                dismissedVersions.value[message.id] = message.version;
+            }
+        });
+    }
 
     function isMessageActive(message: UserMessage) {
         const dismissedVersion = dismissedVersions.value[message.id];
