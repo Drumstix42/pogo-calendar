@@ -67,6 +67,14 @@
         :event-type-key="editColorModal.currentEventTypeKey.value"
         @close="editColorModal.closeModal"
     />
+
+    <!-- Add to Calendar Modal -->
+    <AddToCalendarModal
+        v-if="addToCalendarModal.currentEvent.value"
+        :show="addToCalendarModal.showModal.value"
+        :event="addToCalendarModal.currentEvent.value"
+        @close="addToCalendarModal.closeModal"
+    />
 </template>
 
 <script setup lang="ts">
@@ -75,6 +83,7 @@ import { breakpointsBootstrapV5, useBreakpoints, useEventListener, useScrollLock
 import { hideAllPoppers } from 'floating-vue';
 import { computed, nextTick, watch, watchEffect } from 'vue';
 
+import { useAddToCalendarModal } from '@/composables/useAddToCalendarModal';
 import { useCalendarDataRefresh } from '@/composables/useCalendarDataRefresh';
 import { useDeviceDetection } from '@/composables/useDeviceDetection';
 import { useEditColorModal } from '@/composables/useEditColorModal';
@@ -85,6 +94,7 @@ import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { useEventsStore } from '@/stores/events';
 import { type EventTypeKey } from '@/utils/eventTypes';
 
+import AddToCalendarModal from '@/components/Calendar/AddToCalendarModal.vue';
 import CalendarGrid from '@/components/Calendar/CalendarGrid.vue';
 import CalendarHeader from '@/components/Calendar/CalendarHeader.vue';
 import CalendarOptionsOffcanvas from '@/components/Calendar/CalendarOptionsOffcanvas.vue';
@@ -101,6 +111,7 @@ const eventsStore = useEventsStore();
 const calendarSettings = useCalendarSettingsStore();
 const hideEventModal = useHideEventModal();
 const editColorModal = useEditColorModal();
+const addToCalendarModal = useAddToCalendarModal();
 const { hideEventTypeWithToast, hideEventByIdWithToast } = useEventFilterToasts();
 const { settingsOpen, openSettings, closeSettings, selectedEventId, selectedEventDay, clearEvent } = useUrlSync();
 const { isTouchDevice } = useDeviceDetection();
@@ -212,7 +223,8 @@ function handleGlobalKeydown(event: KeyboardEvent) {
     }
 
     // Let higher-priority overlays and native color pickers handle Escape first.
-    const hasBlockingOverlay = hideEventModal.showModal.value || editColorModal.showModal.value || !!selectedEventId.value;
+    const hasBlockingOverlay =
+        hideEventModal.showModal.value || editColorModal.showModal.value || addToCalendarModal.showModal.value || !!selectedEventId.value;
     if (hasBlockingOverlay) {
         return;
     }

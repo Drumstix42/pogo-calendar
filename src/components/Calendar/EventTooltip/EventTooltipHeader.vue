@@ -9,6 +9,14 @@
         <span class="event-type-name">{{ eventTypeName }}</span>
         <VTooltip :disabled="isTouchDevice" placement="top" :delay="{ show: 50, hide: 0 }" distance="10" class="d-flex align-items-center">
             <template #popper>
+                <div class="tooltip-text">Add to calendar</div>
+            </template>
+            <button type="button" class="tooltip-color-edit-btn" title="Add to calendar" @click="addToCalendarModal.openModal(event)">
+                <BellPlus :size="13" />
+            </button>
+        </VTooltip>
+        <VTooltip :disabled="isTouchDevice" placement="top" :delay="{ show: 50, hide: 0 }" distance="10" class="d-flex align-items-center">
+            <template #popper>
                 <div class="tooltip-text">Customize event type color</div>
             </template>
             <button type="button" class="tooltip-color-edit-btn" :title="`Customize ${eventTypeName} color`" @click="openColorModal">
@@ -20,10 +28,11 @@
 </template>
 
 <script setup lang="ts">
-import { Palette } from '@lucide/vue';
+import { BellPlus, Palette } from '@lucide/vue';
 import { hideAllPoppers } from 'floating-vue';
 import { computed, nextTick } from 'vue';
 
+import { useAddToCalendarModal } from '@/composables/useAddToCalendarModal';
 import { useDeviceDetection } from '@/composables/useDeviceDetection';
 import { useEditColorModal } from '@/composables/useEditColorModal';
 import { useHideEventModal } from '@/composables/useHideEventModal';
@@ -40,6 +49,7 @@ const props = defineProps<Props>();
 
 const hideEventModal = useHideEventModal();
 const editColorModal = useEditColorModal();
+const addToCalendarModal = useAddToCalendarModal();
 const eventsStore = useEventsStore();
 const { isTouchDevice } = useDeviceDetection();
 
