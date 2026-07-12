@@ -21,6 +21,8 @@ export interface PokemonImageData {
     imageUrl: string | null;
     fallbackImageUrl?: string | null;
     effect?: SpriteEffect;
+    /** Number of shields this Super Mega Raid boss has (undefined for non-Super-Mega/unknown bosses). */
+    shieldCount?: number;
 }
 
 // A PogoEvent guaranteed to carry `extraData`. The entry point narrows to this (via `hasExtraData`)

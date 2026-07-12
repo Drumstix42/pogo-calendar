@@ -2,6 +2,7 @@ import { parsePokemonNameAndSuffix } from './eventPokemonNames';
 import type { PokemonImageData, PokemonImageOptions } from './eventPokemonTypes';
 import { type PogoEvent } from './eventTypes';
 import { getPokemonAnimatedUrl, getPokemonSpriteUrl } from './pokemonMapper.ts';
+import { getSuperMegaShieldCount } from './superMegaShields';
 
 export function getSpriteUrl(pokemonName: string, suffix?: string, options?: PokemonImageOptions, fallbackUrl?: string | null) {
     // Use provided suffix or derive from options
@@ -65,6 +66,8 @@ export function getPokemonImagesFromBosses(event: PogoEvent, options?: PokemonIm
 
     for (const boss of bosses) {
         const parsedData = parsePokemonNameAndSuffix(boss.name);
+        const shieldCount = boss.raidType === 'Super Mega' ? getSuperMegaShieldCount(boss.name) : undefined;
+
         if (parsedData) {
             let spriteUrl: string | null = null;
 
@@ -77,9 +80,9 @@ export function getPokemonImagesFromBosses(event: PogoEvent, options?: PokemonIm
                 spriteUrl = getSpriteUrl(parsedData.pokemonName, undefined, options, boss.image);
             }
 
-            images.push({ name: boss.name, imageUrl: spriteUrl, fallbackImageUrl: boss.image || null });
+            images.push({ name: boss.name, imageUrl: spriteUrl, fallbackImageUrl: boss.image || null, shieldCount });
         } else {
-            images.push({ name: boss.name, imageUrl: boss.image || null, fallbackImageUrl: boss.image || null });
+            images.push({ name: boss.name, imageUrl: boss.image || null, fallbackImageUrl: boss.image || null, shieldCount });
         }
     }
 

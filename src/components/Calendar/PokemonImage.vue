@@ -17,6 +17,13 @@
                     <img src="/images/overlay/shadow-aura.png" alt="Shadow effect" class="shadow-aura" />
                 </div>
 
+                <div v-if="shieldCount" class="shield-badge-anchor">
+                    <div class="shield-badge">
+                        <img src="/images/icons/super-mega-shield.png" alt="Super Mega Raid shield" class="shield-icon" />
+                        <span class="shield-count">{{ shieldCount }}</span>
+                    </div>
+                </div>
+
                 <template v-if="isPlaceholder">
                     <CircleHelpIcon class="placeholder-icon" :size="height" />
                 </template>
@@ -34,9 +41,12 @@
             </div>
 
             <template #popper>
-                <div class="tooltip-text white-space-nowrap">
+                <div class="tooltip-text white-space-nowrap text-center">
                     <template v-if="isPlaceholder">Unknown pokemon</template>
                     <template v-else> {{ pokemonData?.name }}{{ !currentImageSrc || hasError ? ' (missing sprite)' : '' }} </template>
+                    <template v-if="shieldCount"
+                        ><br /><span class="fw-bold">{{ shieldCount }} shields to break</span></template
+                    >
                 </div>
             </template>
         </VTooltip>
@@ -97,6 +107,8 @@ const errorLevel = ref(0);
 
 // Per-sprite effect wins; fall back to the event-level prop.
 const resolvedEffect = computed(() => props.pokemonData?.effect ?? props.effect);
+
+const shieldCount = computed(() => props.pokemonData?.shieldCount);
 
 const altFolderUrl = computed(() => {
     const url = props.pokemonData?.imageUrl;
@@ -271,6 +283,44 @@ function onImageError() {
 
 .placeholder-container {
     opacity: 0.6;
+}
+
+.shield-badge-anchor {
+    position: absolute;
+    top: -2px;
+    right: -5px;
+    z-index: 3;
+    display: inline-block;
+}
+
+.shield-badge {
+    position: relative;
+    width: 20px;
+    height: 20px;
+    filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.3));
+}
+
+.shield-icon {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+    opacity: 0.8;
+}
+
+.shield-count {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 1;
+    color: #fff;
+    text-shadow:
+        0 1px 2px rgba(0, 0, 0, 0.9),
+        0 -1px 2px rgba(0, 0, 0, 0.9);
 }
 
 .placeholder-icon {

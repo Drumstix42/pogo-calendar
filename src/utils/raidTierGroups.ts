@@ -1,6 +1,7 @@
 import type { PokemonImageData } from './eventPokemon';
 import type { PokemonBoss } from './eventTypes';
 import { getPokemonAnimatedUrl } from './pokemonMapper';
+import { getSuperMegaShieldCount } from './superMegaShields';
 
 interface TierGroupBoss {
     name: string;
@@ -67,16 +68,20 @@ export function buildRaidTierGroupsWithImages(groups: TierGroupInput[] | undefin
 
     const shouldHideOtherLabel = groups.length === 1 && groups[0].label === 'Other';
 
-    return groups.map(group => ({
-        label: group.label,
-        showLabel: !shouldHideOtherLabel,
-        images: group.bosses.map(boss => {
-            const animatedUrl = useAnimated ? getPokemonAnimatedUrl(boss.name) : null;
-            return {
-                name: boss.name,
-                imageUrl: animatedUrl ?? boss.image,
-                fallbackImageUrl: boss.image || null,
-            } satisfies PokemonImageData;
-        }),
-    }));
+    return groups.map(group => {
+        const isSuperMega = group.label === 'Super Mega';
+        return {
+            label: group.label,
+            showLabel: !shouldHideOtherLabel,
+            images: group.bosses.map(boss => {
+                const animatedUrl = useAnimated ? getPokemonAnimatedUrl(boss.name) : null;
+                return {
+                    name: boss.name,
+                    imageUrl: animatedUrl ?? boss.image,
+                    fallbackImageUrl: boss.image || null,
+                    shieldCount: isSuperMega ? getSuperMegaShieldCount(boss.name) : undefined,
+                } satisfies PokemonImageData;
+            }),
+        };
+    });
 }

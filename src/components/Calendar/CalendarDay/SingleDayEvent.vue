@@ -414,7 +414,7 @@ onMounted(() => {
 
     .event-time {
         margin-top: 3px;
-        margin-bottom: 2px;
+        /* margin-bottom: 2px; */
         font-size: 0.68rem;
     }
 

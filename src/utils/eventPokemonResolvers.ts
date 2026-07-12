@@ -15,6 +15,7 @@ import { getPokemonImagesFromBosses, getRaidBossesWithTierFallback, getSpriteIma
 import { getRaidSubType } from './eventSubtype';
 import { type PogoEvent } from './eventTypes';
 import { getGigantamaxSpriteUrl } from './pokemonMapper.ts';
+import { getSuperMegaShieldCount } from './superMegaShields';
 
 // Each resolver maps one event-type branch to its Pokemon images, returning `null` to signal
 // "this branch produced nothing — fall through to the next" (preserving getEventPokemonImages'
@@ -67,6 +68,9 @@ export function resolveRaidBattleImages(event: EventWithExtraData, options?: Pok
         const images = getSpriteImagesFromNames(pokemonNames, options, isMega);
 
         if (images.length > 0) {
+            if (raidSubType === 'super-mega-raids') {
+                return images.map(image => ({ ...image, shieldCount: getSuperMegaShieldCount(image.name) }));
+            }
             return images;
         }
     }
@@ -128,9 +132,10 @@ export function resolveRaidDayImages(event: EventWithExtraData, options?: Pokemo
             const spriteUrl = getSpriteUrl(parsedData.pokemonName, suffix, options);
             // Reflect the actual Pokemon form in the display name
             const displayName = isMegaModifier ? `Mega ${pokemonNameString}` : pokemonNameString;
+            const shieldCount = raidModifier.includes('super mega') ? getSuperMegaShieldCount(displayName) : undefined;
 
             // Always return, even if spriteUrl is null
-            return [{ name: displayName, imageUrl: spriteUrl }];
+            return [{ name: displayName, imageUrl: spriteUrl, shieldCount }];
         }
     }
 
