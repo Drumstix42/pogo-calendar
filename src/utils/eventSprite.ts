@@ -1,7 +1,7 @@
 import { parsePokemonNameAndSuffix } from './eventPokemonNames';
 import type { PokemonImageData, PokemonImageOptions } from './eventPokemonTypes';
 import { type PogoEvent } from './eventTypes';
-import { getPokemonAnimatedUrl, getPokemonSpriteUrl } from './pokemonMapper.ts';
+import { getPokemonAnimatedUrl, getPokemonSpriteUrl, hasExactSpriteForm } from './pokemonMapper.ts';
 import { getSuperMegaShieldCount } from './superMegaShields';
 
 export function getSpriteUrl(pokemonName: string, suffix?: string, options?: PokemonImageOptions, fallbackUrl?: string | null) {
@@ -69,16 +69,15 @@ export function getPokemonImagesFromBosses(event: PogoEvent, options?: PokemonIm
         const shieldCount = boss.raidType === 'Super Mega' ? getSuperMegaShieldCount(boss.name) : undefined;
 
         if (parsedData) {
-            let spriteUrl: string | null = null;
-
-            const preferProvidedImage = parsedData.suffix === '-megax' || parsedData.suffix === '-megay';
-
-            if (parsedData.suffix) {
-                spriteUrl =
-                    preferProvidedImage && boss.image ? boss.image : getSpriteUrl(parsedData.pokemonName, parsedData.suffix, options, boss.image);
-            } else {
-                spriteUrl = getSpriteUrl(parsedData.pokemonName, undefined, options, boss.image);
-            }
+            // Only trust a generated sprite when it genuinely matches the boss's exact form - some
+            // Mega/Super Mega bosses (Raichu X/Y, Starmie, Dragonite, Malamar) have no matching sprite
+            // anywhere in our sources, and PokeMiners silently substitutes the base sprite for an
+            // unmatched suffix. The event-provided image ranks above that guess; the base sprite (no
+            // suffix at all) is the absolute last resort if even that's missing.
+            const hasRealForm = hasExactSpriteForm(parsedData.pokemonName, parsedData.suffix);
+            const spriteUrl = hasRealForm
+                ? getSpriteUrl(parsedData.pokemonName, parsedData.suffix, options, boss.image)
+                : boss.image || getSpriteUrl(parsedData.pokemonName, undefined, options, boss.image);
 
             images.push({ name: boss.name, imageUrl: spriteUrl, fallbackImageUrl: boss.image || null, shieldCount });
         } else {

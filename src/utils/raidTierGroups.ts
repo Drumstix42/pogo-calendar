@@ -1,6 +1,7 @@
 import type { PokemonImageData } from './eventPokemon';
+import { parsePokemonNameAndSuffix } from './eventPokemonNames';
 import type { PokemonBoss } from './eventTypes';
-import { getPokemonAnimatedUrl } from './pokemonMapper';
+import { getPokemonAnimatedUrl, getPokemonSpriteUrl, hasExactSpriteForm } from './pokemonMapper';
 import { getSuperMegaShieldCount } from './superMegaShields';
 
 interface TierGroupBoss {
@@ -74,10 +75,18 @@ export function buildRaidTierGroupsWithImages(groups: TierGroupInput[] | undefin
             label: group.label,
             showLabel: !shouldHideOtherLabel,
             images: group.bosses.map(boss => {
-                const animatedUrl = useAnimated ? getPokemonAnimatedUrl(boss.name) : null;
+                const parsed = parsePokemonNameAndSuffix(boss.name);
+                // Only trust a generated sprite when it genuinely matches the boss's exact form -
+                // PokeMiners silently substitutes the base sprite for an unmatched suffix (e.g. no
+                // Mega Raichu X/Y art exists), which would otherwise outrank the event-provided image
+                // instead of falling below it. The base sprite is the absolute last-resort fallback.
+                const hasRealForm = parsed != null && hasExactSpriteForm(parsed.pokemonName, parsed.suffix);
+                const generatedUrl = hasRealForm ? (useAnimated ? getPokemonAnimatedUrl(boss.name) : null) : null;
+                const imageUrl = generatedUrl ?? boss.image ?? (parsed ? getPokemonSpriteUrl(parsed.pokemonName) : null);
+
                 return {
                     name: boss.name,
-                    imageUrl: animatedUrl ?? boss.image,
+                    imageUrl,
                     fallbackImageUrl: boss.image || null,
                     shieldCount: isSuperMega ? getSuperMegaShieldCount(boss.name) : undefined,
                 } satisfies PokemonImageData;

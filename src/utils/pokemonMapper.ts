@@ -1,5 +1,5 @@
 import { POKEMON_NAME_TO_ID } from '@/constants/pokemonEntries';
-import { POKEMON_FORM_MAP } from '@/constants/pokemonFormMap';
+import { POKEMON_FORM_MAP, type PokemonFormData } from '@/constants/pokemonFormMap';
 import { VALID_ANIMATED_SPRITES } from '@/constants/validAnimatedSprites';
 import { GIGANTAMAX_POKEMON_IDS } from '@/constants/validGigantamaxSprites';
 import { VALID_STATIC_SPRITES } from '@/constants/validStaticSprites';
@@ -159,6 +159,21 @@ export function isValidStaticSprite(spriteName: string): boolean {
     return VALID_STATIC_SPRITES.has(spriteName.toLowerCase());
 }
 
+// Some of our slugs are more specific than PokeMiners' form names (e.g. "crownedsword" → "CROWNED")
+const POKEMINERS_FORM_ALIASES: Record<string, string> = {
+    crownedsword: 'CROWNED',
+    crownedshield: 'CROWNED',
+};
+
+// Does this Pokemon have a PokeMiners form matching the given suffix? Forms are stored with an 'f'
+// prefix (e.g. "fBURN"), so this checks both with and without it.
+function pokeMinersHasForm(pokemon: PokemonFormData, formSuffix: string): boolean {
+    const cleanedSuffix = formSuffix.startsWith('-') ? formSuffix.substring(1) : formSuffix;
+    const normalizedForm = POKEMINERS_FORM_ALIASES[cleanedSuffix.toLowerCase()] ?? cleanedSuffix.toUpperCase();
+
+    return pokemon.forms.some(f => f.substring(1) === normalizedForm || f.toUpperCase() === normalizedForm);
+}
+
 // Get PokeMiners asset URL for a Pokemon using the form mapping
 function getPokeMinersSpriteUrl(pokemonId: number, formSuffix?: string, shiny = false): string | null {
     const pokemon = POKEMON_FORM_MAP[pokemonId.toString()];
@@ -173,27 +188,10 @@ function getPokeMinersSpriteUrl(pokemonId: number, formSuffix?: string, shiny = 
         // Base form only
         suffix = '';
     } else if (formSuffix) {
-        // Convert our suffix format to PokeMiners format
-        // Our suffixes come from eventPokemon.ts as "-burn", "-chill", etc.
-        // PokeMiners expects uppercase without hyphen: "BURN", "CHILL" (stored as "fBURN", "fCHILL" in form map)
-        const cleanedSuffix = formSuffix.startsWith('-') ? formSuffix.substring(1) : formSuffix;
-
-        // Some of our slugs are more specific than PokeMiners' form names (e.g. "crownedsword" → "CROWNED")
-        const POKEMINERS_FORM_ALIASES: Record<string, string> = {
-            crownedsword: 'CROWNED',
-            crownedshield: 'CROWNED',
-        };
-        const normalizedForm = POKEMINERS_FORM_ALIASES[cleanedSuffix.toLowerCase()] ?? cleanedSuffix.toUpperCase();
-
-        // Check if this form exists in PokeMiners form map
-        // Forms are stored with 'f' prefix (e.g., "fBURN"), so we check both with and without it
-        const hasForm = pokemon.forms.some((f: string) => {
-            const formWithoutF = f.substring(1); // "fBURN" → "BURN"
-            return formWithoutF === normalizedForm || f.toUpperCase() === normalizedForm;
-        });
-
-        if (hasForm) {
+        if (pokeMinersHasForm(pokemon, formSuffix)) {
             // PokeMiners filenames require the 'f' prefix: "pm649.fBURN.icon.png"
+            const cleanedSuffix = formSuffix.startsWith('-') ? formSuffix.substring(1) : formSuffix;
+            const normalizedForm = POKEMINERS_FORM_ALIASES[cleanedSuffix.toLowerCase()] ?? cleanedSuffix.toUpperCase();
             suffix = `.${cleanedSuffix.startsWith('f') ? cleanedSuffix : 'f' + normalizedForm}`;
         } else {
             // Form not found in PokeMiners, use default (e.g., Genesect defaults to "fNORMAL")
@@ -208,6 +206,22 @@ function getPokeMinersSpriteUrl(pokemonId: number, formSuffix?: string, shiny = 
     const filename = `pm${pokemonId}${suffix}${shinyPart}.icon.png`;
 
     return `${POKEMINERS_URL_PREFIX}${filename}`;
+}
+
+// True when a sprite genuinely matches the Pokemon's exact requested form (static or PokeMiners) -
+// as opposed to `getPokeMinersSpriteUrl`'s "form not found -> use default" fallback, which silently
+// hands back the base sprite for an unmatched suffix. Callers with a better fallback available (e.g.
+// an event-provided boss image) should check this before trusting a generated sprite URL.
+export function hasExactSpriteForm(pokemonName: string, suffix?: string): boolean {
+    const pokemonId = getPokemonId(pokemonName);
+    if (pokemonId == null) return false;
+    if (!suffix) return true;
+
+    const urlName = normalizePokemonName(pokemonName).replace(/[^a-z0-9]/g, '') + suffix;
+    if (isValidStaticSprite(urlName)) return true;
+
+    const pokemon = POKEMON_FORM_MAP[pokemonId.toString()];
+    return pokemon != null && pokeMinersHasForm(pokemon, suffix);
 }
 
 const POKEMINERS_URL_PREFIX = 'https://raw.githubusercontent.com/PokeMiners/pogo_assets/master/Images/Pokemon/Addressable%20Assets/';
