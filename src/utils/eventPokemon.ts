@@ -20,10 +20,6 @@ export { getEventSpriteEffect } from './eventPokemonResolvers';
 export { SPRITE_EFFECTS } from './eventPokemonTypes';
 export type { PokemonImageData, PokemonImageOptions, SpriteEffect } from './eventPokemonTypes';
 
-function hasExtraData(event: PogoEvent): event is EventWithExtraData {
-    return event.extraData != null;
-}
-
 // Fill in the event-level effect on any image a resolver didn't already stamp per-sprite.
 function applyEventEffect(images: PokemonImageData[], effect: SpriteEffect | undefined): PokemonImageData[] {
     if (!effect) return images;
@@ -53,15 +49,17 @@ const IMAGE_RESOLVERS: Partial<Record<EventTypeKey, ImageResolver>> = {
 // Dispatches to per-event-type resolvers in priority order. A resolver returns an image array
 // (the result, possibly empty) or `null` to fall through to the next matching branch.
 export function getEventPokemonImages(event: PogoEvent, options?: PokemonImageOptions): PokemonImageData[] {
-    if (!hasExtraData(event)) return [];
+    // extraData can be entirely absent (or null) rather than just missing sub-fields; normalize it
+    // so resolvers can still fall back to title-based parsing instead of getting skipped outright.
+    const eventWithExtraData: EventWithExtraData = { ...event, extraData: event.extraData ?? {} };
 
     const effect = getEventSpriteEffect(event);
-    let result = IMAGE_RESOLVERS[event.eventType]?.(event, options) ?? null;
+    let result = IMAGE_RESOLVERS[event.eventType]?.(eventWithExtraData, options) ?? null;
 
     // Spotlight sub-events (any parent eventType) fall back to the spotlight resolver when their
     // primary resolver produced nothing.
-    if (!result && event.extraData.isSpotlightSubEvent) {
-        result = resolveSpotlightImages(event, options);
+    if (!result && eventWithExtraData.extraData.isSpotlightSubEvent) {
+        result = resolveSpotlightImages(eventWithExtraData, options);
     }
 
     return result ? applyEventEffect(result, effect) : [];

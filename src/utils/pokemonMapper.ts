@@ -278,6 +278,17 @@ export function getPokeMinersDefaultFormSuffix(pokemonId: number): string | null
     return pokemon.default || null;
 }
 
+// True for Pokemon whose Mega Evolution splits into separate X/Y sprites (currently Charizard,
+// Mewtwo) rather than a single unified Mega form. This is purely a sprite-data fact - independent
+// of the (unrelated) "Super Mega Raid" shield mechanic, which some single-variant Pokemon also use.
+export function hasSplitMegaXYForms(pokemonName: string): boolean {
+    const pokemonId = getPokemonId(pokemonName);
+    if (pokemonId == null) return false;
+
+    const pokemon = POKEMON_FORM_MAP[pokemonId.toString()];
+    return pokemon != null && pokemon.forms.includes('fMEGA_X') && pokemon.forms.includes('fMEGA_Y');
+}
+
 export function getPokemonSpriteUrl(pokemonNameOrId: string | number, suffix?: string): string | null {
     let pokemonName: string;
     let pokemonId: number | null = null;

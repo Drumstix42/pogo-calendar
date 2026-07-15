@@ -25,6 +25,7 @@ export interface PokemonImageData {
     shieldCount?: number;
 }
 
-// A PogoEvent guaranteed to carry `extraData`. The entry point narrows to this (via `hasExtraData`)
-// before dispatching, so resolvers can read `event.extraData.X` without defensive optional chaining.
+// A PogoEvent guaranteed to carry `extraData`. The entry point normalizes to this (defaulting a
+// missing/null `extraData` to `{}`) before dispatching, so resolvers can read `event.extraData.X`
+// without defensive optional chaining, and title-based fallback parsing still runs even with no data.
 export type EventWithExtraData = PogoEvent & { extraData: NonNullable<PogoEvent['extraData']> };

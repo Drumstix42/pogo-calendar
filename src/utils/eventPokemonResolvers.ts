@@ -14,7 +14,7 @@ import type { EventWithExtraData, PokemonImageData, PokemonImageOptions, SpriteE
 import { getPokemonImagesFromBosses, getRaidBossesWithTierFallback, getSpriteImagesFromNames, getSpriteUrl } from './eventSprite';
 import { getRaidSubType } from './eventSubtype';
 import { type PogoEvent } from './eventTypes';
-import { getGigantamaxSpriteUrl } from './pokemonMapper.ts';
+import { getGigantamaxSpriteUrl, getPokemonId, hasSplitMegaXYForms } from './pokemonMapper.ts';
 import { getSuperMegaShieldCount } from './superMegaShields';
 
 // Each resolver maps one event-type branch to its Pokemon images, returning `null` to signal
@@ -126,13 +126,18 @@ export function resolveRaidDayImages(event: EventWithExtraData, options?: Pokemo
 
         const parsedData = parsePokemonNameAndSuffix(pokemonNameString);
         if (parsedData) {
-            const isMegaModifier = raidModifier.includes('mega');
+            // A bare title can't say which variant a raid rolled for Pokemon whose Mega splits into
+            // X/Y sprites (Charizard, Mewtwo) - render the plain sprite rather than guessing a form
+            // suffix that may be wrong. This is unrelated to the "Super Mega" raid classification:
+            // some Super Mega bosses are single-variant (Dragonite), and Charizard's split isn't Super Mega at all.
+            const isAmbiguousSplitForm = !parsedData.suffix && hasSplitMegaXYForms(parsedData.pokemonName);
+            const isMegaModifier = raidModifier.includes('mega') && !isAmbiguousSplitForm;
             // Prefer suffix from name parsing; fall back to modifier-derived suffix
             const suffix = parsedData.suffix ?? (isMegaModifier ? '-mega' : undefined);
             const spriteUrl = getSpriteUrl(parsedData.pokemonName, suffix, options);
             // Reflect the actual Pokemon form in the display name
             const displayName = isMegaModifier ? `Mega ${pokemonNameString}` : pokemonNameString;
-            const shieldCount = raidModifier.includes('super mega') ? getSuperMegaShieldCount(displayName) : undefined;
+            const shieldCount = isMegaModifier && raidModifier.includes('super mega') ? getSuperMegaShieldCount(displayName) : undefined;
 
             // Always return, even if spriteUrl is null
             return [{ name: displayName, imageUrl: spriteUrl, shieldCount }];
@@ -184,23 +189,40 @@ export function resolveSpotlightImages(event: EventWithExtraData, options?: Poke
     return images.length > 0 ? images : null;
 }
 
-// Community day events - use spawns data and generate sprites.
+// Community day events - prefer spawns data, then fall back to title parsing.
 export function resolveCommunityDayImages(event: EventWithExtraData, options?: PokemonImageOptions): PokemonImageData[] | null {
     const spawns = event.extraData.communityday?.spawns;
-    if (!spawns) {
-        return null;
-    }
+    if (spawns) {
+        const images: PokemonImageData[] = [];
 
-    const images: PokemonImageData[] = [];
+        for (const spawn of spawns) {
+            if (spawn.name) {
+                const fallbackImage = spawn.image || null;
+                const spriteUrl = getSpriteUrl(spawn.name, undefined, options, fallbackImage);
+                images.push({ name: spawn.name, imageUrl: spriteUrl });
+            }
+        }
 
-    for (const spawn of spawns) {
-        if (spawn.name) {
-            const fallbackImage = spawn.image || null;
-            const spriteUrl = getSpriteUrl(spawn.name, undefined, options, fallbackImage);
-            images.push({ name: spawn.name, imageUrl: spriteUrl });
+        if (images.length > 0) {
+            return images;
         }
     }
 
+    // Pattern: "<Pokemon Name(s)> Community Day"
+    const eventName = formatEventName(event.name);
+    const match = eventName.match(/^(.+?)\s+Community\s+Day$/i);
+    if (!match) {
+        return null;
+    }
+
+    // Skip pre-reveal placeholder titles (e.g. "August Community Day") whose leading text isn't
+    // actually a Pokemon name.
+    const pokemonNames = parseEventPokemonNames(match[1].trim()).filter(name => getPokemonId(name) != null);
+    if (pokemonNames.length === 0) {
+        return null;
+    }
+
+    const images = getSpriteImagesFromNames(pokemonNames, options);
     return images.length > 0 ? images : null;
 }
 
