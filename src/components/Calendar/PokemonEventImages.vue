@@ -21,9 +21,6 @@
             :is-spotlight-sub-event="event.extraData?.isSpotlightSubEvent === true"
         />
 
-        <!-- More indicator when there are additional images beyond the limit -->
-        <span v-if="shouldShowMoreIndicator" class="pokemon-more-indicator">+</span>
-
         <!-- Overflow counter badge -->
         <span v-if="showOverflowBadge" class="overflow-counter-badge">{{ overflowBadgeCount }}</span>
 
@@ -53,7 +50,6 @@ interface Props {
     height?: number;
     useAnimated?: boolean;
     showPlaceholder?: boolean;
-    limit?: number;
     showTooltips?: boolean;
     showCP?: boolean;
     showOverflowCounter?: boolean;
@@ -66,7 +62,6 @@ const props = withDefaults(defineProps<Props>(), {
     height: 18, // Default to medium size (18px)
     useAnimated: false,
     showPlaceholder: false,
-    limit: undefined,
     showTooltips: false,
     showCP: false,
     showOverflowCounter: false,
@@ -79,12 +74,10 @@ const pokemonImages = computed(() => getEventPokemonImages(props.event, { useAni
 
 const breakpoints = useBreakpoints(breakpointsBootstrapV5);
 
-const displayedImages = computed((): PokemonImageData[] => {
-    return props.limit === undefined || props.limit <= 0 ? pokemonImages.value : pokemonImages.value.slice(0, props.limit);
-});
+const MAX_DISPLAYED_IMAGES = 3;
 
-const shouldShowMoreIndicator = computed(() => {
-    return props.limit !== undefined && props.limit > 0 && pokemonImages.value.length > props.limit;
+const displayedImages = computed((): PokemonImageData[] => {
+    return pokemonImages.value.slice(0, MAX_DISPLAYED_IMAGES);
 });
 
 // Event types where a missing sprite warrants a placeholder (a Pokemon is expected).
@@ -116,9 +109,12 @@ const hasTierExclusionOverflow = computed(() => {
     );
 });
 
+// True when there are more Pokemon than the display cap can show.
+const hasCapOverflow = computed(() => pokemonImages.value.length > MAX_DISPLAYED_IMAGES);
+
 const showOverflowBadge = computed(() => {
-    // Always show when tier exclusions are actively hiding raid bosses.
-    if (hasTierExclusionOverflow.value) return true;
+    // Always show when the display cap or tier exclusions are actively hiding Pokemon.
+    if (hasCapOverflow.value || hasTierExclusionOverflow.value) return true;
 
     // Otherwise only show if explicitly enabled via prop.
     if (!props.showOverflowCounter) return false;
@@ -135,6 +131,9 @@ const overflowBadgeCount = computed(() => {
     if (hasTierExclusionOverflow.value) {
         return props.event.extraData?.raidbattles?.bosses?.length ?? 0;
     }
+
+    // For cap overflow, show the total resolved Pokemon count so the hidden count is implied.
+    if (hasCapOverflow.value) return pokemonImages.value.length;
 
     return displayedImages.value.length;
 });
@@ -160,19 +159,6 @@ const overflowBadgeCount = computed(() => {
     .pokemon-images.wrap-multiple {
         flex-wrap: wrap;
     }
-}
-
-.pokemon-more-indicator {
-    display: inline-flex;
-    align-items: center;
-    justify-content: start;
-    height: 16px;
-    color: rgba(230, 230, 230, 0.9);
-    font-size: 0.7rem;
-    font-weight: 800;
-    line-height: 1;
-    flex-shrink: 0;
-    margin-right: 0.1rem;
 }
 
 .overflow-counter-badge {

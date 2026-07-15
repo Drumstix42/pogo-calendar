@@ -40,18 +40,14 @@
                 <TwitchIcon v-if="event.eventType === 'twitch-drops'" :size="iconHeight" class="twitch-drops-icon" />
 
                 <!-- Show Pokemon images for grouped or individual events -->
-                <template
+                <PokemonEventImages
                     v-else-if="
                         calendarSettings.useMultiDayEventSprites && !isMajorCalendarEventType(event.eventType) && shouldShowMultiDaySprites(event)
                     "
-                >
-                    <template v-if="calendarSettings.groupSimilarEvents && hasGroupedEvents(event)">
-                        <PokemonEventImages :event="event" :height="iconHeight" :limit="2" :exclude-tiers="['Tier 1', 'Tier 3']" />
-                    </template>
-                    <template v-else>
-                        <PokemonEventImages :event="event" :height="iconHeight" :exclude-tiers="['Tier 1', 'Tier 3']" />
-                    </template>
-                </template>
+                    :event="event"
+                    :height="iconHeight"
+                    :exclude-tiers="['Tier 1', 'Tier 3']"
+                />
 
                 <span class="event-name">{{ getEventDisplayName(event) }}</span>
                 <span v-if="shouldShowBadge(event)" class="calendar-event-badge">{{ getEventCount(event) }}</span>
@@ -73,7 +69,6 @@ import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { useEventHighlightStore } from '@/stores/eventHighlight';
 import { useEventsStore } from '@/stores/events';
 import { getEventCount, getEventDisplayName, shouldShowBadge, shouldShowMultiDaySprites } from '@/utils/eventDisplay';
-import { hasGroupedEvents } from '@/utils/eventGrouping';
 import { isMajorCalendarEventType } from '@/utils/eventMajor';
 import { type PogoEvent } from '@/utils/eventTypes';
 
