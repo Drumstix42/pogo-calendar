@@ -34,6 +34,13 @@ export function useCalendarDaySingleEvents(getDayInstance: () => Dayjs) {
         const enabledEvents = eventsForDate.filter((event: PogoEvent) => eventFilter.isEventVisible(event.eventType, event.eventID));
 
         const singleDay = enabledEvents.filter((event: PogoEvent) => {
+            // Major event types are always projected per-day via majorDailyDisplayEvents below,
+            // even when the event itself only spans a single day (e.g. a single-day GO Fest raid
+            // makeup event still carries a time-boxed raidSchedule that needs day-scoping).
+            if (isMajorCalendarEventType(event.eventType)) {
+                return false;
+            }
+
             return eventsStore.eventMetadata[event.eventID]?.isSingleDayEvent ?? false;
         });
 
@@ -53,11 +60,6 @@ export function useCalendarDaySingleEvents(getDayInstance: () => Dayjs) {
                 }
 
                 const metadata = eventsStore.eventMetadata[event.eventID];
-                const isMultiDayEvent = metadata?.isMultiDayEvent ?? true;
-                if (!isMultiDayEvent) {
-                    return false;
-                }
-
                 const startDay = (metadata?.startDate ?? parseEventDate(event.start, calendarSettings.manualTimeOffsetHours)).startOf('day');
                 const endDay = (metadata?.endDate ?? parseEventDate(event.end, calendarSettings.manualTimeOffsetHours)).startOf('day');
 
@@ -65,20 +67,25 @@ export function useCalendarDaySingleEvents(getDayInstance: () => Dayjs) {
             })
             .map(event => {
                 const dateKey = targetDay.format('YYYY-MM-DD');
-                const scheduleSections = event.extraData?.raidSchedule ? getRaidScheduleSectionsForDate(event, targetDay) : [];
-                const allDayBosses = scheduleSections.filter(section => section.isAllDay).flatMap(section => section.bosses);
 
-                const dedupedAllDayBosses = Array.from(
-                    new Map(allDayBosses.map(boss => [`${boss.name.toLowerCase()}|${(boss.raidType ?? '').toLowerCase()}`, boss])).values(),
-                );
+                // Only day-scope bosses when a raidSchedule exists to scope them by - without one,
+                // leave extraData untouched so the event's own raidbattles.bosses still renders as-is.
+                let nextExtraData = event.extraData;
+                if (event.extraData?.raidSchedule) {
+                    const scheduleSections = getRaidScheduleSectionsForDate(event, targetDay);
+                    const allDayBosses = scheduleSections.filter(section => section.isAllDay).flatMap(section => section.bosses);
+                    const dedupedAllDayBosses = Array.from(
+                        new Map(allDayBosses.map(boss => [`${boss.name.toLowerCase()}|${(boss.raidType ?? '').toLowerCase()}`, boss])).values(),
+                    );
 
-                const nextExtraData = {
-                    ...event.extraData,
-                    raidbattles: {
-                        ...(event.extraData?.raidbattles ?? {}),
-                        bosses: dedupedAllDayBosses,
-                    },
-                };
+                    nextExtraData = {
+                        ...event.extraData,
+                        raidbattles: {
+                            ...(event.extraData?.raidbattles ?? {}),
+                            bosses: dedupedAllDayBosses,
+                        },
+                    };
+                }
 
                 return {
                     ...event,
