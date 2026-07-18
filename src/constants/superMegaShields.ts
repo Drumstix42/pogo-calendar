@@ -8,8 +8,8 @@ export const SUPER_MEGA_SHIELD_COUNTS: Record<string, number> = {
     malamar: 8,
     'mewtwo x': 10,
     'mewtwo y': 10,
-    'raichu x': 8,
-    'raichu y': 8,
+    'raichu x': 7,
+    'raichu y': 7,
     skarmory: 8,
     starmie: 8,
 };
