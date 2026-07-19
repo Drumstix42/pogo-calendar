@@ -224,21 +224,17 @@ onMounted(() => {
 }
 
 .single-day-event :deep(.overflow-counter-badge) {
-    top: -2px;
+    position: sticky;
+    top: auto;
     bottom: auto;
-    left: 0;
-    right: auto;
+    left: auto;
+    right: 2px;
+    align-self: flex-end;
     height: 12px;
     padding: 0 4px;
     font-size: 10px;
     font-weight: 500;
     background-color: rgba(30, 30, 40, 0.75);
-}
-
-@media (min-width: 375px) {
-    .single-day-event :deep(.overflow-counter-badge) {
-        left: -2px;
-    }
 }
 
 /* Hide toggle button by default; show on hover */
@@ -262,6 +258,7 @@ onMounted(() => {
 .event-content :deep(.pokemon-images) {
     margin-left: 0;
     max-height: 40px;
+    align-self: flex-start;
 }
 
 @media (min-width: 375px) {
