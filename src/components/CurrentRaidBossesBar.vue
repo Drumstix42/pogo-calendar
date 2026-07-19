@@ -199,11 +199,17 @@ onMounted(() => {
 }
 
 .raid-bosses-popper-detail {
-    display: block;
     flex: 1 1 auto;
     min-height: 0;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    padding: 0.6rem 0.8rem;
+}
+
+/* `.raid-bosses-tier-list` / `.raid-bosses-bottom-link` live in the CurrentRaidBossesDetail child;
+   reach in via :deep() to place the padding this popper needs. */
+.raid-bosses-popper-detail :deep(.raid-bosses-tier-list) {
+    padding: 0.6rem 0.8rem 0 0.8rem;
+}
+
+.raid-bosses-popper-detail :deep(.raid-bosses-bottom-link) {
+    padding: 0.5rem 0.8rem 0.6rem 0.8rem;
 }
 </style>

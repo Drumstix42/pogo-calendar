@@ -1,23 +1,42 @@
 <template>
-    <div class="raid-bosses-tier-list">
-        <div v-for="tierGroup in raidsStore.tierGroups" :key="tierGroup.tier" class="tier-detail-group">
-            <div class="tier-detail-header">
-                <img v-if="RAID_TIER_ICONS[tierGroup.tier]" :src="RAID_TIER_ICONS[tierGroup.tier]" :alt="tierGroup.label" class="tier-detail-icon" />
-                <Egg v-else :size="16" class="tier-detail-fallback-icon" />
-                <span class="tier-detail-label">{{ tierGroup.label }}</span>
+    <div class="raid-bosses-detail">
+        <div class="raid-bosses-tier-list">
+            <div v-for="tierGroup in raidsStore.tierGroups" :key="tierGroup.tier" class="tier-detail-group">
+                <div class="tier-detail-header">
+                    <img
+                        v-if="RAID_TIER_ICONS[tierGroup.tier]"
+                        :src="RAID_TIER_ICONS[tierGroup.tier]"
+                        :alt="tierGroup.label"
+                        class="tier-detail-icon"
+                    />
+                    <Egg v-else :size="16" class="tier-detail-fallback-icon" />
+                    <span class="tier-detail-label">{{ tierGroup.label }}</span>
+                </div>
+                <RaidTierGroupImages
+                    :groups="tierGroup.groups"
+                    :height="40"
+                    event-type="raid-battles"
+                    :use-animated="calendarSettings.useAnimatedImages"
+                />
             </div>
-            <RaidTierGroupImages
-                :groups="tierGroup.groups"
-                :height="40"
-                event-type="raid-battles"
-                :use-animated="calendarSettings.useAnimatedImages"
-            />
+        </div>
+
+        <div class="raid-bosses-bottom-link">
+            <a
+                href="https://leekduck.com/raid-bosses/"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="link-neutral link-underline-opacity-0 link-underline-opacity-100-hover d-inline-flex align-items-center gap-1"
+                style="font-size: 0.75rem"
+            >
+                View on LeekDuck <ExternalLink :size="12" />
+            </a>
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { Egg } from '@lucide/vue';
+import { Egg, ExternalLink } from '@lucide/vue';
 
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { useRaidsStore } from '@/stores/raids';
@@ -30,6 +49,25 @@ const raidsStore = useRaidsStore();
 </script>
 
 <style scoped>
+.raid-bosses-detail {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.raid-bosses-tier-list {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+}
+
+.raid-bosses-bottom-link {
+    flex-shrink: 0;
+    padding-top: 0.5rem;
+}
+
 .tier-detail-group {
     display: flex;
     flex-direction: column;

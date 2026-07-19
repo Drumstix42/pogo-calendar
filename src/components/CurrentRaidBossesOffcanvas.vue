@@ -9,9 +9,7 @@
         </button>
     </div>
     <div class="offcanvas-body">
-        <div class="raid-bosses-scrollable">
-            <CurrentRaidBossesDetail />
-        </div>
+        <CurrentRaidBossesDetail class="raid-bosses-detail-fill" />
     </div>
 </template>
 
@@ -47,13 +45,19 @@ defineEmits<{
     padding: 0;
 }
 
-.raid-bosses-scrollable {
+.raid-bosses-detail-fill {
     flex: 1 1 auto;
     min-height: 0;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    -webkit-overflow-scrolling: touch;
-    padding: 1rem 1rem calc(1rem + env(safe-area-inset-bottom)) 1rem;
+}
+
+/* `.raid-bosses-tier-list` / `.raid-bosses-bottom-link` live in the CurrentRaidBossesDetail child;
+   reach in via :deep() to place the padding this offcanvas body needs. */
+.raid-bosses-detail-fill :deep(.raid-bosses-tier-list) {
+    padding: 1rem 1rem 0 1rem;
+}
+
+.raid-bosses-detail-fill :deep(.raid-bosses-bottom-link) {
+    padding: 0.5rem 1rem calc(1rem + env(safe-area-inset-bottom)) 1rem;
 }
 
 .btn {
