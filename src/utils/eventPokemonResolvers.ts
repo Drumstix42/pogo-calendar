@@ -11,10 +11,17 @@ import {
 } from './eventPokemonNames';
 import { SPRITE_EFFECTS } from './eventPokemonTypes';
 import type { EventWithExtraData, PokemonImageData, PokemonImageOptions, SpriteEffect } from './eventPokemonTypes';
-import { getPokemonImagesFromBosses, getRaidBossesWithTierFallback, getSpriteImagesFromNames, getSpriteUrl } from './eventSprite';
+import {
+    getPokemonImagesFromBossList,
+    getPokemonImagesFromBosses,
+    getRaidBossesWithTierFallback,
+    getSpriteImagesFromNames,
+    getSpriteUrl,
+} from './eventSprite';
 import { getRaidSubType } from './eventSubtype';
 import { type PogoEvent } from './eventTypes';
 import { getGigantamaxSpriteUrl, getPokemonId, hasSplitMegaXYForms } from './pokemonMapper.ts';
+import { getHighestTierBosses } from './raidTierGroups';
 import { getSuperMegaShieldCount } from './superMegaShields';
 
 // Each resolver maps one event-type branch to its Pokemon images, returning `null` to signal
@@ -40,12 +47,15 @@ const RAID_DAY_TITLE_EXCEPTIONS = new Set(['fashion raid day']);
 const GMAX_FORM_IN_TITLE = /[\s(]+(low[\s-]?key|single[\s-]?strike|rapid[\s-]?strike)[\s)]*(?:form)?[\s)]*/i;
 
 // Major events (GO Fest / GO Tour / Wild Area) and generic `event` type: raid schedule boss data
-// pre-mapped into raidbattles.
+// pre-mapped into raidbattles. This is a compact preview, so it narrows to just the single
+// highest-priority raid tier present (e.g. Super Mega alone, not mixed with Mega/Tier 5) - detailed
+// views group and show every tier separately via `buildTierGroupsFromBosses`, untouched by this.
 export function resolveBossImages(event: EventWithExtraData, options?: PokemonImageOptions): PokemonImageData[] | null {
     if (!event.extraData.raidbattles?.bosses?.length) {
         return null;
     }
-    const images = getPokemonImagesFromBosses(event, options);
+    const topTierBosses = getHighestTierBosses(getRaidBossesWithTierFallback(event, options));
+    const images = getPokemonImagesFromBossList(topTierBosses, options);
     return images.length > 0 ? images : null;
 }
 

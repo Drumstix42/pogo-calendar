@@ -34,6 +34,27 @@ export function sortTierLabel(a: string, b: string): number {
 }
 
 /**
+ * Narrows a boss list down to just the single highest-priority `raidType` group (by
+ * {@link sortTierLabel}) - for compact previews where mixing tiers (e.g. Super Mega alongside a
+ * plain Mega) reads oddly. The full, unfiltered list still powers detailed views.
+ */
+export function getHighestTierBosses(bosses: PokemonBoss[]): PokemonBoss[] {
+    if (bosses.length === 0) return bosses;
+
+    const tierMap = new Map<string, PokemonBoss[]>();
+    bosses.forEach(boss => {
+        const label = boss.raidType || 'Other';
+        if (!tierMap.has(label)) {
+            tierMap.set(label, []);
+        }
+        tierMap.get(label)!.push(boss);
+    });
+
+    const [, topTierBosses] = Array.from(tierMap.entries()).sort(([a], [b]) => sortTierLabel(a, b))[0];
+    return topTierBosses;
+}
+
+/**
  * Groups bosses by their `raidType` (defaulting to "Other"), sorted via {@link sortTierLabel}.
  */
 export function buildTierGroupsFromBosses(bosses: PokemonBoss[] | undefined) {

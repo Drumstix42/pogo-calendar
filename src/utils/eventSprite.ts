@@ -1,6 +1,6 @@
 import { parsePokemonNameAndSuffix } from './eventPokemonNames';
 import type { PokemonImageData, PokemonImageOptions } from './eventPokemonTypes';
-import { type PogoEvent } from './eventTypes';
+import { type PogoEvent, type PokemonBoss } from './eventTypes';
 import { getPokemonAnimatedUrl, getPokemonSpriteUrl, hasExactSpriteForm } from './pokemonMapper.ts';
 import { getSuperMegaShieldCount } from './superMegaShields';
 
@@ -61,7 +61,10 @@ export function getRaidBossesWithTierFallback(event: PogoEvent, options?: Pokemo
 }
 
 export function getPokemonImagesFromBosses(event: PogoEvent, options?: PokemonImageOptions): PokemonImageData[] {
-    const bosses = getRaidBossesWithTierFallback(event, options);
+    return getPokemonImagesFromBossList(getRaidBossesWithTierFallback(event, options), options);
+}
+
+export function getPokemonImagesFromBossList(bosses: PokemonBoss[], options?: PokemonImageOptions): PokemonImageData[] {
     const images: PokemonImageData[] = [];
 
     for (const boss of bosses) {

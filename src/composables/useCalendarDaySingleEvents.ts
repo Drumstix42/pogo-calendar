@@ -73,16 +73,19 @@ export function useCalendarDaySingleEvents(getDayInstance: () => Dayjs) {
                 let nextExtraData = event.extraData;
                 if (event.extraData?.raidSchedule) {
                     const scheduleSections = getRaidScheduleSectionsForDate(event, targetDay);
-                    const allDayBosses = scheduleSections.filter(section => section.isAllDay).flatMap(section => section.bosses);
-                    const dedupedAllDayBosses = Array.from(
-                        new Map(allDayBosses.map(boss => [`${boss.name.toLowerCase()}|${(boss.raidType ?? '').toLowerCase()}`, boss])).values(),
+                    // Union all-day and time-boxed sections - a single-day event's rotation (e.g. a
+                    // raid makeup day) is split across time-boxed sections with no all-day section at
+                    // all, so filtering to all-day-only would silently drop the whole day's bosses.
+                    const dayBosses = scheduleSections.flatMap(section => section.bosses);
+                    const dedupedDayBosses = Array.from(
+                        new Map(dayBosses.map(boss => [`${boss.name.toLowerCase()}|${(boss.raidType ?? '').toLowerCase()}`, boss])).values(),
                     );
 
                     nextExtraData = {
                         ...event.extraData,
                         raidbattles: {
                             ...(event.extraData?.raidbattles ?? {}),
-                            bosses: dedupedAllDayBosses,
+                            bosses: dedupedDayBosses,
                         },
                     };
                 }
