@@ -138,7 +138,7 @@ const { singleDayEvents } = useCalendarDaySingleEvents(() => props.dayInstance);
     box-shadow: 0px 0px 0px 1px var(--calendar-bg) inset;
 
     &.loading {
-        min-height: 100px;
+        min-height: 70px;
     }
 }
 

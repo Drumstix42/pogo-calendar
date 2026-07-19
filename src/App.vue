@@ -5,7 +5,7 @@
                 <div class="container app-container" style="max-width: none">
                     <a class="navbar-brand" href="#" @click.prevent="goHome">
                         <img src="/favicon.svg" alt="Calendar" width="24" height="24" class="me-2" />
-                        <strong>PoGO Event Calendar</strong>
+                        <strong>PoGO Calendar</strong>
                     </a>
 
                     <div class="ms-auto d-flex align-items-center gap-1">
@@ -49,10 +49,6 @@
                             </a>
                             Vue 3
                         </p>
-                    </div>
-
-                    <div class="footer-section">
-                        <p class="footer-heading">Data Sources</p>
                         <p class="disclaimer-text">
                             Event data powered by
                             <a class="link-secondary" href="https://leekduck.com/" target="_blank" rel="noopener noreferrer">Leekduck</a> via a fork

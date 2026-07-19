@@ -19,6 +19,7 @@ export const STORAGE_KEYS = {
     HAS_VISITED_BEFORE: createStorageKey('has-visited-before'),
     HIDDEN_EVENT_IDS: createStorageKey('hidden-event-ids'),
     MANUAL_TIME_OFFSET_HOURS: createStorageKey('manual-time-offset-hours'),
+    SHOW_CURRENT_RAID_BOSSES: createStorageKey('show-current-raid-bosses'),
     SHOW_SEASON_DAILY_BONUSES: createStorageKey('show-season-daily-bonuses'),
     THEME_MODE: createStorageKey('theme-mode'),
     TIMELINE_SIDEBAR_COLLAPSED: createStorageKey('timeline-sidebar-collapsed'),

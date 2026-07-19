@@ -4,7 +4,12 @@
     <div class="page-layout" :class="{ 'sidebar-layout': isXxlScreenSize }">
         <!-- Calendar Section -->
         <div class="calendar-wrapper pt-1">
-            <CollapsibleSection title="Calendar" storage-key="main/calendar-section" class="calendar-section" :hide-header="isXxlScreenSize">
+            <CollapsibleSection
+                :title="currentMonthDisplay"
+                storage-key="main/calendar-section"
+                class="calendar-section"
+                :hide-header="isXxlScreenSize"
+            >
                 <template #icon>
                     <CalendarRange :size="18" />
                 </template>
@@ -85,6 +90,7 @@ import { computed, nextTick, watch, watchEffect } from 'vue';
 
 import { useAddToCalendarModal } from '@/composables/useAddToCalendarModal';
 import { useCalendarDataRefresh } from '@/composables/useCalendarDataRefresh';
+import { useCurrentMonthDisplay } from '@/composables/useCurrentMonthDisplay';
 import { useDeviceDetection } from '@/composables/useDeviceDetection';
 import { useEditColorModal } from '@/composables/useEditColorModal';
 import { useEventFilterToasts } from '@/composables/useEventFilterToasts';
@@ -109,6 +115,7 @@ import CollapsibleSection from '@/components/CollapsibleSection.vue';
 
 const eventsStore = useEventsStore();
 const calendarSettings = useCalendarSettingsStore();
+const { currentMonthDisplay } = useCurrentMonthDisplay();
 const hideEventModal = useHideEventModal();
 const editColorModal = useEditColorModal();
 const addToCalendarModal = useAddToCalendarModal();

@@ -1,8 +1,25 @@
 <template>
-    <div class="calendar-header d-flex align-items-center justify-content-between flex-wrap row-gap-2 mb-2 px-1">
+    <div class="calendar-header align-items-center row-gap-2 mb-2 px-1">
         <!-- Left: Month navigation -->
-        <div class="d-flex align-items-center flex-wrap gap-1" :class="{ 'flex-grow-1': !isDesktopSidebar }">
-            <span class="month-label flex-grow-1">{{ currentMonthDisplay }}</span>
+        <div class="d-flex align-items-center flex-nowrap gap-1 nav-cluster">
+            <div class="d-flex align-items-center">
+                <VTooltip :disabled="isTouchDevice" placement="top" :delay="{ show: 50, hide: 0 }" distance="10" class="d-flex align-items-center">
+                    <template #popper>
+                        <div class="tooltip-text">Previous month</div>
+                    </template>
+                    <button class="btn btn-icon-ghost btn-sm me-1" @click="goToPreviousMonth" :disabled="isPreviousDisabled">
+                        <ChevronLeft :size="24" />
+                    </button>
+                </VTooltip>
+                <VTooltip :disabled="isTouchDevice" placement="top" :delay="{ show: 50, hide: 0 }" distance="10" class="d-flex align-items-center">
+                    <template #popper>
+                        <div class="tooltip-text">Next month</div>
+                    </template>
+                    <button class="btn btn-icon-ghost btn-sm" @click="goToNextMonth" :disabled="isNextDisabled">
+                        <ChevronRight :size="24" />
+                    </button>
+                </VTooltip>
+            </div>
 
             <VTooltip
                 v-if="!isCurrentMonth"
@@ -10,7 +27,7 @@
                 placement="top"
                 :delay="{ show: 50, hide: 0 }"
                 distance="10"
-                class="d-flex align-items-center ms-1"
+                class="d-flex align-items-center me-1"
             >
                 <template #popper>
                     <div class="tooltip-text">Go to current month</div>
@@ -21,36 +38,13 @@
                 </button>
             </VTooltip>
 
-            <div class="d-flex align-items-center">
-                <VTooltip
-                    :disabled="isTouchDevice"
-                    placement="top"
-                    :delay="{ show: 50, hide: 0 }"
-                    distance="10"
-                    class="d-flex align-items-center ms-1"
-                >
-                    <template #popper>
-                        <div class="tooltip-text">Previous month</div>
-                    </template>
-                    <button class="btn btn-icon-ghost btn-sm me-1" @click="goToPreviousMonth" :disabled="isPreviousDisabled">
-                        <ChevronLeft :size="24" />
-                    </button>
-                </VTooltip>
-                <VTooltip
-                    :disabled="isTouchDevice"
-                    placement="top"
-                    :delay="{ show: 50, hide: 0 }"
-                    distance="10"
-                    class="d-flex align-items-center ms-1"
-                >
-                    <template #popper>
-                        <div class="tooltip-text">Next month</div>
-                    </template>
-                    <button class="btn btn-icon-ghost btn-sm" @click="goToNextMonth" :disabled="isNextDisabled">
-                        <ChevronRight :size="24" />
-                    </button>
-                </VTooltip>
-            </div>
+            <!-- Below xxl, the month/year shows in the "Calendar" collapsible section's title instead. -->
+            <span v-if="isDesktopSidebar" class="month-label">{{ currentMonthDisplay }}</span>
+        </div>
+
+        <!-- Center: Current Raid Bosses -->
+        <div class="raid-bosses-slot">
+            <CurrentRaidBossesBar />
         </div>
 
         <!-- Right: Timeline toggle (only visible at >=1400px) -->
@@ -77,26 +71,23 @@ import { breakpointsBootstrapV5, useBreakpoints } from '@vueuse/core';
 import dayjs from 'dayjs';
 import { computed } from 'vue';
 
+import { useCurrentMonthDisplay } from '@/composables/useCurrentMonthDisplay';
 import { useDeviceDetection } from '@/composables/useDeviceDetection';
 import { useDisplayTime } from '@/composables/useDisplayTime';
 import { useUrlSync } from '@/composables/useUrlSync';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
-import { DATE_FORMAT } from '@/utils/dateFormat';
+
+import CurrentRaidBossesBar from '@/components/CurrentRaidBossesBar.vue';
 
 const { urlMonth, urlYear } = useUrlSync();
 const calendarSettings = useCalendarSettingsStore();
 const { isTouchDevice } = useDeviceDetection();
 const { displayToday } = useDisplayTime();
+const { currentMonthDisplay } = useCurrentMonthDisplay();
 
 // Breakpoints
 const breakpoints = useBreakpoints(breakpointsBootstrapV5);
 const isDesktopSidebar = breakpoints.greaterOrEqual('xxl'); // >= 1400px
-
-// Current month display
-const currentMonthDisplay = computed(() => {
-    const now = displayToday.value;
-    return now.year(urlYear.value).month(urlMonth.value).format(DATE_FORMAT.MONTH_YEAR);
-});
 
 // Check if we're viewing the current month
 const isCurrentMonth = computed(() => {
@@ -143,6 +134,20 @@ const goToCurrentMonth = () => {
 </script>
 
 <style scoped>
+.calendar-header {
+    display: grid;
+    /* Nav column has a max-content floor so its buttons are never squeezed/overlapped by the
+       centered raid-bosses column - if space is genuinely too tight, the row scrolls instead. */
+    grid-template-columns: minmax(max-content, 1fr) auto minmax(0, 1fr);
+    overflow-x: auto;
+}
+
+.raid-bosses-slot {
+    display: flex;
+    justify-content: center;
+    min-width: 0;
+}
+
 .month-label {
     font-size: 1.1rem;
     line-height: 1;
@@ -167,6 +172,7 @@ const goToCurrentMonth = () => {
 
 .timeline-toggle-section {
     flex-shrink: 0;
+    justify-self: end;
 }
 
 .btn-timeline-toggle {

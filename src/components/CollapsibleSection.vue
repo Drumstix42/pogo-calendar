@@ -123,7 +123,7 @@ const toggleCollapsed = () => {
 }
 
 .section-content {
-    padding: 0.8rem 0;
+    padding: 0.5rem 0;
 }
 
 /* Collapse transition */

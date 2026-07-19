@@ -3,10 +3,11 @@ import { onMounted, watch } from 'vue';
 
 import { useCurrentTime } from '@/composables/useCurrentTime';
 import { useEventsStore } from '@/stores/events';
+import { useRaidsStore } from '@/stores/raids';
 import { useSeasonsStore } from '@/stores/seasons';
 
 /**
- * Keeps events + seasons data fresh:
+ * Keeps events + seasons + raid bosses data fresh:
  * - fetches on mount when data is stale
  * - refetches when the live hour ticks over (only while the window is focused)
  * - refetches when the window regains focus (in case hours passed while away)
@@ -14,32 +15,32 @@ import { useSeasonsStore } from '@/stores/seasons';
 export function useCalendarDataRefresh() {
     const eventsStore = useEventsStore();
     const seasonsStore = useSeasonsStore();
+    const raidsStore = useRaidsStore();
     const { liveHour } = useCurrentTime();
     const windowFocused = useWindowFocus();
 
-    onMounted(async () => {
-        // Auto-load events when the page mounts
-        // only fetch if we don't have fresh data
-        if (!eventsStore.hasFreshData) {
-            await eventsStore.fetchEvents();
-        }
-        if (!seasonsStore.hasFreshData) {
-            await seasonsStore.fetchSeasons();
-        }
-    });
+    // Fetches are independent endpoints - run them concurrently rather than chained, so e.g. raids
+    // isn't stuck waiting behind the (much larger) events payload.
+    function refreshAll() {
+        return Promise.all([
+            eventsStore.hasFreshData ? Promise.resolve() : eventsStore.fetchEvents(),
+            seasonsStore.hasFreshData ? Promise.resolve() : seasonsStore.fetchSeasons(),
+            raidsStore.hasFreshData ? Promise.resolve() : raidsStore.fetchRaids(),
+        ]);
+    }
+
+    onMounted(refreshAll);
 
     // Watch for hour changes and refetch events (only when window is focused)
-    watch(liveHour, async () => {
+    watch(liveHour, () => {
         if (!windowFocused.value) return; // Skip if window is not focused
-        await eventsStore.fetchEvents();
-        await seasonsStore.fetchSeasons();
+        return Promise.all([eventsStore.fetchEvents(), seasonsStore.fetchSeasons(), raidsStore.fetchRaids()]);
     });
 
     // Refetch events when window regains focus (in case hours passed while unfocused)
-    watch(windowFocused, async focused => {
+    watch(windowFocused, focused => {
         if (focused) {
-            await eventsStore.fetchEvents();
-            await seasonsStore.fetchSeasons();
+            return Promise.all([eventsStore.fetchEvents(), seasonsStore.fetchSeasons(), raidsStore.fetchRaids()]);
         }
     });
 }

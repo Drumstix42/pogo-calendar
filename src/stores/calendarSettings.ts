@@ -32,6 +32,9 @@ export const useCalendarSettingsStore = defineStore('calendarSettings', () => {
     // Season daily bonuses setting - whether to show the current week's season "Daily Discovery" chips in calendar cells
     const showSeasonDailyBonuses = useLocalStorage<boolean>(STORAGE_KEYS.SHOW_SEASON_DAILY_BONUSES, true);
 
+    // Current raid bosses setting - whether to show the "current raid bosses" bar above the calendar
+    const showCurrentRaidBosses = useLocalStorage<boolean>(STORAGE_KEYS.SHOW_CURRENT_RAID_BOSSES, true);
+
     // Filters apply to timeline setting - whether event type filters should apply to EventTimeline
     const filtersApplyToTimeline = useLocalStorage<boolean>(STORAGE_KEYS.FILTERS_APPLY_TO_TIMELINE, false);
 
@@ -128,6 +131,10 @@ export const useCalendarSettingsStore = defineStore('calendarSettings', () => {
         showSeasonDailyBonuses.value = enabled;
     };
 
+    const setShowCurrentRaidBosses = (enabled: boolean) => {
+        showCurrentRaidBosses.value = enabled;
+    };
+
     const setFiltersApplyToTimeline = (enabled: boolean) => {
         filtersApplyToTimeline.value = enabled;
     };
@@ -187,6 +194,7 @@ export const useCalendarSettingsStore = defineStore('calendarSettings', () => {
         useMultiDayEventSprites,
         useSingleDayEventSprites,
         showSeasonDailyBonuses,
+        showCurrentRaidBosses,
         filtersApplyToTimeline,
         eventBarFontSize,
         manualTimeOffsetHours,
@@ -208,6 +216,7 @@ export const useCalendarSettingsStore = defineStore('calendarSettings', () => {
         setUseMultiDayEventSprites,
         setUseSingleDayEventSprites,
         setShowSeasonDailyBonuses,
+        setShowCurrentRaidBosses,
         setFiltersApplyToTimeline,
         setEventBarFontSize,
         setManualTimeOffsetHours,

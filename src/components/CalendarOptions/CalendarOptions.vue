@@ -13,6 +13,7 @@
             <FirstDaySelector class="options-section" />
             <EventOptions class="options-section event-options-section" />
             <ImageOptions class="options-section" />
+            <RaidBossOptions class="options-section" />
             <EventFilterOptions class="flex-grow-section options-section" />
         </div>
     </div>
@@ -26,6 +27,7 @@ import EventFilterOptions from './EventFilterOptions/EventFilterOptions.vue';
 import EventOptions from './EventOptions.vue';
 import FirstDaySelector from './FirstDaySelector.vue';
 import ImageOptions from './ImageOptions.vue';
+import RaidBossOptions from './RaidBossOptions.vue';
 
 defineEmits<{
     close: [];

@@ -110,6 +110,26 @@ export const useUrlSync = () => {
     }
 
     // ============================================
+    // Current Raid Bosses State
+    // ============================================
+    const raidsOpen = computed(() => route.query.raids === '1');
+
+    function openRaids() {
+        router.push({
+            query: {
+                ...route.query,
+                raids: '1',
+            },
+        });
+    }
+
+    function closeRaids() {
+        const currentQuery = { ...route.query };
+        delete currentQuery.raids;
+        router.replace({ query: currentQuery });
+    }
+
+    // ============================================
     // Event Detail State
     // ============================================
     const selectedEventId = computed(() => {
@@ -179,6 +199,11 @@ export const useUrlSync = () => {
         settingsOpen,
         openSettings,
         closeSettings,
+
+        // Current raid bosses tooltip/offcanvas
+        raidsOpen,
+        openRaids,
+        closeRaids,
 
         // Event detail panel
         selectedEventId,
