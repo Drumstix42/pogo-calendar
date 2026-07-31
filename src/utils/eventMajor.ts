@@ -19,7 +19,9 @@ export function getMajorCalendarEventVariant(event: PogoEvent): MajorCalendarEve
 
     const text = getMajorEventSearchText(event);
 
-    if (text.includes('global')) {
+    // GO Fest "Finale" events (e.g. "Max Finale", "Mega Finale") are the free global
+    // wrap-up event, not one of the ticketed city-specific events earlier in the year.
+    if (text.includes('global') || text.includes('finale')) {
         return 'global';
     }
 
