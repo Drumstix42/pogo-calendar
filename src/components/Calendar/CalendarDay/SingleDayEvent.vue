@@ -216,7 +216,8 @@ onMounted(() => {
 }
 
 .single-day-event :deep(.pokemon-images.wrap-multiple) {
-    min-width: max(80px, 100%);
+    /* min-width: max(80px, 100%); */
+    min-width: 80px;
 }
 
 .single-day-event .twitch-drops-icon {
@@ -235,6 +236,14 @@ onMounted(() => {
     font-size: 10px;
     font-weight: 500;
     background-color: rgba(30, 30, 40, 0.75);
+}
+
+@media (min-width: 768px) {
+    .single-day-event :deep(.overflow-counter-badge) {
+        position: absolute;
+        /* bottom: -1px;
+        right: -2px; */
+    }
 }
 
 /* Hide toggle button by default; show on hover */
