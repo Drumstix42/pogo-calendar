@@ -311,7 +311,7 @@ useEventListener(window, 'keydown', handleGlobalKeydown);
 @media (min-width: 1400px) {
     .page-layout.sidebar-layout {
         flex-direction: row;
-        gap: 1rem;
+        gap: 0.8rem;
         align-items: flex-start;
         transition: gap 0.3s ease;
     }
@@ -332,7 +332,7 @@ useEventListener(window, 'keydown', handleGlobalKeydown);
 
     .timeline-wrapper {
         flex-shrink: 0;
-        width: 425px;
+        width: 428px;
         transition: width 0.3s ease;
         position: sticky;
         top: var(--navbar-height-scrolled);
@@ -347,7 +347,8 @@ useEventListener(window, 'keydown', handleGlobalKeydown);
         height: calc(100dvh - var(--navbar-height-scrolled) - 0.3rem);
         overflow-y: auto;
         overflow-x: hidden;
-        padding-right: 6px;
+        padding-left: 5px;
+        padding-right: 5px;
     }
 
     /* Custom scrollbar for timeline sidebar */

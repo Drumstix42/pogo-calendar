@@ -140,9 +140,9 @@ onMounted(() => {
     color: #ffffff;
     background-color: color-mix(in srgb, var(--event-bg-color) 80%, black) !important;
 
-    .event-name {
+    /* .event-name {
         box-shadow: inset 1px 1px 9px 4px color-mix(in srgb, var(--event-bg-color) 80%, black);
-    }
+    } */
 }
 
 .multi-day-event-bar--inner {
@@ -192,7 +192,7 @@ onMounted(() => {
     padding-right: 1px;
 
     /* text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.55); */ /* already a subtle shadow on the parent */
-    box-shadow: inset 1px 1px 9px 4px var(--event-bg-color);
+    /* box-shadow: inset 1px 1px 9px 4px var(--event-bg-color); */
 
     @media (min-width: 768px) {
         text-overflow: ellipsis;

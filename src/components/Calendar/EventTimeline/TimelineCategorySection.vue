@@ -29,7 +29,11 @@
             />
 
             <!-- Special message for Today section when no events exist -->
-            <div v-if="category.key === TimelineCategory.TODAY && totalCount === 0" key="no-events-today" class="no-events-today">
+            <div
+                v-if="category.key === TimelineCategory.TODAY && totalCount === 0 && !searchActive"
+                key="no-events-today"
+                class="category-empty-message"
+            >
                 <p>No single-day events scheduled today</p>
             </div>
         </TransitionGroup>
@@ -57,6 +61,11 @@
             </div>
         </TransitionGroup>
 
+        <!-- No matches for the active search within this category -->
+        <div v-if="searchActive && categoryEvents.length === 0" class="category-empty-message">
+            <p>No matching events in this category</p>
+        </div>
+
         <!-- Hidden events indicator -->
         <div v-if="hiddenCount > 0" class="hidden-events-indicator">{{ hiddenCount }} event{{ hiddenCount === 1 ? '' : 's' }} hidden by filters</div>
     </CollapsibleSection>
@@ -76,6 +85,7 @@ interface Props {
     totalCount: number;
     hiddenCount: number;
     activeEventId: string | null;
+    searchActive: boolean;
 }
 
 defineProps<Props>();
@@ -172,7 +182,7 @@ const emit = defineEmits<{
     border: 1px dashed var(--bs-tertiary-color);
 }
 
-.no-events-today {
+.category-empty-message {
     text-align: center;
     padding: 0.5rem;
     color: var(--bs-secondary-color);
@@ -180,7 +190,7 @@ const emit = defineEmits<{
     font-size: 0.9rem;
 }
 
-.no-events-today p {
+.category-empty-message p {
     margin: 0;
 }
 
