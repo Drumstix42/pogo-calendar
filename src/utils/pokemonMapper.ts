@@ -218,7 +218,7 @@ export function hasExactSpriteForm(pokemonName: string, suffix?: string): boolea
     if (!suffix) return true;
 
     const urlName = normalizePokemonName(pokemonName).replace(/[^a-z0-9]/g, '') + suffix;
-    if (isValidStaticSprite(urlName)) return true;
+    if (isValidStaticSprite(urlName) || isValidAnimatedSprite(urlName)) return true;
 
     const pokemon = POKEMON_FORM_MAP[pokemonId.toString()];
     return pokemon != null && pokeMinersHasForm(pokemon, suffix);
