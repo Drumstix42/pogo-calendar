@@ -37,6 +37,10 @@ export function sortTierLabel(a: string, b: string): number {
  * Narrows a boss list down to just the single highest-priority `raidType` group (by
  * {@link sortTierLabel}) - for compact previews where mixing tiers (e.g. Super Mega alongside a
  * plain Mega) reads oddly. The full, unfiltered list still powers detailed views.
+ *
+ * Exception: if the top two tiers together are still a handful of unique Pokemon (e.g. a lone
+ * Tier 5 boss alongside a two-form Super Mega), both are shown - narrowing to just one tier would
+ * hide a boss for no visual-clutter benefit.
  */
 export function getHighestTierBosses(bosses: PokemonBoss[]): PokemonBoss[] {
     if (bosses.length === 0) return bosses;
@@ -50,8 +54,17 @@ export function getHighestTierBosses(bosses: PokemonBoss[]): PokemonBoss[] {
         tierMap.get(label)!.push(boss);
     });
 
-    const [, topTierBosses] = Array.from(tierMap.entries()).sort(([a], [b]) => sortTierLabel(a, b))[0];
-    return topTierBosses;
+    const sortedGroups = Array.from(tierMap.entries()).sort(([a], [b]) => sortTierLabel(a, b));
+    const [, topTierBosses] = sortedGroups[0];
+
+    const combinedBosses =
+        sortedGroups.length > 1 && new Set([...topTierBosses, ...sortedGroups[1][1]].map(boss => boss.name.toLowerCase())).size <= 3
+            ? [...topTierBosses, ...sortedGroups[1][1]]
+            : topTierBosses;
+
+    const deduped = new Map<string, PokemonBoss>();
+    combinedBosses.forEach(boss => deduped.set(boss.name.toLowerCase(), boss));
+    return Array.from(deduped.values());
 }
 
 /**
