@@ -11,5 +11,5 @@ export const SUPER_MEGA_SHIELD_COUNTS: Record<string, number> = {
     'raichu x': 7,
     'raichu y': 7,
     skarmory: 8,
-    starmie: 8,
+    starmie: 7,
 };
