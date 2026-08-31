@@ -2,6 +2,8 @@ import dayjs from 'dayjs';
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
+import { useCurrentTime } from '@/composables/useCurrentTime';
+
 /**
  * Composable for synchronizing calendar state with URL query parameters
  * Enables shareable calendar links and browser navigation support
@@ -86,6 +88,19 @@ export const useUrlSync = () => {
             urlYear.value = getCurrentYear();
         },
     );
+
+    // Default view (no month/year param) should follow the real-world month as it changes,
+    // e.g. a tab left open past midnight on the last day of the month.
+    const { liveDay } = useCurrentTime();
+    watch(liveDay, () => {
+        if (route.query.month || route.query.year) return;
+
+        const current = dayjs();
+        if (urlMonth.value !== current.month() || urlYear.value !== current.year()) {
+            urlMonth.value = current.month();
+            urlYear.value = current.year();
+        }
+    });
 
     const isCurrentMonthYear = computed(() => isCurrentMonth());
 
