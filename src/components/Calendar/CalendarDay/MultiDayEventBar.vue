@@ -47,6 +47,7 @@
                     :event="event"
                     :height="iconHeight"
                     :exclude-tiers="['Tier 1', 'Tier 3']"
+                    multi-day
                 />
 
                 <span class="event-name">{{ getEventDisplayName(event) }}</span>

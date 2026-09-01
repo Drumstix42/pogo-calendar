@@ -11,6 +11,7 @@ import {
     resolveSpotlightImages,
 } from './eventPokemonResolvers';
 import type { EventWithExtraData, PokemonImageData, PokemonImageOptions, SpriteEffect } from './eventPokemonTypes';
+import { getPokemonImagesFromBossList, getRecurringRaidScheduleBosses } from './eventSprite';
 import { type EventTypeKey, type PogoEvent } from './eventTypes';
 
 // Re-exported for backward-compatible import paths (canonical homes: eventPokemonNames.ts /
@@ -70,9 +71,19 @@ export function hasEventPokemonImage(event: PogoEvent, options?: PokemonImageOpt
 }
 
 export function getMultiDayPokemonImages(event: PogoEvent, options?: PokemonImageOptions): PokemonImageData[] {
-    // Only show images for raid-battles events for now
-    if (event.eventType === 'raid-battles' || event.eventType === 'raid-weekend') {
-        return getEventPokemonImages(event, options);
+    const raidSchedule = event.extraData?.raidSchedule;
+
+    // A per-day raid schedule means the full boss list is day-specific and not representative of
+    // the whole bar - narrow to bosses that recur on every day instead (e.g. a legendary running
+    // alongside a daily-rotating Mega). No day-schedule at all just uses the regular resolution.
+    if (raidSchedule && raidSchedule.length > 0) {
+        const recurringBosses = getRecurringRaidScheduleBosses(raidSchedule);
+        if (recurringBosses.length === 0) {
+            return [];
+        }
+        const images = getPokemonImagesFromBossList(recurringBosses, options);
+        return applyEventEffect(images, getEventSpriteEffect(event));
     }
-    return [];
+
+    return getEventPokemonImages(event, options);
 }

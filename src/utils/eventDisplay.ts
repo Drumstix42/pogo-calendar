@@ -1,5 +1,6 @@
 import { getGroupedEventsCount } from '@/utils/eventGrouping';
 import { formatEventName } from '@/utils/eventName';
+import { getMultiDayPokemonImages } from '@/utils/eventPokemon';
 import { type PogoEvent } from '@/utils/eventTypes';
 
 // Display name for a calendar event bar/block.
@@ -21,10 +22,5 @@ export function shouldShowBadge(event: PogoEvent): boolean {
 }
 
 export function shouldShowMultiDaySprites(event: PogoEvent): boolean {
-    // Raid schedule bosses are day/time-specific and not representative for the full multi-day bar.
-    if (event.extraData?.raidSchedule && event.extraData.raidSchedule.length > 0) {
-        return false;
-    }
-
-    return true;
+    return getMultiDayPokemonImages(event).length > 0;
 }

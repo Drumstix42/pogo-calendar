@@ -1,6 +1,6 @@
 import { parsePokemonNameAndSuffix } from './eventPokemonNames';
 import type { PokemonImageData, PokemonImageOptions } from './eventPokemonTypes';
-import { type PogoEvent, type PokemonBoss } from './eventTypes';
+import { type PogoEvent, type PokemonBoss, type RaidScheduleEntry } from './eventTypes';
 import { getPokemonAnimatedUrl, getPokemonSpriteUrl, hasExactSpriteForm } from './pokemonMapper.ts';
 import { getSuperMegaShieldCount } from './superMegaShields';
 
@@ -58,6 +58,22 @@ export function getRaidBossesWithTierFallback(event: PogoEvent, options?: Pokemo
     }
 
     return allBosses;
+}
+
+// Bosses present in every day of a multi-day raid schedule (e.g. a legendary that runs the whole
+// event alongside a daily-rotating Mega). A day-specific boss (present on only some days) isn't
+// representative of the full span, so it's excluded here - the multi-day bar shows only what's
+// actually available every day, with the rest implied by the overflow count.
+export function getRecurringRaidScheduleBosses(raidSchedule: RaidScheduleEntry[]): PokemonBoss[] {
+    const dayBossSets = raidSchedule.map(day => day.bosses ?? []).filter(bosses => bosses.length > 0);
+    if (dayBossSets.length === 0) {
+        return [];
+    }
+
+    const [firstDay, ...restDays] = dayBossSets;
+    return firstDay.filter(boss =>
+        restDays.every(dayBosses => dayBosses.some(otherBoss => otherBoss.name.trim().toLowerCase() === boss.name.trim().toLowerCase())),
+    );
 }
 
 export function getPokemonImagesFromBosses(event: PogoEvent, options?: PokemonImageOptions): PokemonImageData[] {

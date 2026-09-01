@@ -40,7 +40,7 @@
 import { breakpointsBootstrapV5, useBreakpoints } from '@vueuse/core';
 import { computed } from 'vue';
 
-import { type PokemonImageData, getEventPokemonImages, getEventSpriteEffect } from '@/utils/eventPokemon';
+import { type PokemonImageData, getEventPokemonImages, getEventSpriteEffect, getMultiDayPokemonImages } from '@/utils/eventPokemon';
 import { type PogoEvent } from '@/utils/eventTypes';
 
 import PokemonImage from './PokemonImage.vue';
@@ -56,6 +56,9 @@ interface Props {
     overflowBadgeAlign?: 'left' | 'right';
     excludeTiers?: string[];
     wrap?: boolean;
+    // Narrows to bosses representative of the whole span (e.g. only ones recurring across every day
+    // of a raid schedule) instead of a single day's full boss list - for multi-day event bars.
+    multiDay?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -68,9 +71,13 @@ const props = withDefaults(defineProps<Props>(), {
     overflowBadgeAlign: 'left',
     excludeTiers: undefined,
     wrap: false,
+    multiDay: false,
 });
 
-const pokemonImages = computed(() => getEventPokemonImages(props.event, { useAnimated: props.useAnimated, excludeTiers: props.excludeTiers }));
+const pokemonImages = computed(() => {
+    const options = { useAnimated: props.useAnimated, excludeTiers: props.excludeTiers };
+    return props.multiDay ? getMultiDayPokemonImages(props.event, options) : getEventPokemonImages(props.event, options);
+});
 
 const breakpoints = useBreakpoints(breakpointsBootstrapV5);
 
