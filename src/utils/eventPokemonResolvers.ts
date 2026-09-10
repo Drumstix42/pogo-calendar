@@ -1,7 +1,7 @@
 import { formatEventName } from './eventName.ts';
 import {
-    extractPokemonNameFromMaxMonday,
     extractPokemonNameFromRaidBattle,
+    extractPokemonNamesFromMaxMonday,
     extractPokemonNamesFromRaidHour,
     extractPokemonNamesFromSpotlightHour,
     parseDynamaxMaxBattleName,
@@ -157,15 +157,21 @@ export function resolveRaidDayImages(event: EventWithExtraData, options?: Pokemo
     return null;
 }
 
-// Max-mondays events - parse Pokemon name from title and generate sprite URL.
+// Max-mondays events - parse Pokemon name(s) from title and generate sprite URL(s).
 export function resolveMaxMondayImages(event: EventWithExtraData, options?: PokemonImageOptions): PokemonImageData[] | null {
-    const pokemonName = extractPokemonNameFromMaxMonday(formatEventName(event.name));
-    if (!pokemonName) {
+    const pokemonNames = extractPokemonNamesFromMaxMonday(formatEventName(event.name));
+    if (pokemonNames.length === 0) {
         return null;
     }
-    const spriteUrl = getSpriteUrl(pokemonName, undefined, options);
     // Always return, even if spriteUrl is null (let component handle placeholder)
-    return [{ name: pokemonName, imageUrl: spriteUrl }];
+    return pokemonNames.map(name => ({ name, imageUrl: getSpriteUrl(name, undefined, options) }));
+}
+
+// Filters out unrevealed-placeholder text (e.g. "September 17", "Mystery Pokémon") that LeekDuck
+// sends instead of a real name before a spotlight Pokemon is announced.
+function isKnownPokemonName(name: string): boolean {
+    const parsed = parsePokemonNameAndSuffix(name);
+    return parsed !== null && getPokemonId(parsed.pokemonName) != null;
 }
 
 // Spotlight hours (and spotlight sub-events) - prefer structured spotlight payloads, then title parsing.
@@ -174,16 +180,23 @@ export function resolveSpotlightImages(event: EventWithExtraData, options?: Poke
 
     const spotlight = event.extraData.spotlight;
     if (spotlight) {
-        // Prefer structured spotlight payloads when present.
+        // A name can bundle multiple Pokemon as one string (e.g. "Weedle, Kakuna, and Beedrill") -
+        // split before resolving sprites.
         if (spotlight.list && spotlight.list.length > 0) {
             for (const pokemon of spotlight.list) {
-                const spriteUrl = getSpriteUrl(pokemon.name, undefined, options, pokemon.image);
-                images.push({ name: pokemon.name, imageUrl: spriteUrl });
+                for (const name of parseEventPokemonNames(pokemon.name)) {
+                    if (!isKnownPokemonName(name)) continue;
+                    const spriteUrl = getSpriteUrl(name, undefined, options, pokemon.image);
+                    images.push({ name, imageUrl: spriteUrl });
+                }
             }
         } else if (spotlight.name) {
             const fallbackImage = spotlight.image || null;
-            const spriteUrl = getSpriteUrl(spotlight.name, undefined, options, fallbackImage);
-            images.push({ name: spotlight.name, imageUrl: spriteUrl });
+            for (const name of parseEventPokemonNames(spotlight.name)) {
+                if (!isKnownPokemonName(name)) continue;
+                const spriteUrl = getSpriteUrl(name, undefined, options, fallbackImage);
+                images.push({ name, imageUrl: spriteUrl });
+            }
         } else if (spotlight.image) {
             images.push({ name: 'Spotlight Pokemon', imageUrl: spotlight.image });
         }
@@ -193,7 +206,8 @@ export function resolveSpotlightImages(event: EventWithExtraData, options?: Poke
         }
     }
 
-    const pokemonNames = extractPokemonNamesFromSpotlightHour(event.name);
+    // Also filter title parsing (e.g. "Mystery Pokémon Spotlight Hour").
+    const pokemonNames = extractPokemonNamesFromSpotlightHour(event.name).filter(isKnownPokemonName);
     images.push(...getSpriteImagesFromNames(pokemonNames, options));
 
     return images.length > 0 ? images : null;

@@ -66,10 +66,10 @@ export function extractPokemonNamesFromRaidHour(eventName: string): string[] {
     return parseEventPokemonNames(pokemonPart);
 }
 
-export function extractPokemonNameFromMaxMonday(eventName: string): string | null {
-    // Pattern: "Dynamax <Pokemon Name> during Max Monday"
+export function extractPokemonNamesFromMaxMonday(eventName: string): string[] {
+    // Pattern: "Dynamax <Pokemon Name(s)> during Max Monday"
     const match = eventName.match(/^Dynamax\s+(.+?)\s+during\s+Max\s+Monday$/i);
-    return match ? match[1].trim() : null;
+    return match ? parseEventPokemonNames(match[1].trim()) : [];
 }
 
 // Single source of truth for the max-battle title patterns. Returns the captured Pokemon name
