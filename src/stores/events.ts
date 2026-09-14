@@ -186,7 +186,10 @@ export const useEventsStore = defineStore('eventsStore', () => {
                 throw new Error(`Failed to fetch events: ${response.status} ${response.statusText}`);
             }
 
-            const fetchedEvents: PogoEvent[] = await response.json();
+            const rawEvents: PogoEvent[] = await response.json();
+
+            // Some events (e.g. unannounced Spotlight Hours) have no date yet; date helpers assume one.
+            const fetchedEvents = rawEvents.filter(event => event.start && event.end);
 
             // Generate pseudo raid hour and spotlight hour events from parent events
             const raidHourEvents: PogoEvent[] = [];
