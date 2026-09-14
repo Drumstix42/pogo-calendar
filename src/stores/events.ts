@@ -123,6 +123,9 @@ export const useEventsStore = defineStore('eventsStore', () => {
 
         // First pass: create metadata for all raw events
         events.value.forEach(event => {
+            // Newly announced events (e.g. an unscheduled Spotlight Hour) can have null dates
+            if (!event.start || !event.end) return;
+
             metadata[event.eventID] = buildEventMetadata(event, {
                 now,
                 manualOffsetHours,
