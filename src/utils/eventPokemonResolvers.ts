@@ -4,6 +4,7 @@ import {
     extractPokemonNamesFromMaxMonday,
     extractPokemonNamesFromRaidHour,
     extractPokemonNamesFromSpotlightHour,
+    hasCostumeDescription,
     parseDynamaxMaxBattleName,
     parseEventPokemonNames,
     parseGigantamaxMaxBattleName,
@@ -174,6 +175,19 @@ function isKnownPokemonName(name: string): boolean {
     return parsed !== null && getPokemonId(parsed.pokemonName) != null;
 }
 
+// For costume titles, an event-provided image outranks our generated sprite - only the former can show the costume.
+function resolveNamedPokemonImage(
+    name: string,
+    parsed: { pokemonName: string; suffix?: string },
+    options: PokemonImageOptions | undefined,
+    fallbackImage?: string | null,
+): string | null {
+    if (hasCostumeDescription(name) && fallbackImage) {
+        return fallbackImage;
+    }
+    return getSpriteUrl(parsed.pokemonName, parsed.suffix, options, fallbackImage);
+}
+
 // Spotlight hours (and spotlight sub-events) - prefer structured spotlight payloads, then title parsing.
 export function resolveSpotlightImages(event: EventWithExtraData, options?: PokemonImageOptions): PokemonImageData[] | null {
     const images: PokemonImageData[] = [];
@@ -185,17 +199,17 @@ export function resolveSpotlightImages(event: EventWithExtraData, options?: Poke
         if (spotlight.list && spotlight.list.length > 0) {
             for (const pokemon of spotlight.list) {
                 for (const name of parseEventPokemonNames(pokemon.name)) {
-                    if (!isKnownPokemonName(name)) continue;
-                    const spriteUrl = getSpriteUrl(name, undefined, options, pokemon.image);
-                    images.push({ name, imageUrl: spriteUrl });
+                    const parsed = parsePokemonNameAndSuffix(name);
+                    if (!parsed || getPokemonId(parsed.pokemonName) == null) continue;
+                    images.push({ name, imageUrl: resolveNamedPokemonImage(name, parsed, options, pokemon.image) });
                 }
             }
         } else if (spotlight.name) {
             const fallbackImage = spotlight.image || null;
             for (const name of parseEventPokemonNames(spotlight.name)) {
-                if (!isKnownPokemonName(name)) continue;
-                const spriteUrl = getSpriteUrl(name, undefined, options, fallbackImage);
-                images.push({ name, imageUrl: spriteUrl });
+                const parsed = parsePokemonNameAndSuffix(name);
+                if (!parsed || getPokemonId(parsed.pokemonName) == null) continue;
+                images.push({ name, imageUrl: resolveNamedPokemonImage(name, parsed, options, fallbackImage) });
             }
         } else if (spotlight.image) {
             images.push({ name: 'Spotlight Pokemon', imageUrl: spotlight.image });
@@ -221,8 +235,9 @@ export function resolveCommunityDayImages(event: EventWithExtraData, options?: P
 
         for (const spawn of spawns) {
             if (spawn.name) {
+                const parsed = parsePokemonNameAndSuffix(spawn.name);
                 const fallbackImage = spawn.image || null;
-                const spriteUrl = getSpriteUrl(spawn.name, undefined, options, fallbackImage);
+                const spriteUrl = parsed ? resolveNamedPokemonImage(spawn.name, parsed, options, fallbackImage) : fallbackImage;
                 images.push({ name: spawn.name, imageUrl: spriteUrl });
             }
         }

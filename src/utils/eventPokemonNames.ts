@@ -163,7 +163,20 @@ const REGIONAL_FORM_SUFFIXES: Record<string, string> = {
     paldean: 'paldea',
 };
 
+// Matches "<Pokemon> wearing <item>" costume titles - no costume-specific sprite exists for these.
+const COSTUME_DESCRIPTION_PATTERN = /^(.+?)\s+wearing\s+.+$/i;
+
+export function hasCostumeDescription(name: string): boolean {
+    return COSTUME_DESCRIPTION_PATTERN.test(name);
+}
+
 export function parsePokemonNameAndSuffix(pokemonNameString: string): { pokemonName: string; suffix?: string } | null {
+    // Strip a costume description so the rest of this function resolves the base Pokemon instead.
+    const costumeMatch = pokemonNameString.match(COSTUME_DESCRIPTION_PATTERN);
+    if (costumeMatch) {
+        pokemonNameString = costumeMatch[1].trim();
+    }
+
     // Handle Mega variants with X/Y
     const megaXYMatch = pokemonNameString.match(/^Mega\s+(.+?)\s+([XY])$/i);
     if (megaXYMatch) {
