@@ -130,8 +130,9 @@ export function resolveRaidDayImages(event: EventWithExtraData, options?: Pokemo
         const pokemonNameString = match[1].trim();
         const raidModifier = match[2]?.trim().toLowerCase() ?? '';
 
-        // Skip generic raid days without a Pokemon name (e.g. future events without complete data)
-        if (pokemonNameString.toLowerCase() === 'shadow' || pokemonNameString.toLowerCase() === 'raid') {
+        // Skip nameless raid days (e.g. "Super Mega Raid Day") - a modifier word can leak into this capture.
+        const bareModifierWords = new Set(['shadow', 'raid', 'super', 'mega', 'fusion']);
+        if (bareModifierWords.has(pokemonNameString.toLowerCase())) {
             return [];
         }
 
