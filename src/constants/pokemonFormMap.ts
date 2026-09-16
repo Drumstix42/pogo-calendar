@@ -82,7 +82,7 @@ export const POKEMON_FORM_MAP: PokemonFormMap = {
     },
     '26': {
         default: null,
-        forms: ['fALOLA'],
+        forms: ['fALOLA', 'fMEGA_X', 'fMEGA_Y'],
     },
     '27': {
         default: null,
@@ -158,7 +158,10 @@ export const POKEMON_FORM_MAP: PokemonFormMap = {
     },
     '69': null,
     '70': null,
-    '71': null,
+    '71': {
+        default: null,
+        forms: ['fMEGA'],
+    },
     '72': null,
     '73': null,
     '74': {
@@ -259,7 +262,10 @@ export const POKEMON_FORM_MAP: PokemonFormMap = {
     '118': null,
     '119': null,
     '120': null,
-    '121': null,
+    '121': {
+        default: null,
+        forms: ['fMEGA'],
+    },
     '122': {
         default: null,
         forms: ['fGALARIAN'],
@@ -317,7 +323,10 @@ export const POKEMON_FORM_MAP: PokemonFormMap = {
     },
     '147': null,
     '148': null,
-    '149': null,
+    '149': {
+        default: null,
+        forms: ['fMEGA'],
+    },
     '150': {
         default: null,
         forms: ['fMEGA_X', 'fMEGA_Y'],
@@ -700,7 +709,10 @@ export const POKEMON_FORM_MAP: PokemonFormMap = {
     '395': null,
     '396': null,
     '397': null,
-    '398': null,
+    '398': {
+        default: null,
+        forms: ['fMEGA'],
+    },
     '399': null,
     '400': null,
     '401': null,
@@ -995,7 +1007,10 @@ export const POKEMON_FORM_MAP: PokemonFormMap = {
     '606': null,
     '607': null,
     '608': null,
-    '609': null,
+    '609': {
+        default: null,
+        forms: ['fMEGA'],
+    },
     '610': null,
     '611': null,
     '612': null,
@@ -1062,13 +1077,22 @@ export const POKEMON_FORM_MAP: PokemonFormMap = {
     },
     '650': null,
     '651': null,
-    '652': null,
+    '652': {
+        default: null,
+        forms: ['fMEGA'],
+    },
     '653': null,
     '654': null,
-    '655': null,
+    '655': {
+        default: null,
+        forms: ['fMEGA'],
+    },
     '656': null,
     '657': null,
-    '658': null,
+    '658': {
+        default: null,
+        forms: ['fMEGA'],
+    },
     '659': null,
     '660': null,
     '661': null,
@@ -1136,7 +1160,10 @@ export const POKEMON_FORM_MAP: PokemonFormMap = {
     '684': null,
     '685': null,
     '686': null,
-    '687': null,
+    '687': {
+        default: null,
+        forms: ['fMEGA'],
+    },
     '688': null,
     '689': null,
     '690': null,
