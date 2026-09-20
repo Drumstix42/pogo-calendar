@@ -8,6 +8,12 @@ export const STORAGE_PREFIX = 'pogo-calendar';
 export const createStorageKey = (key: string): string => `${STORAGE_PREFIX}-${key}`;
 
 export const STORAGE_KEYS = {
+    CAMPFIRE_BODY_TEMPLATE: createStorageKey('campfire-body-template'),
+    CAMPFIRE_INCLUDE_CP: createStorageKey('campfire-include-cp'),
+    CAMPFIRE_INCLUDE_MAX_CP: createStorageKey('campfire-include-max-cp'),
+    CAMPFIRE_INCLUDE_VULNERABILITIES: createStorageKey('campfire-include-vulnerabilities'),
+    CAMPFIRE_INCLUDE_WEATHER_BOOSTED_CP: createStorageKey('campfire-include-weather-boosted-cp'),
+    CAMPFIRE_TITLE_TEMPLATE: createStorageKey('campfire-title-template'),
     COLLAPSIBLE_SECTIONS: createStorageKey('collapsible-sections'),
     CUSTOM_EVENT_TYPE_COLORS: createStorageKey('custom-event-type-colors'),
     DISABLED_FILTERS: createStorageKey('disabled-filters'),

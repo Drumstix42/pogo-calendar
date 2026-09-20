@@ -20,6 +20,10 @@ $font-family-sans-serif:
     'Helvetica Neue',
     sans-serif;
 
+// Inputs default to $body-bg, which is identical to the page/modal background in dark mode - give
+// them their own step on the theme scale so they're visually distinct as interactive fields.
+$input-bg: var(--bs-tertiary-bg) !default;
+
 // Bootstrap's variables
 @import 'bootstrap/scss/variables';
 @import 'bootstrap/scss/variables-dark';

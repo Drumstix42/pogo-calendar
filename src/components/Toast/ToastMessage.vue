@@ -13,7 +13,7 @@
         <div class="toast-body">
             <div class="toast-content-row">
                 <div class="toast-text">
-                    <div class="mb-1 small" v-html="toast.title"></div>
+                    <div v-if="toast.title" class="mb-1 small" v-html="toast.title"></div>
                     <div class="toast-text--message" v-html="toast.message"></div>
                 </div>
                 <div class="toast-right-section">

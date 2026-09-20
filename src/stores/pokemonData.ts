@@ -64,39 +64,10 @@ export const usePokemonDataStore = defineStore('pokemonData', () => {
         normal: 'Normal',
     };
 
-    /**
-     * Search for a catchable Pokemon by name, stripping battle form prefixes
-     * Returns the base form that can actually be caught/encountered
-     */
-    function searchCatchablePokemon(pokemonName: string): PokemonData | null {
-        if (!state.value.isLoaded || pokemonData.value.length === 0) {
-            return null;
-        }
-
-        // Strip all battle form prefixes - these forms can't be caught, only base forms
+    // Resolves regional/forme/parenthetical form wording to the data's "<name> <form>" order.
+    // Shared by both search variants below; does not touch Mega/Gigantamax/Dynamax/Primal/Shadow prefixes.
+    function resolveFormSearchName(pokemonName: string): string {
         let searchName = pokemonName;
-        let wasMegaPrefixed = false;
-        if (searchName.startsWith('Gigantamax ')) {
-            searchName = searchName.substring(11); // Remove "Gigantamax "
-        } else if (searchName.startsWith('Dynamax ')) {
-            searchName = searchName.substring(8); // Remove "Dynamax "
-        } else if (searchName.startsWith('Mega ')) {
-            wasMegaPrefixed = true;
-            searchName = searchName.substring(5); // Remove "Mega "
-        } else if (searchName.startsWith('Primal ')) {
-            searchName = searchName.substring(7); // Remove "Primal "
-        } else if (searchName.startsWith('Shadow ')) {
-            searchName = searchName.substring(7); // Remove "Shadow "
-        }
-
-        // Mega variants with a trailing X/Y should map to the base species for CP lookup.
-        // Example: "Mega Mewtwo X" -> "Mewtwo".
-        if (wasMegaPrefixed) {
-            const megaVariantMatch = searchName.match(/^(.+?)\s+[XY]$/i);
-            if (megaVariantMatch) {
-                searchName = megaVariantMatch[1].trim();
-            }
-        }
 
         // Handle regional form prefixes: "Hisuian Braviary" → "Braviary Hisuian" (data stores name + form order).
         // These forms have their own stats, so map the prefix to the data's form string.
@@ -129,7 +100,41 @@ export const usePokemonDataStore = defineStore('pokemonData', () => {
             searchName = `${basePokemonName} ${formName}`;
         }
 
-        // Normalize the search name using our existing mapper normalization
+        return searchName;
+    }
+
+    // Strips battle-only prefixes that can't be caught/encountered as such - the Pokemon obtained
+    // (or fought, for Dynamax/Gigantamax/Shadow which don't change typing) is the base species.
+    // Example: "Mega Mewtwo X" -> "Mewtwo".
+    function stripBattleFormPrefix(pokemonName: string): string {
+        let searchName = pokemonName;
+        let wasMegaPrefixed = false;
+
+        if (searchName.startsWith('Gigantamax ')) {
+            searchName = searchName.substring(11); // Remove "Gigantamax "
+        } else if (searchName.startsWith('Dynamax ')) {
+            searchName = searchName.substring(8); // Remove "Dynamax "
+        } else if (searchName.startsWith('Mega ')) {
+            wasMegaPrefixed = true;
+            searchName = searchName.substring(5); // Remove "Mega "
+        } else if (searchName.startsWith('Primal ')) {
+            searchName = searchName.substring(7); // Remove "Primal "
+        } else if (searchName.startsWith('Shadow ')) {
+            searchName = searchName.substring(7); // Remove "Shadow "
+        }
+
+        // Mega variants with a trailing X/Y should map to the base species for CP lookup.
+        if (wasMegaPrefixed) {
+            const megaVariantMatch = searchName.match(/^(.+?)\s+[XY]$/i);
+            if (megaVariantMatch) {
+                searchName = megaVariantMatch[1].trim();
+            }
+        }
+
+        return searchName;
+    }
+
+    function findPokemonByName(searchName: string): PokemonData | null {
         const normalizedSearch = normalizePokemonName(searchName);
         const cleanSearch = cleanPokemonName(searchName);
 
@@ -168,6 +173,32 @@ export const usePokemonDataStore = defineStore('pokemonData', () => {
         }
 
         return null;
+    }
+
+    /**
+     * Search for a catchable Pokemon by name, stripping battle form prefixes
+     * Returns the base form that can actually be caught/encountered
+     */
+    function searchCatchablePokemon(pokemonName: string): PokemonData | null {
+        if (!state.value.isLoaded || pokemonData.value.length === 0) {
+            return null;
+        }
+
+        return findPokemonByName(resolveFormSearchName(stripBattleFormPrefix(pokemonName)));
+    }
+
+    /**
+     * Search for a Pokemon's in-battle form - unlike `searchCatchablePokemon`, this keeps Mega/Primal
+     * typing intact (Mega Mewtwo X is Psychic/Fighting, not just Mewtwo's Psychic), since that's what
+     * matters for raid weaknesses. Falls back to the catchable species when there's no separate record
+     * (Gigantamax/Dynamax/Shadow don't change typing, so no such record exists).
+     */
+    function searchBattlePokemon(pokemonName: string): PokemonData | null {
+        if (!state.value.isLoaded || pokemonData.value.length === 0) {
+            return null;
+        }
+
+        return findPokemonByName(resolveFormSearchName(pokemonName)) ?? searchCatchablePokemon(pokemonName);
     }
 
     /**
@@ -215,5 +246,6 @@ export const usePokemonDataStore = defineStore('pokemonData', () => {
         getPokemonCP,
         preloadData,
         searchCatchablePokemon,
+        searchBattlePokemon,
     };
 });

@@ -1,8 +1,14 @@
 <template>
     <Teleport to="body">
         <Transition name="modal">
-            <div v-if="show" class="modal-backdrop" :class="{ 'is-scrollable': scrollable }" @click="handleBackdropClick">
-                <div class="modal-dialog" @click.stop>
+            <div
+                v-if="show"
+                class="modal-backdrop"
+                :class="{ 'is-scrollable': scrollable }"
+                @mousedown="handleBackdropMouseDown"
+                @mouseup="handleBackdropMouseUp"
+            >
+                <div class="modal-dialog" :class="`modal-dialog-${size}`">
                     <div class="modal-content">
                         <!-- Modal Header -->
                         <div class="modal-header">
@@ -36,21 +42,36 @@ interface Props {
     scrollable?: boolean;
     /** Optional selector to mark `inert` while the modal is open (e.g. an offcanvas with a focus trap). */
     inertSelector?: string;
+    /** Widens the dialog on larger screens for content-heavy modals. */
+    size?: 'default' | 'lg';
 }
 
 interface Emits {
     (e: 'close'): void;
 }
 
-const props = defineProps<Props>();
+const props = withDefaults(defineProps<Props>(), {
+    size: 'default',
+});
 const emit = defineEmits<Emits>();
 
 function close() {
     emit('close');
 }
 
-function handleBackdropClick() {
-    close();
+// Require both mousedown and mouseup on the backdrop itself, so dragging a text selection out
+// past the dialog and releasing over the backdrop doesn't count as a close click.
+let mouseDownOnBackdrop = false;
+
+function handleBackdropMouseDown(event: MouseEvent) {
+    mouseDownOnBackdrop = event.target === event.currentTarget;
+}
+
+function handleBackdropMouseUp(event: MouseEvent) {
+    if (mouseDownOnBackdrop && event.target === event.currentTarget) {
+        close();
+    }
+    mouseDownOnBackdrop = false;
 }
 
 function handleKeydown(event: KeyboardEvent) {
@@ -114,6 +135,10 @@ onBeforeUnmount(() => {
     max-width: 500px;
     width: 90%;
     margin: 1rem;
+}
+
+.modal-dialog-lg {
+    max-width: 700px;
 }
 
 .modal-backdrop.is-scrollable .modal-dialog {

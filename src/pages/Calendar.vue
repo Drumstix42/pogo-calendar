@@ -80,6 +80,14 @@
         :event="addToCalendarModal.currentEvent.value"
         @close="addToCalendarModal.closeModal"
     />
+
+    <!-- Campfire Event Text Modal -->
+    <CampfireEventModal
+        v-if="campfireEventModal.currentEvent.value"
+        :show="campfireEventModal.showModal.value"
+        :event="campfireEventModal.currentEvent.value"
+        @close="campfireEventModal.closeModal"
+    />
 </template>
 
 <script setup lang="ts">
@@ -90,6 +98,7 @@ import { computed, nextTick, watch, watchEffect } from 'vue';
 
 import { useAddToCalendarModal } from '@/composables/useAddToCalendarModal';
 import { useCalendarDataRefresh } from '@/composables/useCalendarDataRefresh';
+import { useCampfireEventModal } from '@/composables/useCampfireEventModal';
 import { useCurrentMonthDisplay } from '@/composables/useCurrentMonthDisplay';
 import { useDeviceDetection } from '@/composables/useDeviceDetection';
 import { useEditColorModal } from '@/composables/useEditColorModal';
@@ -104,6 +113,7 @@ import AddToCalendarModal from '@/components/Calendar/AddToCalendarModal.vue';
 import CalendarGrid from '@/components/Calendar/CalendarGrid.vue';
 import CalendarHeader from '@/components/Calendar/CalendarHeader.vue';
 import CalendarOptionsOffcanvas from '@/components/Calendar/CalendarOptionsOffcanvas.vue';
+import CampfireEventModal from '@/components/Calendar/CampfireEventModal.vue';
 import EditEventColorModal from '@/components/Calendar/EditEventColorModal.vue';
 import EventDetailDrawer from '@/components/Calendar/EventDetailDrawer.vue';
 /* import CalendarMobile from '@/components/Calendar/CalendarMobile.vue'; */
@@ -119,6 +129,7 @@ const { currentMonthDisplay } = useCurrentMonthDisplay();
 const hideEventModal = useHideEventModal();
 const editColorModal = useEditColorModal();
 const addToCalendarModal = useAddToCalendarModal();
+const campfireEventModal = useCampfireEventModal();
 const { hideEventTypeWithToast, hideEventByIdWithToast } = useEventFilterToasts();
 const {
     settingsOpen,
@@ -274,7 +285,11 @@ function handleGlobalKeydown(event: KeyboardEvent) {
 
     // Let higher-priority overlays and native color pickers handle Escape first.
     const hasBlockingOverlay =
-        hideEventModal.showModal.value || editColorModal.showModal.value || addToCalendarModal.showModal.value || !!selectedEventId.value;
+        hideEventModal.showModal.value ||
+        editColorModal.showModal.value ||
+        addToCalendarModal.showModal.value ||
+        campfireEventModal.showModal.value ||
+        !!selectedEventId.value;
     if (hasBlockingOverlay) {
         return;
     }

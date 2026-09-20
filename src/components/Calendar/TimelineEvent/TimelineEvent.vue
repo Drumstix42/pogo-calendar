@@ -24,6 +24,7 @@
             @toggle="toggleActive"
             @add-to-calendar="openAddToCalendarModal"
             @edit-color="openColorModal"
+            @generate-campfire-text="openCampfireModal"
             @hide="openHideModal"
         />
 
@@ -147,6 +148,7 @@ const {
     isTouchDevice,
     openColorModal,
     openAddToCalendarModal,
+    openCampfireModal,
     toggleActive,
     openHideModal,
     debouncedHighlightEventID,

@@ -23,16 +23,25 @@
                 <Palette :size="13" />
             </button>
         </VTooltip>
+        <VTooltip :disabled="isTouchDevice" placement="top" :delay="{ show: 50, hide: 0 }" distance="10" class="d-flex align-items-center">
+            <template #popper>
+                <div class="tooltip-text">Generate Campfire event text</div>
+            </template>
+            <button type="button" class="tooltip-color-edit-btn" title="Generate Campfire event text" @click="openCampfireModal">
+                <Flame :size="13" />
+            </button>
+        </VTooltip>
         <EventToggleButton :event-type="event.eventType" @hide="openHideModal" />
     </div>
 </template>
 
 <script setup lang="ts">
-import { BellPlus, Palette } from '@lucide/vue';
+import { BellPlus, Flame, Palette } from '@lucide/vue';
 import { hideAllPoppers } from 'floating-vue';
 import { computed, nextTick } from 'vue';
 
 import { useAddToCalendarModal } from '@/composables/useAddToCalendarModal';
+import { useCampfireEventModal } from '@/composables/useCampfireEventModal';
 import { useDeviceDetection } from '@/composables/useDeviceDetection';
 import { useEditColorModal } from '@/composables/useEditColorModal';
 import { useHideEventModal } from '@/composables/useHideEventModal';
@@ -50,6 +59,7 @@ const props = defineProps<Props>();
 const hideEventModal = useHideEventModal();
 const editColorModal = useEditColorModal();
 const addToCalendarModal = useAddToCalendarModal();
+const campfireEventModal = useCampfireEventModal();
 const eventsStore = useEventsStore();
 const { isTouchDevice } = useDeviceDetection();
 
@@ -57,6 +67,10 @@ const eventTypeName = computed(() => getEventTypeInfo(props.event.eventType).nam
 
 function openColorModal() {
     editColorModal.openModal(props.event.eventType);
+}
+
+function openCampfireModal() {
+    campfireEventModal.openModal(props.event);
 }
 
 function openHideModal() {

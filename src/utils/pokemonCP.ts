@@ -35,6 +35,8 @@ export interface CPResult {
     level20Max: number;
     /** CP for level 25 perfect IVs (15/15/15) - Weather boosted raid encounters */
     level25Max: number;
+    /** CP for level 50 perfect IVs (15/15/15) - Fully powered up */
+    level50Max: number;
 }
 
 /**
@@ -70,6 +72,7 @@ export function calculateRaidCP(stats: PokemonStats): CPResult {
     return {
         level20Max: calculateCP(baseAttack, baseDefense, baseStamina, CPM_VALUES[20], 15, 15, 15),
         level25Max: calculateCP(baseAttack, baseDefense, baseStamina, CPM_VALUES[25], 15, 15, 15),
+        level50Max: calculateCP(baseAttack, baseDefense, baseStamina, CPM_VALUES[50], 15, 15, 15),
     };
 }
 

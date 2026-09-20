@@ -26,6 +26,15 @@
                     </button>
                 </VTooltip>
 
+                <VTooltip :disabled="isTouchDevice" placement="top" :delay="{ show: 50, hide: 0 }" distance="10">
+                    <template #popper>
+                        <div class="tooltip-text">Generate Campfire event text</div>
+                    </template>
+                    <button type="button" class="timeline-color-edit-btn" @click.stop="emit('generateCampfireText')">
+                        <Flame :size="13" />
+                    </button>
+                </VTooltip>
+
                 <div @click.stop>
                     <EventToggleButton :event-type="eventType" @hide="emit('hide')" />
                 </div>
@@ -40,7 +49,7 @@
 </template>
 
 <script setup lang="ts">
-import { BellPlus, ChevronsDownUp, ChevronsUpDown, Palette } from '@lucide/vue';
+import { BellPlus, ChevronsDownUp, ChevronsUpDown, Flame, Palette } from '@lucide/vue';
 
 import { type EventTypeKey } from '@/utils/eventTypes';
 
@@ -57,6 +66,7 @@ interface Emits {
     toggle: [];
     addToCalendar: [];
     editColor: [];
+    generateCampfireText: [];
     hide: [];
 }
 

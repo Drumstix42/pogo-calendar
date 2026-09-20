@@ -2,6 +2,7 @@ import { breakpointsBootstrapV5, useBreakpoints } from '@vueuse/core';
 import { computed } from 'vue';
 
 import { useAddToCalendarModal } from '@/composables/useAddToCalendarModal';
+import { useCampfireEventModal } from '@/composables/useCampfireEventModal';
 import { useDeviceDetection } from '@/composables/useDeviceDetection';
 import { useEditColorModal } from '@/composables/useEditColorModal';
 import { useEventHighlightDebounce } from '@/composables/useEventHighlightDebounce';
@@ -28,6 +29,7 @@ export function useTimelineEvent(props: TimelineEventProps, emit: TimelineEventE
     const hideEventModal = useHideEventModal();
     const editColorModal = useEditColorModal();
     const addToCalendarModal = useAddToCalendarModal();
+    const campfireEventModal = useCampfireEventModal();
     const eventsStore = useEventsStore();
     const { isTouchDevice } = useDeviceDetection();
 
@@ -40,6 +42,10 @@ export function useTimelineEvent(props: TimelineEventProps, emit: TimelineEventE
 
     function openAddToCalendarModal() {
         addToCalendarModal.openModal(props.event);
+    }
+
+    function openCampfireModal() {
+        campfireEventModal.openModal(props.event);
     }
 
     function toggleActive() {
@@ -135,6 +141,7 @@ export function useTimelineEvent(props: TimelineEventProps, emit: TimelineEventE
         isTouchDevice,
         openColorModal,
         openAddToCalendarModal,
+        openCampfireModal,
         toggleActive,
         openHideModal,
         debouncedHighlightEventID,
