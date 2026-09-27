@@ -22,7 +22,7 @@
                                     :href="groupedEvent.link"
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    class="link-secondary link-underline-opacity-0 link-underline-opacity-100-hover d-inline-flex align-items-center gap-1"
+                                    class="link-neutral link-underline-opacity-0 link-underline-opacity-100-hover d-inline-flex align-items-center gap-1"
                                     style="font-size: 0.7rem"
                                 >
                                     View on LeekDuck <ExternalLink :size="11" />
@@ -66,7 +66,7 @@
             </div>
 
             <!-- Show time for single events -->
-            <div class="event-time-info" :class="getMajorTooltipClass(event)">
+            <div v-else class="event-time-info" :class="getMajorTooltipClass(event)">
                 <div class="event-content">
                     <!-- Event text content -->
                     <div class="event-text">
