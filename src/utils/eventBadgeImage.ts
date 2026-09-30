@@ -2,13 +2,13 @@ import type { SpriteEffect } from './eventPokemonTypes';
 import { getBadgeSprite } from './eventSprite';
 import { loadFirstAvailableImage } from './loadImage';
 
-const CANVAS_SIZE = 200;
-const CORNER_RADIUS = 22;
-const PADDING = 10;
+const CANVAS_SIZE = 512;
+const CORNER_RADIUS = 56;
+const PADDING = 30;
 const FONT_FAMILY = 'Inter, sans-serif';
 const TOP_BAND_COLOR = 'rgba(0, 0, 0, 0.6)';
 const BOTTOM_BAND_COLOR = '#000000';
-const TEXT_OUTLINE_WIDTH = 2.2;
+const TEXT_OUTLINE_WIDTH = 5.6;
 
 // Gmax artwork already reads as visually distinct, so it only gets the glow below rather than an overlay.
 const OVERLAY_ASSET_URLS: Partial<Record<SpriteEffect, string>> = {
@@ -25,38 +25,38 @@ const EFFECT_GLOW: Partial<Record<SpriteEffect, { color: string; blur: number }>
 };
 
 const POKEBALL_PATTERN_ANGLE_DEG = 42;
-const POKEBALL_PATTERN_SPACING = 44;
-const POKEBALL_PATTERN_RADIUS = 15;
-const POKEBALL_PATTERN_LINE_WIDTH = 2.2;
+const POKEBALL_PATTERN_SPACING = 113;
+const POKEBALL_PATTERN_RADIUS = 38;
+const POKEBALL_PATTERN_LINE_WIDTH = 5.6;
 const POKEBALL_PATTERN_COLOR = 'rgba(255, 255, 255, 0.07)';
 
-const TITLE_FONT_SIZE = 26;
-const TITLE_TOP = 7;
-const TITLE_LINE_HEIGHT = 24;
+const TITLE_FONT_SIZE = 68;
+const TITLE_TOP = 18;
+const TITLE_LINE_HEIGHT = 61;
 const TITLE_MAX_LINES = 2;
-const TITLE_SIDE_PADDING = 24;
-const TOP_BAND_PADDING_BOTTOM = 3;
+const TITLE_SIDE_PADDING = 61;
+const TOP_BAND_PADDING_BOTTOM = 8;
 
 // "∣" (U+2223) rather than "|" - shorter, centered on the math axis rather than full ascender
 // height. Exported so the Campfire modal builds its CP lines with the same character.
 export const CP_DIVIDER = '∣';
 const CP_DIVIDER_COLOR = 'rgba(255, 255, 255, 0.5)';
 
-const BOTTOM_FONT_SIZE_SINGLE_LINE = 28;
-const BOTTOM_FONT_SIZE_MULTI_LINE = 26;
-const BOTTOM_MIN_FONT_SIZE = 12;
+const BOTTOM_FONT_SIZE_SINGLE_LINE = 72;
+const BOTTOM_FONT_SIZE_MULTI_LINE = 67;
+const BOTTOM_MIN_FONT_SIZE = 30;
 const BOTTOM_TEXT_MAX_WIDTH = CANVAS_SIZE - PADDING * 1.5;
-const BOTTOM_LINE_HEIGHT = 24;
-const BOTTOM_BAND_PADDING_TOP = 7;
-const BOTTOM_BAND_PADDING_BOTTOM = 7;
+const BOTTOM_LINE_HEIGHT = 61;
+const BOTTOM_BAND_PADDING_TOP = 14;
+const BOTTOM_BAND_PADDING_BOTTOM = 22;
 
 // How far the Pokemon art is allowed to extend into the band regions - it's drawn last, so it reads
 // as overlapping in front of the bands rather than being cropped underneath.
-const POKEMON_BAND_OVERLAP = 15;
+const POKEMON_BAND_OVERLAP = 38;
 // The radius is deliberately oversized - the canvas clamps it to the largest geometrically valid
 // value, so the bottom-corner sweep always reaches as far toward center as it can.
-const TOP_BAND_CORNER_RADIUS = 40;
-const TOP_BAND_OVERSIZE_SIZE = 10;
+const TOP_BAND_CORNER_RADIUS = 102;
+const TOP_BAND_OVERSIZE_SIZE = 26;
 
 export interface EventBadgeSpec {
     title: string;
@@ -99,7 +99,7 @@ function fitFontSize(ctx: CanvasRenderingContext2D, text: string, maxWidth: numb
     while (size > minSize) {
         ctx.font = `900 ${size}px ${FONT_FAMILY}`;
         if (ctx.measureText(text).width <= maxWidth) break;
-        size -= 2;
+        size -= 5;
     }
     return size;
 }
@@ -263,6 +263,9 @@ interface PokemonSlotLayout {
     drawHeight: number;
 }
 
+// Slight backoff from a full `object-fit: contain` fit
+const POKEMON_FILL_SCALE = 0.93;
+
 // Position/size only - drawing happens separately so overlay art can layer behind the title band
 // while the Pokemon icon stays in front of it.
 function layOutPokemon(pokemon: ResolvedBadgePokemon[], areaTop: number, areaHeight: number): PokemonSlotLayout[] {
@@ -270,8 +273,9 @@ function layOutPokemon(pokemon: ResolvedBadgePokemon[], areaTop: number, areaHei
     const slotWidth = areaWidth / pokemon.length;
 
     return pokemon.map((resolved, index) => {
-        // Cap at 1 - upscaling a smaller sprite past its natural resolution looks pixelated.
-        const scale = Math.min(slotWidth / resolved.image.width, areaHeight / resolved.image.height, 1);
+        // Fits the slot proportionally, same as `object-fit: contain` - no cap at native resolution,
+        // so the sprite scales with the canvas instead of shrinking relative to everything around it.
+        const scale = Math.min(slotWidth / resolved.image.width, areaHeight / resolved.image.height) * POKEMON_FILL_SCALE;
         const drawWidth = resolved.image.width * scale;
         const drawHeight = resolved.image.height * scale;
         const slotCenterX = PADDING + slotWidth * (index + 0.5);
@@ -327,6 +331,10 @@ export async function generateEventBadge(spec: EventBadgeSpec): Promise<Blob | n
     canvas.height = CANVAS_SIZE;
     const ctx = canvas.getContext('2d');
     if (!ctx) return null;
+
+    // Sprites are no longer capped at native resolution (see `layOutPokemon`), so they're often
+    // upscaled now - 'high' gives smoother interpolation than the canvas default ('low').
+    ctx.imageSmoothingQuality = 'high';
 
     await document.fonts.load(`900 ${TITLE_FONT_SIZE}px ${FONT_FAMILY}`);
 
