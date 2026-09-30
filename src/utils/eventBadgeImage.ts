@@ -31,11 +31,11 @@ const POKEBALL_PATTERN_LINE_WIDTH = 2.2;
 const POKEBALL_PATTERN_COLOR = 'rgba(255, 255, 255, 0.07)';
 
 const TITLE_FONT_SIZE = 26;
-const TITLE_TOP = 5;
+const TITLE_TOP = 7;
 const TITLE_LINE_HEIGHT = 24;
 const TITLE_MAX_LINES = 2;
 const TITLE_SIDE_PADDING = 24;
-const TOP_BAND_PADDING_BOTTOM = 4;
+const TOP_BAND_PADDING_BOTTOM = 3;
 
 // "∣" (U+2223) rather than "|" - shorter, centered on the math axis rather than full ascender
 // height. Exported so the Campfire modal builds its CP lines with the same character.
@@ -48,7 +48,7 @@ const BOTTOM_MIN_FONT_SIZE = 12;
 const BOTTOM_TEXT_MAX_WIDTH = CANVAS_SIZE - PADDING * 1.5;
 const BOTTOM_LINE_HEIGHT = 24;
 const BOTTOM_BAND_PADDING_TOP = 7;
-const BOTTOM_BAND_PADDING_BOTTOM = 4;
+const BOTTOM_BAND_PADDING_BOTTOM = 7;
 
 // How far the Pokemon art is allowed to extend into the band regions - it's drawn last, so it reads
 // as overlapping in front of the bands rather than being cropped underneath.
