@@ -13,7 +13,7 @@ import { computed } from 'vue';
 
 import { useEventTypeColorsStore } from '@/stores/eventTypeColors';
 import { type PogoEvent } from '@/utils/eventTypes';
-import { getSpotlightBonusInfo, getSpotlightBonusTypeIcon } from '@/utils/spotlightBonus';
+import { getSpotlightBonusInfo, getSpotlightBonusText, getSpotlightBonusTypeIcon } from '@/utils/spotlightBonus';
 
 interface Props {
     event: PogoEvent;
@@ -26,12 +26,7 @@ const eventTypeColorsStore = useEventTypeColorsStore();
 // The event type's configured color (respects user overrides), used for the bonus card accent border.
 const eventColor = computed(() => eventTypeColorsStore.getEventTypeColor(props.event.eventType));
 
-const bonus = computed(() => {
-    if (props.event.eventType === 'pokemon-spotlight-hour' && props.event.extraData?.spotlight?.bonus) {
-        return props.event.extraData.spotlight.bonus;
-    }
-    return null;
-});
+const bonus = computed(() => getSpotlightBonusText(props.event));
 
 const bonusIcon = computed(() => {
     const info = getSpotlightBonusInfo(props.event);

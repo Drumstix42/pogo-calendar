@@ -12,7 +12,7 @@
                 <div class="tooltip-text">Add to calendar</div>
             </template>
             <button type="button" class="tooltip-color-edit-btn" title="Add to calendar" @click="addToCalendarModal.openModal(event)">
-                <BellPlus :size="13" />
+                <CalendarPlus :size="13" />
             </button>
         </VTooltip>
         <VTooltip :disabled="isTouchDevice" placement="top" :delay="{ show: 50, hide: 0 }" distance="10" class="d-flex align-items-center">
@@ -25,9 +25,9 @@
         </VTooltip>
         <VTooltip :disabled="isTouchDevice" placement="top" :delay="{ show: 50, hide: 0 }" distance="10" class="d-flex align-items-center">
             <template #popper>
-                <div class="tooltip-text">Generate Campfire event text</div>
+                <div class="tooltip-text">Generate Campfire event details</div>
             </template>
-            <button type="button" class="tooltip-color-edit-btn" title="Generate Campfire event text" @click="openCampfireModal">
+            <button type="button" class="tooltip-color-edit-btn" title="Generate Campfire event details" @click="openCampfireModal">
                 <Flame :size="13" />
             </button>
         </VTooltip>
@@ -36,7 +36,7 @@
 </template>
 
 <script setup lang="ts">
-import { BellPlus, Flame, Palette } from '@lucide/vue';
+import { CalendarPlus, Flame, Palette } from '@lucide/vue';
 import { hideAllPoppers } from 'floating-vue';
 import { computed, nextTick } from 'vue';
 
@@ -115,7 +115,7 @@ function openHideModal() {
 }
 
 .tooltip-color-edit-btn:hover {
-    background-color: rgba(255, 255, 255, 0.3);
+    background-color: rgba(255, 255, 255, 0.35);
     transform: scale(1.05);
 }
 

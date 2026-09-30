@@ -5,6 +5,12 @@ export interface SpotlightBonusInfo {
     bonusType: 'xp' | 'stardust' | 'candy';
 }
 
+/** The event's raw bonus text (e.g. "3x Catch XP"), or null outside Spotlight Hour / when unset. */
+export function getSpotlightBonusText(event: PogoEvent): string | null {
+    if (event.eventType !== 'pokemon-spotlight-hour') return null;
+    return event.extraData?.spotlight?.bonus ?? null;
+}
+
 export function getSpotlightBonusInfo(event: PogoEvent): SpotlightBonusInfo | null {
     if (event.eventType !== 'pokemon-spotlight-hour' || !event.extraData?.spotlight?.bonus) {
         return null;

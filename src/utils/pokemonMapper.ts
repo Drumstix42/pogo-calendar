@@ -159,10 +159,13 @@ export function isValidStaticSprite(spriteName: string): boolean {
     return VALID_STATIC_SPRITES.has(spriteName.toLowerCase());
 }
 
-// Some of our slugs are more specific than PokeMiners' form names (e.g. "crownedsword" → "CROWNED")
+// Some of our slugs don't match PokeMiners' form names 1:1 (e.g. "crownedsword" → "CROWNED", or
+// "megax"/"megay" - our Mega X/Y suffix has no separator, PokeMiners' does: "fMEGA_X"/"fMEGA_Y").
 const POKEMINERS_FORM_ALIASES: Record<string, string> = {
     crownedsword: 'CROWNED',
     crownedshield: 'CROWNED',
+    megax: 'MEGA_X',
+    megay: 'MEGA_Y',
 };
 
 // Does this Pokemon have a PokeMiners form matching the given suffix? Forms are stored with an 'f'

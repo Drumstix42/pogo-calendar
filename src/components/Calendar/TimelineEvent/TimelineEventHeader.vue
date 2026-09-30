@@ -28,7 +28,7 @@
 
                 <VTooltip :disabled="isTouchDevice" placement="top" :delay="{ show: 50, hide: 0 }" distance="10">
                     <template #popper>
-                        <div class="tooltip-text">Generate Campfire event text</div>
+                        <div class="tooltip-text">Generate Campfire event details</div>
                     </template>
                     <button type="button" class="timeline-color-edit-btn" @click.stop="emit('generateCampfireText')">
                         <Flame :size="13" />

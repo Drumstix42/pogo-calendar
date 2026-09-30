@@ -10,6 +10,12 @@ export type FirstDayOfWeek = 'Sunday' | 'Monday' | 'Tuesday' | 'Wednesday' | 'Th
 const TIME_OVERRIDE_COLLAPSIBLE_KEY = 'calendarSettings/event-options-time-override';
 const COLLAPSE_DEFAULTS_MARKER_KEY = 'calendarSettings/default-collapsed-initialized-v1';
 
+const CAMPFIRE_IMAGE_POKEMON_COLLAPSIBLE_KEY = 'campfireEventModal/image-pokemon';
+const CAMPFIRE_IMAGE_POKEMON_COLLAPSE_MARKER_KEY = 'calendarSettings/default-collapsed-campfire-image-pokemon-v1';
+
+const CAMPFIRE_EVENT_DETAILS_COLLAPSIBLE_KEY = 'campfireEventModal/event-details';
+const CAMPFIRE_EVENT_DETAILS_COLLAPSE_MARKER_KEY = 'calendarSettings/default-collapsed-campfire-event-details-v1';
+
 /**
  * Pinia store for calendar display settings with persistent localStorage
  */
@@ -51,6 +57,17 @@ export const useCalendarSettingsStore = defineStore('calendarSettings', () => {
     if (!(COLLAPSE_DEFAULTS_MARKER_KEY in collapsedSections.value)) {
         collapsedSections.value[TIME_OVERRIDE_COLLAPSIBLE_KEY] = true;
         collapsedSections.value[COLLAPSE_DEFAULTS_MARKER_KEY] = true;
+    }
+
+    // Separate marker so this defaults to collapsed retroactively for existing users too, not just new ones.
+    if (!(CAMPFIRE_IMAGE_POKEMON_COLLAPSE_MARKER_KEY in collapsedSections.value)) {
+        collapsedSections.value[CAMPFIRE_IMAGE_POKEMON_COLLAPSIBLE_KEY] = true;
+        collapsedSections.value[CAMPFIRE_IMAGE_POKEMON_COLLAPSE_MARKER_KEY] = true;
+    }
+
+    if (!(CAMPFIRE_EVENT_DETAILS_COLLAPSE_MARKER_KEY in collapsedSections.value)) {
+        collapsedSections.value[CAMPFIRE_EVENT_DETAILS_COLLAPSIBLE_KEY] = true;
+        collapsedSections.value[CAMPFIRE_EVENT_DETAILS_COLLAPSE_MARKER_KEY] = true;
     }
 
     // Timeline sidebar collapsed state - separate from vertical layout collapse

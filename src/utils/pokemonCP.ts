@@ -97,11 +97,11 @@ export function formatCP(cp: number): string {
  * @param level20Max - Normal raid CP
  * @param level25Max - Weather boosted raid CP
  * @param showWeatherBoost - Whether to show the weather boost value
- * @returns Formatted string like "1,234" or "1,234 / 1,456"
+ * @returns Formatted string like "1,234" or "1,234 | 1,456"
  */
 export function formatCPDisplay(level20Max: number, level25Max: number, showWeatherBoost: boolean): string {
     if (showWeatherBoost) {
-        return `${formatCP(level20Max)} / ${formatCP(level25Max)}`;
+        return `${formatCP(level20Max)} | ${formatCP(level25Max)}`;
     }
     return `${formatCP(level20Max)}`;
 }

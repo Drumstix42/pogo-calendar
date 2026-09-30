@@ -1,7 +1,16 @@
-import { parsePokemonNameAndSuffix } from './eventPokemonNames';
-import type { PokemonImageData, PokemonImageOptions } from './eventPokemonTypes';
+import { parseGigantamaxFormSlug, parsePokemonNameAndSuffix } from './eventPokemonNames';
+import { SPRITE_EFFECTS } from './eventPokemonTypes';
+import type { PokemonImageData, PokemonImageOptions, SpriteEffect } from './eventPokemonTypes';
 import { type PogoEvent, type PokemonBoss, type RaidScheduleEntry } from './eventTypes';
-import { getPokemonAnimatedUrl, getPokemonSpriteUrl, hasExactSpriteForm } from './pokemonMapper.ts';
+import {
+    getGigantamaxSpriteUrl,
+    getPokemonAnimatedUrl,
+    getPokemonSpriteUrl,
+    getSprite256FallbackUrl,
+    getSpriteFallbackUrl,
+    hasExactSpriteForm,
+    hasSplitMegaXYForms,
+} from './pokemonMapper.ts';
 import { getSuperMegaShieldCount } from './superMegaShields';
 
 export function getSpriteUrl(pokemonName: string, suffix?: string, options?: PokemonImageOptions, fallbackUrl?: string | null) {
@@ -107,9 +116,58 @@ export function getPokemonImagesFromBossList(bosses: PokemonBoss[], options?: Po
     return images;
 }
 
+export interface BadgeSprite {
+    /** Ordered candidate URLs, largest/best first - try in order until one loads. */
+    urls: string[];
+    effect?: SpriteEffect;
+}
+
+// Same tiered chain as `getSpriteUrl`, returning every candidate instead of just the first match.
+// (A 256x256-first attempt was tried and reverted - PokeMiners pads some Pokemon's 256 art with
+// empty margin instead of scaling up, leaving them tiny/off-center.)
+export function getBadgeSpriteUrls(pokemonName: string): string[] {
+    const parsed = parsePokemonNameAndSuffix(pokemonName);
+    if (!parsed) return [];
+
+    const baseUrl = getPokemonSpriteUrl(parsed.pokemonName, parsed.suffix);
+    if (!baseUrl) return [];
+
+    const candidates = [baseUrl, getSprite256FallbackUrl(baseUrl), getSpriteFallbackUrl(baseUrl)];
+    return [...new Set(candidates.filter((url): url is string => url !== null))];
+}
+
+// Also detects a free-typed Gigantamax/Dynamax/Shadow prefix and reports which overlay effect (if
+// any) the badge should draw. `fallbackEffect` covers Max Monday/Shadow Raids, whose resolvers strip
+// that prefix and classify the effect at the event level instead - a name-based match always wins.
+export function getBadgeSprite(pokemonName: string, fallbackEffect?: SpriteEffect): BadgeSprite {
+    const gigantamaxMatch = pokemonName.match(/^Gigantamax\s+(.+)$/i);
+    if (gigantamaxMatch) {
+        const { baseName, formSlug } = parseGigantamaxFormSlug(gigantamaxMatch[1].trim());
+        const gmaxUrl = getGigantamaxSpriteUrl(baseName, formSlug);
+        // Gigantamax art doesn't join the normal tiered fallback (it's a standalone CDN) - if there's
+        // no Gmax asset for this Pokemon, fall back to its plain sprite chain with no overlay.
+        return gmaxUrl ? { urls: [gmaxUrl], effect: SPRITE_EFFECTS.GIGANTAMAX } : { urls: getBadgeSpriteUrls(baseName) };
+    }
+
+    const dynamaxMatch = pokemonName.match(/^Dynamax\s+(.+)$/i);
+    if (dynamaxMatch) {
+        return { urls: getBadgeSpriteUrls(dynamaxMatch[1].trim()), effect: SPRITE_EFFECTS.DYNAMAX };
+    }
+
+    if (/^Shadow\s+/i.test(pokemonName)) {
+        // parsePokemonNameAndSuffix strips "Shadow " itself, so the full name still resolves correctly.
+        return { urls: getBadgeSpriteUrls(pokemonName), effect: SPRITE_EFFECTS.SHADOW };
+    }
+
+    return { urls: getBadgeSpriteUrls(pokemonName), effect: fallbackEffect };
+}
+
 // Parse a list of Pokemon names and resolve a sprite image for each (skipping unparseable names).
 // `megaFallback` (set from event context, e.g. a Mega raid) applies `-mega` to names that carry no
-// explicit form suffix of their own.
+// explicit form suffix of their own - except Pokemon whose Mega splits into X/Y sprites (Charizard,
+// Mewtwo), where a bare name can't say which variant it is, so it's left as the plain form instead
+// of guessing. The returned `name` reflects this too, so downstream consumers (e.g. the Campfire
+// badge, which re-parses `name` for its own sprite/CP lookups) see the same form the sprite shows.
 export function getSpriteImagesFromNames(names: string[], options?: PokemonImageOptions, megaFallback = false): PokemonImageData[] {
     const images: PokemonImageData[] = [];
 
@@ -117,8 +175,12 @@ export function getSpriteImagesFromNames(names: string[], options?: PokemonImage
         const parsed = parsePokemonNameAndSuffix(name);
         if (!parsed) continue;
 
-        const suffix = parsed.suffix ?? (megaFallback ? '-mega' : undefined);
-        images.push({ name, imageUrl: getSpriteUrl(parsed.pokemonName, suffix, options) });
+        const isAmbiguousSplitForm = !parsed.suffix && hasSplitMegaXYForms(parsed.pokemonName);
+        const applyMegaFallback = megaFallback && !isAmbiguousSplitForm;
+        const suffix = parsed.suffix ?? (applyMegaFallback ? '-mega' : undefined);
+        const displayName = applyMegaFallback ? `Mega ${name}` : name;
+
+        images.push({ name: displayName, imageUrl: getSpriteUrl(parsed.pokemonName, suffix, options) });
     }
 
     return images;

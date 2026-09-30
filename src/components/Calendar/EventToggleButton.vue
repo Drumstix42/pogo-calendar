@@ -40,9 +40,7 @@ const eventTypeName = computed(() => getEventTypeInfo(props.eventType).name);
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 18px;
-    height: 20px;
-    padding: 0;
+    padding: 3px;
     background-color: rgba(0, 0, 0, 0.2);
     color: rgba(255, 255, 255, 0.7);
     border: none;
@@ -55,5 +53,9 @@ const eventTypeName = computed(() => getEventTypeInfo(props.eventType).name);
 .event-toggle-button:hover {
     background-color: rgba(0, 0, 0, 0.6);
     color: rgba(255, 255, 255, 0.9);
+    transform: scale(1.05);
+}
+.event-toggle-button:active {
+    transform: scale(0.95);
 }
 </style>

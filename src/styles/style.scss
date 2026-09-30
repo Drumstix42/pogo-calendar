@@ -9,7 +9,7 @@ body {
 /* Note: Bootstrap 5 includes box-sizing: border-box reset in reboot.scss */
 
 body {
-    background-color: #f6f8fa;
+    background-color: var(--page-bg);
     margin: 0;
     min-height: 100vh;
     /* Font family now defined in Bootstrap customization */
@@ -20,7 +20,6 @@ body {
 }
 
 [data-bs-theme='dark'] body {
-    background: var(--bs-body-bg);
     background-attachment: unset;
 }
 
@@ -175,6 +174,15 @@ small,
     font-size: 0.9rem;
     font-weight: 500;
     cursor: pointer;
+    transition: color 0.15s ease;
+
+    &:hover {
+        color: color-mix(in srgb, var(--bs-body-color) 70%, var(--bs-primary) 30%);
+    }
+
+    &:active {
+        color: color-mix(in srgb, var(--bs-body-color) 45%, var(--bs-primary) 55%);
+    }
 }
 
 /* Floating Vue */

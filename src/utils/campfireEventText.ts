@@ -2,14 +2,24 @@
  * Builds copyable Pokemon GO Campfire meetup text (title + static blurb + per-Pokemon CP/weakness
  * blocks). Ported from a companion Python tool (campfire-event-helper).
  */
-import { type CPResult, type PokemonData, calculateRaidCP, formatCP } from './pokemonCP';
-import { type PokemonType, formatVulnerabilityText, getSuperEffectiveTypes } from './typeEffectiveness';
+import { getEventPokemonImages } from './eventPokemon';
+import { type PogoEvent } from './eventTypes';
+import { type CPResult, type PokemonData, calculateRaidCP, formatCP, formatCPDisplay } from './pokemonCP';
+import { type PokemonType, formatWeaknessText, getSuperEffectiveTypes } from './typeEffectiveness';
+
+// Names the image resolvers use as placeholders when no specific Pokemon is known - not real lookups.
+const NON_POKEMON_PLACEHOLDER_NAMES = new Set(['Spotlight Pokemon', 'Max Battle']);
+
+// Distinct, real Pokemon names for an event - seeds both the text and image sections' Pokemon lists.
+export function resolveCampfireEventPokemonNames(event: PogoEvent): string[] {
+    return [...new Set(getEventPokemonImages(event).map(image => image.name))].filter(name => !NON_POKEMON_PLACEHOLDER_NAMES.has(name));
+}
 
 export interface CampfirePokemonEntry {
     displayName: string;
     types: string[];
     cp: CPResult;
-    vulnerabilityText: string;
+    weaknessText: string;
     /** Temporarily-boosted Level 50 CP while Mega Evolved/Primal Reverted - only set when the battle form has its own stats. */
     megaMaxCp?: number;
 }
@@ -35,13 +45,14 @@ export function buildCampfirePokemonEntry(
         displayName,
         types: battlePokemon.types,
         cp: calculateRaidCP(catchablePokemon.stats),
-        vulnerabilityText: formatVulnerabilityText(single, double),
+        weaknessText: formatWeaknessText(single, double),
         megaMaxCp,
     };
 }
 
 export interface CampfireOutputOptions {
-    includeVulnerabilities: boolean;
+    includePokemonDetails: boolean;
+    includeWeakness: boolean;
     includeCP: boolean;
     includeWeatherBoostedCP: boolean;
     includeMaxCP: boolean;
@@ -50,21 +61,19 @@ export interface CampfireOutputOptions {
 export function formatCampfirePokemonEntry(entry: CampfirePokemonEntry, options: CampfireOutputOptions): string {
     const lines = [`${entry.displayName} (${entry.types.join(', ')})`];
 
-    if (options.includeVulnerabilities) {
-        lines.push(`Vulnerable: ${entry.vulnerabilityText}`);
+    if (options.includeWeakness) {
+        lines.push(`Weakness: ${entry.weaknessText}`);
     }
 
     if (options.includeCP) {
-        const hundoCp = options.includeWeatherBoostedCP
-            ? `${formatCP(entry.cp.level20Max)} / ${formatCP(entry.cp.level25Max)} (WB)`
-            : formatCP(entry.cp.level20Max);
-        lines.push(`Hundo CP: ${hundoCp}`);
+        const hundoCp = formatCPDisplay(entry.cp.level20Max, entry.cp.level25Max, options.includeWeatherBoostedCP);
+        lines.push(`Hundo CP: ${options.includeWeatherBoostedCP ? `${hundoCp} (WB)` : hundoCp}`);
     }
 
     if (options.includeMaxCP) {
-        lines.push(`Max CP: ${formatCP(entry.cp.level50Max)} (Lvl 50)`);
+        lines.push(`Max CP: ${formatCP(entry.cp.level50Max)} (Lv 50)`);
         if (entry.megaMaxCp) {
-            lines.push(`Mega Max CP: ${formatCP(entry.megaMaxCp)} (Lvl 50)`);
+            lines.push(`Mega Max CP: ${formatCP(entry.megaMaxCp)} (Lv 50)`);
         }
     }
 
@@ -96,6 +105,9 @@ export function resolveCampfireTemplate(template: string, context: CampfireTempl
 }
 
 export function formatCampfireEventText(title: string, body: string, entries: CampfirePokemonEntry[], options: CampfireOutputOptions): string {
-    const entryBlock = entries.length > 0 ? `--\n${entries.map(entry => formatCampfirePokemonEntry(entry, options)).join('\n\n')}` : '';
+    const entryBlock =
+        options.includePokemonDetails && entries.length > 0
+            ? `--\n${entries.map(entry => formatCampfirePokemonEntry(entry, options)).join('\n\n')}`
+            : '';
     return [title.trim(), body.trim(), entryBlock].filter(Boolean).join('\n\n');
 }

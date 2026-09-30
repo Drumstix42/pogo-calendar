@@ -93,7 +93,7 @@ export function getSuperEffectiveTypes(type1: PokemonType, type2?: PokemonType):
     return { single: single.sort(), double: double.sort() };
 }
 
-export function formatVulnerabilityText(single: PokemonType[], double: PokemonType[]): string {
+export function formatWeaknessText(single: PokemonType[], double: PokemonType[]): string {
     const parts: string[] = [];
 
     if (double.length > 0) {

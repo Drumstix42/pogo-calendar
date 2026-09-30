@@ -7,6 +7,7 @@ import {
     hasCostumeDescription,
     parseDynamaxMaxBattleName,
     parseEventPokemonNames,
+    parseGigantamaxFormSlug,
     parseGigantamaxMaxBattleName,
     parsePokemonNameAndSuffix,
 } from './eventPokemonNames';
@@ -42,10 +43,6 @@ export function getEventSpriteEffect(event: PogoEvent): SpriteEffect | undefined
 }
 
 const RAID_DAY_TITLE_EXCEPTIONS = new Set(['fashion raid day']);
-
-// Multi-form Gigantamax forms as they appear in titles (e.g. "Toxtricity Low Key",
-// "Urshifu (Rapid Strike Form)"). Capture group 1 is normalized to a slug for the sprite lookup.
-const GMAX_FORM_IN_TITLE = /[\s(]+(low[\s-]?key|single[\s-]?strike|rapid[\s-]?strike)[\s)]*(?:form)?[\s)]*/i;
 
 // Major events (GO Fest / GO Tour / Wild Area) and generic `event` type: raid schedule boss data
 // pre-mapped into raidbattles. This is a compact preview, so it narrows to just the single
@@ -272,9 +269,7 @@ export function resolveCommunityDayImages(event: EventWithExtraData, options?: P
 function resolveGigantamaxImage(pokemonName: string, options?: PokemonImageOptions): PokemonImageData {
     // Detect and strip a known multi-form suffix (e.g. "Toxtricity Low Key" → base "Toxtricity",
     // slug "low-key") so the mapper can pick the right Gmax sprite.
-    const formMatch = pokemonName.match(GMAX_FORM_IN_TITLE);
-    const formSlug = formMatch ? formMatch[1].toLowerCase().replace(/[\s-]+/g, '-') : undefined;
-    const basePokemonName = formMatch ? pokemonName.replace(GMAX_FORM_IN_TITLE, '').trim() : pokemonName;
+    const { baseName: basePokemonName, formSlug } = parseGigantamaxFormSlug(pokemonName);
 
     const gmaxUrl = getGigantamaxSpriteUrl(basePokemonName, formSlug);
     if (gmaxUrl) {

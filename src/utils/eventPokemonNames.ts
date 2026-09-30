@@ -170,6 +170,19 @@ export function hasCostumeDescription(name: string): boolean {
     return COSTUME_DESCRIPTION_PATTERN.test(name);
 }
 
+// Multi-form Gigantamax forms as they appear in titles (e.g. "Toxtricity Low Key",
+// "Urshifu (Rapid Strike Form)"). Capture group 1 is normalized to a slug for the sprite lookup.
+const GMAX_FORM_IN_TITLE = /[\s(]+(low[\s-]?key|single[\s-]?strike|rapid[\s-]?strike)[\s)]*(?:form)?[\s)]*/i;
+
+// Splits a (Gigantamax-prefix-stripped) Pokemon name into its base species and multi-form slug, if
+// any - shared by the event-title Gmax resolver and the free-typed Campfire badge sprite resolver.
+export function parseGigantamaxFormSlug(pokemonName: string): { baseName: string; formSlug?: string } {
+    const formMatch = pokemonName.match(GMAX_FORM_IN_TITLE);
+    const formSlug = formMatch ? formMatch[1].toLowerCase().replace(/[\s-]+/g, '-') : undefined;
+    const baseName = formMatch ? pokemonName.replace(GMAX_FORM_IN_TITLE, '').trim() : pokemonName;
+    return { baseName, formSlug };
+}
+
 export function parsePokemonNameAndSuffix(pokemonNameString: string): { pokemonName: string; suffix?: string } | null {
     // Strip a costume description so the rest of this function resolves the base Pokemon instead.
     const costumeMatch = pokemonNameString.match(COSTUME_DESCRIPTION_PATTERN);

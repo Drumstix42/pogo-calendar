@@ -20,9 +20,8 @@ $font-family-sans-serif:
     'Helvetica Neue',
     sans-serif;
 
-// Inputs default to $body-bg, which is identical to the page/modal background in dark mode - give
-// them their own step on the theme scale so they're visually distinct as interactive fields.
-$input-bg: var(--bs-tertiary-bg) !default;
+// Recessed input look via --surface-input, opposite of Bootstrap's usual dark-mode elevation.
+$input-bg: var(--surface-input) !default;
 
 // Bootstrap's variables
 @import 'bootstrap/scss/variables';
@@ -76,6 +75,10 @@ $input-bg: var(--bs-tertiary-bg) !default;
 :root {
     --example-cell-size: 120px;
     --navbar-height-scrolled: 42px;
+
+    // Semi-transparent overlay (Discord's technique) - darkens relative to whatever's behind it.
+    --surface-panel: rgba(0, 0, 0, 0.08);
+    --surface-input: rgba(0, 0, 0, 0.08);
 }
 
 // Theme overrides
@@ -93,6 +96,8 @@ $input-bg: var(--bs-tertiary-bg) !default;
     --bs-dark: rgba(0, 0, 0, 0.87);
     --bs-success: #137333;
     --bs-success-rgb: 19, 115, 51;
+
+    --page-bg: #f6f8fa;
 
     --calendar-bg: #eaeaea;
     --calendar-cell-bg: #fefefe;
@@ -122,16 +127,22 @@ $input-bg: var(--bs-tertiary-bg) !default;
 }
 
 [data-bs-theme='dark'] {
-    --bs-body-bg: #1a1919;
-    --bs-body-bg-rgb: 33, 37, 41;
-    --bs-tertiary-bg: #2b3035;
-    --bs-tertiary-bg-rgb: 43, 48, 53;
-    --bs-secondary-bg: #343a40;
-    --bs-secondary-color: #adb5bd;
+    --bs-body-bg: #313338;
+    --bs-body-bg-rgb: 49, 51, 56;
+    --bs-body-color: #e9ecef;
+    --bs-body-color-rgb: 233, 236, 239;
+    --bs-tertiary-bg: #3a3d43;
+    --bs-tertiary-bg-rgb: 58, 61, 67;
+    --bs-secondary-bg: #43474d;
+    --bs-secondary-bg-rgb: 67, 71, 77;
+    // Drives .text-muted
+    --bs-secondary-color: #c5c6ca;
     --bs-border-color: #495057;
     --bs-border-color-translucent: rgba(255, 255, 255, 0.15);
     --bs-success: #198754;
     --bs-success-rgb: 25, 135, 84;
+
+    --page-bg: #1a1919;
 
     --calendar-bg: #222327;
     --calendar-cell-bg: #323339;
@@ -158,6 +169,16 @@ $input-bg: var(--bs-tertiary-bg) !default;
     // Custom link colors
     --link-neutral-color: #d2c9da;
     --link-neutral-hover-color: #f1e6f5;
+}
+
+// Baked from Sass $secondary at compile time, not a CSS var - override directly here.
+[data-bs-theme='dark'] .btn-secondary {
+    --bs-btn-bg: #4d545a;
+    --bs-btn-border-color: #4d545a;
+    --bs-btn-hover-bg: #43484d;
+    --bs-btn-hover-border-color: #3e4247;
+    --bs-btn-active-bg: #3a3e42;
+    --bs-btn-active-border-color: #34383c;
 }
 
 // Responsive overrides for custom variables
