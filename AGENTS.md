@@ -7,7 +7,7 @@ Always read the actual code before making assumptions.
 
 ## Project Overview
 
-Vue 3 + TypeScript calendar for Pokemon GO events. Events fetched from external API with Pokemon-themed UI.
+Vue 3 + TypeScript SPA: a calendar/timeline of Pokémon GO events, with data scraped from LeekDuck.
 
 ## Keep this doc current
 
@@ -47,7 +47,9 @@ When a code change alters behavior described here, propose the matching doc upda
 - **Vue 3 + TypeScript**, Composition API, `<script setup lang="ts">` everywhere.
 - **Pinia** composition-style stores; persistence via VueUse `useLocalStorage` (keys in
   `src/constants/storage.ts`, all under the `pogo-calendar-` prefix).
-- **Day.js** for dates; UTC→local always via `dayjs.utc(event.start).local()`.
+- **Day.js** for dates. Always parse feed dates with `parseEventDate(str, calendarSettings.manualTimeOffsetHours)`
+  (`src/utils/eventDate.ts`): `Z`-suffixed strings are UTC instants (converted to local); all others
+  are LeekDuck "local time" and kept as wall-clock time.
 - **Bootstrap 5** with custom SCSS theming via the `data-bs-theme` attribute; responsive
   mobile/desktop patterns using Bootstrap classes + media queries.
 - **VueUse** breakpoints (`breakpointsBootstrapV5`); **FloatingVue** tooltips (touch disabled);
@@ -57,20 +59,74 @@ When a code change alters behavior described here, propose the matching doc upda
 
 ## Event data
 
-Scraped from LeekDuck via [ScrapedDuck](https://github.com/bigfoott/ScrapedDuck):
-`https://raw.githubusercontent.com/bigfoott/ScrapedDuck/data/events.min.json`
+Feeds come from the [Drumstix42 fork of ScrapedDuck](https://github.com/Drumstix42/ScrapedDuck)
+(upstream: `bigfoott/ScrapedDuck`), `data` branch, under
+`https://raw.githubusercontent.com/Drumstix42/ScrapedDuck/refs/heads/data/`:
 
-`boss`/`spawn` lists in `extraData` can be empty for past or newly announced events — all handlers
-must degrade gracefully to title-based parsing.
+| File              | Store     |
+| ----------------- | --------- |
+| `events.min.json` | `events`  |
+| `raids.min.json`  | `raids`   |
+| `season.json`     | `seasons` |
+
+- **Fix data shape upstream.** The user owns the fork; prefer fixing feed issues there (e.g. slug
+  normalization) over massaging data in the app. Suggest it rather than adding app-side workarounds.
+- Events without `start`/`end` (e.g. unannounced Spotlight Hours) are dropped at fetch.
+- `boss`/`spawn` lists in `extraData` can be empty for past or newly announced events — all handlers
+  must degrade gracefully to title-based parsing.
+- Sample feed snapshots live in `planning/events*.json` (not shipped); use them to check data shapes.
 
 ### Event types (`src/utils/eventTypes.ts`)
 
-Each type has a `name`, `color`, `priority` (lower = higher on calendar), and `category`. The full
-`EventTypeKey` union and `EVENT_TYPES` record live here. Categories: `community-and-raids`,
-`research`, `seasonal-and-premium`, `events-and-misc`.
+- `eventType` = **primary** type (from LeekDuck's events list page). `eventTypes` = every tag on the
+  event's page, primary first (e.g. `event` + `location-specific`, `wild-area` + `ticketed-event`).
+  `eventTypes` is optional — read it via `getEventTypes()` / `getSecondaryEventTypes()` /
+  `hasEventType()`, never directly.
+- **Primary drives behavior:** filters, color, calendar priority, grouping. **Secondary tags are
+  display/search only:** chips (`EventTypeTags.vue`), search terms, location detection. Don't filter
+  on secondary tags — a deliberate decision: LeekDuck tags the same event format inconsistently
+  (Rocket "Taken Over" events are sometimes primary `team-go-rocket`, sometimes `event` +
+  `team-go-rocket`), so tag-based filtering would confuse users.
+- `EVENT_TYPES` entries (`name`, `color`, `priority` — lower = higher on calendar, `category`) each
+  become a filter. `EVENT_TAG_TYPES` holds `name` + `color` for tag-only slugs (never primary), which
+  stay out of the filters but remain color-customizable via their chips. Unknown slugs fall back to a
+  title-cased name and gray (`getEventTypeInfo()` / `getDefaultEventTypeColor()`).
+- **Adding a type:** an `EVENT_TYPES` entry (or `EVENT_TAG_TYPES` if it's only ever secondary); add
+  it to `$event-types` in `src/styles/style.scss` (filter hover highlighting); handle it in
+  `getEventPokemonImages()` if it needs Pokémon images.
 
-Adding a new event type: add an entry to `EVENT_TYPES`, then handle it in `getEventPokemonImages()`
-if it needs Pokemon images.
+### Generated and runtime-only events
+
+Not every event in the store came from the feed — check for these before assuming feed shape:
+
+- **Pseudo sub-events** (`src/utils/eventSubEvents.ts`), generated in `fetchEvents()` from the
+  `raidSchedule` / `spotlightSchedule` of primary-`event` parents. Marked with
+  `extraData.isRaidHourSubEvent` / `isSpotlightSubEvent` + `parentEventId`; IDs are
+  `${parentID}-raid-hour-${date}-${i}` / `${parentID}-spotlight-hour-${date}-${i}`; they copy the
+  parent's `eventTypes`.
+- **Grouping markers** `_isGrouped` / `_groupedEvents` / `_displayName`, stamped by the store when
+  "group similar events" is on (`src/utils/eventGrouping.ts`).
+- **Major daily projections** (below): `_isMajorDailyDisplay` + `_sourceEventID`, ID
+  `${sourceID}-daily-${date}`. Resolve back to the source event via `useDailyEventDisplay()`
+  (`getSourceEventID()` / `getEventForDetails()`) before looking up metadata or details.
+
+### Major events (`src/utils/eventMajor.ts`)
+
+`MAJOR_CALENDAR_EVENT_TYPES` = `pokemon-go-fest`, `pokemon-go-tour`, `wild-area`. Instead of
+multi-day bars they render as a box per day in each calendar cell (`useCalendarDaySingleEvents`),
+with raid bosses scoped to that day's `raidSchedule`.
+
+- **Global vs location-specific** — `getMajorCalendarEventVariant()`: a location tag
+  (`location-specific` / `in-person-event`, via `isLocationSpecificEvent()`) wins; otherwise
+  "global"/"finale" in the ID/name/link → global; otherwise location-specific. A missing tag does
+  **not** mean global — LeekDuck leaves some city events untagged (e.g. 2025 GO Fest cities).
+- **Watermark** — `getEventWatermarkClass()` returns classes for the shared partial
+  `src/styles/_event-watermark.scss` (globe = global, map pin = location-specific). Major events
+  always get one; non-major events get the pin only when location-tagged. Each host (tooltip,
+  timeline card, single-day cell) tunes size/opacity/color via `--event-watermark-*` vars: major =
+  tinted with the type color, non-major = gray. The major box styling (gradient background, thick
+  border) is separate and major-only; non-major single-day cells with a pin only get a taller
+  `min-height` so the pin fits.
 
 ### Pokémon image resolution (`src/utils/eventPokemon.ts`)
 
@@ -122,21 +178,32 @@ to the placeholder.
 
 ## Stores (`src/stores/`)
 
-| Store              | Key responsibility                                                     |
-| ------------------ | ---------------------------------------------------------------------- |
-| `eventsStore`      | Fetches and caches raw event data                                      |
-| `eventFilter`      | Persists disabled event type keys + hidden event IDs                   |
-| `eventTypeColors`  | Persists per-type color overrides; falls back to `EVENT_TYPES` default |
-| `calendarSettings` | First day of week, display options                                     |
-| `eventHighlight`   | Tracks hovered/focused event for cross-component highlighting          |
-| `theme`            | Light/dark/system theme, persisted                                     |
-| `toasts`           | Ephemeral toast queue                                                  |
-| `userMessages`     | Dismissible banners with version-keyed persistence                     |
+| Store (file)       | Responsibility                                                                                      |
+| ------------------ | --------------------------------------------------------------------------------------------------- |
+| `events`           | Fetches the events feed, generates sub-events, applies grouping, caches per-event `eventMetadata`   |
+| `eventFilter`      | Persists disabled (primary) type keys + hidden event IDs                                            |
+| `eventTypeColors`  | Persists per-type color overrides; defaults via `getDefaultEventTypeColor()`                        |
+| `calendarSettings` | Persisted display prefs: first day of week, grouping, sprite toggles, font size, manual time offset |
+| `raids`            | Current raid bosses feed                                                                            |
+| `seasons`          | Season feed (daily discoveries, season bonuses); keeps neighbors so boundary weeks resolve          |
+| `pokemonData`      | Lazily loaded Pokémon stats for CP calculations (`mgrann03/pokemon-resources`)                      |
+| `campfireTemplate` | Persisted Campfire event text template                                                              |
+| `eventHighlight`   | Hovered/focused event for cross-component highlighting                                              |
+| `theme`            | Light/dark/system theme, persisted                                                                  |
+| `toasts`           | Ephemeral toast queue                                                                               |
+| `userMessages`     | Dismissible banners with version-keyed persistence                                                  |
+| `app`              | Checks `/version.json` to detect a newer deployed build (update prompt)                             |
 
-## URL sync (`src/composables/useUrlSync.ts`)
+## URL state (`src/composables/useUrlSync.ts`)
 
-Keeps `?month=M&year=Y` query params in sync with calendar navigation. Month is 1-based in the URL,
-0-based internally (Day.js convention). Params are cleared when navigating back to the current month.
+The URL is the source of truth for navigation and open panels/modals, so they're shareable and work
+with back/forward. Opening pushes a history entry; closing replaces it. Follow the same pattern for
+any new panel or modal.
+
+- `month` (1-based in the URL, 0-based internally per Day.js) + `year`; cleared on the current month.
+- `settings=1`, `raids=1` — panels.
+- `event` (+ optional `eventDay`) — selected event (detail panel / tooltip deep link).
+- Modals: `addToCalendar`, `campfire`, `hideEvent` (event ID); `editColor` (event type key).
 
 ---
 
@@ -173,9 +240,11 @@ file violating several at once is a refactor candidate.
 - `DATE_FORMAT` constants for date-formatting consistency.
 - Minimal comments — explain _why_, not _what_.
 
-## Key files
+## Where things live
 
-- `src/stores/` — Pinia composition stores
-- `src/utils/` — event / Pokémon business logic
-- `src/composables/` — reusable logic (e.g. `useUrlSync.ts`)
+- `src/utils/` — pure event/Pokémon logic (no Vue reactivity)
+- `src/composables/` — stateful `useX()` logic
+- `src/stores/` — Pinia stores (above)
+- `src/styles/` — global SCSS + shared partials (e.g. `_event-watermark.scss`)
 - `src/constants/storage.ts` — localStorage keys
+- `planning/` — feed snapshots and planning notes (not shipped)
