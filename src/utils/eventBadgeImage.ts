@@ -16,9 +16,12 @@ const OVERLAY_ASSET_URLS: Partial<Record<SpriteEffect, string>> = {
     shadow: '/images/overlay/shadow-aura.png',
 };
 const OVERLAY_SCALE: Partial<Record<SpriteEffect, number>> = {
-    dynamax: 1.35,
-    shadow: 1.3,
+    dynamax: 1.2,
+    shadow: 1.2,
 };
+// Fraction of the overlay's height to lift it above the sprite's center - the calendar UI anchors
+// overlays to the sprite's top edge rather than centering them, so they sit slightly higher there.
+const OVERLAY_RAISE = 0.2;
 const EFFECT_GLOW: Partial<Record<SpriteEffect, { color: string; blur: number }>> = {
     shadow: { color: 'rgba(68, 57, 117, 0.75)', blur: 3 },
     gigantamax: { color: 'rgba(200, 0, 0, 0.35)', blur: 4.4 },
@@ -67,6 +70,8 @@ export interface EventBadgeSpec {
     bottomLines: string[];
     /** Event-level effect (e.g. from a Max Monday or Shadow Raid) applied when a name has no prefix of its own */
     defaultPokemonEffect?: SpriteEffect;
+    /** User size multiplier for the sprites (and their overlays). Defaults to 1. */
+    spriteScale?: number;
 }
 
 interface ResolvedBadgePokemon {
@@ -114,6 +119,7 @@ function getTitleLines(ctx: CanvasRenderingContext2D, title: string): string[] {
 }
 
 function getTopBandHeight(lineCount: number): number {
+    if (lineCount === 0) return 0;
     return TITLE_TOP + Math.max(lineCount - 1, 0) * TITLE_LINE_HEIGHT + TITLE_FONT_SIZE + TOP_BAND_PADDING_BOTTOM;
 }
 
@@ -265,21 +271,26 @@ interface PokemonSlotLayout {
     y: number;
     drawWidth: number;
     drawHeight: number;
+    /** Fixed per-slot size reference for the overlay, independent of the sprite's own shape. */
+    overlayBaseSize: number;
 }
 
 // Slight backoff from a full `object-fit: contain` fit
 const POKEMON_FILL_SCALE = 0.93;
 
-// Position/size only - drawing happens separately so overlay art can layer behind the title band
-// while the Pokemon icon stays in front of it.
-function layOutPokemon(pokemon: ResolvedBadgePokemon[], areaTop: number, areaHeight: number): PokemonSlotLayout[] {
+// Position/size only - overlays and icons are drawn in separate passes so every overlay sits behind
+// every icon, even where a neighboring Pokemon's overlay overlaps it.
+function layOutPokemon(pokemon: ResolvedBadgePokemon[], areaTop: number, areaHeight: number, spriteScale: number): PokemonSlotLayout[] {
     const areaWidth = CANVAS_SIZE - PADDING * 2;
     const slotWidth = areaWidth / pokemon.length;
+    const fillScale = POKEMON_FILL_SCALE * spriteScale;
+    // Sized off the slot rather than the sprite, so a wide sprite doesn't drag its overlay along with it.
+    const overlayBaseSize = Math.min(slotWidth, areaHeight) * fillScale;
 
     return pokemon.map((resolved, index) => {
         // Fits the slot proportionally, same as `object-fit: contain` - no cap at native resolution,
         // so the sprite scales with the canvas instead of shrinking relative to everything around it.
-        const scale = Math.min(slotWidth / resolved.image.width, areaHeight / resolved.image.height) * POKEMON_FILL_SCALE;
+        const scale = Math.min(slotWidth / resolved.image.width, areaHeight / resolved.image.height) * fillScale;
         const drawWidth = resolved.image.width * scale;
         const drawHeight = resolved.image.height * scale;
         const slotCenterX = PADDING + slotWidth * (index + 0.5);
@@ -290,21 +301,22 @@ function layOutPokemon(pokemon: ResolvedBadgePokemon[], areaTop: number, areaHei
             y: areaTop + (areaHeight - drawHeight) / 2,
             drawWidth,
             drawHeight,
+            overlayBaseSize,
         };
     });
 }
 
 function drawPokemonOverlays(ctx: CanvasRenderingContext2D, layout: PokemonSlotLayout[]) {
-    layout.forEach(({ pokemon: { overlayImage, effect }, x, y, drawWidth, drawHeight }) => {
+    layout.forEach(({ pokemon: { overlayImage, effect }, x, y, drawWidth, drawHeight, overlayBaseSize }) => {
         if (!overlayImage || !effect) return;
 
         // Sized off the overlay's own aspect ratio, not stretched to the Pokemon's bounding box -
         // stretching distorts non-square overlay art.
         const overlayScale = OVERLAY_SCALE[effect] ?? 1;
-        const overlayWidth = drawWidth * overlayScale;
+        const overlayWidth = overlayBaseSize * overlayScale;
         const overlayHeight = overlayWidth * (overlayImage.height / overlayImage.width);
         const centerX = x + drawWidth / 2;
-        const centerY = y + drawHeight / 2;
+        const centerY = y + drawHeight / 2 - overlayHeight * OVERLAY_RAISE;
 
         ctx.drawImage(overlayImage, centerX - overlayWidth / 2, centerY - overlayHeight / 2, overlayWidth, overlayHeight);
     });
@@ -327,7 +339,7 @@ function drawPokemonIcons(ctx: CanvasRenderingContext2D, layout: PokemonSlotLayo
 
 /**
  * Renders a Campfire-style square event badge as a PNG blob. Layer order: background -> Pokeball
- * pattern -> overlay art -> title band + text -> Pokemon icon(s) -> bottom band + text.
+ * pattern -> title band + text -> overlay art -> Pokemon icon(s) -> bottom band + text.
  */
 export async function generateEventBadge(spec: EventBadgeSpec): Promise<Blob | null> {
     const canvas = document.createElement('canvas');
@@ -359,13 +371,14 @@ export async function generateEventBadge(spec: EventBadgeSpec): Promise<Blob | n
 
     const areaTop = topBandHeight - POKEMON_BAND_OVERLAP;
     const areaHeight = CANVAS_SIZE - bottomBandHeight + POKEMON_BAND_OVERLAP - areaTop;
-    const pokemonLayout = layOutPokemon(loadedPokemon, areaTop, areaHeight);
+    const pokemonLayout = layOutPokemon(loadedPokemon, areaTop, areaHeight, spec.spriteScale ?? 1);
+
+    if (titleLines.length > 0) {
+        drawTopBandCollar(ctx, topBandHeight, TOP_BAND_COLOR);
+        drawTitle(ctx, titleLines);
+    }
 
     drawPokemonOverlays(ctx, pokemonLayout);
-
-    drawTopBandCollar(ctx, topBandHeight, TOP_BAND_COLOR);
-    drawTitle(ctx, titleLines);
-
     drawPokemonIcons(ctx, pokemonLayout);
 
     if (spec.bottomLines.length > 0) {

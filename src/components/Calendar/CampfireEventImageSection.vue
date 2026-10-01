@@ -25,6 +25,20 @@
                 </button>
                 <small class="text-muted d-block mt-1">Up to {{ MAX_IMAGE_POKEMON }} Pokémon per image.</small>
 
+                <label for="campfireSpriteScale" class="form-label small d-block mt-3">Sprite Scale Size: {{ spriteScalePercent }}%</label>
+                <div class="sprite-scale-range" :style="{ '--default-position': spriteScaleDefaultPosition }">
+                    <input
+                        id="campfireSpriteScale"
+                        v-model.number="spriteScalePercent"
+                        type="range"
+                        class="form-range"
+                        :min="MIN_SPRITE_SCALE_PERCENT"
+                        :max="MAX_SPRITE_SCALE_PERCENT"
+                        step="5"
+                    />
+                    <span class="sprite-scale-default-tick" aria-hidden="true"></span>
+                </div>
+
                 <label class="form-label d-block mt-3">Bottom Text</label>
                 <textarea
                     v-model="imageCustomBottomText"
@@ -54,6 +68,7 @@
 
 <script setup lang="ts">
 import { Download, Plus, Settings } from '@lucide/vue';
+import { watchThrottled } from '@vueuse/core';
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 
 import { usePokemonRowList } from '@/composables/usePokemonRowList';
@@ -84,10 +99,16 @@ const pokemonDataStore = usePokemonDataStore();
 
 const MAX_IMAGE_POKEMON = 3;
 const MAX_IMAGE_CP_LINES = 2;
+const MIN_SPRITE_SCALE_PERCENT = 25;
+const MAX_SPRITE_SCALE_PERCENT = 125;
+const DEFAULT_SPRITE_SCALE_PERCENT = 100;
+// 0-1 position of the default along the track, for the tick mark under the slider.
+const spriteScaleDefaultPosition = (DEFAULT_SPRITE_SCALE_PERCENT - MIN_SPRITE_SCALE_PERCENT) / (MAX_SPRITE_SCALE_PERCENT - MIN_SPRITE_SCALE_PERCENT);
 
 const { rows: imagePokemonRows, addRow: addImageRow, removeRow: removeImageRow, setNames: setImagePokemonNames } = usePokemonRowList();
 const imageTitle = ref('');
 const imageCustomBottomText = ref('');
+const spriteScalePercent = ref(DEFAULT_SPRITE_SCALE_PERCENT);
 
 const eventTypeName = computed(() => getEventTypeInfo(props.event.eventType).name);
 
@@ -104,6 +125,7 @@ watch(
         setImagePokemonNames(resolveCampfireEventPokemonNames(props.event).slice(0, MAX_IMAGE_POKEMON));
         imageTitle.value = eventTypeName.value;
         imageCustomBottomText.value = '';
+        spriteScalePercent.value = DEFAULT_SPRITE_SCALE_PERCENT;
     },
     { immediate: true },
 );
@@ -172,14 +194,24 @@ const badgeDefaultEffect = computed(() => getEventSpriteEffect(props.event));
 const badgeImageUrl = ref<string | null>(null);
 const isGeneratingBadge = ref(false);
 
-// Guards against an older, slower generation overwriting a newer one's result.
-let badgeGenerationToken = 0;
+// Only one render runs at a time; a change mid-render just queues one more pass with the latest values.
+// (Discarding in-flight renders as stale instead meant that while dragging - when every render outlasts
+// the throttle interval - none ever finished, so the preview froze until input stopped.)
+let isRendering = false;
+let needsRerender = false;
+let isUnmounted = false;
 
-watch(
-    [imageTitle, imagePokemonNames, imageBottomLines, badgeBackgroundColor],
-    async () => {
-        const token = ++badgeGenerationToken;
-        isGeneratingBadge.value = true;
+async function regenerateBadge() {
+    if (isRendering) {
+        needsRerender = true;
+        return;
+    }
+
+    isRendering = true;
+    isGeneratingBadge.value = true;
+
+    do {
+        needsRerender = false;
 
         const blob = await generateEventBadge({
             title: imageTitle.value,
@@ -187,20 +219,32 @@ watch(
             pokemonNames: imagePokemonNames.value,
             bottomLines: imageBottomLines.value,
             defaultPokemonEffect: badgeDefaultEffect.value,
+            spriteScale: spriteScalePercent.value / 100,
         });
 
-        if (token !== badgeGenerationToken) return;
+        if (isUnmounted) return;
 
         if (badgeImageUrl.value) {
             URL.revokeObjectURL(badgeImageUrl.value);
         }
         badgeImageUrl.value = blob ? URL.createObjectURL(blob) : null;
-        isGeneratingBadge.value = false;
-    },
-    { immediate: true },
-);
+    } while (needsRerender);
+
+    isRendering = false;
+    isGeneratingBadge.value = false;
+}
+
+// Render once immediately so the preview isn't delayed on open; after that, throttle so dragging the
+// size slider or typing stays live without re-rendering the whole canvas on every tick/keystroke.
+// `trailing` guarantees a final render once input stops, so the preview always lands on the last value.
+regenerateBadge();
+watchThrottled([imageTitle, imagePokemonNames, imageBottomLines, badgeBackgroundColor, spriteScalePercent], regenerateBadge, {
+    throttle: 100,
+    trailing: true,
+});
 
 onBeforeUnmount(() => {
+    isUnmounted = true;
     if (badgeImageUrl.value) {
         URL.revokeObjectURL(badgeImageUrl.value);
     }
@@ -232,6 +276,24 @@ onBeforeUnmount(() => {
 
 :deep(.form-control) {
     font-size: 0.85rem;
+}
+
+.sprite-scale-range {
+    position: relative;
+}
+
+/* Marks the default value under the track. The thumb's center only travels between half a thumb-width
+   in from each end (Bootstrap's thumb is 1rem), so the tick is placed along that inset span. */
+.sprite-scale-default-tick {
+    position: absolute;
+    top: calc(100% - 0.5rem);
+    left: calc(0.5rem + (100% - 1rem) * var(--default-position));
+    width: 2px;
+    height: 6px;
+    transform: translateX(-50%);
+    border-radius: 1px;
+    background-color: var(--bs-secondary-color);
+    pointer-events: none;
 }
 
 .event-image-preview {
