@@ -204,6 +204,75 @@ export const useUrlSync = () => {
         router.replace({ query: currentQuery });
     }
 
+    // ============================================
+    // Campfire Event Modal State
+    // ============================================
+    const campfireEventId = computed(() => {
+        const eventId = route.query.campfire;
+        return typeof eventId === 'string' ? eventId : undefined;
+    });
+
+    function openCampfire(eventId: string) {
+        router.push({
+            query: {
+                ...route.query,
+                campfire: eventId,
+            },
+        });
+    }
+
+    function closeCampfire() {
+        const currentQuery = { ...route.query };
+        delete currentQuery.campfire;
+        router.replace({ query: currentQuery });
+    }
+
+    // ============================================
+    // Hide Event Modal State
+    // ============================================
+    const hideEventId = computed(() => {
+        const eventId = route.query.hideEvent;
+        return typeof eventId === 'string' ? eventId : undefined;
+    });
+
+    function openHideEvent(eventId: string) {
+        router.push({
+            query: {
+                ...route.query,
+                hideEvent: eventId,
+            },
+        });
+    }
+
+    function closeHideEvent() {
+        const currentQuery = { ...route.query };
+        delete currentQuery.hideEvent;
+        router.replace({ query: currentQuery });
+    }
+
+    // ============================================
+    // Edit Event Type Color Modal State
+    // ============================================
+    const editColorEventType = computed(() => {
+        const eventType = route.query.editColor;
+        return typeof eventType === 'string' ? eventType : undefined;
+    });
+
+    function openEditColor(eventType: string) {
+        router.push({
+            query: {
+                ...route.query,
+                editColor: eventType,
+            },
+        });
+    }
+
+    function closeEditColor() {
+        const currentQuery = { ...route.query };
+        delete currentQuery.editColor;
+        router.replace({ query: currentQuery });
+    }
+
     return {
         // Calendar navigation
         urlMonth,
@@ -230,5 +299,20 @@ export const useUrlSync = () => {
         addToCalendarEventId,
         openAddToCalendar,
         closeAddToCalendar,
+
+        // Campfire event modal
+        campfireEventId,
+        openCampfire,
+        closeCampfire,
+
+        // Hide event modal
+        hideEventId,
+        openHideEvent,
+        closeHideEvent,
+
+        // Edit event type color modal
+        editColorEventType,
+        openEditColor,
+        closeEditColor,
     };
 };

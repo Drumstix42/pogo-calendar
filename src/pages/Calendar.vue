@@ -107,7 +107,7 @@ import { useHideEventModal } from '@/composables/useHideEventModal';
 import { useUrlSync } from '@/composables/useUrlSync';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { useEventsStore } from '@/stores/events';
-import { type EventTypeKey } from '@/utils/eventTypes';
+import { EVENT_TAG_TYPES, EVENT_TYPES, type EventTypeKey } from '@/utils/eventTypes';
 
 import AddToCalendarModal from '@/components/Calendar/AddToCalendarModal.vue';
 import CalendarGrid from '@/components/Calendar/CalendarGrid.vue';
@@ -141,6 +141,15 @@ const {
     addToCalendarEventId,
     openAddToCalendar,
     closeAddToCalendar,
+    campfireEventId,
+    openCampfire,
+    closeCampfire,
+    hideEventId,
+    openHideEvent,
+    closeHideEvent,
+    editColorEventType,
+    openEditColor,
+    closeEditColor,
 } = useUrlSync();
 const { isTouchDevice } = useDeviceDetection();
 
@@ -211,6 +220,98 @@ watch(
             openAddToCalendar(addToCalendarModal.currentEvent.value.eventID);
         } else if (!isOpen && addToCalendarEventId.value) {
             closeAddToCalendar();
+        }
+    },
+);
+
+// Campfire event modal ⇄ URL sync (same pattern as Add to Calendar above)
+const campfireEventFromUrl = computed(() => {
+    if (!campfireEventId.value) {
+        return undefined;
+    }
+    return eventsStore.getProcessedEventById(campfireEventId.value);
+});
+
+watch(
+    campfireEventFromUrl,
+    event => {
+        if (event) {
+            campfireEventModal.openModal(event);
+        } else if (!campfireEventId.value && campfireEventModal.showModal.value) {
+            campfireEventModal.closeModal();
+        }
+    },
+    { immediate: true },
+);
+
+watch(
+    () => campfireEventModal.showModal.value,
+    isOpen => {
+        if (isOpen && campfireEventModal.currentEvent.value && !campfireEventId.value) {
+            openCampfire(campfireEventModal.currentEvent.value.eventID);
+        } else if (!isOpen && campfireEventId.value) {
+            closeCampfire();
+        }
+    },
+);
+
+// Hide event modal ⇄ URL sync (same pattern as Add to Calendar above)
+const hideEventFromUrl = computed(() => {
+    if (!hideEventId.value) {
+        return undefined;
+    }
+    return eventsStore.getProcessedEventById(hideEventId.value);
+});
+
+watch(
+    hideEventFromUrl,
+    event => {
+        if (event) {
+            hideEventModal.openModal(event);
+        } else if (!hideEventId.value && hideEventModal.showModal.value) {
+            hideEventModal.closeModal();
+        }
+    },
+    { immediate: true },
+);
+
+watch(
+    () => hideEventModal.showModal.value,
+    isOpen => {
+        if (isOpen && hideEventModal.currentEvent.value && !hideEventId.value) {
+            openHideEvent(hideEventModal.currentEvent.value.eventID);
+        } else if (!isOpen && hideEventId.value) {
+            closeHideEvent();
+        }
+    },
+);
+
+// Edit event type color modal ⇄ URL sync - keyed by event type rather than event, so an unknown
+// type in the URL is ignored instead of opening the modal on the fallback type.
+const editColorEventTypeFromUrl = computed(() => {
+    const eventType = editColorEventType.value;
+    return eventType && (eventType in EVENT_TYPES || eventType in EVENT_TAG_TYPES) ? (eventType as EventTypeKey) : undefined;
+});
+
+watch(
+    editColorEventTypeFromUrl,
+    eventType => {
+        if (eventType) {
+            editColorModal.openModal(eventType);
+        } else if (!editColorEventType.value && editColorModal.showModal.value) {
+            editColorModal.closeModal();
+        }
+    },
+    { immediate: true },
+);
+
+watch(
+    () => editColorModal.showModal.value,
+    isOpen => {
+        if (isOpen && !editColorEventType.value) {
+            openEditColor(editColorModal.currentEventTypeKey.value);
+        } else if (!isOpen && editColorEventType.value) {
+            closeEditColor();
         }
     },
 );
