@@ -89,11 +89,29 @@ export function getPokemonImagesFromBosses(event: PogoEvent, options?: PokemonIm
     return getPokemonImagesFromBossList(getRaidBossesWithTierFallback(event, options), options);
 }
 
+// Boss names carry Dynamax/Shadow as a name prefix (e.g. "Dynamax Dialga" in a Wild Area raid
+// schedule), so each sprite gets its own overlay regardless of the event's type. Gigantamax isn't
+// covered - its art lives on a separate CDN (see `getBadgeSprite`).
+export function splitSpriteEffectPrefix(pokemonName: string): { spriteName: string; effect?: SpriteEffect } {
+    const dynamaxMatch = pokemonName.match(/^Dynamax\s+(.+)$/i);
+    if (dynamaxMatch) {
+        return { spriteName: dynamaxMatch[1].trim(), effect: SPRITE_EFFECTS.DYNAMAX };
+    }
+
+    if (/^Shadow\s+/i.test(pokemonName)) {
+        // parsePokemonNameAndSuffix strips "Shadow " itself, so the full name still resolves correctly.
+        return { spriteName: pokemonName, effect: SPRITE_EFFECTS.SHADOW };
+    }
+
+    return { spriteName: pokemonName };
+}
+
 export function getPokemonImagesFromBossList(bosses: PokemonBoss[], options?: PokemonImageOptions): PokemonImageData[] {
     const images: PokemonImageData[] = [];
 
     for (const boss of bosses) {
-        const parsedData = parsePokemonNameAndSuffix(boss.name);
+        const { spriteName, effect } = splitSpriteEffectPrefix(boss.name);
+        const parsedData = parsePokemonNameAndSuffix(spriteName);
         const shieldCount = boss.raidType === 'Super Mega' ? getSuperMegaShieldCount(boss.name) : undefined;
 
         if (parsedData) {
@@ -107,9 +125,9 @@ export function getPokemonImagesFromBossList(bosses: PokemonBoss[], options?: Po
                 ? getSpriteUrl(parsedData.pokemonName, parsedData.suffix, options, boss.image)
                 : boss.image || getSpriteUrl(parsedData.pokemonName, undefined, options, boss.image);
 
-            images.push({ name: boss.name, imageUrl: spriteUrl, fallbackImageUrl: boss.image || null, shieldCount });
+            images.push({ name: boss.name, imageUrl: spriteUrl, fallbackImageUrl: boss.image || null, shieldCount, effect });
         } else {
-            images.push({ name: boss.name, imageUrl: boss.image || null, fallbackImageUrl: boss.image || null, shieldCount });
+            images.push({ name: boss.name, imageUrl: boss.image || null, fallbackImageUrl: boss.image || null, shieldCount, effect });
         }
     }
 
@@ -149,17 +167,8 @@ export function getBadgeSprite(pokemonName: string, fallbackEffect?: SpriteEffec
         return gmaxUrl ? { urls: [gmaxUrl], effect: SPRITE_EFFECTS.GIGANTAMAX } : { urls: getBadgeSpriteUrls(baseName) };
     }
 
-    const dynamaxMatch = pokemonName.match(/^Dynamax\s+(.+)$/i);
-    if (dynamaxMatch) {
-        return { urls: getBadgeSpriteUrls(dynamaxMatch[1].trim()), effect: SPRITE_EFFECTS.DYNAMAX };
-    }
-
-    if (/^Shadow\s+/i.test(pokemonName)) {
-        // parsePokemonNameAndSuffix strips "Shadow " itself, so the full name still resolves correctly.
-        return { urls: getBadgeSpriteUrls(pokemonName), effect: SPRITE_EFFECTS.SHADOW };
-    }
-
-    return { urls: getBadgeSpriteUrls(pokemonName), effect: fallbackEffect };
+    const { spriteName, effect } = splitSpriteEffectPrefix(pokemonName);
+    return { urls: getBadgeSpriteUrls(spriteName), effect: effect ?? fallbackEffect };
 }
 
 // Parse a list of Pokemon names and resolve a sprite image for each (skipping unparseable names).

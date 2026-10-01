@@ -1,5 +1,6 @@
 import type { PokemonImageData } from './eventPokemon';
 import { parsePokemonNameAndSuffix } from './eventPokemonNames';
+import { splitSpriteEffectPrefix } from './eventSprite';
 import type { PokemonBoss } from './eventTypes';
 import { getPokemonAnimatedUrl, getPokemonSpriteUrl, hasExactSpriteForm } from './pokemonMapper';
 import { getSuperMegaShieldCount } from './superMegaShields';
@@ -109,13 +110,14 @@ export function buildRaidTierGroupsWithImages(groups: TierGroupInput[] | undefin
             label: group.label,
             showLabel: !shouldHideOtherLabel,
             images: group.bosses.map(boss => {
-                const parsed = parsePokemonNameAndSuffix(boss.name);
+                const { spriteName, effect } = splitSpriteEffectPrefix(boss.name);
+                const parsed = parsePokemonNameAndSuffix(spriteName);
                 // Only trust a generated sprite when it genuinely matches the boss's exact form -
                 // PokeMiners silently substitutes the base sprite for an unmatched suffix (e.g. no
                 // Mega Raichu X/Y art exists), which would otherwise outrank the event-provided image
                 // instead of falling below it. The base sprite is the absolute last-resort fallback.
                 const hasRealForm = parsed != null && hasExactSpriteForm(parsed.pokemonName, parsed.suffix);
-                const generatedUrl = hasRealForm ? (useAnimated ? getPokemonAnimatedUrl(boss.name) : null) : null;
+                const generatedUrl = hasRealForm ? (useAnimated ? getPokemonAnimatedUrl(spriteName) : null) : null;
                 const imageUrl = generatedUrl ?? boss.image ?? (parsed ? getPokemonSpriteUrl(parsed.pokemonName) : null);
 
                 return {
@@ -123,6 +125,7 @@ export function buildRaidTierGroupsWithImages(groups: TierGroupInput[] | undefin
                     imageUrl,
                     fallbackImageUrl: boss.image || null,
                     shieldCount: isSuperMega ? getSuperMegaShieldCount(boss.name) : undefined,
+                    effect,
                 } satisfies PokemonImageData;
             }),
         };

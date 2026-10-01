@@ -214,6 +214,12 @@ against a standalone CDN (HybridShivam) gated by `GIGANTAMAX_POKEMON_IDS`. It do
 tiered fallback above (the `@error` chain only derives from tier-2 URLs), so an unknown filename 404s
 to the placeholder.
 
+Sprite overlays (`SPRITE_EFFECTS`: Dynamax clouds, Shadow aura, Gigantamax) come from two places:
+an **event-level** effect (`getEventSpriteEffect()` — Max Mondays, Dynamax Max Battle titles, Shadow
+Raids), and a **per-sprite** effect that wins over it. Boss lists derive the per-sprite effect from
+the boss name prefix via `splitSpriteEffectPrefix()` (`Dynamax X`, `Shadow X`), so prefixed bosses
+inside any event type (e.g. Dynamax Dialga in a Wild Area schedule) get their overlay.
+
 ---
 
 ## Stores (`src/stores/`)
