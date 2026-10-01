@@ -101,7 +101,7 @@ export function formatCP(cp: number): string {
  */
 export function formatCPDisplay(level20Max: number, level25Max: number, showWeatherBoost: boolean): string {
     if (showWeatherBoost) {
-        return `${formatCP(level20Max)} | ${formatCP(level25Max)}`;
+        return `${formatCP(level20Max)} ∣ ${formatCP(level25Max)}`;
     }
     return `${formatCP(level20Max)}`;
 }

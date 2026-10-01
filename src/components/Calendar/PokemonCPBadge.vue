@@ -6,7 +6,10 @@
                     {{ tooltipText }}
                 </div>
             </template>
-            <span>{{ formattedCP }}</span>
+            <span v-if="formattedCP.boosted">
+                {{ formattedCP.normal }} <span class="cp-divider">{{ CP_DIVIDER }}</span> {{ formattedCP.boosted }}
+            </span>
+            <span v-else>{{ formattedCP.normal }}</span>
         </VTooltip>
     </div>
 </template>
@@ -15,8 +18,9 @@
 import { computed } from 'vue';
 
 import { usePokemonDataStore } from '@/stores/pokemonData';
+import { CP_DIVIDER } from '@/utils/eventBadgeImage';
 import { MAJOR_CALENDAR_EVENT_TYPES } from '@/utils/eventMajor';
-import { calculateRaidCP, formatCPDisplay } from '@/utils/pokemonCP';
+import { calculateRaidCP, formatCP } from '@/utils/pokemonCP';
 
 interface Props {
     pokemonName: string;
@@ -71,9 +75,13 @@ const cpData = computed(() => {
     return calculateRaidCP(pokemon.stats);
 });
 
+// Split rather than one formatted string so the divider can be styled on its own.
 const formattedCP = computed(() => {
-    if (!cpData.value) return '';
-    return formatCPDisplay(cpData.value.level20Max, cpData.value.level25Max, shouldShowWeatherBoost.value);
+    if (!cpData.value) return { normal: '', boosted: null };
+    return {
+        normal: formatCP(cpData.value.level20Max),
+        boosted: shouldShowWeatherBoost.value ? formatCP(cpData.value.level25Max) : null,
+    };
 });
 
 // just show text no the numbers again
@@ -98,6 +106,11 @@ const tooltipText = computed(() => {
     text-align: center;
     white-space: nowrap;
     margin-bottom: 5px;
+}
+
+/* Mixed against the badge's own text color, so it dims in both themes. */
+.cp-divider {
+    color: color-mix(in srgb, currentColor 60%, transparent);
 }
 
 /* Dark mode - light text on dark background */
