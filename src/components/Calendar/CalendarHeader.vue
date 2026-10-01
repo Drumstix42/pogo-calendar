@@ -68,69 +68,22 @@
 <script setup lang="ts">
 import { Calendar, ChevronLeft, ChevronRight, PanelRightClose, PanelRightOpen, Undo2 } from '@lucide/vue';
 import { breakpointsBootstrapV5, useBreakpoints } from '@vueuse/core';
-import dayjs from 'dayjs';
-import { computed } from 'vue';
 
 import { useCurrentMonthDisplay } from '@/composables/useCurrentMonthDisplay';
 import { useDeviceDetection } from '@/composables/useDeviceDetection';
-import { useDisplayTime } from '@/composables/useDisplayTime';
-import { useUrlSync } from '@/composables/useUrlSync';
+import { useMonthNavigation } from '@/composables/useMonthNavigation';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 
 import CurrentRaidBossesBar from '@/components/CurrentRaidBossesBar.vue';
 
-const { urlMonth, urlYear } = useUrlSync();
 const calendarSettings = useCalendarSettingsStore();
 const { isTouchDevice } = useDeviceDetection();
-const { displayToday } = useDisplayTime();
 const { currentMonthDisplay } = useCurrentMonthDisplay();
+const { isCurrentMonth, isPreviousDisabled, isNextDisabled, goToPreviousMonth, goToNextMonth, goToCurrentMonth } = useMonthNavigation();
 
 // Breakpoints
 const breakpoints = useBreakpoints(breakpointsBootstrapV5);
 const isDesktopSidebar = breakpoints.greaterOrEqual('xxl'); // >= 1400px
-
-// Check if we're viewing the current month
-const isCurrentMonth = computed(() => {
-    const now = displayToday.value;
-    return urlYear.value === now.year() && urlMonth.value === now.month();
-});
-
-// Check navigation boundaries
-const isPreviousDisabled = computed(() => {
-    const now = displayToday.value;
-    const current = now.year(urlYear.value).month(urlMonth.value);
-    const earliest = dayjs().year(2016).month(0); // January 2016
-    return current.isSameOrBefore(earliest, 'month');
-});
-
-const isNextDisabled = computed(() => {
-    const now = displayToday.value;
-    const current = now.year(urlYear.value).month(urlMonth.value);
-    const currentYear = now.year();
-    const latest = now.year(currentYear + 1).month(11); // December of next year
-    return current.isSameOrAfter(latest, 'month');
-});
-
-// Navigation methods
-const goToPreviousMonth = () => {
-    const now = displayToday.value;
-    const prev = now.year(urlYear.value).month(urlMonth.value).subtract(1, 'month');
-    urlMonth.value = prev.month();
-    urlYear.value = prev.year();
-};
-
-const goToNextMonth = () => {
-    const now = displayToday.value;
-    const next = now.year(urlYear.value).month(urlMonth.value).add(1, 'month');
-    urlMonth.value = next.month();
-    urlYear.value = next.year();
-};
-
-const goToCurrentMonth = () => {
-    const now = displayToday.value;
-    urlMonth.value = now.month();
-    urlYear.value = now.year();
-};
 </script>
 
 <style scoped>
