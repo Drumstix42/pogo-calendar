@@ -42,6 +42,31 @@ When a code change alters behavior described here, propose the matching doc upda
 - Prefer the git command line over tooling.
 - Do not add a `Co-Authored-By` trailer or any AI attribution footer to commit messages.
 
+## Release notes
+
+GitHub releases are titled with the tag (`vX.Y.Z`). When asked to prep one, cover the commits since the
+latest tag (`git tag --sort=-creatordate`) and hand back the text to paste. Don't create tags or releases.
+Past release bodies (for reference): `curl -s "https://api.github.com/repos/Drumstix42/pogo-calendar/releases?per_page=3"`.
+
+```markdown
+**Full Changelog**: https://github.com/Drumstix42/pogo-calendar/compare/v<prev>...v<new>
+
+### Feature
+
+- Added ...
+
+### Fix
+
+- Fixed ...
+```
+
+- Sections in order `### Feature`, `### Fix`, `### Chore` (singular); omit empty ones. Skip `docs:` commits.
+- Roughly one line per user-facing change, written for app users: "Added …", "… now …", "Fixed …". No
+  trailing period. Use UI names (tooltips, timeline, event detail panel, Campfire Event Helper, Summary
+  text) and concrete examples in parentheses — "(e.g. …)".
+- Only list fixes users could have hit in the last release; a bug introduced and fixed within the same
+  cycle isn't a fix.
+
 ## Tech stack
 
 - **Vue 3 + TypeScript**, Composition API, `<script setup lang="ts">` everywhere.
