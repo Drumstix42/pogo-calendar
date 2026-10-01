@@ -49,11 +49,16 @@ export interface BonusItem {
     image: string;
 }
 
+/** One bonus list from the event page's "Bonuses" section; groups arrive in page order. */
 export interface EventBonusGroup {
-    startTime?: string;
-    endTime?: string;
-    description?: string;
+    title: string | null;
+    description: string | null;
+    // Bare wall-clock strings (e.g. "2:00 p.m."), only set for "from X to Y" wording - display hints only.
+    startTime: string | null;
+    endTime: string | null;
     items: BonusItem[];
+    // Footnotes; item text ending in `*`/`**` points at the note starting with the same marker.
+    notes: string[];
 }
 
 /** A titled group of daily-discovery bonus lines (a single day can stack multiple groups). */

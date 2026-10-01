@@ -6,7 +6,7 @@ function namesOf(bosses?: PokemonBoss[] | PokemonBoss | null): string[] {
     return (Array.isArray(bosses) ? bosses : [bosses]).map(boss => boss.name);
 }
 
-// communityday.bonuses is typed `any[]` upstream but is BonusItem-shaped at runtime (see CommunityDayBonuses.vue).
+// communityday.bonuses is typed `any[]` upstream but is BonusItem-shaped at runtime.
 function bonusTexts(items?: Array<{ text?: string }> | null): string[] {
     if (!items) return [];
     return items.map(item => item?.text).filter((text): text is string => Boolean(text));

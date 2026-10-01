@@ -2,10 +2,10 @@
  * Builds copyable Pokemon GO Campfire meetup text (title + static blurb + per-Pokemon CP/weakness
  * blocks). Ported from a companion Python tool (campfire-event-helper).
  */
+import { getEventBonusGroups } from './eventBonuses';
 import { getEventPokemonImages } from './eventPokemon';
 import { type PogoEvent } from './eventTypes';
 import { type CPResult, type PokemonData, calculateRaidCP, formatCP, formatCPDisplay } from './pokemonCP';
-import { getSpotlightBonusText } from './spotlightBonus';
 import { type PokemonType, formatWeaknessText, getSuperEffectiveTypes } from './typeEffectiveness';
 
 // Names the image resolvers use as placeholders when no specific Pokemon is known - not real lookups.
@@ -16,15 +16,22 @@ export function resolveCampfireEventPokemonNames(event: PogoEvent): string[] {
     return [...new Set(getEventPokemonImages(event).map(image => image.name))].filter(name => !NON_POKEMON_PLACEHOLDER_NAMES.has(name));
 }
 
-// Spotlight Hour's single bonus, or Community Day's list. `communityday.bonuses` is typed `any[]`
-// upstream but is `{ text, image }`-shaped at runtime.
-export function getCampfireEventBonuses(event: PogoEvent): string[] {
-    const spotlightBonus = getSpotlightBonusText(event);
-    if (spotlightBonus) return [spotlightBonus];
+export interface CampfireBonusGroup {
+    title: string | null;
+    items: string[];
+}
 
-    if (event.eventType !== 'community-day') return [];
-    const bonuses: Array<{ text?: string }> = event.extraData?.communityday?.bonuses ?? [];
-    return bonuses.map(bonus => bonus?.text?.trim()).filter((text): text is string => Boolean(text));
+// Trailing `*`/`**` markers point at footnotes the Output doesn't include.
+const FOOTNOTE_MARKER = /\*+$/;
+
+// The same bonus groups the detail views show, reduced to plain text lines.
+export function getCampfireEventBonusGroups(event: PogoEvent): CampfireBonusGroup[] {
+    return getEventBonusGroups(event)
+        .map(group => ({
+            title: group.title,
+            items: group.items.map(item => item.text.replace(FOOTNOTE_MARKER, '').trim()).filter(Boolean),
+        }))
+        .filter(group => group.items.length > 0);
 }
 
 export interface CampfirePokemonEntry {
@@ -68,8 +75,8 @@ export interface CampfireOutputOptions {
     includeCP: boolean;
     includeWeatherBoostedCP: boolean;
     includeMaxCP: boolean;
-    /** Event bonuses (e.g. "3x Catch XP"), placed between the summary text and the Pokemon block. */
-    bonuses?: string[];
+    /** Event bonus groups (e.g. "3x Catch XP"), placed between the summary text and the Pokemon block. */
+    bonusGroups?: CampfireBonusGroup[];
 }
 
 export function formatCampfirePokemonEntry(entry: CampfirePokemonEntry, options: CampfireOutputOptions): string {
@@ -118,14 +125,30 @@ export function resolveCampfireTemplate(template: string, context: CampfireTempl
         .replace(TEMPLATE_PLACEHOLDERS.eventType, context.eventTypeName);
 }
 
-function formatBonusBlock(bonuses: string[]): string {
-    if (bonuses.length === 0) return '';
-    if (bonuses.length === 1) return `Bonus: ${bonuses[0]}`;
-    return `Bonuses:\n${bonuses.map(bonus => `- ${bonus}`).join('\n')}`;
+function formatBonusSection(heading: string, items: string[]): string {
+    if (items.length === 1) return `${heading}: ${items[0]}`;
+    return `${heading}:\n${items.map(item => `- ${item}`).join('\n')}`;
+}
+
+function formatBonusBlock(groups: CampfireBonusGroup[]): string {
+    // Back-to-back untitled groups (e.g. all-day + time-windowed bonuses) share one default heading.
+    const sections: CampfireBonusGroup[] = [];
+    for (const group of groups) {
+        const previous = sections[sections.length - 1];
+        if (!group.title && previous && !previous.title) {
+            previous.items.push(...group.items);
+        } else {
+            sections.push({ title: group.title, items: [...group.items] });
+        }
+    }
+
+    return sections
+        .map(section => formatBonusSection(section.title ?? (section.items.length === 1 ? 'Bonus' : 'Bonuses'), section.items))
+        .join('\n\n');
 }
 
 export function formatCampfireEventText(title: string, body: string, entries: CampfirePokemonEntry[], options: CampfireOutputOptions): string {
-    const bonusBlock = formatBonusBlock(options.bonuses ?? []);
+    const bonusBlock = formatBonusBlock(options.bonusGroups ?? []);
     const entryBlock =
         options.includePokemonDetails && entries.length > 0
             ? `--\n${entries.map(entry => formatCampfirePokemonEntry(entry, options)).join('\n\n')}`

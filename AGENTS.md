@@ -110,6 +110,21 @@ Not every event in the store came from the feed — check for these before assum
   `${sourceID}-daily-${date}`. Resolve back to the source event via `useDailyEventDisplay()`
   (`getSourceEventID()` / `getEventForDetails()`) before looking up metadata or details.
 
+### Bonuses (`src/utils/eventBonuses.ts`)
+
+`extraData.bonuses` holds every event page's "Bonuses" section as `EventBonusGroup`s in page order
+(`title` null = general bonuses; titled = ticket/tier/time-window extras; `*` markers in item text point
+at `notes`). `getEventBonusGroups()` is the single source for the detail views (`EventBonuses.vue`) and
+the Campfire Output text, with two exceptions:
+
+- **Spotlight Hour** builds its group from `spotlight.bonus` so it keeps our local bonus-type icon (the
+  feed item has no image). The calendar-cell icons (`SpotlightBonusIcons`) read `eventMetadata`, not this.
+- **Season** is skipped — `SeasonBonuses.vue` renders the same items (plus Daily Discoveries) from
+  `extraData.season`.
+
+The legacy `communityday.bonuses` / `bonusDisclaimers` duplicate the new data and are only read for
+search. `raidSchedule[].bonuses` is unrelated (per-day raid notes → `raidHourBonuses` on sub-events).
+
 ### Major events (`src/utils/eventMajor.ts`)
 
 `MAJOR_CALENDAR_EVENT_TYPES` = `pokemon-go-fest`, `pokemon-go-tour`, `wild-area`. Instead of

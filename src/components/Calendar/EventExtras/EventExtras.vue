@@ -1,10 +1,8 @@
 <template>
     <div v-if="hasContent" class="event-extras">
-        <SpotlightBonus :event="event" />
-        <RaidHourBonuses :event="event" />
-        <CommunityDayBonuses :event="event" />
-        <SeasonBonuses v-if="seasonData" :season="seasonData" :highlight-day-of-week="highlightDayOfWeek" />
         <EventBonuses :event="event" />
+        <RaidHourBonuses :event="event" />
+        <SeasonBonuses v-if="seasonData" :season="seasonData" :highlight-day-of-week="highlightDayOfWeek" />
     </div>
 </template>
 
@@ -14,11 +12,9 @@ import { computed } from 'vue';
 import { hasEventExtras } from '@/utils/eventSubtype';
 import { type PogoEvent } from '@/utils/eventTypes';
 
-import CommunityDayBonuses from './CommunityDayBonuses.vue';
 import EventBonuses from './EventBonuses.vue';
 import RaidHourBonuses from './RaidHourBonuses.vue';
 import SeasonBonuses from './SeasonBonuses.vue';
-import SpotlightBonus from './SpotlightBonus.vue';
 
 interface Props {
     event: PogoEvent;

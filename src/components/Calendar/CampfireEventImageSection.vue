@@ -132,7 +132,7 @@ function slugify(text: string): string {
 
 const badgeImageFilename = computed(() => `${slugify(props.event.name) || 'campfire-event'}.png`);
 
-// Only Spotlight Hour's single bonus fits on the image - Community Day's bonus list is text-output only.
+// Only Spotlight Hour's single bonus fits on the image - other events' bonus lists are text-output only.
 const imageBonusText = computed(() => getSpotlightBonusText(props.event));
 
 // Priority: custom caption, then the bonus, then auto CP lines. An event with a bonus never falls

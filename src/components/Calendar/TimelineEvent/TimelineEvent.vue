@@ -356,10 +356,6 @@ const {
         :deep(.event-extras) {
             margin-top: 0.5rem;
         }
-
-        :deep(.community-day-bonuses) {
-            margin-top: 1rem;
-        }
     }
 }
 

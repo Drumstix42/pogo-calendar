@@ -1,3 +1,4 @@
+import { getEventBonusGroups } from './eventBonuses';
 import type { EventTypeKey, PogoEvent } from './eventTypes';
 
 // Event types that support sub-typing/categorization
@@ -38,13 +39,11 @@ export function hasEventExtras(event: PogoEvent): boolean {
     const extra = event.extraData;
     if (!extra) return false;
 
-    const hasSpotlightBonus = event.eventType === 'pokemon-spotlight-hour' && Boolean(extra.spotlight?.bonus);
     const hasRaidHourBonuses = Boolean(extra.isRaidHourSubEvent && extra.raidHourBonuses);
-    const hasCommunityDayBonuses = event.eventType === 'community-day' && Boolean(extra.communityday?.bonuses);
     const hasSeason = event.eventType === 'season' && Boolean(extra.season);
-    const hasEventBonuses = Boolean(extra.bonuses?.some(group => group.items?.length));
+    const hasEventBonuses = getEventBonusGroups(event).length > 0;
 
-    return hasSpotlightBonus || hasRaidHourBonuses || hasCommunityDayBonuses || hasSeason || hasEventBonuses;
+    return hasRaidHourBonuses || hasSeason || hasEventBonuses;
 }
 
 /** Higher number = higher priority for raid sub-type sorting */
