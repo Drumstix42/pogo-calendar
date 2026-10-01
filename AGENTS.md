@@ -100,6 +100,9 @@ Feeds come from the [Drumstix42 fork of ScrapedDuck](https://github.com/Drumstix
 - `boss`/`spawn` lists in `extraData` can be empty for past or newly announced events — all handlers
   must degrade gracefully to title-based parsing.
 - Sample feed snapshots live in `planning/events*.json` (not shipped); use them to check data shapes.
+  They were captured over time (higher number = newer) while events were still being announced and
+  finalized, so older ones aren't reliable for an event's actual contents. For facts about a specific
+  event, use the newest snapshot, the live feed (URL above), or the LeekDuck page itself.
 
 ### Event types (`src/utils/eventTypes.ts`)
 
