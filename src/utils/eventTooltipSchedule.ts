@@ -1,3 +1,4 @@
+import { EVENT_WIDE_RAIDS_LABEL, getEventWideRaidBosses } from './eventRaidHours';
 import type { PogoEvent, PokemonBoss, RaidScheduleEntry } from './eventTypes';
 import { buildRaidTierGroupsWithImages, buildTierGroupsFromBosses } from './raidTierGroups';
 
@@ -87,6 +88,16 @@ export function buildFullRaidScheduleDaySections(event: PogoEvent, useAnimatedIm
         }
         // Raid-hour rows are shown by generated pseudo events, not the parent event.
     });
+
+    // Added last so it lands after every real day.
+    appendScheduleSection(
+        ensureDaySection(EVENT_WIDE_RAIDS_LABEL, raidSchedule.length),
+        'event-wide',
+        'All Days',
+        undefined,
+        true,
+        getEventWideRaidBosses(event),
+    );
 
     const daySections = orderedDates
         .map(date => {

@@ -234,3 +234,27 @@ export function getRaidScheduleBossesForDate(parentEvent: PogoEvent, targetDate:
     const mergedBosses = sections.flatMap(section => section.bosses);
     return dedupeBosses(mergedBosses);
 }
+
+/** Section/day label for {@link getEventWideRaidBosses} in detailed schedule views. */
+export const EVENT_WIDE_RAIDS_LABEL = 'Throughout Event';
+
+/**
+ * Bosses in the event's overall list that no schedule day mentions - e.g. Wild Area's event-long
+ * Three-Star Raids next to its day-split Max Battles. `raidSchedule` only holds day-split sections,
+ * so detailed per-day views append these or they'd vanish entirely.
+ */
+export function getEventWideRaidBosses(event: PogoEvent): PokemonBoss[] {
+    const raidSchedule = event.extraData?.raidSchedule;
+    const bosses = event.extraData?.raidbattles?.bosses;
+    if (!raidSchedule?.length || !bosses?.length) {
+        return [];
+    }
+
+    const scheduledBosses = raidSchedule.flatMap(schedule => [
+        ...(schedule.bosses ?? []),
+        ...(schedule.raidHours ?? []).flatMap(raidHour => raidHour.bosses ?? []),
+    ]);
+    const scheduledNames = new Set(scheduledBosses.map(boss => boss.name.trim().toLowerCase()));
+
+    return dedupeBosses(bosses.filter(boss => !scheduledNames.has(boss.name.trim().toLowerCase())));
+}

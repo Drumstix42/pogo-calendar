@@ -5,7 +5,13 @@ import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { useEventsStore } from '@/stores/events';
 import { formatEventName } from '@/utils/eventName';
 import { getEventSpriteEffect } from '@/utils/eventPokemon';
-import { getRaidScheduleBossesForDate, getRaidScheduleSectionsForDate } from '@/utils/eventRaidHours';
+import {
+    EVENT_WIDE_RAIDS_LABEL,
+    type RaidScheduleSection,
+    getEventWideRaidBosses,
+    getRaidScheduleBossesForDate,
+    getRaidScheduleSectionsForDate,
+} from '@/utils/eventRaidHours';
 import { getRaidSubType, isEventWithSubtype } from '@/utils/eventSubtype';
 import { buildFullRaidScheduleDaySections } from '@/utils/eventTooltipSchedule';
 import { type PogoEvent } from '@/utils/eventTypes';
@@ -60,7 +66,22 @@ export function useEventTooltip(props: UseEventTooltipOptions) {
             return undefined;
         }
 
-        return sections
+        const eventWideBosses = getEventWideRaidBosses(event);
+        const sectionsWithEventWide: RaidScheduleSection[] = eventWideBosses.length
+            ? [
+                  ...sections,
+                  {
+                      id: 'event-wide',
+                      title: EVENT_WIDE_RAIDS_LABEL,
+                      label: EVENT_WIDE_RAIDS_LABEL,
+                      bosses: eventWideBosses,
+                      isAllDay: true,
+                      sortKey: Number.POSITIVE_INFINITY,
+                  },
+              ]
+            : sections;
+
+        return sectionsWithEventWide
             .map(section => {
                 const tierGroups = buildTierGroupsFromBosses(section.bosses);
                 const tierGroupsWithImages = buildRaidTierGroupsWithImages(tierGroups, calendarSettings.useAnimatedImages);

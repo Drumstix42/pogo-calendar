@@ -1,4 +1,4 @@
-import { parseTimeStartSortKey } from './eventRaidHours';
+import { EVENT_WIDE_RAIDS_LABEL, getEventWideRaidBosses, parseTimeStartSortKey } from './eventRaidHours';
 import type { PogoEvent, PokemonBoss, RaidScheduleEntry } from './eventTypes';
 import { buildRaidTierGroupsWithImages, buildTierGroupsFromBosses, sortTierLabel } from './raidTierGroups';
 
@@ -18,10 +18,14 @@ function formatScheduleSectionLabel(label?: string, isAllDay: boolean = false): 
 
 /**
  * Builds the expanded timeline raid schedule: bosses grouped into tiers, nested under their
- * schedule section (incl. raid hours) and ordered day. Returns `undefined` when there is nothing
- * to render.
+ * schedule section (incl. raid hours) and ordered day, with event-wide bosses as a trailing
+ * "Throughout Event" day. Returns `undefined` when there is nothing to render.
  */
-export function buildTimelineScheduleDaySectionsWithTierGroups(event: PogoEvent, useAnimatedImages: boolean = true) {
+export function buildTimelineScheduleDaySectionsWithTierGroups(
+    event: PogoEvent,
+    useAnimatedImages: boolean = true,
+    includeEventWideBosses: boolean = true,
+) {
     const raidSchedule = event.extraData?.raidSchedule;
     if (!raidSchedule || raidSchedule.length === 0) {
         return undefined;
@@ -116,6 +120,18 @@ export function buildTimelineScheduleDaySectionsWithTierGroups(event: PogoEvent,
         }
     });
 
+    // Added last so it lands after every real day.
+    if (includeEventWideBosses) {
+        appendScheduleSection(
+            ensureDaySection(EVENT_WIDE_RAIDS_LABEL, raidSchedule.length),
+            'event-wide',
+            'All Days',
+            undefined,
+            true,
+            getEventWideRaidBosses(event),
+        );
+    }
+
     const daySections = orderedDates
         .map(date => {
             const daySection = daySectionMap.get(date);
@@ -152,7 +168,8 @@ export type TimelineScheduleDaySection = NonNullable<ReturnType<typeof buildTime
  * keeping the highest-priority tier label for each. Used for the compact, non-active card layout.
  */
 export function buildCollapsedScheduleDayGroups(event: PogoEvent) {
-    const daySections = buildTimelineScheduleDaySectionsWithTierGroups(event, false);
+    // The compact card stays strictly per-day; event-wide bosses only show once expanded.
+    const daySections = buildTimelineScheduleDaySectionsWithTierGroups(event, false, false);
     if (!daySections?.length) {
         return undefined;
     }
