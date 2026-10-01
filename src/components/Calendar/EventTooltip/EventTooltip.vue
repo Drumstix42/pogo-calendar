@@ -9,11 +9,12 @@
                     v-for="groupedEvent in getGroupedEvents(event)"
                     :key="groupedEvent.eventID"
                     class="event-time-info"
-                    :class="getMajorTooltipClass(groupedEvent)"
+                    :class="getEventWatermarkClass(groupedEvent)"
                 >
                     <div class="event-content">
                         <!-- Event text content -->
                         <div class="event-text">
+                            <EventTypeTags :event="groupedEvent" />
                             <div v-if="groupedEvent.extraData?.parentEventId" class="parent-event-name">{{ getParentEventName(groupedEvent) }}</div>
                             <div class="grouped-event-name">{{ formatEventName(groupedEvent.name) }}</div>
                             <EventTimeDisplay :event="groupedEvent" />
@@ -66,10 +67,11 @@
             </div>
 
             <!-- Show time for single events -->
-            <div v-else class="event-time-info" :class="getMajorTooltipClass(event)">
+            <div v-else class="event-time-info" :class="getEventWatermarkClass(event)">
                 <div class="event-content">
                     <!-- Event text content -->
                     <div class="event-text">
+                        <EventTypeTags :event="event" />
                         <div v-if="event.extraData?.parentEventId" class="parent-event-name">{{ parentEventName }}</div>
                         <div class="grouped-event-name">{{ formatEventName(event.name) }}</div>
                         <EventTimeDisplay :event="event" />
@@ -152,12 +154,14 @@ import { type Dayjs } from 'dayjs';
 import { useEventTooltip } from '@/composables/useEventTooltip';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { getGroupedEvents } from '@/utils/eventGrouping';
+import { getEventWatermarkClass } from '@/utils/eventMajor';
 import { formatEventName } from '@/utils/eventName';
 import { getEventSpriteEffect } from '@/utils/eventPokemon';
 import { type PogoEvent } from '@/utils/eventTypes';
 
 import EventExtras from '../EventExtras/EventExtras.vue';
 import EventTimeDisplay from '../EventTimeDisplay.vue';
+import EventTypeTags from '../EventTypeTags.vue';
 import PokemonEventImages from '../PokemonEventImages.vue';
 import RaidTierGroupImages from '../RaidTierGroupImages.vue';
 import EventTooltipHeader from './EventTooltipHeader.vue';
@@ -186,7 +190,6 @@ const {
     getTierGroupsWithImagesForEvent,
     getScheduleSectionsWithTierGroupsForEvent,
     scheduleDaySectionsWithTierGroups,
-    getMajorTooltipClass,
     spriteEffect,
     tierGroupsWithImages,
     scheduleSectionsWithTierGroups,
@@ -228,55 +231,9 @@ const {
     border-radius: 4px;
 }
 
-.event-time-info.major-tooltip-event {
-    position: relative;
-}
-
-.event-time-info.major-tooltip-event::after {
-    content: '';
-    position: absolute;
-    right: 1px;
-    bottom: 0;
-    width: 56px;
-    height: 56px;
-    pointer-events: none;
-    opacity: 0.22;
-    background-color: color-mix(in srgb, var(--bs-body-color) 62%, transparent);
-    mask-repeat: no-repeat;
-    mask-position: center;
-    mask-size: contain;
-    z-index: 0;
-}
-
-@media (min-width: 768px) {
-    .event-time-info.major-tooltip-event::after {
-        right: 2px;
-        bottom: 0;
-        width: 68px;
-        height: 68px;
-    }
-}
-
-@media (min-width: 1200px) {
-    .event-time-info.major-tooltip-event::after {
-        right: 3px;
-        bottom: -1px;
-        width: 74px;
-        height: 74px;
-    }
-}
-
-.event-time-info.major-tooltip-global::after {
-    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='M2 12h20'/%3E%3Cpath d='M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z'/%3E%3C/svg%3E");
-}
-
-.event-time-info.major-tooltip-location::after {
-    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 1 1 16 0'/%3E%3Ccircle cx='12' cy='10' r='3'/%3E%3C/svg%3E");
-}
-
-[data-bs-theme='dark'] .event-time-info.major-tooltip-event::after {
-    opacity: 0.26;
-    background-color: color-mix(in srgb, var(--bs-body-color) 70%, transparent);
+[data-bs-theme='dark'] .event-time-info.event-watermark {
+    --event-watermark-opacity: 0.26;
+    --event-watermark-color: color-mix(in srgb, var(--bs-body-color) 70%, transparent);
 }
 
 .event-content {

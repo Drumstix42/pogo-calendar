@@ -11,6 +11,7 @@
         </div>
 
         <div class="event-summary mb-3 pb-3 px-2 border-bottom">
+            <EventTypeTags :event="event" :editable="false" />
             <div class="event-summary-name">{{ eventName }}</div>
             <EventTimeDisplay :event="event" />
         </div>
@@ -55,6 +56,7 @@ import { downloadEventIcs } from '@/utils/icsExport';
 
 import BaseModal from '@/components/BaseModal.vue';
 import EventTimeDisplay from '@/components/Calendar/EventTimeDisplay.vue';
+import EventTypeTags from '@/components/Calendar/EventTypeTags.vue';
 
 interface Props {
     show: boolean;

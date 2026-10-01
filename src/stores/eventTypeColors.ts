@@ -3,7 +3,7 @@ import { defineStore } from 'pinia';
 import { computed } from 'vue';
 
 import { STORAGE_KEYS } from '@/constants/storage';
-import { EVENT_TYPES, type EventTypeKey } from '@/utils/eventTypes';
+import { type EventTypeKey, getDefaultEventTypeColor } from '@/utils/eventTypes';
 
 export const useEventTypeColorsStore = defineStore('eventTypeColors', () => {
     // Store custom colors as an object mapping eventTypeKey to hex color
@@ -32,7 +32,7 @@ export const useEventTypeColorsStore = defineStore('eventTypeColors', () => {
 
     // Get the effective color (custom or default) for an event type
     function getEventTypeColor(eventTypeKey: EventTypeKey): string {
-        return customColors.value[eventTypeKey] || EVENT_TYPES[eventTypeKey]?.color || '#757575';
+        return customColors.value[eventTypeKey] || getDefaultEventTypeColor(eventTypeKey);
     }
 
     // Count of customized event types

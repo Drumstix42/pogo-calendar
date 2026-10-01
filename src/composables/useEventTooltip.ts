@@ -3,7 +3,6 @@ import { computed } from 'vue';
 
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { useEventsStore } from '@/stores/events';
-import { type MajorCalendarEventVariant, getMajorCalendarEventVariant, isMajorCalendarEventType } from '@/utils/eventMajor';
 import { formatEventName } from '@/utils/eventName';
 import { getEventSpriteEffect } from '@/utils/eventPokemon';
 import { getRaidScheduleBossesForDate, getRaidScheduleSectionsForDate } from '@/utils/eventRaidHours';
@@ -97,30 +96,6 @@ export function useEventTooltip(props: UseEventTooltipOptions) {
         return buildFullRaidScheduleDaySections(props.event, calendarSettings.useAnimatedImages);
     });
 
-    function isMajorEvent(event: PogoEvent) {
-        return isMajorCalendarEventType(event.eventType);
-    }
-
-    function getMajorVariant(event: PogoEvent): MajorCalendarEventVariant {
-        if (!isMajorEvent(event)) {
-            return 'location-specific';
-        }
-
-        return getMajorCalendarEventVariant(event);
-    }
-
-    function getMajorTooltipClass(event: PogoEvent) {
-        if (!isMajorEvent(event)) {
-            return undefined;
-        }
-
-        return {
-            'major-tooltip-event': true,
-            'major-tooltip-global': getMajorVariant(event) === 'global',
-            'major-tooltip-location': getMajorVariant(event) === 'location-specific',
-        };
-    }
-
     const spriteEffect = computed(() => getEventSpriteEffect(props.event));
 
     const tierGroupsWithImages = computed(() => {
@@ -146,7 +121,6 @@ export function useEventTooltip(props: UseEventTooltipOptions) {
         getTierGroupsWithImagesForEvent,
         getScheduleSectionsWithTierGroupsForEvent,
         scheduleDaySectionsWithTierGroups,
-        getMajorTooltipClass,
         spriteEffect,
         tierGroupsWithImages,
         scheduleSectionsWithTierGroups,

@@ -1,0 +1,49 @@
+// Corner watermark icon on event views (tooltip, timeline card, single-day cell): a globe for global major
+// events, a map pin for location-specific ones. Hosts tune it via --event-watermark-opacity and
+// --event-watermark-color; the host's content needs to sit above z-index 0.
+
+.event-watermark {
+    position: relative;
+}
+
+.event-watermark::after {
+    content: '';
+    position: absolute;
+    right: 1px;
+    bottom: 0;
+    width: 56px;
+    height: 56px;
+    pointer-events: none;
+    opacity: var(--event-watermark-opacity, 0.22);
+    background-color: var(--event-watermark-color, color-mix(in srgb, var(--bs-body-color) 62%, transparent));
+    mask-repeat: no-repeat;
+    mask-position: center;
+    mask-size: contain;
+    z-index: 0;
+}
+
+@media (min-width: 768px) {
+    .event-watermark::after {
+        right: 2px;
+        bottom: 0;
+        width: 68px;
+        height: 68px;
+    }
+}
+
+@media (min-width: 1200px) {
+    .event-watermark::after {
+        right: 3px;
+        bottom: -1px;
+        width: 74px;
+        height: 74px;
+    }
+}
+
+.event-watermark--global::after {
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='M2 12h20'/%3E%3Cpath d='M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z'/%3E%3C/svg%3E");
+}
+
+.event-watermark--location::after {
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 1 1 16 0'/%3E%3Ccircle cx='12' cy='10' r='3'/%3E%3C/svg%3E");
+}

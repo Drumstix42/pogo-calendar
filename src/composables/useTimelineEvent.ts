@@ -8,7 +8,7 @@ import { useEditColorModal } from '@/composables/useEditColorModal';
 import { useEventHighlightDebounce } from '@/composables/useEventHighlightDebounce';
 import { useHideEventModal } from '@/composables/useHideEventModal';
 import { useEventsStore } from '@/stores/events';
-import { type MajorCalendarEventVariant, getMajorCalendarEventVariant, isMajorCalendarEventType } from '@/utils/eventMajor';
+import { getEventWatermarkClass, isMajorCalendarEventType } from '@/utils/eventMajor';
 import { formatEventName } from '@/utils/eventName';
 import { getEventPokemonImages, getEventSpriteEffect } from '@/utils/eventPokemon';
 import { hasEventExtras } from '@/utils/eventSubtype';
@@ -129,13 +129,7 @@ export function useTimelineEvent(props: TimelineEventProps, emit: TimelineEventE
         return isMajorCalendarEventType(props.event.eventType);
     });
 
-    const majorTimelineVariant = computed<MajorCalendarEventVariant>(() => {
-        if (!isMajorTimelineEvent.value) {
-            return 'location-specific';
-        }
-
-        return getMajorCalendarEventVariant(props.event);
-    });
+    const watermarkClass = computed(() => getEventWatermarkClass(props.event));
 
     return {
         isTouchDevice,
@@ -159,6 +153,6 @@ export function useTimelineEvent(props: TimelineEventProps, emit: TimelineEventE
         showPokemonRow,
         hasExtras,
         isMajorTimelineEvent,
-        majorTimelineVariant,
+        watermarkClass,
     };
 }

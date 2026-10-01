@@ -3,7 +3,7 @@ import customParseFormat from 'dayjs/plugin/customParseFormat';
 import utc from 'dayjs/plugin/utc';
 
 import { parseRaidScheduleDate } from './eventRaidHours';
-import type { PogoEvent, PokemonBoss } from './eventTypes';
+import { type PogoEvent, type PokemonBoss, getEventTypes } from './eventTypes';
 
 dayjs.extend(utc);
 dayjs.extend(customParseFormat);
@@ -123,6 +123,7 @@ export function generateEventRaidHourSubEvents(parentEvent: PogoEvent): PogoEven
                 eventID,
                 name: eventName,
                 eventType: 'event',
+                eventTypes: getEventTypes(parentEvent),
                 heading: 'Event',
                 link: parentEvent.link,
                 image: raidHour.bosses[0]?.image || parentEvent.image,
@@ -188,6 +189,7 @@ export function generateEventSpotlightSubEvents(parentEvent: PogoEvent): PogoEve
             eventID,
             name: eventName,
             eventType: parentEvent.eventType,
+            eventTypes: getEventTypes(parentEvent),
             heading: parentEvent.heading,
             link: parentEvent.link,
             image: schedule.pokemon.image || parentEvent.image,

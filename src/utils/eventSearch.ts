@@ -1,5 +1,5 @@
 import { decodeHtmlEntities } from './eventName';
-import { type PogoEvent, type PokemonBoss, type SeasonData, getEventTypeInfo } from './eventTypes';
+import { type PogoEvent, type PokemonBoss, type SeasonData, getEventTypeInfo, getEventTypes } from './eventTypes';
 
 function namesOf(bosses?: PokemonBoss[] | PokemonBoss | null): string[] {
     if (!bosses) return [];
@@ -26,7 +26,7 @@ function seasonBonusTexts(season: SeasonData): string[] {
 
 // Pulls every Pokemon name and bonus/text value relevant to a card so search can match without caring how deep it lives in extraData.
 function getEventSearchTerms(event: PogoEvent): string[] {
-    const terms = [event.name, event.heading, getEventTypeInfo(event.eventType).name];
+    const terms = [event.name, event.heading, ...getEventTypes(event).map(eventType => getEventTypeInfo(eventType).name)];
 
     const extraData = event.extraData;
     if (extraData) {

@@ -12,14 +12,15 @@
     >
         <div
             class="single-day-event calendar-event"
-            :class="{
-                'event-past': metadata?.isPastEvent,
-                'event-id-highlighted': eventHighlight.hoveredEventID === sourceEventId,
-                'has-bonus-icons': calendarSettings.useSingleDayEventSprites && metadata?.spotlightBonus,
-                'major-daily-display-event': isMajorDaily,
-                'major-daily-global': isMajorDaily && majorVariant === 'global',
-                'major-daily-location': isMajorDaily && majorVariant === 'location-specific',
-            }"
+            :class="[
+                {
+                    'event-past': metadata?.isPastEvent,
+                    'event-id-highlighted': eventHighlight.hoveredEventID === sourceEventId,
+                    'has-bonus-icons': calendarSettings.useSingleDayEventSprites && metadata?.spotlightBonus,
+                    'major-daily-display-event': isMajorDaily,
+                },
+                watermarkClass,
+            ]"
             :style="{
                 '--major-event-color': metadata?.color,
             }"
@@ -84,6 +85,7 @@ import { useDailyEventDisplay } from '@/composables/useDailyEventDisplay';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { useEventHighlightStore } from '@/stores/eventHighlight';
 import { getEventCount, shouldShowBadge } from '@/utils/eventDisplay';
+import { getEventWatermarkClass } from '@/utils/eventMajor';
 import { type PogoEvent } from '@/utils/eventTypes';
 
 import SpotlightBonusIcons from '@/components/Calendar/CalendarDay/SpotlightBonusIcons.vue';
@@ -102,14 +104,8 @@ const props = defineProps<Props>();
 const calendarSettings = useCalendarSettingsStore();
 const eventHighlight = useEventHighlightStore();
 
-const {
-    getSourceEventID,
-    isMajorDailyDisplayEvent,
-    getEventMetadataForDisplay,
-    getMajorDailyVariant,
-    getEventDisplayNameForSingleDay,
-    getEventForDetails,
-} = useDailyEventDisplay();
+const { getSourceEventID, isMajorDailyDisplayEvent, getEventMetadataForDisplay, getEventDisplayNameForSingleDay, getEventForDetails } =
+    useDailyEventDisplay();
 
 const {
     isTouchDevice,
@@ -137,9 +133,10 @@ const twitchIconHeight = computed(() => singleDayPokemonHeight.value - 10);
 const sourceEventId = computed(() => getSourceEventID(props.event));
 const metadata = computed(() => getEventMetadataForDisplay(props.event));
 const isMajorDaily = computed(() => isMajorDailyDisplayEvent(props.event));
-const majorVariant = computed(() => getMajorDailyVariant(props.event));
 const displayName = computed(() => getEventDisplayNameForSingleDay(props.event));
 const detailsEvent = computed(() => getEventForDetails(props.event));
+// The source event, so major daily projections resolve global vs location like the original.
+const watermarkClass = computed(() => getEventWatermarkClass(detailsEvent.value));
 const showBadge = computed(() => shouldShowBadge(props.event));
 const eventCount = computed(() => getEventCount(props.event));
 
@@ -457,58 +454,85 @@ onMounted(() => {
     }
 }
 
-.single-day-event.major-daily-display-event::after {
-    content: '';
-    position: absolute;
+/* Pin/globe icon from the shared watermark partial, resized for calendar cells */
+.single-day-event.event-watermark {
+    isolation: isolate;
+    --event-watermark-opacity: 0.24;
+    --event-watermark-color: color-mix(in srgb, var(--bs-body-color) 62%, transparent);
+
+    .event-content {
+        position: relative;
+        z-index: 1;
+    }
+}
+
+.single-day-event.major-daily-display-event.event-watermark {
+    --event-watermark-color: color-mix(in srgb, var(--major-event-color) 60%, var(--bs-body-color) 40%);
+}
+
+.single-day-event.event-watermark::after {
     right: -12px;
     bottom: 0px;
     width: 38px;
     height: 38px;
-    pointer-events: none;
-    opacity: 0.24;
-    background-color: color-mix(in srgb, var(--major-event-color) 60%, var(--bs-body-color) 40%);
-    mask-repeat: no-repeat;
-    mask-position: center;
-    mask-size: contain;
-    z-index: 0;
 }
 
+/* Non-major boxes are short; give the pin room when no sprites stretch the box */
 @media (min-width: 375px) {
-    .single-day-event.major-daily-display-event::after {
-        right: -10px;
-        bottom: -1px;
-        width: 42px;
-        height: 42px;
-        opacity: 0.28;
+    .single-day-event.event-watermark:not(.major-daily-display-event) {
+        min-height: 42px;
     }
 }
 
 @media (min-width: 576px) {
-    .single-day-event.major-daily-display-event::after {
-        right: -8px;
-        bottom: -2px;
-        width: 50px;
-        height: 50px;
-        opacity: 0.34;
+    .single-day-event.event-watermark:not(.major-daily-display-event) {
+        min-height: 46px;
     }
 }
 
 @media (min-width: 768px) {
-    .single-day-event.major-daily-display-event::after {
+    .single-day-event.event-watermark:not(.major-daily-display-event) {
+        min-height: 54px;
+    }
+}
+
+@media (min-width: 375px) {
+    .single-day-event.event-watermark {
+        --event-watermark-opacity: 0.28;
+    }
+
+    .single-day-event.event-watermark::after {
+        right: -10px;
+        bottom: -1px;
+        width: 42px;
+        height: 42px;
+    }
+}
+
+@media (min-width: 576px) {
+    .single-day-event.event-watermark {
+        --event-watermark-opacity: 0.34;
+    }
+
+    .single-day-event.event-watermark::after {
+        right: -8px;
+        bottom: -2px;
+        width: 50px;
+        height: 50px;
+    }
+}
+
+@media (min-width: 768px) {
+    .single-day-event.event-watermark {
+        --event-watermark-opacity: 0.4;
+    }
+
+    .single-day-event.event-watermark::after {
         right: -6px;
         bottom: -2px;
         width: 58px;
         height: 58px;
-        opacity: 0.4;
     }
-}
-
-.single-day-event.major-daily-display-event.major-daily-global::after {
-    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='M2 12h20'/%3E%3Cpath d='M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z'/%3E%3C/svg%3E");
-}
-
-.single-day-event.major-daily-display-event.major-daily-location::after {
-    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 1 1 16 0'/%3E%3Ccircle cx='12' cy='10' r='3'/%3E%3C/svg%3E");
 }
 
 [data-bs-theme='dark'] .single-day-event.major-daily-display-event {
@@ -528,7 +552,11 @@ onMounted(() => {
     );
 } */
 
-[data-bs-theme='dark'] .single-day-event.major-daily-display-event::after {
-    background-color: color-mix(in srgb, var(--major-event-color) 70%, var(--bs-body-color) 30%);
+[data-bs-theme='dark'] .single-day-event.event-watermark {
+    --event-watermark-color: color-mix(in srgb, var(--bs-body-color) 70%, transparent);
+}
+
+[data-bs-theme='dark'] .single-day-event.major-daily-display-event.event-watermark {
+    --event-watermark-color: color-mix(in srgb, var(--major-event-color) 70%, var(--bs-body-color) 30%);
 }
 </style>

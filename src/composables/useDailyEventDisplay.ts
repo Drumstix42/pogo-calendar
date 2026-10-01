@@ -1,7 +1,6 @@
 import { type DailyMajorDisplayEvent } from '@/composables/useCalendarDaySingleEvents';
 import { useEventsStore } from '@/stores/events';
 import { getEventDisplayName } from '@/utils/eventDisplay';
-import { type MajorCalendarEventVariant, getMajorCalendarEventVariant } from '@/utils/eventMajor';
 import { formatEventName } from '@/utils/eventName';
 import { type PogoEvent } from '@/utils/eventTypes';
 
@@ -20,17 +19,6 @@ export function useDailyEventDisplay() {
 
     function getEventMetadataForDisplay(event: PogoEvent) {
         return eventsStore.eventMetadata[getSourceEventID(event)];
-    }
-
-    function getMajorDailyVariant(event: PogoEvent): MajorCalendarEventVariant {
-        if (!isMajorDailyDisplayEvent(event)) {
-            return 'location-specific';
-        }
-
-        return getMajorCalendarEventVariant({
-            ...event,
-            eventID: getSourceEventID(event),
-        });
     }
 
     function getEventDisplayNameForSingleDay(event: PogoEvent): string {
@@ -53,7 +41,6 @@ export function useDailyEventDisplay() {
         getSourceEventID,
         isMajorDailyDisplayEvent,
         getEventMetadataForDisplay,
-        getMajorDailyVariant,
         getEventDisplayNameForSingleDay,
         getEventForDetails,
     };

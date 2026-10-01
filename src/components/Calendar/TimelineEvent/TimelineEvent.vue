@@ -1,13 +1,14 @@
 <template>
     <div
         class="timeline-event-card timeline-event"
-        :class="{
-            'is-active': props.isActive,
-            'event-id-highlighted': eventHighlight.hoveredEventID === props.event.eventID,
-            'major-timeline-event': isMajorTimelineEvent,
-            'major-timeline-global': isMajorTimelineEvent && majorTimelineVariant === 'global',
-            'major-timeline-location': isMajorTimelineEvent && majorTimelineVariant === 'location-specific',
-        }"
+        :class="[
+            {
+                'is-active': props.isActive,
+                'event-id-highlighted': eventHighlight.hoveredEventID === props.event.eventID,
+                'major-timeline-event': isMajorTimelineEvent,
+            },
+            watermarkClass,
+        ]"
         :data-event-type="event.eventType"
         :data-timeline-event-id="event.eventID"
         :style="{
@@ -30,6 +31,7 @@
 
         <!-- Event body -->
         <div class="event-body">
+            <EventTypeTags :event="event" />
             <div v-if="event.extraData?.parentEventId" class="parent-event-name">{{ parentEventName }}</div>
 
             <div class="event-header-row" @click="toggleActive">
@@ -122,6 +124,7 @@ import { type PogoEvent } from '@/utils/eventTypes';
 
 import EventExtras from '@/components/Calendar/EventExtras/EventExtras.vue';
 import EventTimeDisplay from '@/components/Calendar/EventTimeDisplay.vue';
+import EventTypeTags from '@/components/Calendar/EventTypeTags.vue';
 import PokemonEventImages from '@/components/Calendar/PokemonEventImages.vue';
 import TimelineCollapsedSchedule from '@/components/Calendar/TimelineEvent/TimelineCollapsedSchedule.vue';
 import TimelineEventHeader from '@/components/Calendar/TimelineEvent/TimelineEventHeader.vue';
@@ -166,7 +169,7 @@ const {
     showPokemonRow,
     hasExtras,
     isMajorTimelineEvent,
-    majorTimelineVariant,
+    watermarkClass,
 } = useTimelineEvent(props, emit);
 </script>
 
@@ -236,46 +239,13 @@ const {
     }
 }
 
-.timeline-event-card.major-timeline-event::after {
-    content: '';
-    position: absolute;
-    right: 1px;
-    bottom: 0;
-    width: 56px;
-    height: 56px;
-    pointer-events: none;
-    opacity: 0.2;
-    background-color: color-mix(in srgb, var(--event-color) 62%, var(--bs-body-color) 38%);
-    mask-repeat: no-repeat;
-    mask-position: center;
-    mask-size: contain;
-    z-index: 0;
+.timeline-event-card.event-watermark {
+    --event-watermark-opacity: 0.2;
+    --event-watermark-color: color-mix(in srgb, var(--bs-body-color) 62%, transparent);
 }
 
-@media (min-width: 768px) {
-    .timeline-event-card.major-timeline-event::after {
-        right: 2px;
-        bottom: 0;
-        width: 68px;
-        height: 68px;
-    }
-}
-
-@media (min-width: 1200px) {
-    .timeline-event-card.major-timeline-event::after {
-        right: 3px;
-        bottom: -1px;
-        width: 74px;
-        height: 74px;
-    }
-}
-
-.timeline-event-card.major-timeline-event.major-timeline-global::after {
-    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='M2 12h20'/%3E%3Cpath d='M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z'/%3E%3C/svg%3E");
-}
-
-.timeline-event-card.major-timeline-event.major-timeline-location::after {
-    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 1 1 16 0'/%3E%3Ccircle cx='12' cy='10' r='3'/%3E%3C/svg%3E");
+.timeline-event-card.major-timeline-event.event-watermark {
+    --event-watermark-color: color-mix(in srgb, var(--event-color) 62%, var(--bs-body-color) 38%);
 }
 
 [data-bs-theme='dark'] .timeline-event-card.major-timeline-event {
@@ -305,9 +275,13 @@ const {
     }
 }
 
-[data-bs-theme='dark'] .timeline-event-card.major-timeline-event::after {
-    opacity: 0.24;
-    background-color: color-mix(in srgb, var(--event-color) 70%, var(--bs-body-color) 30%);
+[data-bs-theme='dark'] .timeline-event-card.event-watermark {
+    --event-watermark-opacity: 0.24;
+    --event-watermark-color: color-mix(in srgb, var(--bs-body-color) 70%, transparent);
+}
+
+[data-bs-theme='dark'] .timeline-event-card.major-timeline-event.event-watermark {
+    --event-watermark-color: color-mix(in srgb, var(--event-color) 70%, var(--bs-body-color) 30%);
 }
 
 .event-body {

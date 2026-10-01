@@ -116,6 +116,8 @@ export interface PogoEvent {
     eventID: string;
     name: string;
     eventType: EventTypeKey | string;
+    // Every type tag from the LeekDuck event page; primary `eventType` first. Optional for older data.
+    eventTypes?: Array<EventTypeKey | string>;
     heading: string;
     link: string;
     image: string;
@@ -433,6 +435,19 @@ export const EVENT_TYPES: Record<string, EventTypeInfo> = {
     },
 };
 
+// Types LeekDuck only uses as secondary tags. Kept out of EVENT_TYPES so they don't appear as filters,
+// but still named and colored (and color-customizable) for their tag chips.
+export const EVENT_TAG_TYPES: Record<string, Pick<EventTypeInfo, 'name' | 'color'>> = {
+    'in-person-event': {
+        name: 'In-Person Event',
+        color: '#2f6690', // steel blue
+    },
+    'add-on-event': {
+        name: 'Add-On Event',
+        color: '#b33771', // magenta
+    },
+};
+
 // Type for valid event type keys
 export type EventTypeKey = keyof typeof EVENT_TYPES;
 
@@ -449,7 +464,7 @@ export type TimelineCategoryKey = (typeof TimelineCategory)[keyof typeof Timelin
 export const getEventTypeInfo = (eventType: string): EventTypeInfoWithoutColor => {
     const info = EVENT_TYPES[eventType] || {
         // replaces dashes with spaces and capitalizes each word
-        name: eventType.replace(/-/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()),
+        name: EVENT_TAG_TYPES[eventType]?.name ?? eventType.replace(/-/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()),
         priority: 5,
         category: 'events-and-misc',
     };
@@ -460,3 +475,20 @@ export const getEventTypeInfo = (eventType: string): EventTypeInfoWithoutColor =
         category: info.category,
     };
 };
+
+// All type tags for an event (primary first); falls back to the primary type when the feed omits them.
+export function getEventTypes(event: Pick<PogoEvent, 'eventType' | 'eventTypes'>): string[] {
+    return event.eventTypes?.length ? event.eventTypes : [event.eventType];
+}
+
+export function getSecondaryEventTypes(event: Pick<PogoEvent, 'eventType' | 'eventTypes'>): string[] {
+    return getEventTypes(event).filter(eventType => eventType !== event.eventType);
+}
+
+export function hasEventType(event: Pick<PogoEvent, 'eventType' | 'eventTypes'>, eventType: EventTypeKey) {
+    return getEventTypes(event).includes(eventType);
+}
+
+export function getDefaultEventTypeColor(eventType: EventTypeKey): string {
+    return EVENT_TYPES[eventType]?.color || EVENT_TAG_TYPES[eventType]?.color || '#757575';
+}

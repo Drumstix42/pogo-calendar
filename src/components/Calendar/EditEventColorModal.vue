@@ -49,7 +49,7 @@
 import { computed, ref, watch } from 'vue';
 
 import { useEventTypeColorsStore } from '@/stores/eventTypeColors';
-import { EVENT_TYPES, type EventTypeKey } from '@/utils/eventTypes';
+import { type EventTypeKey, getDefaultEventTypeColor, getEventTypeInfo } from '@/utils/eventTypes';
 
 import BaseModal from '@/components/BaseModal.vue';
 import ColorPickerField from '@/components/Calendar/ColorPickerField.vue';
@@ -71,8 +71,8 @@ const eventTypeColorsStore = useEventTypeColorsStore();
 const currentColor = ref<string>('');
 const originalColor = ref<string>('');
 
-const eventTypeName = computed(() => EVENT_TYPES[props.eventTypeKey]?.name || props.eventTypeKey);
-const defaultColor = computed(() => EVENT_TYPES[props.eventTypeKey]?.color || '#757575');
+const eventTypeName = computed(() => getEventTypeInfo(props.eventTypeKey).name);
+const defaultColor = computed(() => getDefaultEventTypeColor(props.eventTypeKey));
 const isColorDifferentFromDefault = computed(() => currentColor.value.toLowerCase() !== defaultColor.value.toLowerCase());
 
 function closeModal() {
