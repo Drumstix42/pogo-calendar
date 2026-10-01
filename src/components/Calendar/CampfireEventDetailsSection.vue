@@ -1,6 +1,4 @@
 <template>
-    <h4 class="mt-3">Event Details</h4>
-
     <div class="field-group">
         <CollapsibleSection title="Configure Event Details" storage-key="campfireEventModal/event-details" content-class="pt-2">
             <template #icon>
@@ -80,15 +78,13 @@
                 <small class="text-muted d-block">Not relevant for Max Battles.</small>
             </div>
         </template>
-        <div v-else-if="spotlightBonusText" class="form-check">
-            <input
-                id="campfireIncludeSpotlightBonus"
-                v-model="campfireTemplateStore.includeSpotlightBonus"
-                class="form-check-input"
-                type="checkbox"
-            />
-            <label class="form-check-label" for="campfireIncludeSpotlightBonus">Show Spotlight Bonus</label>
-            <small class="text-muted d-block">Shows "{{ spotlightBonusText }}" instead of CP on the image. Doesn't affect the text output.</small>
+        <div v-else-if="eventBonuses.length > 0" class="form-check">
+            <input id="campfireIncludeEventBonus" v-model="campfireTemplateStore.includeEventBonus" class="form-check-input" type="checkbox" />
+            <label class="form-check-label" for="campfireIncludeEventBonus">Show Event Bonuses</label>
+            <small v-if="showsBonusOnImage" class="text-muted d-block">
+                Shows "{{ eventBonuses[0] }}" in the Output text, and in the image footer.
+            </small>
+            <small v-else class="text-muted d-block">Shows the event's bonuses in the output text (not on the image).</small>
         </div>
         <div class="form-check">
             <input
@@ -135,6 +131,7 @@ import {
     type CampfirePokemonEntry,
     buildCampfirePokemonEntry,
     formatCampfireEventText,
+    getCampfireEventBonuses,
     resolveCampfireEventPokemonNames,
     resolveCampfireTemplate,
 } from '@/utils/campfireEventText';
@@ -178,6 +175,10 @@ function resetBodyTemplate() {
     bodyTemplate.value = campfireTemplateStore.bodyTemplate;
 }
 
+// Hundo/Weather Boosted CP don't apply to Community Day's or Spotlight Hour's wild encounter - hide
+// the CP options entirely rather than showing an always-inapplicable checkbox for the life of the modal.
+const showCpOptions = computed(() => props.event.eventType !== 'community-day' && props.event.eventType !== 'pokemon-spotlight-hour');
+
 // Re-seed the form from the event's resolved Pokemon and the saved templates each time the modal opens.
 watch(
     () => props.show,
@@ -191,9 +192,9 @@ watch(
         bodyTemplate.value = campfireTemplateStore.bodyTemplate;
 
         // Not persisted (see the store) - re-derive a sensible default for this specific event's type.
-        campfireTemplateStore.includeCP = true;
+        campfireTemplateStore.includeCP = showCpOptions.value;
         campfireTemplateStore.includeWeatherBoostedCP = props.event.eventType !== 'max-battles';
-        campfireTemplateStore.includeSpotlightBonus = true;
+        campfireTemplateStore.includeEventBonus = true;
     },
     { immediate: true },
 );
@@ -204,10 +205,9 @@ watch(bodyTemplate, newValue => (campfireTemplateStore.bodyTemplate = newValue))
 
 const pokemonNames = computed(() => pokemonRows.value.map(row => row.name.trim()).filter(Boolean));
 const eventTypeName = computed(() => getEventTypeInfo(props.event.eventType).name);
-const spotlightBonusText = computed(() => getSpotlightBonusText(props.event));
-// Hundo/Weather Boosted CP don't apply to Community Day's or Spotlight Hour's wild encounter - hide
-// the CP options entirely rather than showing an always-inapplicable checkbox for the life of the modal.
-const showCpOptions = computed(() => props.event.eventType !== 'community-day' && props.event.eventType !== 'pokemon-spotlight-hour');
+const eventBonuses = computed(() => getCampfireEventBonuses(props.event));
+// Only Spotlight Hour's single bonus goes on the image - Community Day usually has too many to fit.
+const showsBonusOnImage = computed(() => Boolean(getSpotlightBonusText(props.event)));
 const templateContext = computed(() => ({ pokemonNames: pokemonNames.value, eventTypeName: eventTypeName.value }));
 
 const resolvedTitle = computed(() => resolveCampfireTemplate(titleTemplate.value, templateContext.value));
@@ -231,6 +231,7 @@ const outputOptions = computed(() => ({
     includeCP: campfireTemplateStore.includeCP,
     includeWeatherBoostedCP: campfireTemplateStore.includeWeatherBoostedCP,
     includeMaxCP: campfireTemplateStore.includeMaxCP,
+    bonuses: campfireTemplateStore.includeEventBonus ? eventBonuses.value : [],
 }));
 
 const outputText = computed(() => formatCampfireEventText(resolvedTitle.value, resolvedBody.value, pokemonEntries.value, outputOptions.value));
@@ -289,7 +290,7 @@ async function copyOutput() {
 
 .output-label {
     line-height: 1.1rem;
-    font-size: 1.45rem;
+    font-size: 1.3rem;
     font-weight: 600;
 }
 

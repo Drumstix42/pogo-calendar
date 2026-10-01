@@ -1,6 +1,4 @@
 <template>
-    <h4>Event Image</h4>
-
     <div class="field-group">
         <CollapsibleSection title="Configure Event Image" storage-key="campfireEventModal/image-pokemon" content-class="pt-2">
             <template #icon>
@@ -11,7 +9,8 @@
                     <label class="form-label mb-0">Title</label>
                     <button type="button" class="btn btn-link btn-sm p-0" @click="resetImageTitle">Reset to default</button>
                 </div>
-                <input v-model="imageTitle" type="text" class="form-control mb-3" placeholder="Event type" />
+                <textarea v-model="imageTitle" class="form-control mb-1" rows="2" placeholder="Event type"></textarea>
+                <small class="text-muted d-block mb-3">Press Enter for a manual line break (up to {{ TITLE_MAX_LINES }} lines).</small>
 
                 <label class="form-label d-block">Image Pokémon</label>
                 <PokemonNameRow v-for="row in imagePokemonRows" :key="row.id" v-model="row.name" class="mb-2" @remove="removeImageRow(row.id)" />
@@ -27,10 +26,15 @@
                 <small class="text-muted d-block mt-1">Up to {{ MAX_IMAGE_POKEMON }} Pokémon per image.</small>
 
                 <label class="form-label d-block mt-3">Bottom Text</label>
-                <input v-model="imageCustomBottomText" type="text" class="form-control" placeholder="Custom caption (overrides CP/bonus text)" />
+                <textarea
+                    v-model="imageCustomBottomText"
+                    class="form-control"
+                    rows="2"
+                    placeholder="Custom caption (overrides CP/bonus text)"
+                ></textarea>
                 <small class="text-muted d-block">
                     Leave blank to auto-show Hundo CP per Pokémon (up to {{ MAX_IMAGE_CP_LINES }}) or event bonus text. With more than 2 Pokémon, type
-                    a caption as seen fit.
+                    a caption as seen fit. Press Enter for a manual line break (up to {{ MAX_IMAGE_CP_LINES }} lines).
                 </small>
             </div>
         </CollapsibleSection>
@@ -57,7 +61,7 @@ import { useCampfireTemplateStore } from '@/stores/campfireTemplate';
 import { useEventsStore } from '@/stores/events';
 import { usePokemonDataStore } from '@/stores/pokemonData';
 import { resolveCampfireEventPokemonNames } from '@/utils/campfireEventText';
-import { CP_DIVIDER, generateEventBadge } from '@/utils/eventBadgeImage';
+import { CP_DIVIDER, TITLE_MAX_LINES, generateEventBadge } from '@/utils/eventBadgeImage';
 import { getEventSpriteEffect } from '@/utils/eventPokemon';
 import { type PogoEvent, getEventTypeInfo } from '@/utils/eventTypes';
 import { calculateRaidCP } from '@/utils/pokemonCP';
@@ -128,16 +132,22 @@ function slugify(text: string): string {
 
 const badgeImageFilename = computed(() => `${slugify(props.event.name) || 'campfire-event'}.png`);
 
-const spotlightBonusText = computed(() => getSpotlightBonusText(props.event));
+// Only Spotlight Hour's single bonus fits on the image - Community Day's bonus list is text-output only.
+const imageBonusText = computed(() => getSpotlightBonusText(props.event));
 
-// Priority: custom caption, then the Spotlight Hour bonus, then auto CP lines. A Spotlight Hour event
-// never falls back to CP lines when the bonus is turned off - CP isn't relevant there either way.
+// Priority: custom caption, then the bonus, then auto CP lines. An event with a bonus never falls
+// back to CP lines when the bonus is turned off - CP isn't relevant there either way.
 const imageBottomLines = computed(() => {
-    const customText = imageCustomBottomText.value.trim();
-    if (customText) return [customText];
+    // A manual line break (literal `\n`) forces a split here, same as the title.
+    const customLines = imageCustomBottomText.value
+        .split('\n')
+        .map(line => line.trim())
+        .filter(Boolean)
+        .slice(0, MAX_IMAGE_CP_LINES);
+    if (customLines.length > 0) return customLines;
 
-    if (spotlightBonusText.value) {
-        return campfireTemplateStore.includeSpotlightBonus ? [spotlightBonusText.value] : [];
+    if (imageBonusText.value) {
+        return campfireTemplateStore.includeEventBonus ? [imageBonusText.value] : [];
     }
 
     if (!campfireTemplateStore.includeCP || imagePokemonNames.value.length === 0 || imagePokemonNames.value.length > MAX_IMAGE_CP_LINES) {

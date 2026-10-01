@@ -20,12 +20,12 @@ export const useCampfireTemplateStore = defineStore('campfireTemplate', () => {
     const includeWeakness = useLocalStorage<boolean>(STORAGE_KEYS.CAMPFIRE_INCLUDE_WEAKNESS, true);
     const includeMaxCP = useLocalStorage<boolean>(STORAGE_KEYS.CAMPFIRE_INCLUDE_MAX_CP, true);
 
-    // CP/Spotlight toggles - NOT persisted. Their sensible default depends on the current event's type
+    // CP/bonus toggles - NOT persisted. Their sensible default depends on the current event's type
     // (e.g. Weather Boosted CP defaults off for Max Battles), so the modal re-derives these each time
     // it opens rather than carrying a stale value over from whatever event was open last.
     const includeCP = ref(true);
     const includeWeatherBoostedCP = ref(true);
-    const includeSpotlightBonus = ref(true);
+    const includeEventBonus = ref(true);
 
     function resetTitleTemplate() {
         titleTemplate.value = DEFAULT_CAMPFIRE_TITLE_TEMPLATE;
@@ -43,7 +43,7 @@ export const useCampfireTemplateStore = defineStore('campfireTemplate', () => {
         includeCP,
         includeWeatherBoostedCP,
         includeMaxCP,
-        includeSpotlightBonus,
+        includeEventBonus,
         resetTitleTemplate,
         resetBodyTemplate,
     };

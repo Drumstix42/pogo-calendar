@@ -33,7 +33,7 @@ const POKEBALL_PATTERN_COLOR = 'rgba(255, 255, 255, 0.07)';
 const TITLE_FONT_SIZE = 68;
 const TITLE_TOP = 18;
 const TITLE_LINE_HEIGHT = 61;
-const TITLE_MAX_LINES = 2;
+export const TITLE_MAX_LINES = 2;
 const TITLE_SIDE_PADDING = 61;
 const TOP_BAND_PADDING_BOTTOM = 8;
 
@@ -104,9 +104,13 @@ function fitFontSize(ctx: CanvasRenderingContext2D, text: string, maxWidth: numb
     return size;
 }
 
+// Respects a user-typed line break as a forced split, auto-wrapping within each resulting segment
+// if it's still too wide, rather than only ever wrapping on whitespace.
 function getTitleLines(ctx: CanvasRenderingContext2D, title: string): string[] {
     ctx.font = `900 ${TITLE_FONT_SIZE}px ${FONT_FAMILY}`;
-    return wrapText(ctx, title, CANVAS_SIZE - TITLE_SIDE_PADDING * 2).slice(0, TITLE_MAX_LINES);
+    const maxWidth = CANVAS_SIZE - TITLE_SIDE_PADDING * 2;
+    const lines = title.split('\n').flatMap(paragraph => wrapText(ctx, paragraph, maxWidth));
+    return lines.slice(0, TITLE_MAX_LINES);
 }
 
 function getTopBandHeight(lineCount: number): number {

@@ -5,6 +5,7 @@
 import { getEventPokemonImages } from './eventPokemon';
 import { type PogoEvent } from './eventTypes';
 import { type CPResult, type PokemonData, calculateRaidCP, formatCP, formatCPDisplay } from './pokemonCP';
+import { getSpotlightBonusText } from './spotlightBonus';
 import { type PokemonType, formatWeaknessText, getSuperEffectiveTypes } from './typeEffectiveness';
 
 // Names the image resolvers use as placeholders when no specific Pokemon is known - not real lookups.
@@ -13,6 +14,17 @@ const NON_POKEMON_PLACEHOLDER_NAMES = new Set(['Spotlight Pokemon', 'Max Battle'
 // Distinct, real Pokemon names for an event - seeds both the text and image sections' Pokemon lists.
 export function resolveCampfireEventPokemonNames(event: PogoEvent): string[] {
     return [...new Set(getEventPokemonImages(event).map(image => image.name))].filter(name => !NON_POKEMON_PLACEHOLDER_NAMES.has(name));
+}
+
+// Spotlight Hour's single bonus, or Community Day's list. `communityday.bonuses` is typed `any[]`
+// upstream but is `{ text, image }`-shaped at runtime.
+export function getCampfireEventBonuses(event: PogoEvent): string[] {
+    const spotlightBonus = getSpotlightBonusText(event);
+    if (spotlightBonus) return [spotlightBonus];
+
+    if (event.eventType !== 'community-day') return [];
+    const bonuses: Array<{ text?: string }> = event.extraData?.communityday?.bonuses ?? [];
+    return bonuses.map(bonus => bonus?.text?.trim()).filter((text): text is string => Boolean(text));
 }
 
 export interface CampfirePokemonEntry {
@@ -56,6 +68,8 @@ export interface CampfireOutputOptions {
     includeCP: boolean;
     includeWeatherBoostedCP: boolean;
     includeMaxCP: boolean;
+    /** Event bonuses (e.g. "3x Catch XP"), placed between the summary text and the Pokemon block. */
+    bonuses?: string[];
 }
 
 export function formatCampfirePokemonEntry(entry: CampfirePokemonEntry, options: CampfireOutputOptions): string {
@@ -104,10 +118,17 @@ export function resolveCampfireTemplate(template: string, context: CampfireTempl
         .replace(TEMPLATE_PLACEHOLDERS.eventType, context.eventTypeName);
 }
 
+function formatBonusBlock(bonuses: string[]): string {
+    if (bonuses.length === 0) return '';
+    if (bonuses.length === 1) return `Bonus: ${bonuses[0]}`;
+    return `Bonuses:\n${bonuses.map(bonus => `- ${bonus}`).join('\n')}`;
+}
+
 export function formatCampfireEventText(title: string, body: string, entries: CampfirePokemonEntry[], options: CampfireOutputOptions): string {
+    const bonusBlock = formatBonusBlock(options.bonuses ?? []);
     const entryBlock =
         options.includePokemonDetails && entries.length > 0
             ? `--\n${entries.map(entry => formatCampfirePokemonEntry(entry, options)).join('\n\n')}`
             : '';
-    return [title.trim(), body.trim(), entryBlock].filter(Boolean).join('\n\n');
+    return [title.trim(), body.trim(), bonusBlock, entryBlock].filter(Boolean).join('\n\n');
 }
