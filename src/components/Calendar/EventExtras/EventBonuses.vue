@@ -11,9 +11,8 @@
             }"
         >
             <div ref="bonusListRef" class="event-bonus-list" @scroll="updateScrollState">
-                <div v-for="(group, groupIndex) in groups" :key="groupIndex" class="event-bonus-group">
-                    <div v-if="group.title" class="event-bonus-group-title">{{ group.title }}</div>
-                    <div v-if="group.description" class="event-bonus-description">{{ group.description }}</div>
+                <div v-for="(group, groupIndex) in displayGroups" :key="groupIndex" class="event-bonus-group">
+                    <div v-if="group.label" class="event-bonus-group-title">{{ group.label }}</div>
                     <div v-for="(item, itemIndex) in group.items" :key="itemIndex" class="bonus-item">
                         <img v-if="item.image" :src="item.image" :alt="item.text" class="bonus-icon" />
                         <span class="bonus-text">{{ item.text }}</span>
@@ -50,6 +49,14 @@ const bonusListRef = ref<HTMLElement>();
 const { canScrollUp, canScrollDown, updateScrollState } = useScrollShadow(bonusListRef);
 
 const groups = computed(() => getEventBonusGroups(props.event));
+
+// The compact time range stands in for `description`, whose full sentences are too wordy for the card.
+const displayGroups = computed(() =>
+    groups.value.map(group => {
+        const timeRange = group.startTime && group.endTime ? `${group.startTime} – ${group.endTime}` : null;
+        return { ...group, label: [group.title, timeRange].filter(Boolean).join(' · ') };
+    }),
+);
 
 const headerLabel = computed(() => {
     const itemCount = groups.value.reduce((count, group) => count + group.items.length, 0);
@@ -99,15 +106,6 @@ const headerLabel = computed(() => {
     margin-bottom: 0.2rem;
     padding-bottom: 0.15rem;
     border-bottom: 1px solid color-mix(in srgb, var(--bs-body-color) 10%, transparent);
-}
-
-.event-bonus-description {
-    font-size: 0.65rem;
-    color: color-mix(in srgb, var(--bs-body-color) 70%, transparent);
-    line-height: 1.2;
-    /* Multi-paragraph descriptions arrive joined with "\n". */
-    white-space: pre-line;
-    margin-bottom: 0.25rem;
 }
 
 .event-bonus-notes {
