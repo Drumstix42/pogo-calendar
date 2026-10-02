@@ -171,6 +171,22 @@ with raid bosses scoped to that day's `raidSchedule`.
   border) is separate and major-only; non-major single-day cells with a pin only get a taller
   `min-height` so the pin fits.
 
+### Past-week bar condensing (`src/composables/useCalendarDayLayout.ts`)
+
+With `calendarSettings.condensePastEventBars` on (default), multi-day bars in fully past weeks are
+trimmed so long-running events don't repeat a full bar through every week. `getPastWeekDisplay()`
+decides per week: the start week becomes a title-sized stub with a torn right edge, the end week a stub
+with a torn left edge (it never grows past the event's end time), and the weeks between are hidden.
+Events that start and end in the same week, and all current/future weeks, render normally.
+
+- **Bars keep their full size and row** in every state; only painting/pointer events change
+  (`MultiDayEventBar.vue`), so nothing shifts when they're revealed.
+- **Reveal:** hovering the stub, or highlighting the event elsewhere (timeline, other segments) or its
+  type in the filter options (`eventHighlight` store), restores the full bars via `past-week-revealed`.
+- **Stub that nearly fills its bar** (`STUB_FILL_THRESHOLD_PX`) drops the tear and paints as a normal
+  bar; only stubs attach the resize observer that measures this.
+- No stub when the event started before the visible grid; its past weeks are just hidden.
+
 ### Pokémon image resolution (`src/utils/eventPokemon.ts`)
 
 `getEventPokemonImages()` is the single entry point. It runs per-event-type resolvers in priority
@@ -237,12 +253,12 @@ when a calendar sprite looks "missing".
 | `events`           | Fetches the events feed, generates sub-events, applies grouping, caches per-event `eventMetadata`   |
 | `eventFilter`      | Persists disabled (primary) type keys + hidden event IDs                                            |
 | `eventTypeColors`  | Persists per-type color overrides; defaults via `getDefaultEventTypeColor()`                        |
-| `calendarSettings` | Persisted display prefs: first day of week, grouping, sprite toggles, font size, manual time offset |
+| `calendarSettings` | Persisted display prefs: week start, grouping, past-bar condensing, sprites, font size, time offset |
 | `raids`            | Current raid bosses feed                                                                            |
 | `seasons`          | Season feed (daily discoveries, season bonuses); keeps neighbors so boundary weeks resolve          |
 | `pokemonData`      | Lazily loaded Pokémon stats for CP calculations (`mgrann03/pokemon-resources`)                      |
 | `campfireTemplate` | Persisted Campfire event text template                                                              |
-| `eventHighlight`   | Hovered/focused event for cross-component highlighting                                              |
+| `eventHighlight`   | Hovered/focused event + hovered filter type, for cross-component highlighting                       |
 | `theme`            | Light/dark/system theme, persisted                                                                  |
 | `toasts`           | Ephemeral toast queue                                                                               |
 | `userMessages`     | Dismissible banners with version-keyed persistence                                                  |

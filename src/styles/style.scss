@@ -377,6 +377,10 @@ body {
     &:not(:hover) {
         outline: 1px dashed rgba(243, 240, 75, 0.5);
         outline-offset: -1px;
+
+        .event-name {
+            animation: letter-spacing-pulse 0.5s ease-out infinite alternate;
+        }
     }
 
     &.multi-day-event-bar {
@@ -432,6 +436,11 @@ body {
 
         .event-header-bar {
             background-color: color-mix(in srgb, var(--event-color, var(--event-bg-color)) 12%, transparent);
+        }
+
+        .event-name {
+            transform-origin: left center; /* the name fills the row, so a centered pulse would shift it sideways */
+            animation: letter-spacing-pulse 0.5s ease-out infinite alternate;
         }
 
         .event-body {

@@ -37,6 +37,22 @@
 
         <div class="form-check form-switch mt-3">
             <input
+                id="condensePastEventBars"
+                class="form-check-input"
+                type="checkbox"
+                role="switch"
+                :checked="calendarSettings.condensePastEventBars"
+                @change="handleCondensePastEventBarsToggle"
+            />
+            <label for="condensePastEventBars" class="form-check-label">Condense past event bars</label>
+        </div>
+        <small class="text-muted mt-1 d-block"
+            >When enabled, multi-day bars in past weeks shrink to a short labeled stub where the event starts or ends, and are hidden in between.
+            Hover an event to see its full bars.</small
+        >
+
+        <div class="form-check form-switch mt-3">
+            <input
                 id="showSeasonDailyBonuses"
                 class="form-check-input"
                 type="checkbox"
@@ -109,6 +125,11 @@ watch(
 const handleToggleChange = (event: Event) => {
     const target = event.target as HTMLInputElement;
     calendarSettings.setGroupSimilarEvents(target.checked);
+};
+
+const handleCondensePastEventBarsToggle = (event: Event) => {
+    const target = event.target as HTMLInputElement;
+    calendarSettings.setCondensePastEventBars(target.checked);
 };
 
 const handleSeasonDailyBonusesToggle = (event: Event) => {

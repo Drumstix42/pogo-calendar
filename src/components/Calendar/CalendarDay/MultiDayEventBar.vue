@@ -1,8 +1,10 @@
 <template>
     <div
+        ref="barRef"
         class="multi-day-event-bar calendar-event"
         :class="[
             barClass,
+            pastWeekClasses,
             {
                 'event-id-highlighted': eventHighlight.hoveredEventID === event.eventID,
                 'event-past': metadata?.isPastEvent,
@@ -36,7 +38,7 @@
             @apply-show="handleMenuShow(event.eventID)"
             @apply-hide="handleMenuHide(event.eventID)"
         >
-            <div class="multi-day-event-bar--inner">
+            <div ref="innerRef" class="multi-day-event-bar--inner">
                 <TwitchIcon v-if="event.eventType === 'twitch-drops'" :size="iconHeight" class="twitch-drops-icon" />
 
                 <!-- Show Pokemon images for grouped or individual events -->
@@ -62,10 +64,12 @@
 </template>
 
 <script setup lang="ts">
+import { useResizeObserver } from '@vueuse/core';
 import { type Dayjs } from 'dayjs';
 import { computed, onMounted, ref } from 'vue';
 
 import { useCalendarDayEventInteraction } from '@/composables/useCalendarDayEventInteraction';
+import { type PastWeekBarDisplay } from '@/composables/useCalendarDayLayout';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { useEventHighlightStore } from '@/stores/eventHighlight';
 import { useEventsStore } from '@/stores/events';
@@ -84,7 +88,11 @@ interface Props {
     position: { left: string; width: string };
     slotTop: number;
     slotIndex: number | undefined;
+    pastWeekDisplay?: PastWeekBarDisplay | null;
 }
+
+// A stub this close to its bar's far end is all but the full bar, so it shows as one
+const STUB_FILL_THRESHOLD_PX = 16;
 
 const props = defineProps<Props>();
 
@@ -105,6 +113,29 @@ const {
 
 const metadata = computed(() => eventsStore.eventMetadata[props.event.eventID]);
 const iconHeight = computed(() => calendarSettings.eventBarHeight - 2);
+
+const barRef = ref<HTMLElement>();
+const innerRef = ref<HTMLElement>();
+const isStub = computed(() => props.pastWeekDisplay === 'start-stub' || props.pastWeekDisplay === 'end-stub');
+const stubFillsBar = ref(false);
+
+useResizeObserver(() => (isStub.value ? [barRef.value, innerRef.value] : null), measureStub);
+
+function measureStub() {
+    if (!barRef.value || !innerRef.value) return;
+    stubFillsBar.value = barRef.value.clientWidth - innerRef.value.offsetWidth < STUB_FILL_THRESHOLD_PX;
+}
+
+const isRevealed = computed(() => eventHighlight.hoveredEventID === props.event.eventID || eventHighlight.hoveredEventType === props.event.eventType);
+
+const pastWeekClasses = computed(() => {
+    if (!props.pastWeekDisplay) return '';
+
+    const revealed = { 'past-week-revealed': isRevealed.value };
+    if (props.pastWeekDisplay === 'hidden') return ['past-week-hidden', revealed];
+
+    return ['past-week-stub', props.pastWeekDisplay === 'start-stub' ? 'tear-right' : 'tear-left', { 'stub-torn': !stubFillsBar.value }, revealed];
+});
 
 // Auto-open the tooltip when this event/day was deep-linked via ?event=&eventDay= on load
 const menuShown = ref(false);
@@ -281,5 +312,63 @@ onMounted(() => {
 
 .multi-day-event-bar.single-day-span {
     border-radius: 6px;
+}
+
+/* Past-week display (see getPastWeekDisplay): hidden bars and stubs keep their full size, and are
+   restored while the event is hovered, or revealed by an event ID / filter type highlight. */
+.multi-day-event-bar.past-week-hidden:not(.past-week-revealed) {
+    visibility: hidden;
+}
+
+/* Stub sizing stays the same in every state, so measuring it (stubFillsBar) can't feed back on itself */
+.multi-day-event-bar.past-week-stub {
+    --stub-tear-depth: 7px;
+
+    .multi-day-event-bar--inner {
+        width: fit-content;
+        max-width: 100%;
+    }
+
+    &.tear-right .multi-day-event-bar--inner {
+        right: auto;
+        padding-right: calc(var(--stub-tear-depth) + 2px);
+    }
+
+    &.tear-left .multi-day-event-bar--inner {
+        left: auto;
+        padding-left: calc(var(--stub-tear-depth) + 2px);
+    }
+}
+
+/* Collapsed stub: the bar goes transparent and click-through, leaving only its content strip painted,
+   with a torn edge (a column of teeth, 3 per bar height, unioned with a solid block) */
+.multi-day-event-bar.calendar-event.stub-torn {
+    /* The strip and the bar swap colors instantly, so a fade would flash. !important + the extra class
+       outrank the global .calendar-event / highlight transitions in style.scss. */
+    transition: none !important;
+
+    &:not(:hover):not(.past-week-revealed) {
+        background-color: transparent !important;
+        pointer-events: none !important;
+
+        .multi-day-event-bar--inner {
+            background-color: var(--event-bg-color);
+            pointer-events: auto;
+        }
+    }
+
+    &.tear-right:not(:hover):not(.past-week-revealed) .multi-day-event-bar--inner {
+        mask:
+            url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 2' preserveAspectRatio='none'%3E%3Cpath d='M0 0L1 1L0 2Z'/%3E%3C/svg%3E")
+                right top / var(--stub-tear-depth) calc(100% / 3) repeat-y,
+            linear-gradient(#000 0 0) left / calc(100% - var(--stub-tear-depth)) 100% no-repeat;
+    }
+
+    &.tear-left:not(:hover):not(.past-week-revealed) .multi-day-event-bar--inner {
+        mask:
+            url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 2' preserveAspectRatio='none'%3E%3Cpath d='M1 0L0 1L1 2Z'/%3E%3C/svg%3E")
+                left top / var(--stub-tear-depth) calc(100% / 3) repeat-y,
+            linear-gradient(#000 0 0) right / calc(100% - var(--stub-tear-depth)) 100% no-repeat;
+    }
 }
 </style>

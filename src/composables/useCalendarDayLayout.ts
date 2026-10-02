@@ -1,6 +1,7 @@
 import { type Dayjs } from 'dayjs';
 import { computed } from 'vue';
 
+import { useDisplayTime } from '@/composables/useDisplayTime';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { useEventsStore } from '@/stores/events';
 import { parseEventDate } from '@/utils/eventDate';
@@ -15,6 +16,8 @@ export interface EventSlot {
     shouldRenderOnDay: (day: Dayjs) => boolean;
 }
 
+export type PastWeekBarDisplay = 'start-stub' | 'end-stub' | 'hidden';
+
 const MULTI_DAY_EVENT_BAR_MARGIN = 1; // px margin between bars
 
 // Layout math for the multi-day event bars rendered in a single CalendarDay cell:
@@ -22,6 +25,7 @@ const MULTI_DAY_EVENT_BAR_MARGIN = 1; // px margin between bars
 export function useCalendarDayLayout(getDayInstance: () => Dayjs, getEventSlots: () => EventSlot[]) {
     const eventsStore = useEventsStore();
     const calendarSettings = useCalendarSettingsStore();
+    const { displayToday } = useDisplayTime();
 
     const multiDayEventBarHeight = computed(() => calendarSettings.eventBarHeight);
     const multiDayEventIconHeight = computed(() => multiDayEventBarHeight.value - 2);
@@ -39,6 +43,28 @@ export function useCalendarDayLayout(getDayInstance: () => Dayjs, getEventSlots:
         const weekEnd = weekStart.add(6, 'day');
 
         return { weekStart, weekEnd };
+    }
+
+    // Long-running events repeat a full-width bar through every week they span, which clutters weeks
+    // already past. There, the start and end weeks collapse to title-sized stubs (torn edge toward the
+    // rest of the event) and the weeks between are hidden, all restored while the event is hovered or
+    // highlighted. Bars keep their full size and row either way, so nothing shifts on reveal.
+    function getPastWeekDisplay(event: PogoEvent): PastWeekBarDisplay | null {
+        if (!calendarSettings.condensePastEventBars) return null;
+
+        const { weekStart, weekEnd } = getWeekBoundaries(getDayInstance());
+        if (!weekEnd.isBefore(displayToday.value, 'day')) return null;
+
+        const metadata = eventsStore.eventMetadata[event.eventID];
+        const eventStartDay = (metadata?.startDate ?? parseEventDate(event.start, calendarSettings.manualTimeOffsetHours)).startOf('day');
+        const eventEndDay = (metadata?.endDate ?? parseEventDate(event.end, calendarSettings.manualTimeOffsetHours)).startOf('day');
+        const startsThisWeek = !eventStartDay.isBefore(weekStart, 'day');
+        const endsThisWeek = !eventEndDay.isAfter(weekEnd, 'day');
+
+        if (startsThisWeek && endsThisWeek) return null;
+        if (startsThisWeek) return 'start-stub';
+        if (endsThisWeek) return 'end-stub';
+        return 'hidden';
     }
 
     // Compact slot assignments for this specific week to remove gaps
@@ -253,5 +279,6 @@ export function useCalendarDayLayout(getDayInstance: () => Dayjs, getEventSlots:
         getEventSlotTop,
         getMultiDayEventBarClass,
         getEventPosition,
+        getPastWeekDisplay,
     };
 }

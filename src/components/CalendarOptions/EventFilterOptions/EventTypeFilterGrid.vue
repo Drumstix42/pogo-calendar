@@ -18,6 +18,7 @@
 </template>
 
 <script setup lang="ts">
+import { useEventHighlightStore } from '@/stores/eventHighlight';
 import { groupEventTypesByCategory } from '@/utils/eventTypeGroups';
 import type { EventTypeKey } from '@/utils/eventTypes';
 
@@ -26,14 +27,19 @@ import EventTypeFilterItem from './EventTypeFilterItem.vue';
 // Event type groups (by category), built once from the static EVENT_TYPES record.
 const eventGroups = groupEventTypesByCategory();
 
+const eventHighlight = useEventHighlightStore();
+
 // Hovering a filter item highlights matching events elsewhere via a body data-attribute
-// (consumed by global styles in src/styles/style.scss).
+// (consumed by global styles in src/styles/style.scss), and via the store for bars that
+// need to react in code (e.g. revealing collapsed past-week bars).
 function highlightEventType(eventTypeKey: EventTypeKey) {
     document.body.setAttribute('data-filter-hover-event-type', eventTypeKey);
+    eventHighlight.highlightEventType(eventTypeKey);
 }
 
 function clearHighlight() {
     document.body.removeAttribute('data-filter-hover-event-type');
+    eventHighlight.clearEventTypeHighlight();
 }
 </script>
 

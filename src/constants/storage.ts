@@ -14,6 +14,7 @@ export const STORAGE_KEYS = {
     CAMPFIRE_INCLUDE_WEAKNESS: createStorageKey('campfire-include-weakness'),
     CAMPFIRE_TITLE_TEMPLATE: createStorageKey('campfire-title-template'),
     COLLAPSIBLE_SECTIONS: createStorageKey('collapsible-sections'),
+    CONDENSE_PAST_EVENT_BARS: createStorageKey('condense-past-event-bars'),
     CUSTOM_EVENT_TYPE_COLORS: createStorageKey('custom-event-type-colors'),
     DISABLED_FILTERS: createStorageKey('disabled-filters'),
     DISMISSED_MESSAGE_VERSIONS: createStorageKey('dismissed-message-versions'),

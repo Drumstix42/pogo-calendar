@@ -26,6 +26,9 @@ export const useCalendarSettingsStore = defineStore('calendarSettings', () => {
     // Event grouping setting - whether to group events of same type with identical start/end times
     const groupSimilarEvents = useLocalStorage<boolean>(STORAGE_KEYS.GROUP_SIMILAR_EVENTS, true);
 
+    // Condense past event bars setting - whether multi-day bars in past weeks collapse to stubs (or hide between them)
+    const condensePastEventBars = useLocalStorage<boolean>(STORAGE_KEYS.CONDENSE_PAST_EVENT_BARS, true);
+
     // Animated images setting - whether to use animated images in detailed views
     const useAnimatedImages = useLocalStorage<boolean>(STORAGE_KEYS.USE_ANIMATED_IMAGES, true);
 
@@ -144,6 +147,10 @@ export const useCalendarSettingsStore = defineStore('calendarSettings', () => {
         useSingleDayEventSprites.value = enabled;
     };
 
+    const setCondensePastEventBars = (enabled: boolean) => {
+        condensePastEventBars.value = enabled;
+    };
+
     const setShowSeasonDailyBonuses = (enabled: boolean) => {
         showSeasonDailyBonuses.value = enabled;
     };
@@ -207,6 +214,7 @@ export const useCalendarSettingsStore = defineStore('calendarSettings', () => {
         firstDayOfWeek,
         allDayNames,
         groupSimilarEvents,
+        condensePastEventBars,
         useAnimatedImages,
         useMultiDayEventSprites,
         useSingleDayEventSprites,
@@ -229,6 +237,7 @@ export const useCalendarSettingsStore = defineStore('calendarSettings', () => {
         // Actions
         setFirstDayOfWeek,
         setGroupSimilarEvents,
+        setCondensePastEventBars,
         setUseAnimatedImages,
         setUseMultiDayEventSprites,
         setUseSingleDayEventSprites,
