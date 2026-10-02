@@ -33,7 +33,8 @@
                     <div class="tooltip-text">Go to current month</div>
                 </template>
                 <button class="btn btn-icon-ghost btn-sm" :class="{ 'disabled-subtle': isCurrentMonth }" @click="goToCurrentMonth">
-                    <Undo2 v-if="!isCurrentMonth" :size="22" class="calendar-reset-icon" />
+                    <Undo2 v-if="isViewingFutureMonth" :size="22" class="calendar-reset-icon" />
+                    <Redo2 v-else-if="!isCurrentMonth" :size="22" class="calendar-reset-icon" />
                     <Calendar v-else :size="22" />
                 </button>
             </VTooltip>
@@ -66,7 +67,7 @@
 </template>
 
 <script setup lang="ts">
-import { Calendar, ChevronLeft, ChevronRight, PanelRightClose, PanelRightOpen, Undo2 } from '@lucide/vue';
+import { Calendar, ChevronLeft, ChevronRight, PanelRightClose, PanelRightOpen, Redo2, Undo2 } from '@lucide/vue';
 import { breakpointsBootstrapV5, useBreakpoints } from '@vueuse/core';
 import { computed } from 'vue';
 
@@ -95,6 +96,8 @@ const isCurrentMonth = computed(() => {
 
 // Check navigation boundaries
 const viewedMonth = computed(() => displayToday.value.year(urlYear.value).month(urlMonth.value));
+// The reset icon points back toward the current month
+const isViewingFutureMonth = computed(() => viewedMonth.value.isAfter(displayToday.value, 'month'));
 const isPreviousDisabled = computed(() => !isMonthNavigable(viewedMonth.value.subtract(1, 'month'), displayToday.value));
 const isNextDisabled = computed(() => !isMonthNavigable(viewedMonth.value.add(1, 'month'), displayToday.value));
 
