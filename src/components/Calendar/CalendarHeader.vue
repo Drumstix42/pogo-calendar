@@ -32,10 +32,9 @@
                 <template #popper>
                     <div class="tooltip-text">Go to current month</div>
                 </template>
-                <button class="btn btn-icon-ghost btn-sm" :class="{ 'disabled-subtle': isCurrentMonth }" @click="goToCurrentMonth">
+                <button class="btn btn-icon-ghost btn-sm" @click="goToCurrentMonth">
                     <Undo2 v-if="isViewingFutureMonth" :size="22" class="calendar-reset-icon" />
-                    <Redo2 v-else-if="!isCurrentMonth" :size="22" class="calendar-reset-icon" />
-                    <Calendar v-else :size="22" />
+                    <Redo2 v-else :size="22" class="calendar-reset-icon" />
                 </button>
             </VTooltip>
 
@@ -67,7 +66,7 @@
 </template>
 
 <script setup lang="ts">
-import { Calendar, ChevronLeft, ChevronRight, PanelRightClose, PanelRightOpen, Redo2, Undo2 } from '@lucide/vue';
+import { ChevronLeft, ChevronRight, PanelRightClose, PanelRightOpen, Redo2, Undo2 } from '@lucide/vue';
 import { breakpointsBootstrapV5, useBreakpoints } from '@vueuse/core';
 import { computed } from 'vue';
 
@@ -153,11 +152,6 @@ const goToCurrentMonth = () => {
 
 .btn-icon-ghost {
     transition: all 0.2s ease;
-}
-
-.disabled-subtle {
-    opacity: 0.2 !important;
-    cursor: not-allowed;
 }
 
 .timeline-toggle-section {
