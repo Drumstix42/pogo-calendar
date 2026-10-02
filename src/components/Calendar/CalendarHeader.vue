@@ -68,22 +68,56 @@
 <script setup lang="ts">
 import { Calendar, ChevronLeft, ChevronRight, PanelRightClose, PanelRightOpen, Undo2 } from '@lucide/vue';
 import { breakpointsBootstrapV5, useBreakpoints } from '@vueuse/core';
+import { computed } from 'vue';
 
 import { useCurrentMonthDisplay } from '@/composables/useCurrentMonthDisplay';
 import { useDeviceDetection } from '@/composables/useDeviceDetection';
-import { useMonthNavigation } from '@/composables/useMonthNavigation';
+import { useDisplayTime } from '@/composables/useDisplayTime';
+import { useUrlSync } from '@/composables/useUrlSync';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
+import { isMonthNavigable } from '@/utils/calendarGrid';
 
 import CurrentRaidBossesBar from '@/components/CurrentRaidBossesBar.vue';
 
+const { urlMonth, urlYear } = useUrlSync();
 const calendarSettings = useCalendarSettingsStore();
 const { isTouchDevice } = useDeviceDetection();
+const { displayToday } = useDisplayTime();
 const { currentMonthDisplay } = useCurrentMonthDisplay();
-const { isCurrentMonth, isPreviousDisabled, isNextDisabled, goToPreviousMonth, goToNextMonth, goToCurrentMonth } = useMonthNavigation();
 
-// Breakpoints
 const breakpoints = useBreakpoints(breakpointsBootstrapV5);
 const isDesktopSidebar = breakpoints.greaterOrEqual('xxl'); // >= 1400px
+
+const isCurrentMonth = computed(() => {
+    const now = displayToday.value;
+    return urlYear.value === now.year() && urlMonth.value === now.month();
+});
+
+// Check navigation boundaries
+const viewedMonth = computed(() => displayToday.value.year(urlYear.value).month(urlMonth.value));
+const isPreviousDisabled = computed(() => !isMonthNavigable(viewedMonth.value.subtract(1, 'month'), displayToday.value));
+const isNextDisabled = computed(() => !isMonthNavigable(viewedMonth.value.add(1, 'month'), displayToday.value));
+
+// Navigation methods
+const goToPreviousMonth = () => {
+    const now = displayToday.value;
+    const prev = now.year(urlYear.value).month(urlMonth.value).subtract(1, 'month');
+    urlMonth.value = prev.month();
+    urlYear.value = prev.year();
+};
+
+const goToNextMonth = () => {
+    const now = displayToday.value;
+    const next = now.year(urlYear.value).month(urlMonth.value).add(1, 'month');
+    urlMonth.value = next.month();
+    urlYear.value = next.year();
+};
+
+const goToCurrentMonth = () => {
+    const now = displayToday.value;
+    urlMonth.value = now.month();
+    urlYear.value = now.year();
+};
 </script>
 
 <style scoped>

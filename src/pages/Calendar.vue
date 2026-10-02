@@ -16,9 +16,8 @@
                 <!-- Month Navigation Header -->
                 <CalendarHeader />
 
-                <!-- Calendar Grid Component -->
-                <!-- Main Calendar Grid -->
-                <CalendarGrid />
+                <!-- Main Calendar Grid (with swipeable neighbor months on touch devices) -->
+                <CalendarMonthPager />
 
                 <!-- Filter Summary Button -->
                 <FilterSummary @open-filters="openSettingsAndScrollToFilters" />
@@ -110,8 +109,8 @@ import { useEventsStore } from '@/stores/events';
 import { EVENT_TAG_TYPES, EVENT_TYPES, type EventTypeKey } from '@/utils/eventTypes';
 
 import AddToCalendarModal from '@/components/Calendar/AddToCalendarModal.vue';
-import CalendarGrid from '@/components/Calendar/CalendarGrid.vue';
 import CalendarHeader from '@/components/Calendar/CalendarHeader.vue';
+import CalendarMonthPager from '@/components/Calendar/CalendarMonthPager.vue';
 import CalendarOptionsOffcanvas from '@/components/Calendar/CalendarOptionsOffcanvas.vue';
 import CampfireEventModal from '@/components/Calendar/CampfireEventModal.vue';
 import EditEventColorModal from '@/components/Calendar/EditEventColorModal.vue';

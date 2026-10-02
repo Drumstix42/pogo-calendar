@@ -1,74 +1,80 @@
 <template>
-    <div class="calendar-grid mb-2">
-        <!-- Calendar Grid -->
-        <div class="calendar-grid-container" ref="calendarGridRef">
-            <!-- Moves as a unit during month swipes -->
-            <div :style="swipeStyle">
-                <!-- Day Headers -->
-                <div class="calendar-day-headers">
-                    <div v-for="day in dayHeaders" :key="day" class="calendar-day-header">
-                        {{ day }}
-                    </div>
+    <div class="calendar-grid">
+        <div class="calendar-grid-container">
+            <!-- Day Headers -->
+            <div class="calendar-day-headers">
+                <div v-for="day in dayHeaders" :key="day" class="calendar-day-header">
+                    {{ day }}
                 </div>
+            </div>
 
-                <!-- Calendar Days -->
-                <div class="calendar-days">
-                    <CalendarDay
-                        v-for="(day, index) in calendarDays"
-                        :key="`${day.month}-${day.date}`"
-                        :date="day.date"
-                        :month="day.month"
-                        :year="day.year"
-                        :is-current-month="day.isCurrentMonth"
-                        :is-today="day.isToday"
-                        :day-instance="day.dayInstance"
-                        :event-slots="eventSlots"
-                        :show-right-border="(index + 1) % 7 !== 0"
-                    />
-                </div>
+            <!-- Calendar Days -->
+            <div class="calendar-days">
+                <CalendarDay
+                    v-for="(day, index) in calendarDays"
+                    :key="`${day.month}-${day.date}`"
+                    :date="day.date"
+                    :month="day.month"
+                    :year="day.year"
+                    :is-current-month="day.isCurrentMonth"
+                    :is-today="day.isToday"
+                    :day-instance="day.dayInstance"
+                    :event-slots="cellEventSlots"
+                    :show-right-border="(index + 1) % 7 !== 0"
+                    :placeholder="placeholder"
+                />
             </div>
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { computed, useTemplateRef } from 'vue';
+import { computed } from 'vue';
 
 import { useCalendarGridSlots } from '@/composables/useCalendarGridSlots';
-import { useCalendarSwipe } from '@/composables/useCalendarSwipe';
 import { useDisplayTime } from '@/composables/useDisplayTime';
-import { useUrlSync } from '@/composables/useUrlSync';
+import { provideSpriteLoading } from '@/composables/useSpriteLoading';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { buildCalendarDays } from '@/utils/calendarGrid';
 
 import CalendarDay from './CalendarDay/CalendarDay.vue';
 
-const { urlMonth, urlYear } = useUrlSync();
+interface Props {
+    year: number;
+    month: number;
+    /** Skeleton cells only, for neighbor months not rendered yet. */
+    placeholder?: boolean;
+    loadSprites?: boolean;
+}
+
+const props = withDefaults(defineProps<Props>(), {
+    placeholder: false,
+    loadSprites: true,
+});
+
 const calendarSettings = useCalendarSettingsStore();
 const { displayToday } = useDisplayTime();
 
-// Day headers from settings store
+provideSpriteLoading(() => props.loadSprites);
+
 const dayHeaders = computed(() => calendarSettings.dayHeaders);
 
 const calendarDays = computed(() =>
     buildCalendarDays(displayToday.value, {
-        year: urlYear.value,
-        month: urlMonth.value,
+        year: props.year,
+        month: props.month,
         firstDayIndex: calendarSettings.firstDayIndex,
     }),
 );
 
 const { eventSlots } = useCalendarGridSlots(() => calendarDays.value);
-
-const calendarGridRef = useTemplateRef<HTMLElement>('calendarGridRef');
-const { swipeStyle } = useCalendarSwipe(calendarGridRef);
+// Slot packing is lazy — placeholders never read it.
+const cellEventSlots = computed(() => (props.placeholder ? [] : eventSlots.value));
 </script>
 
 <style scoped>
 .calendar-grid-container {
     position: relative;
-    /* Horizontal touch movement is handled by the month swipe; keep vertical scroll and pinch-zoom native. */
-    touch-action: pan-y pinch-zoom;
     background: var(--calendar-bg);
     /* border-radius: 0.5rem; */
     overflow: clip;

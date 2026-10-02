@@ -53,3 +53,10 @@ export function buildCalendarDays(referenceDay: Dayjs, { year, month, firstDayIn
 
     return days;
 }
+
+// Navigable calendar range: January 2016 through December of next year (relative to referenceDay).
+export function isMonthNavigable(month: Dayjs, referenceDay: Dayjs) {
+    const earliest = referenceDay.year(2016).month(0);
+    const latest = referenceDay.year(referenceDay.year() + 1).month(11);
+    return !month.isBefore(earliest, 'month') && !month.isAfter(latest, 'month');
+}

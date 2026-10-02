@@ -1,10 +1,9 @@
 import { tryOnScopeDispose, useEventListener, usePreferredReducedMotion, useSwipe } from '@vueuse/core';
-import { type MaybeRefOrGetter, computed, nextTick, shallowRef, toValue } from 'vue';
+import { type MaybeRefOrGetter, computed, shallowRef, toValue } from 'vue';
 
-import { useMonthNavigation } from '@/composables/useMonthNavigation';
-
-// Movement before the gesture's axis is decided (browser-like touch slop).
-const AXIS_LOCK_DISTANCE = 10;
+// Movement before the axis is decided. Must stay under the browser's touch slop (~8px in Chrome),
+// after which it starts scrolling and touchmove can no longer be canceled.
+const AXIS_LOCK_DISTANCE = 5;
 // Horizontal movement must clearly dominate so diagonal scrolling never changes the month.
 const AXIS_LOCK_RATIO = 1.5;
 // iOS/Android reserve screen edges for back/forward swipes — and "back" changes the month here too.
@@ -14,24 +13,29 @@ const FLICK_VELOCITY = 0.35; // px/ms
 const FLICK_MIN_DISTANCE = 30;
 const VELOCITY_WINDOW_MS = 100;
 const BOUNDARY_RESISTANCE = 0.3;
-const SLIDE_OUT_MS = 160;
-const SLIDE_IN_MS = 220;
+const SLIDE_MS = 220;
 const SPRING_BACK_MS = 200;
-const MAX_FADE = 0.4;
 
 type GestureState = 'pending' | 'horizontal' | 'ignored';
-type Direction = 1 | -1; // 1 = finger moving right (previous month), -1 = left (next month)
+/** Month offset a swipe reveals: -1 = previous (finger moving right), 1 = next (finger moving left). */
+export type SwipeMonthOffset = -1 | 1;
 
-/**
- * Touch swipe left/right on the calendar to change months, with the grid following the finger
- * and sliding out/in on commit. Returns a style to bind on the element that should move.
- */
-export function useCalendarSwipe(target: MaybeRefOrGetter<HTMLElement | null | undefined>) {
-    const { isPreviousDisabled, isNextDisabled, goToPreviousMonth, goToNextMonth } = useMonthNavigation();
+interface CalendarSwipeOptions {
+    canSwipe: (offset: SwipeMonthOffset) => boolean;
+    /** Called when the slide lands; must swap the displayed month synchronously so the reset frame shows it. */
+    onCommit: (offset: SwipeMonthOffset) => void;
+}
+
+/** Touch swipe left/right on the calendar to change months; `swipeStyle` translates a track holding the neighbor months. */
+export function useCalendarSwipe(target: MaybeRefOrGetter<HTMLElement | null | undefined>, { canSwipe, onCommit }: CalendarSwipeOptions) {
     const reducedMotion = usePreferredReducedMotion();
 
     const offsetX = shallowRef(0);
     const transitionMs = shallowRef(0);
+    /** Neighbor currently being dragged toward (0 = none). */
+    const revealingOffset = shallowRef<SwipeMonthOffset | 0>(0);
+    /** From axis lock until the slide/spring-back settles. */
+    const isSwiping = shallowRef(false);
     let gesture: GestureState = 'ignored';
     let isSliding = false;
     let samples: { dx: number; t: number }[] = [];
@@ -54,9 +58,12 @@ export function useCalendarSwipe(target: MaybeRefOrGetter<HTMLElement | null | u
                 return;
             }
 
+            const offset = toMonthOffset(dx);
             clearTimeout(timer);
+            isSwiping.value = true;
+            revealingOffset.value = offset;
             transitionMs.value = 0;
-            offsetX.value = isBlocked(dx) ? dx * BOUNDARY_RESISTANCE : dx;
+            offsetX.value = canSwipe(offset) ? dx : dx * BOUNDARY_RESISTANCE;
 
             samples.push({ dx, t: e.timeStamp });
             samples = samples.filter(sample => e.timeStamp - sample.t <= VELOCITY_WINDOW_MS);
@@ -68,14 +75,27 @@ export function useCalendarSwipe(target: MaybeRefOrGetter<HTMLElement | null | u
             gesture = 'ignored';
 
             const dx = -lengthX.value;
-            const direction: Direction = dx > 0 ? 1 : -1;
-            if (e.type !== 'touchcancel' && !isBlocked(dx) && isCommitGesture(dx)) {
-                slideToMonth(direction);
+            const offset = toMonthOffset(dx);
+            if (e.type !== 'touchcancel' && canSwipe(offset) && isCommitGesture(dx)) {
+                slideToMonth(offset);
             } else {
-                animateTo(0, SPRING_BACK_MS);
+                springBack();
             }
         },
     });
+
+    // Claim locked swipes so the browser doesn't also pan the page; its leftover fling would swallow
+    // the next tap. Registered after useSwipe's listener so the lock is decided for this event.
+    useEventListener(
+        target,
+        'touchmove',
+        (e: TouchEvent) => {
+            if (gesture === 'horizontal' && e.cancelable) {
+                e.preventDefault();
+            }
+        },
+        { passive: false },
+    );
 
     // A second finger means pinch-zoom, not a swipe.
     useEventListener(
@@ -86,20 +106,23 @@ export function useCalendarSwipe(target: MaybeRefOrGetter<HTMLElement | null | u
                 return;
             }
             if (gesture === 'horizontal') {
-                animateTo(0, SPRING_BACK_MS);
+                springBack();
             }
             gesture = 'ignored';
         },
         { passive: true },
     );
 
-    function isBlocked(dx: number) {
-        return dx > 0 ? isPreviousDisabled.value : isNextDisabled.value;
+    function toMonthOffset(dx: number): SwipeMonthOffset {
+        return dx > 0 ? -1 : 1;
+    }
+
+    function getWidth() {
+        return toValue(target)?.offsetWidth || window.innerWidth;
     }
 
     function isCommitGesture(dx: number) {
-        const width = toValue(target)?.offsetWidth ?? window.innerWidth;
-        if (Math.abs(dx) > width * COMMIT_DISTANCE_RATIO) {
+        if (Math.abs(dx) > getWidth() * COMMIT_DISTANCE_RATIO) {
             return true;
         }
 
@@ -125,28 +148,24 @@ export function useCalendarSwipe(target: MaybeRefOrGetter<HTMLElement | null | u
         });
     }
 
-    async function slideToMonth(direction: Direction) {
-        const navigate = direction === 1 ? goToPreviousMonth : goToNextMonth;
-        if (reducedMotion.value === 'reduce') {
-            navigate();
-            offsetX.value = 0;
-            transitionMs.value = 0;
-            return;
+    async function springBack() {
+        await animateTo(0, SPRING_BACK_MS);
+        revealingOffset.value = 0;
+        isSwiping.value = false;
+    }
+
+    async function slideToMonth(offset: SwipeMonthOffset) {
+        if (reducedMotion.value !== 'reduce') {
+            isSliding = true;
+            await animateTo(-offset * getWidth(), SLIDE_MS);
         }
 
-        const width = toValue(target)?.offsetWidth ?? window.innerWidth;
-        isSliding = true;
-        await animateTo(direction * width, SLIDE_OUT_MS);
-
-        // Swap months while off-screen so the new month's render cost is hidden, then park it on
-        // the opposite side and let it paint before sliding in.
-        navigate();
-        offsetX.value = -direction * width;
-        await nextTick();
-        await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-
-        await animateTo(0, SLIDE_IN_MS);
+        onCommit(offset);
+        transitionMs.value = 0;
+        offsetX.value = 0;
+        revealingOffset.value = 0;
         isSliding = false;
+        isSwiping.value = false;
     }
 
     tryOnScopeDispose(() => clearTimeout(timer));
@@ -156,17 +175,15 @@ export function useCalendarSwipe(target: MaybeRefOrGetter<HTMLElement | null | u
             return undefined;
         }
 
-        const width = toValue(target)?.offsetWidth || window.innerWidth;
-        const fade = Math.min(Math.abs(offsetX.value) / width, 1) * MAX_FADE;
-        const transition = transitionMs.value ? `transform ${transitionMs.value}ms ease-out, opacity ${transitionMs.value}ms ease-out` : 'none';
-
         return {
             transform: `translate3d(${offsetX.value}px, 0, 0)`,
-            opacity: 1 - fade,
-            transition,
-            willChange: 'transform, opacity',
+            transition: transitionMs.value ? `transform ${transitionMs.value}ms ease-out` : 'none',
+            willChange: 'transform',
         };
     });
 
-    return { swipeStyle };
+    /** How far the track has moved toward the neighbor, 0–1 (reaches 1 as a committed slide lands). */
+    const swipeProgress = computed(() => Math.min(Math.abs(offsetX.value) / getWidth(), 1));
+
+    return { swipeStyle, swipeProgress, transitionMs, revealingOffset, isSwiping };
 }

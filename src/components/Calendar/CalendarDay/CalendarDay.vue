@@ -2,7 +2,7 @@
     <div
         class="calendar-day"
         :class="{
-            loading: eventsStore.loading,
+            loading: showSkeleton,
             'other-month': !isCurrentMonth,
             today: isToday,
         }"
@@ -20,8 +20,8 @@
         <!-- Season "Daily Discovery" chip (current week only) -->
         <SeasonDailyChip :day-instance="dayInstance" />
 
-        <!-- Loading skeleton -->
-        <div v-if="eventsStore.loading" class="loading-skeleton">
+        <!-- Loading skeleton (also used for placeholder months) -->
+        <div v-if="showSkeleton" class="loading-skeleton">
             <div class="skeleton-multi-day placeholder-glow">
                 <span
                     class="placeholder"
@@ -35,7 +35,7 @@
         </div>
 
         <!-- Multi-day events (day-spanning bars) -->
-        <div v-if="weekCompactSlots.size > 0" class="multi-day-events" :style="{ height: `${multiDayEventsHeight}px` }">
+        <div v-if="!placeholder && weekCompactSlots.size > 0" class="multi-day-events" :style="{ height: `${multiDayEventsHeight}px` }">
             <TransitionGroup name="fade" tag="div">
                 <div
                     v-for="event in multiDayEvents"
@@ -63,7 +63,7 @@
         </div>
 
         <!-- Single-day events (vertically stacked event blocks with timestamps) -->
-        <div>
+        <div v-if="!placeholder">
             <TransitionGroup name="fade" tag="div" class="single-day-events">
                 <SingleDayEvent
                     v-for="event in singleDayEvents"
@@ -100,10 +100,14 @@ interface Props {
     dayInstance: Dayjs;
     showRightBorder: boolean;
     eventSlots: EventSlot[];
+    /** Render only the day number + skeleton, skipping event layout entirely. */
+    placeholder?: boolean;
 }
 
 const props = defineProps<Props>();
 const eventsStore = useEventsStore();
+
+const showSkeleton = computed(() => eventsStore.loading || props.placeholder);
 
 const isBirthday = computed(() => isPokemonGoBirthday(props.dayInstance));
 

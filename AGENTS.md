@@ -223,6 +223,11 @@ Raids), and a **per-sprite** effect that wins over it. Boss lists derive the per
 the boss name prefix via `splitSpriteEffectPrefix()` (`Dynamax X`, `Shadow X`), so prefixed bosses
 inside any event type (e.g. Dynamax Dialga in a Wild Area schedule) get their overlay.
 
+Sprite downloads can be held off: on touch devices `CalendarMonthPager.vue` keeps the neighbor
+months mounted for swiping, and they render sprites as same-size empty boxes until a swipe heads
+their way (`provideSpriteLoading()` / `useSpriteLoading()` in `PokemonImage.vue`). Check this first
+when a calendar sprite looks "missing".
+
 ---
 
 ## Stores (`src/stores/`)

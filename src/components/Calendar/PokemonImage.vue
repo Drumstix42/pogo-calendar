@@ -28,8 +28,10 @@
                     <CircleHelpIcon class="placeholder-icon" :size="height" />
                 </template>
                 <template v-else>
+                    <!-- Sprite download held off (see useSpriteLoading) -->
+                    <span v-if="!spritesEnabled" class="pokemon-icon deferred-sprite" :style="{ height: `${height}px`, width: `${height}px` }"></span>
                     <img
-                        v-if="currentImageSrc && !hasError"
+                        v-else-if="currentImageSrc && !hasError"
                         :src="currentImageSrc"
                         :alt="pokemonData?.name"
                         class="pokemon-icon"
@@ -67,6 +69,7 @@
 import { BadgeQuestionMark, CircleHelpIcon } from '@lucide/vue';
 import { computed, ref, watch } from 'vue';
 
+import { useSpriteLoading } from '@/composables/useSpriteLoading';
 import { SPRITE_EFFECTS } from '@/utils/eventPokemon';
 import type { PokemonImageData, SpriteEffect } from '@/utils/eventPokemon';
 import { getSprite256FallbackUrl, getSpriteFallbackUrl } from '@/utils/pokemonMapper';
@@ -103,6 +106,7 @@ const props = withDefaults(defineProps<Props>(), {
     isPlaceholder: false,
 });
 
+const spritesEnabled = useSpriteLoading();
 const errorLevel = ref(0);
 
 // Per-sprite effect wins; fall back to the event-level prop.
@@ -267,6 +271,10 @@ function onImageError() {
     z-index: 2;
     flex-shrink: 0;
     width: auto;
+}
+
+.deferred-sprite {
+    display: inline-block;
 }
 
 .has-dynamax-overlay {
