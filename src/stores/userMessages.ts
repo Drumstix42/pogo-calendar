@@ -31,13 +31,21 @@ export const useUserMessagesStore = defineStore('userMessages', () => {
             showToNewUsers: true,
         },
         {
-            id: 'add-to-calendar-message',
-            version: '2026-07-07-001',
+            id: 'swipe-months-message',
+            version: '2026-10-01-001',
+            type: 'info',
+            content: 'On touch devices, you can now <strong>swipe the calendar</strong> left or right to change months.',
+            dismissible: true,
+            expiresAt: '2026-12-01',
+        },
+        {
+            id: 'campfire-helper-message',
+            version: '2026-10-01-001',
             type: 'info',
             content:
-                'You can now add event reminders to your own calendar. Look for the <strong>bell icon</strong> on detailed event views to add it to your web calendar, or download an .ics file.',
+                'Organizing a meetup? The <strong>Campfire Event Helper</strong> (the <strong>flame icon</strong> on event details) creates a ready-to-share image and summary text for your Campfire event.',
             dismissible: true,
-            expiresAt: '2026-09-07',
+            expiresAt: '2026-12-01',
         },
     ];
 
