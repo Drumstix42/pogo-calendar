@@ -16,7 +16,8 @@ export interface EventSlot {
     shouldRenderOnDay: (day: Dayjs) => boolean;
 }
 
-export type PastWeekBarDisplay = 'start-stub' | 'end-stub' | 'hidden';
+// 'start-stub-adjacent' = a start stub in the week right before the current one (see getPastWeekDisplay)
+export type PastWeekBarDisplay = 'start-stub' | 'start-stub-adjacent' | 'end-stub' | 'hidden';
 
 const MULTI_DAY_EVENT_BAR_MARGIN = 1; // px margin between bars
 
@@ -49,6 +50,8 @@ export function useCalendarDayLayout(getDayInstance: () => Dayjs, getEventSlots:
     // already past. There, the start and end weeks collapse to title-sized stubs (torn edge toward the
     // rest of the event) and the weeks between are hidden, all restored while the event is hovered or
     // highlighted. Bars keep their full size and row either way, so nothing shifts on reveal.
+    // The tear marks a gap, so a start stub right before the current week (whose full bar is visible)
+    // may drop it and flow straight into that week instead.
     function getPastWeekDisplay(event: PogoEvent): PastWeekBarDisplay | null {
         if (!calendarSettings.condensePastEventBars) return null;
 
@@ -62,7 +65,12 @@ export function useCalendarDayLayout(getDayInstance: () => Dayjs, getEventSlots:
         const endsThisWeek = !eventEndDay.isAfter(weekEnd, 'day');
 
         if (startsThisWeek && endsThisWeek) return null;
-        if (startsThisWeek) return 'start-stub';
+        if (startsThisWeek) {
+            if (weekEnd.add(7, 'day').isBefore(displayToday.value, 'day')) return 'start-stub';
+            // Starting on the week's last day, the bar is at most one cell, so a stub would save nothing
+            if (eventStartDay.isSame(weekEnd, 'day')) return null;
+            return 'start-stub-adjacent';
+        }
         if (endsThisWeek) return 'end-stub';
         return 'hidden';
     }

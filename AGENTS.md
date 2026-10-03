@@ -183,8 +183,10 @@ Events that start and end in the same week, and all current/future weeks, render
   (`MultiDayEventBar.vue`), so nothing shifts when they're revealed.
 - **Reveal:** hovering the stub, or highlighting the event elsewhere (timeline, other segments) or its
   type in the filter options (`eventHighlight` store), restores the full bars via `past-week-revealed`.
-- **Stub that nearly fills its bar** (`STUB_FILL_THRESHOLD_PX`) drops the tear and paints as a normal
-  bar; only stubs attach the resize observer that measures this.
+- **The tear marks a gap.** Stubs keep it, except a start stub in the week right before the current
+  one (`start-stub-adjacent`): it renders as a normal bar if it starts on the week's last day, or if
+  its label nearly fills the bar (`STUB_FILL_THRESHOLD_PX`), so it flows into the current week. Only
+  those stubs attach the resize observer that measures this.
 - No stub when the event started before the visible grid; its past weeks are just hidden.
 
 ### Pokémon image resolution (`src/utils/eventPokemon.ts`)

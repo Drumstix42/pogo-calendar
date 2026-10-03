@@ -91,7 +91,7 @@ interface Props {
     pastWeekDisplay?: PastWeekBarDisplay | null;
 }
 
-// A stub this close to its bar's far end is all but the full bar, so it shows as one
+// An adjacent start stub this close to its bar's end is all but the full bar, so it shows as one
 const STUB_FILL_THRESHOLD_PX = 16;
 
 const props = defineProps<Props>();
@@ -116,10 +116,12 @@ const iconHeight = computed(() => calendarSettings.eventBarHeight - 2);
 
 const barRef = ref<HTMLElement>();
 const innerRef = ref<HTMLElement>();
-const isStub = computed(() => props.pastWeekDisplay === 'start-stub' || props.pastWeekDisplay === 'end-stub');
+const isStartStub = computed(() => props.pastWeekDisplay === 'start-stub' || props.pastWeekDisplay === 'start-stub-adjacent');
+// Only a start stub right before the current week can drop its tear, so only it gets measured
+const canFlowIntoNextWeek = computed(() => props.pastWeekDisplay === 'start-stub-adjacent');
 const stubFillsBar = ref(false);
 
-useResizeObserver(() => (isStub.value ? [barRef.value, innerRef.value] : null), measureStub);
+useResizeObserver(() => (canFlowIntoNextWeek.value ? [barRef.value, innerRef.value] : null), measureStub);
 
 function measureStub() {
     if (!barRef.value || !innerRef.value) return;
@@ -134,7 +136,12 @@ const pastWeekClasses = computed(() => {
     const revealed = { 'past-week-revealed': isRevealed.value };
     if (props.pastWeekDisplay === 'hidden') return ['past-week-hidden', revealed];
 
-    return ['past-week-stub', props.pastWeekDisplay === 'start-stub' ? 'tear-right' : 'tear-left', { 'stub-torn': !stubFillsBar.value }, revealed];
+    return [
+        'past-week-stub',
+        isStartStub.value ? 'tear-right' : 'tear-left',
+        { 'stub-torn': !(canFlowIntoNextWeek.value && stubFillsBar.value) },
+        revealed,
+    ];
 });
 
 // Auto-open the tooltip when this event/day was deep-linked via ?event=&eventDay= on load
