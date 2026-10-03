@@ -295,11 +295,13 @@ export function resolveMaxBattleImages(event: EventWithExtraData, options?: Poke
         }
     }
 
-    // Check for regular Dynamax pattern: "Dynamax <Pokemon> Max Battle Weekend/Day"
+    // Dynamax pattern: "Dynamax <Pokemon Name(s)> Max Battle Weekend/Day" (may name multiple Pokemon).
     const dynamaxName = parseDynamaxMaxBattleName(eventName);
     if (dynamaxName) {
-        const spriteUrl = getSpriteUrl(dynamaxName, undefined, options);
-        return [{ name: dynamaxName, imageUrl: spriteUrl }];
+        const images = getSpriteImagesFromNames(parseEventPokemonNames(dynamaxName), options);
+        if (images.length > 0) {
+            return images;
+        }
     }
 
     // Fallback to event image if available (e.g., "Max Battle Weekend" with no specific Pokemon)
