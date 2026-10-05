@@ -197,6 +197,12 @@ Events that start and end in the same week, and all current/future weeks, render
   those stubs attach the resize observer that measures this.
 - No stub when the event started before the visible grid; its past weeks are just hidden.
 
+### Overnight events (`src/utils/eventMetadata.ts`)
+
+Short events crossing midnight (`isOvernightEvent`, e.g. late-night Twitch Drops) render as a single-day
+box on the start day plus a bar on the end day. Bar code reads `barStartDate` (end day's midnight)
+instead of `startDate`; they stay `isMultiDayEvent` everywhere else.
+
 ### Pokémon image resolution (`src/utils/eventPokemon.ts`)
 
 `getEventPokemonImages()` is the single entry point. It runs per-event-type resolvers in priority
