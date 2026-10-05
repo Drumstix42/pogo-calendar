@@ -20,6 +20,7 @@ export interface EventSlot {
 export type PastWeekBarDisplay = 'start-stub' | 'start-stub-adjacent' | 'end-stub' | 'hidden';
 
 const MULTI_DAY_EVENT_BAR_MARGIN = 1; // px margin between bars
+const MULTI_DAY_EVENT_BAR_ICON_PADDING = 6; // px around the icon (bar's inner start-cap padding + room)
 
 // Layout math for the multi-day event bars rendered in a single CalendarDay cell:
 // week-relative slot packing and per-event left/width/top positioning across week boundaries.
@@ -59,7 +60,7 @@ export function useCalendarDayLayout(getDayInstance: () => Dayjs, getEventSlots:
         if (!weekEnd.isBefore(displayToday.value, 'day')) return null;
 
         const metadata = eventsStore.eventMetadata[event.eventID];
-        const eventStartDay = (metadata?.startDate ?? parseEventDate(event.start, calendarSettings.manualTimeOffsetHours)).startOf('day');
+        const eventStartDay = (metadata?.barStartDate ?? parseEventDate(event.start, calendarSettings.manualTimeOffsetHours)).startOf('day');
         const eventEndDay = (metadata?.endDate ?? parseEventDate(event.end, calendarSettings.manualTimeOffsetHours)).startOf('day');
         const startsThisWeek = !eventStartDay.isBefore(weekStart, 'day');
         const endsThisWeek = !eventEndDay.isAfter(weekEnd, 'day');
@@ -170,7 +171,8 @@ export function useCalendarDayLayout(getDayInstance: () => Dayjs, getEventSlots:
         const { weekEnd } = getWeekBoundaries(getDayInstance());
         const weekEndDay = weekEnd.endOf('day');
 
-        // Use the actual event's dates, not the composite slot's extended dates
+        // Use the actual event's dates, not the composite slot's extended dates. The real start (not
+        // barStartDate) gives an overnight event's end-day bar a square left edge, as a continuation.
         const metadata = eventsStore.eventMetadata[event.eventID];
         const eventStartDay = (metadata?.startDate ?? parseEventDate(event.start, calendarSettings.manualTimeOffsetHours)).startOf('day');
         const eventEndDay = (metadata?.endDate ?? parseEventDate(event.end, calendarSettings.manualTimeOffsetHours)).startOf('day');
@@ -215,7 +217,7 @@ export function useCalendarDayLayout(getDayInstance: () => Dayjs, getEventSlots:
 
         const today = currentDay.startOf('day');
         const metadata = eventsStore.eventMetadata[event.eventID];
-        const eventStart = metadata?.startDate ?? parseEventDate(event.start, calendarSettings.manualTimeOffsetHours);
+        const eventStart = metadata?.barStartDate ?? parseEventDate(event.start, calendarSettings.manualTimeOffsetHours);
         const eventEnd = metadata?.endDate ?? parseEventDate(event.end, calendarSettings.manualTimeOffsetHours);
 
         // This function only handles multi-day events that render as bars
@@ -262,7 +264,7 @@ export function useCalendarDayLayout(getDayInstance: () => Dayjs, getEventSlots:
             }
 
             const otherMetadata = eventsStore.eventMetadata[slot.event.eventID];
-            const otherStart = otherMetadata?.startDate ?? parseEventDate(slot.event.start, calendarSettings.manualTimeOffsetHours);
+            const otherStart = otherMetadata?.barStartDate ?? parseEventDate(slot.event.start, calendarSettings.manualTimeOffsetHours);
 
             // Check if other event starts at or shortly after this one ends (within 2 hours)
             // AND starts within this same week
@@ -271,9 +273,12 @@ export function useCalendarDayLayout(getDayInstance: () => Dayjs, getEventSlots:
 
         const gapAdjustment = hasFollowingEvent ? ' - 1px' : '';
 
+        // Never narrower than the leading icon; it grows right only, so the start time stays accurate
+        const minWidthPx = multiDayEventIconHeight.value + MULTI_DAY_EVENT_BAR_ICON_PADDING;
+
         return {
             left: `${leftPercentage}%`,
-            width: `calc(${Math.max(widthPercentage, 5)}% + 0px${gapAdjustment})`,
+            width: `max(calc(${Math.max(widthPercentage, 5)}% + 0px${gapAdjustment}), ${minWidthPx}px)`,
         };
     }
 

@@ -40,9 +40,17 @@
                             </div>
                         </div>
                         <div class="event-time">
-                            <div class="event-dot" :style="{ backgroundColor: metadata?.color }"></div>
-                            {{ metadata?.formattedStartTime }}
+                            <div class="event-time-value">
+                                <div class="event-dot" :style="{ backgroundColor: metadata?.color }"></div>
+                                {{ metadata?.formattedStartTime }}
+                            </div>
                             <span v-if="isToday && metadata?.isPastEvent" class="event-ended-label">Ended</span>
+                        </div>
+                        <div v-if="overnightEndTime" class="event-time event-end-time">
+                            <div class="event-time-value">
+                                <Clock12 :size="10" class="event-midnight-icon" />
+                                {{ overnightEndTime }}
+                            </div>
                         </div>
                     </div>
 
@@ -76,6 +84,7 @@
 </template>
 
 <script setup lang="ts">
+import { Clock12 } from '@lucide/vue';
 import { breakpointsBootstrapV5, useBreakpoints } from '@vueuse/core';
 import { type Dayjs } from 'dayjs';
 import { computed, onMounted, ref } from 'vue';
@@ -84,6 +93,7 @@ import { useCalendarDayEventInteraction } from '@/composables/useCalendarDayEven
 import { useDailyEventDisplay } from '@/composables/useDailyEventDisplay';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { useEventHighlightStore } from '@/stores/eventHighlight';
+import { formatEventTime } from '@/utils/eventDate';
 import { getEventCount, shouldShowBadge } from '@/utils/eventDisplay';
 import { getEventWatermarkClass } from '@/utils/eventMajor';
 import { type PogoEvent } from '@/utils/eventTypes';
@@ -139,6 +149,10 @@ const detailsEvent = computed(() => getEventForDetails(props.event));
 const watermarkClass = computed(() => getEventWatermarkClass(detailsEvent.value));
 const showBadge = computed(() => shouldShowBadge(props.event));
 const eventCount = computed(() => getEventCount(props.event));
+// Overnight events end past midnight, so the end time gets its own row
+const overnightEndTime = computed(() =>
+    metadata.value?.isOvernightEvent && !isMajorDaily.value ? formatEventTime(props.event.end, calendarSettings.manualTimeOffsetHours) : null,
+);
 
 // Auto-open the tooltip when this event/day was deep-linked via ?event=&eventDay= on load
 const menuShown = ref(false);
@@ -335,6 +349,17 @@ onMounted(() => {
         }
     }
 
+    /* Icon + time stay on one line and clip when narrow; an ellipsis would eat most of the time.
+       The row itself still wraps, so the Ended label can drop below. */
+    .event-time-value {
+        display: inline-flex;
+        align-items: center;
+        column-gap: inherit;
+        min-width: 0;
+        overflow: hidden;
+        white-space: nowrap;
+    }
+
     .event-dot {
         display: inline-flex;
         flex-shrink: 0;
@@ -358,6 +383,21 @@ onMounted(() => {
 
 [data-bs-theme='dark'] .single-day-event .event-time {
     color: #adb5bd;
+}
+
+/* Tucked under the start time row, with the clock in the dot's column */
+.single-day-event .event-end-time {
+    margin-top: -4px;
+
+    .event-midnight-icon {
+        flex-shrink: 0;
+        margin-top: -1px;
+        margin-right: 1px;
+
+        @media (min-width: 425px) {
+            margin-left: 0.5px;
+        }
+    }
 }
 
 .event-ended-label {

@@ -166,10 +166,14 @@ export interface EventMetadata {
     // Precomputed dates
     startDate: Dayjs;
     endDate: Dayjs;
+    // Where the multi-day bar begins: startDate, except overnight events (bar only on their end day)
+    barStartDate: Dayjs;
 
     // Classifications
     isMultiDayEvent: boolean;
     isSingleDayEvent: boolean;
+    // Short event crossing midnight: a single-day box on its start day + a bar on its end day
+    isOvernightEvent: boolean;
     isPastEvent: boolean;
     isFutureEvent: boolean;
 

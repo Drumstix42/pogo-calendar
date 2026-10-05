@@ -31,7 +31,7 @@ export function useCalendarGridSlots(getCalendarDays: () => CalendarDayCell[]) {
             }
 
             const eventStart =
-                metadata?.startDate.startOf('day') ?? parseEventDate(event.start, calendarSettings.manualTimeOffsetHours).startOf('day');
+                metadata?.barStartDate.startOf('day') ?? parseEventDate(event.start, calendarSettings.manualTimeOffsetHours).startOf('day');
             const eventEnd = metadata?.endDate.startOf('day') ?? parseEventDate(event.end, calendarSettings.manualTimeOffsetHours).startOf('day');
             const calendarStart = calendarDays[0]?.dayInstance.startOf('day');
             const calendarEnd = calendarDays[calendarDays.length - 1]?.dayInstance.startOf('day');
@@ -117,13 +117,13 @@ export function useCalendarGridSlots(getCalendarDays: () => CalendarDayCell[]) {
 
     function hasConflictInSlot(event: PogoEvent, slotIndex: number, existingSlots: EventSlot[]): boolean {
         const eventMetadata = eventsStore.eventMetadata[event.eventID];
-        const eventStart = eventMetadata?.startDate ?? parseEventDate(event.start, calendarSettings.manualTimeOffsetHours);
+        const eventStart = eventMetadata?.barStartDate ?? parseEventDate(event.start, calendarSettings.manualTimeOffsetHours);
         const eventEnd = eventMetadata?.endDate ?? parseEventDate(event.end, calendarSettings.manualTimeOffsetHours);
         const slotsInThisIndex = existingSlots.filter(slot => slot.slotIndex === slotIndex);
 
         return slotsInThisIndex.some(slot => {
             const slotMetadata = eventsStore.eventMetadata[slot.event.eventID];
-            const slotStart = slotMetadata?.startDate ?? parseEventDate(slot.event.start, calendarSettings.manualTimeOffsetHours);
+            const slotStart = slotMetadata?.barStartDate ?? parseEventDate(slot.event.start, calendarSettings.manualTimeOffsetHours);
             const slotEnd = slotMetadata?.endDate ?? parseEventDate(slot.event.end, calendarSettings.manualTimeOffsetHours);
 
             // Check for actual time overlap
@@ -184,7 +184,7 @@ export function useCalendarGridSlots(getCalendarDays: () => CalendarDayCell[]) {
 
         for (const event of sortedEvents) {
             const metadata = eventsStore.eventMetadata[event.eventID];
-            const eventStart = (metadata?.startDate ?? parseEventDate(event.start, calendarSettings.manualTimeOffsetHours)).startOf('day');
+            const eventStart = (metadata?.barStartDate ?? parseEventDate(event.start, calendarSettings.manualTimeOffsetHours)).startOf('day');
             const eventEnd = (metadata?.endDate ?? parseEventDate(event.end, calendarSettings.manualTimeOffsetHours)).startOf('day');
 
             // Try to find a slot where this event can fit without conflicts and with same event type

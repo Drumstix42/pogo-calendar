@@ -41,7 +41,13 @@ export function useCalendarDaySingleEvents(getDayInstance: () => Dayjs) {
                 return false;
             }
 
-            return eventsStore.eventMetadata[event.eventID]?.isSingleDayEvent ?? false;
+            const metadata = eventsStore.eventMetadata[event.eventID];
+            // Overnight events show here on their start day only; their end day gets a bar instead
+            if (metadata?.isOvernightEvent) {
+                return metadata.startDate.isSame(getDayInstance(), 'day');
+            }
+
+            return metadata?.isSingleDayEvent ?? false;
         });
 
         return {
