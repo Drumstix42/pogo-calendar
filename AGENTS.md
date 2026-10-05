@@ -99,6 +99,14 @@ Feeds come from the [Drumstix42 fork of ScrapedDuck](https://github.com/Drumstix
 - Events without `start`/`end` (e.g. unannounced Spotlight Hours) are dropped at fetch.
 - `boss`/`spawn` lists in `extraData` can be empty for past or newly announced events — all handlers
   must degrade gracefully to title-based parsing.
+- **Fetch event data only when an issue needs it** — from the live feed (URL above), or the user's
+  local JSON when they supply one (swap `curl -s <url>` for `cat <file>`). Ideally filter the data first, by event ID when one is provided:
+
+    ```bash
+    curl -s https://raw.githubusercontent.com/Drumstix42/ScrapedDuck/refs/heads/data/events.min.json \
+      | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>console.log(JSON.stringify(JSON.parse(s).find(e=>e.eventID===process.argv[1]),null,1)))" <event-id>
+    ```
+
 - Sample feed snapshots live in `planning/events*.json` (not shipped); use them to check data shapes.
   They were captured over time (higher number = newer) while events were still being announced and
   finalized, so older ones aren't reliable for an event's actual contents. For facts about a specific
