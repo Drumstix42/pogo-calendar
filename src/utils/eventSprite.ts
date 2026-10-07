@@ -1,4 +1,4 @@
-import { parseGigantamaxFormSlug, parsePokemonNameAndSuffix } from './eventPokemonNames';
+import { hasCostumeDescription, parseGigantamaxFormSlug, parsePokemonNameAndSuffix } from './eventPokemonNames';
 import { SPRITE_EFFECTS } from './eventPokemonTypes';
 import type { PokemonImageData, PokemonImageOptions, SpriteEffect } from './eventPokemonTypes';
 import { type PogoEvent, type PokemonBoss, type RaidScheduleEntry } from './eventTypes';
@@ -120,7 +120,8 @@ export function getPokemonImagesFromBossList(bosses: PokemonBoss[], options?: Po
             // anywhere in our sources, and PokeMiners silently substitutes the base sprite for an
             // unmatched suffix. The event-provided image ranks above that guess; the base sprite (no
             // suffix at all) is the absolute last resort if even that's missing.
-            const hasRealForm = hasExactSpriteForm(parsedData.pokemonName, parsedData.suffix);
+            // A costume ("Pikachu wearing ...") parses to its base Pokemon; only the event image shows the costume.
+            const hasRealForm = !hasCostumeDescription(boss.name) && hasExactSpriteForm(parsedData.pokemonName, parsedData.suffix);
             const spriteUrl = hasRealForm
                 ? getSpriteUrl(parsedData.pokemonName, parsedData.suffix, options, boss.image)
                 : boss.image || getSpriteUrl(parsedData.pokemonName, undefined, options, boss.image);
