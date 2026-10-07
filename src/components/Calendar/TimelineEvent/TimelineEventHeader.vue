@@ -35,7 +35,7 @@
                     </button>
                 </VTooltip>
 
-                <div @click.stop>
+                <div v-if="canHide" @click.stop>
                     <EventToggleButton :event-type="eventType" @hide="emit('hide')" />
                 </div>
             </template>
@@ -60,6 +60,8 @@ interface Props {
     eventTypeName: string;
     isActive: boolean;
     isTouchDevice: boolean;
+    /** False when the event is already hidden by the filters */
+    canHide?: boolean;
 }
 
 interface Emits {
@@ -70,7 +72,9 @@ interface Emits {
     hide: [];
 }
 
-defineProps<Props>();
+withDefaults(defineProps<Props>(), {
+    canHide: true,
+});
 const emit = defineEmits<Emits>();
 </script>
 

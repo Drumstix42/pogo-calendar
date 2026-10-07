@@ -1,12 +1,15 @@
 <template>
-    <div v-if="eventFilter.disabledEventTypeKeys.length > 0 || eventFilter.hiddenEventIds.length > 0" class="filter-summary">
+    <div v-if="isVisible" class="filter-summary">
         <VTooltip :disabled="isTouchDevice" placement="top" :delay="{ show: 50, hide: 0 }" distance="10" class="d-flex align-items-center ms-1">
             <template #popper>
                 <div class="tooltip-text">Click to open Settings</div>
             </template>
             <button class="btn btn-icon-ghost filter-summary-btn" @click="emit('open-filters')" aria-label="Open settings to modify filters">
                 <EyeOff :size="12" class="me-2" />
-                <span class="filter-summary-text">
+                <span v-if="hiddenEventCount !== undefined" class="filter-summary-text">
+                    {{ hiddenEventCount }} event{{ hiddenEventCount === 1 ? '' : 's' }} normally hidden by filters
+                </span>
+                <span v-else class="filter-summary-text">
                     <span v-if="eventFilter.disabledEventTypeKeys.length > 0">
                         {{ eventFilter.disabledEventTypeKeys.length }} event type{{ eventFilter.disabledEventTypeKeys.length === 1 ? '' : 's' }}
                         hidden
@@ -24,9 +27,17 @@
 
 <script setup lang="ts">
 import { EyeOff } from '@lucide/vue';
+import { computed } from 'vue';
 
 import { useDeviceDetection } from '@/composables/useDeviceDetection';
 import { useEventFilterStore } from '@/stores/eventFilter';
+
+interface Props {
+    /** Summarize these specific events (shown anyway, e.g. in a drawer) instead of the global filter counts. */
+    hiddenEventCount?: number;
+}
+
+const props = defineProps<Props>();
 
 const emit = defineEmits<{
     'open-filters': [];
@@ -34,6 +45,11 @@ const emit = defineEmits<{
 
 const eventFilter = useEventFilterStore();
 const { isTouchDevice } = useDeviceDetection();
+
+const isVisible = computed(() => {
+    if (props.hiddenEventCount !== undefined) return props.hiddenEventCount > 0;
+    return eventFilter.disabledEventTypeKeys.length > 0 || eventFilter.hiddenEventIds.length > 0;
+});
 </script>
 
 <style scoped>

@@ -53,6 +53,22 @@
 
         <div class="form-check form-switch mt-3">
             <input
+                id="pinAllMonthEvents"
+                class="form-check-input"
+                type="checkbox"
+                role="switch"
+                :checked="calendarSettings.pinAllMonthEvents"
+                @change="handlePinAllMonthEventsToggle"
+            />
+            <label for="pinAllMonthEvents" class="form-check-label">Pin all-month events above the calendar</label>
+        </div>
+        <small class="text-muted mt-1 d-block"
+            >When enabled, events that span the entire month show above the calendar instead of repeating each week. Click "All month" to expand or
+            collapse them.</small
+        >
+
+        <div class="form-check form-switch mt-3">
+            <input
                 id="showSeasonDailyBonuses"
                 class="form-check-input"
                 type="checkbox"
@@ -130,6 +146,11 @@ const handleToggleChange = (event: Event) => {
 const handleCondensePastEventBarsToggle = (event: Event) => {
     const target = event.target as HTMLInputElement;
     calendarSettings.setCondensePastEventBars(target.checked);
+};
+
+const handlePinAllMonthEventsToggle = (event: Event) => {
+    const target = event.target as HTMLInputElement;
+    calendarSettings.setPinAllMonthEvents(target.checked);
 };
 
 const handleSeasonDailyBonusesToggle = (event: Event) => {

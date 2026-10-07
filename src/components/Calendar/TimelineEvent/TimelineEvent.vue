@@ -6,6 +6,7 @@
                 'is-active': props.isActive,
                 'event-id-highlighted': eventHighlight.hoveredEventID === props.event.eventID,
                 'major-timeline-event': isMajorTimelineEvent,
+                'is-filtered-out': props.filteredOut,
             },
             watermarkClass,
         ]"
@@ -22,6 +23,7 @@
             :event-type-name="eventTypeName"
             :is-active="props.isActive"
             :is-touch-device="isTouchDevice"
+            :can-hide="!props.filteredOut"
             @toggle="toggleActive"
             @add-to-calendar="openAddToCalendarModal"
             @edit-color="openColorModal"
@@ -135,6 +137,8 @@ import TransferIcon from '@/components/Icons/TransferIcon.vue';
 interface Props {
     event: PogoEvent;
     isActive: boolean;
+    /** Shown despite the event filters hiding it (e.g. in the event list drawer). */
+    filteredOut?: boolean;
 }
 
 interface Emits {
@@ -237,6 +241,11 @@ const {
             color-mix(in srgb, var(--calendar-cell-bg) 52%, var(--event-color) 48%)
         );
     }
+}
+
+/* Normally hidden by the event filters: a dashed border sets it apart */
+.timeline-event-card.is-filtered-out {
+    border-style: dashed;
 }
 
 .timeline-event-card.event-watermark {

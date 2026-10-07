@@ -14,10 +14,12 @@ export interface EventSlot {
     startDay: Dayjs;
     endDay: Dayjs;
     shouldRenderOnDay: (day: Dayjs) => boolean;
+    /** Pinned above the grid as an all-month event, so drawn only in the weeks it starts or ends */
+    isPinned?: boolean;
 }
 
-// 'start-stub-adjacent' = a start stub in the week right before the current one (see getPastWeekDisplay)
-export type PastWeekBarDisplay = 'start-stub' | 'start-stub-adjacent' | 'end-stub' | 'hidden';
+// 'start-stub-adjacent' = a start stub in the week right before the current one (see getWeekBarDisplay)
+export type WeekBarDisplay = 'start-stub' | 'start-stub-adjacent' | 'end-stub' | 'hidden';
 
 const MULTI_DAY_EVENT_BAR_MARGIN = 1; // px margin between bars
 const MULTI_DAY_EVENT_BAR_ICON_PADDING = 6; // px around the icon (bar's inner start-cap padding + room)
@@ -47,23 +49,40 @@ export function useCalendarDayLayout(getDayInstance: () => Dayjs, getEventSlots:
         return { weekStart, weekEnd };
     }
 
+    // A pinned all-month event only keeps a bar (and a row) in the neighbor-month week it starts or ends in
+    function isPinnedAwayFromWeek(slot: EventSlot, weekStart: Dayjs, weekEnd: Dayjs) {
+        if (!slot.isPinned) return false;
+
+        const startsThisWeek = !slot.startDay.isBefore(weekStart, 'day') && !slot.startDay.isAfter(weekEnd, 'day');
+        const endsThisWeek = !slot.endDay.isBefore(weekStart, 'day') && !slot.endDay.isAfter(weekEnd, 'day');
+        return !startsThisWeek && !endsThisWeek;
+    }
+
     // Long-running events repeat a full-width bar through every week they span, which clutters weeks
     // already past. There, the start and end weeks collapse to title-sized stubs (torn edge toward the
     // rest of the event) and the weeks between are hidden, all restored while the event is hovered or
     // highlighted. Bars keep their full size and row either way, so nothing shifts on reveal.
     // The tear marks a gap, so a start stub right before the current week (whose full bar is visible)
     // may drop it and flow straight into that week instead.
-    function getPastWeekDisplay(event: PogoEvent): PastWeekBarDisplay | null {
-        if (!calendarSettings.condensePastEventBars) return null;
-
+    // Pinned all-month events get the same stubs in their start/end week, past or not, since the rest
+    // of the event lives in the header; the current week shows its full bar instead.
+    function getWeekBarDisplay(event: PogoEvent): WeekBarDisplay | null {
         const { weekStart, weekEnd } = getWeekBoundaries(getDayInstance());
-        if (!weekEnd.isBefore(displayToday.value, 'day')) return null;
 
         const metadata = eventsStore.eventMetadata[event.eventID];
         const eventStartDay = (metadata?.barStartDate ?? parseEventDate(event.start, calendarSettings.manualTimeOffsetHours)).startOf('day');
         const eventEndDay = (metadata?.endDate ?? parseEventDate(event.end, calendarSettings.manualTimeOffsetHours)).startOf('day');
         const startsThisWeek = !eventStartDay.isBefore(weekStart, 'day');
         const endsThisWeek = !eventEndDay.isAfter(weekEnd, 'day');
+
+        if (getEventSlotData(event)?.isPinned) {
+            const isCurrentWeek = !displayToday.value.isBefore(weekStart, 'day') && !displayToday.value.isAfter(weekEnd, 'day');
+            if (isCurrentWeek) return null;
+            return startsThisWeek ? 'start-stub' : 'end-stub';
+        }
+
+        if (!calendarSettings.condensePastEventBars) return null;
+        if (!weekEnd.isBefore(displayToday.value, 'day')) return null;
 
         if (startsThisWeek && endsThisWeek) return null;
         if (startsThisWeek) {
@@ -83,7 +102,7 @@ export function useCalendarDayLayout(getDayInstance: () => Dayjs, getEventSlots:
 
         // Find all events that actually render on at least one day in this week
         const eventsRenderingInThisWeek = getEventSlots().filter(slot => {
-            if (isMajorCalendarEventType(slot.event.eventType)) {
+            if (isMajorCalendarEventType(slot.event.eventType) || isPinnedAwayFromWeek(slot, weekStart, weekEnd)) {
                 return false;
             }
 
@@ -124,8 +143,13 @@ export function useCalendarDayLayout(getDayInstance: () => Dayjs, getEventSlots:
     });
 
     const multiDayEvents = computed(() => {
+        const { weekStart, weekEnd } = getWeekBoundaries(getDayInstance());
         const eventsOnThisDay = getEventSlots().filter(slot => {
-            return slot.shouldRenderOnDay(getDayInstance()) && !isMajorCalendarEventType(slot.event.eventType);
+            return (
+                slot.shouldRenderOnDay(getDayInstance()) &&
+                !isMajorCalendarEventType(slot.event.eventType) &&
+                !isPinnedAwayFromWeek(slot, weekStart, weekEnd)
+            );
         });
 
         // Sort by compact slot index instead of original slot index
@@ -292,6 +316,6 @@ export function useCalendarDayLayout(getDayInstance: () => Dayjs, getEventSlots:
         getEventSlotTop,
         getMultiDayEventBarClass,
         getEventPosition,
-        getPastWeekDisplay,
+        getWeekBarDisplay,
     };
 }

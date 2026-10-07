@@ -6,28 +6,16 @@
         class="event-category"
     >
         <template #title>
-            <div class="category-text d-flex align-items-center gap-2">
-                <span class="badge rounded-pill bg-secondary">{{ totalCount }}</span>
-                <span class="category-title">{{ category.title }}</span>
-            </div>
+            <TimelineCategoryTitle :title="category.title" :count="totalCount" />
         </template>
 
-        <!-- Events in this category -->
-        <!-- For today and ongoing, show events directly -->
-        <TransitionGroup
-            v-if="category.key === TimelineCategory.TODAY || category.key === TimelineCategory.ONGOING"
-            name="fade"
-            tag="div"
-            class="category-events"
+        <!-- Events in this category: flat for today/ongoing, grouped by date for upcoming/future -->
+        <TimelineCategoryEvents
+            :events="categoryEvents"
+            :date-groups="isDateGroupedCategory(category.key) ? dateGroups : undefined"
+            :active-event-id="activeEventId"
+            @activate="emit('activate', $event)"
         >
-            <TimelineEvent
-                v-for="event in categoryEvents"
-                :key="event.eventID"
-                :event="event"
-                :is-active="activeEventId === event.eventID"
-                @activate="emit('activate', $event)"
-            />
-
             <!-- Special message for Today section when no events exist -->
             <div
                 v-if="category.key === TimelineCategory.TODAY && totalCount === 0 && !searchActive"
@@ -36,46 +24,27 @@
             >
                 <p>No single-day events scheduled today</p>
             </div>
-        </TransitionGroup>
-
-        <!-- For upcoming and future, group by date -->
-        <TransitionGroup
-            v-else-if="category.key === TimelineCategory.UPCOMING || category.key === TimelineCategory.FUTURE"
-            name="fade"
-            tag="div"
-            class="category-events"
-        >
-            <div v-for="dateGroup in dateGroups" :key="dateGroup.dateKey" class="date-group">
-                <div class="date-divider">
-                    <span class="day-of-week">{{ dateGroup.dayOfWeek }}</span> {{ dateGroup.dateStr }}
-                </div>
-                <TransitionGroup name="fade" tag="div" :key="dateGroup.dateKey" class="date-events">
-                    <TimelineEvent
-                        v-for="event in dateGroup.events"
-                        :key="event.eventID"
-                        :event="event"
-                        :is-active="activeEventId === event.eventID"
-                        @activate="emit('activate', $event)"
-                    />
-                </TransitionGroup>
-            </div>
-        </TransitionGroup>
+        </TimelineCategoryEvents>
 
         <!-- No matches for the active search within this category -->
         <div v-if="searchActive && categoryEvents.length === 0" class="category-empty-message">
             <p>No matching events in this category</p>
         </div>
 
-        <!-- Hidden events indicator -->
-        <div v-if="hiddenCount > 0" class="hidden-events-indicator">{{ hiddenCount }} event{{ hiddenCount === 1 ? '' : 's' }} hidden by filters</div>
+        <!-- Hidden events indicator: opens the whole category, unfiltered -->
+        <button v-if="hiddenCount > 0" type="button" class="hidden-events-indicator" @click="openEventList(category.key)">
+            {{ hiddenCount }} event{{ hiddenCount === 1 ? '' : 's' }} hidden by filters
+        </button>
     </CollapsibleSection>
 </template>
 
 <script setup lang="ts">
-import { type TimelineDateGroup } from '@/composables/useTimelineCategories';
+import { type TimelineDateGroup, isDateGroupedCategory } from '@/composables/useTimelineCategories';
+import { useUrlSync } from '@/composables/useUrlSync';
 import { type PogoEvent, TimelineCategory, type TimelineCategoryKey } from '@/utils/eventTypes';
 
-import TimelineEvent from '../TimelineEvent/TimelineEvent.vue';
+import TimelineCategoryEvents from './TimelineCategoryEvents.vue';
+import TimelineCategoryTitle from './TimelineCategoryTitle.vue';
 import CollapsibleSection from '@/components/CollapsibleSection.vue';
 
 interface Props {
@@ -93,6 +62,8 @@ defineProps<Props>();
 const emit = defineEmits<{
     activate: [eventId: string];
 }>();
+
+const { openEventList } = useUrlSync();
 </script>
 
 <style lang="scss" scoped>
@@ -141,36 +112,9 @@ const emit = defineEmits<{
     padding: 0 !important;
 }
 
-.category-text {
-    flex-shrink: 0;
-    font-size: 0.85rem;
-    line-height: 1.25rem;
-    font-weight: 500;
-    color: var(--bs-body-color);
-    white-space: nowrap;
-
-    .badge {
-        font-size: 0.75rem;
-        line-height: 1;
-        padding: 0.25em 0.5em;
-    }
-}
-
-.category-events {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    margin-top: 8px;
-    padding: 0 4px;
-}
-
-.date-events {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
 .hidden-events-indicator {
+    display: block;
+    width: calc(100% - 32px);
     margin: 12px 16px 0 16px;
     padding: 8px 12px;
     font-size: 12px;
@@ -180,6 +124,17 @@ const emit = defineEmits<{
     background: var(--bs-tertiary-bg);
     border-radius: 4px;
     border: 1px dashed var(--bs-tertiary-color);
+    cursor: pointer;
+    transition:
+        color 0.2s ease,
+        background-color 0.2s ease,
+        border-color 0.2s ease;
+
+    &:hover {
+        color: var(--bs-body-color);
+        background: var(--bs-secondary-bg);
+        border-color: var(--bs-secondary-color);
+    }
 }
 
 .category-empty-message {
@@ -192,67 +147,5 @@ const emit = defineEmits<{
 
 .category-empty-message p {
     margin: 0;
-}
-
-.date-group {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    margin-bottom: 12px;
-    transition: all 0.3s ease;
-
-    &:last-child {
-        margin-bottom: 0;
-    }
-}
-
-.date-divider {
-    margin: 4px 0 1px 0;
-    padding: 0 4px;
-    font-size: 0.85rem;
-    letter-spacing: 0.5px;
-    color: var(--bs-secondary-color);
-    line-height: 1.3;
-    transition: all 0.3s ease;
-
-    .day-of-week {
-        font-weight: 600;
-    }
-}
-
-/* Improve fade transitions for timeline events */
-.category-events > *,
-.date-events > * {
-    transition: all 0.3s ease;
-}
-
-.category-events,
-.date-events {
-    position: relative;
-    transition: all 0.3s ease;
-}
-
-/* Ensure fade-in happens at final position without sliding */
-.category-events .fade-enter-active,
-.date-events .fade-enter-active {
-    transition: opacity 0.3s ease;
-}
-
-.category-events .fade-enter-from,
-.date-events .fade-enter-from {
-    opacity: 0;
-}
-
-/* Use absolute positioning during leave to prevent layout shift */
-.category-events .fade-leave-active,
-.date-events .fade-leave-active {
-    position: absolute;
-    width: 100%;
-}
-
-.date-events .fade-enter-active {
-    /* Override to ensure no transform/position changes during enter */
-    transition: opacity 0.3s ease !important;
-    transform: none !important;
 }
 </style>

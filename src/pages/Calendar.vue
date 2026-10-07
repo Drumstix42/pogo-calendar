@@ -20,7 +20,7 @@
                 <CalendarMonthPager />
 
                 <!-- Filter Summary Button -->
-                <FilterSummary @open-filters="openSettingsAndScrollToFilters" />
+                <FilterSummary @open-filters="openEventFilters" />
             </CollapsibleSection>
         </div>
 
@@ -54,6 +54,9 @@
         :target-date="selectedEventDay"
         @close="clearEvent"
     />
+
+    <!-- Event List Drawer (all-month events or a timeline category, unfiltered) -->
+    <EventListDrawer :show="!!eventListKey && !eventsStore.loading" :list-key="eventListKey" @close="closeEventList" />
 
     <!-- Hide Event Modal -->
     <HideEventModal
@@ -93,7 +96,7 @@
 import { CalendarRange, PanelTop } from '@lucide/vue';
 import { breakpointsBootstrapV5, useBreakpoints, useEventListener, useScrollLock } from '@vueuse/core';
 import { hideAllPoppers } from 'floating-vue';
-import { computed, nextTick, watch, watchEffect } from 'vue';
+import { computed, watch, watchEffect } from 'vue';
 
 import { useAddToCalendarModal } from '@/composables/useAddToCalendarModal';
 import { useCalendarDataRefresh } from '@/composables/useCalendarDataRefresh';
@@ -103,6 +106,7 @@ import { useDeviceDetection } from '@/composables/useDeviceDetection';
 import { useEditColorModal } from '@/composables/useEditColorModal';
 import { useEventFilterToasts } from '@/composables/useEventFilterToasts';
 import { useHideEventModal } from '@/composables/useHideEventModal';
+import { useOpenEventFilters } from '@/composables/useOpenEventFilters';
 import { useUrlSync } from '@/composables/useUrlSync';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { useEventsStore } from '@/stores/events';
@@ -115,6 +119,7 @@ import CalendarOptionsOffcanvas from '@/components/Calendar/CalendarOptionsOffca
 import CampfireEventModal from '@/components/Calendar/CampfireEventModal.vue';
 import EditEventColorModal from '@/components/Calendar/EditEventColorModal.vue';
 import EventDetailDrawer from '@/components/Calendar/EventDetailDrawer.vue';
+import EventListDrawer from '@/components/Calendar/EventListDrawer.vue';
 /* import CalendarMobile from '@/components/Calendar/CalendarMobile.vue'; */
 import EventTimeline from '@/components/Calendar/EventTimeline/EventTimeline.vue';
 import FilterSummary from '@/components/Calendar/FilterSummary.vue';
@@ -130,6 +135,7 @@ const editColorModal = useEditColorModal();
 const addToCalendarModal = useAddToCalendarModal();
 const campfireEventModal = useCampfireEventModal();
 const { hideEventTypeWithToast, hideEventByIdWithToast } = useEventFilterToasts();
+const { openEventFilters } = useOpenEventFilters();
 const {
     settingsOpen,
     openSettings,
@@ -137,6 +143,8 @@ const {
     selectedEventId,
     selectedEventDay,
     clearEvent,
+    eventListKey,
+    closeEventList,
     addToCalendarEventId,
     openAddToCalendar,
     closeAddToCalendar,
@@ -331,23 +339,6 @@ const selectedEventIsSingleDay = computed(() => {
 });
 
 // Event actions
-function openSettingsAndScrollToFilters() {
-    const storageKey = 'calendarSettings/event-filters';
-
-    if (calendarSettings.isCollapsibleSectionCollapsed(storageKey)) {
-        calendarSettings.toggleCollapsibleSection(storageKey);
-    }
-
-    openSettings();
-
-    nextTick(() => {
-        setTimeout(() => {
-            const element = document.getElementById('event-type-filters-section');
-            element?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }, 350); // Wait for offcanvas slide-in animation (300ms + buffer)
-    });
-}
-
 function handleHideByType(eventType: EventTypeKey) {
     hideEventTypeWithToast(eventType);
 }
@@ -364,7 +355,7 @@ function handleHideById(eventId: string, eventName: string) {
 // restores the original overflow automatically when the component unmounts.
 const isBodyScrollLocked = useScrollLock(document.body);
 watchEffect(() => {
-    const isOverlayOpen = calendarSettings.optionsExpanded || !!selectedEventId.value;
+    const isOverlayOpen = calendarSettings.optionsExpanded || !!selectedEventId.value || !!eventListKey.value;
     isBodyScrollLocked.value = isOverlayOpen && isTouchDevice.value;
 });
 
@@ -379,18 +370,20 @@ function handleGlobalKeydown(event: KeyboardEvent) {
         return;
     }
 
-    if (!calendarSettings.optionsExpanded) {
+    // Let higher-priority overlays and native color pickers handle Escape first.
+    const isModalOpen =
+        hideEventModal.showModal.value || editColorModal.showModal.value || addToCalendarModal.showModal.value || campfireEventModal.showModal.value;
+    if (isModalOpen) {
         return;
     }
 
-    // Let higher-priority overlays and native color pickers handle Escape first.
-    const hasBlockingOverlay =
-        hideEventModal.showModal.value ||
-        editColorModal.showModal.value ||
-        addToCalendarModal.showModal.value ||
-        campfireEventModal.showModal.value ||
-        !!selectedEventId.value;
-    if (hasBlockingOverlay) {
+    // The event list drawer sits above the settings panel
+    if (eventListKey.value) {
+        closeEventList();
+        return;
+    }
+
+    if (!calendarSettings.optionsExpanded || selectedEventId.value) {
         return;
     }
 

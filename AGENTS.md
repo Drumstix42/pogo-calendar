@@ -182,7 +182,7 @@ with raid bosses scoped to that day's `raidSchedule`.
 ### Past-week bar condensing (`src/composables/useCalendarDayLayout.ts`)
 
 With `calendarSettings.condensePastEventBars` on (default), multi-day bars in fully past weeks are
-trimmed so long-running events don't repeat a full bar through every week. `getPastWeekDisplay()`
+trimmed so long-running events don't repeat a full bar through every week. `getWeekBarDisplay()`
 decides per week: the start week becomes a title-sized stub with a torn right edge, the end week a stub
 with a torn left edge (it never grows past the event's end time), and the weeks between are hidden.
 Events that start and end in the same week, and all current/future weeks, render normally.
@@ -190,12 +190,34 @@ Events that start and end in the same week, and all current/future weeks, render
 - **Bars keep their full size and row** in every state; only painting/pointer events change
   (`MultiDayEventBar.vue`), so nothing shifts when they're revealed.
 - **Reveal:** hovering the stub, or highlighting the event elsewhere (timeline, other segments) or its
-  type in the filter options (`eventHighlight` store), restores the full bars via `past-week-revealed`.
+  type in the filter options (`eventHighlight` store), restores the full bars via `week-bar-revealed`.
 - **The tear marks a gap.** Stubs keep it, except a start stub in the week right before the current
   one (`start-stub-adjacent`): it renders as a normal bar if it starts on the week's last day, or if
   its label nearly fills the bar (`STUB_FILL_THRESHOLD_PX`), so it flows into the current week. Only
   those stubs attach the resize observer that measures this.
 - No stub when the event started before the visible grid; its past weeks are just hidden.
+
+### Pinned all-month events (`src/composables/useCalendarGridSlots.ts`)
+
+Opt-in via `calendarSettings.pinAllMonthEvents` (off by default). Events whose bar starts before the viewed
+month's 1st and ends after its last day (`allMonthEvents`) render once above the sticky day headers
+(`CalendarAllMonthEvents.vue`) as wrapping inline chips with a date range (a `MultiDayEventBar` with no
+`position`). In the grid they're flagged `isPinned` on their slot (packed last) and only draw in a
+neighbor-month week where they start or end, as a torn stub — or the full bar in the current week (see
+`getWeekBarDisplay()`); other weeks don't reserve a row for them. The "All month" toggle collapses the
+chips, persisted as a collapsible section; the strip shows only when at least one is visible. Its count
+includes filtered-out events (`hiddenAllMonthEventCount`), which get a "+N hidden" chip instead of a bar.
+Major events are never pinned.
+
+### Event list drawer (`src/components/Calendar/EventListDrawer.vue`)
+
+The "+N hidden" all-month chip and the timeline's "N events hidden by filters" indicators open a drawer
+listing that whole set **unfiltered** (`useEventList()`): the viewed month's all-month events, or one
+timeline category. It reuses the timeline's `TimelineCategoryTitle` / `TimelineCategoryEvents`; events the
+filters normally hide get a dashed border (`TimelineEvent` `filteredOut`, which also drops the Hide
+action). Its footer `FilterSummary` (with `hiddenEventCount`) goes on to Settings > Filters. Drawers share
+the `BaseDrawer.vue` shell (header + close button via the `title` prop or `#title` slot); modals
+(`BaseModal`) always layer above them.
 
 ### Overnight events (`src/utils/eventMetadata.ts`)
 
@@ -264,21 +286,21 @@ when a calendar sprite looks "missing".
 
 ## Stores (`src/stores/`)
 
-| Store (file)       | Responsibility                                                                                      |
-| ------------------ | --------------------------------------------------------------------------------------------------- |
-| `events`           | Fetches the events feed, generates sub-events, applies grouping, caches per-event `eventMetadata`   |
-| `eventFilter`      | Persists disabled (primary) type keys + hidden event IDs                                            |
-| `eventTypeColors`  | Persists per-type color overrides; defaults via `getDefaultEventTypeColor()`                        |
-| `calendarSettings` | Persisted display prefs: week start, grouping, past-bar condensing, sprites, font size, time offset |
-| `raids`            | Current raid bosses feed                                                                            |
-| `seasons`          | Season feed (daily discoveries, season bonuses); keeps neighbors so boundary weeks resolve          |
-| `pokemonData`      | Lazily loaded Pokémon stats for CP calculations (`mgrann03/pokemon-resources`)                      |
-| `campfireTemplate` | Persisted Campfire event text template                                                              |
-| `eventHighlight`   | Hovered/focused event + hovered filter type, for cross-component highlighting                       |
-| `theme`            | Light/dark/system theme, persisted                                                                  |
-| `toasts`           | Ephemeral toast queue                                                                               |
-| `userMessages`     | Dismissible banners with version-keyed persistence                                                  |
-| `app`              | Checks `/version.json` to detect a newer deployed build (update prompt)                             |
+| Store (file)       | Responsibility                                                                                                         |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------- |
+| `events`           | Fetches the events feed, generates sub-events, applies grouping, caches per-event `eventMetadata`                      |
+| `eventFilter`      | Persists disabled (primary) type keys + hidden event IDs                                                               |
+| `eventTypeColors`  | Persists per-type color overrides; defaults via `getDefaultEventTypeColor()`                                           |
+| `calendarSettings` | Persisted display prefs: week start, grouping, past-bar condensing, all-month pinning, sprites, font size, time offset |
+| `raids`            | Current raid bosses feed                                                                                               |
+| `seasons`          | Season feed (daily discoveries, season bonuses); keeps neighbors so boundary weeks resolve                             |
+| `pokemonData`      | Lazily loaded Pokémon stats for CP calculations (`mgrann03/pokemon-resources`)                                         |
+| `campfireTemplate` | Persisted Campfire event text template                                                                                 |
+| `eventHighlight`   | Hovered/focused event + hovered filter type, for cross-component highlighting                                          |
+| `theme`            | Light/dark/system theme, persisted                                                                                     |
+| `toasts`           | Ephemeral toast queue                                                                                                  |
+| `userMessages`     | Dismissible banners with version-keyed persistence                                                                     |
+| `app`              | Checks `/version.json` to detect a newer deployed build (update prompt)                                                |
 
 ## URL state (`src/composables/useUrlSync.ts`)
 
@@ -289,6 +311,7 @@ any new panel or modal.
 - `month` (1-based in the URL, 0-based internally per Day.js) + `year`; cleared on the current month.
 - `settings=1`, `raids=1` — panels.
 - `event` (+ optional `eventDay`) — selected event (detail panel / tooltip deep link).
+- `eventList` — event list drawer: `all-month` (for the viewed month) or a timeline category key.
 - Modals: `addToCalendar`, `campfire`, `hideEvent` (event ID); `editColor` (event type key).
 
 ---

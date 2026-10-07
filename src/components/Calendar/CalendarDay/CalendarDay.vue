@@ -57,7 +57,7 @@
                         :position="getEventPosition(event, props.dayInstance)"
                         :slot-top="getEventSlotTop(event)"
                         :slot-index="getEventSlotData(event)?.slotIndex"
-                        :past-week-display="getPastWeekDisplay(event)"
+                        :week-bar-display="getWeekBarDisplay(event)"
                     />
                 </div>
             </TransitionGroup>
@@ -122,7 +122,7 @@ const {
     getEventSlotTop,
     getMultiDayEventBarClass,
     getEventPosition,
-    getPastWeekDisplay,
+    getWeekBarDisplay,
 } = useCalendarDayLayout(
     () => props.dayInstance,
     () => props.eventSlots,

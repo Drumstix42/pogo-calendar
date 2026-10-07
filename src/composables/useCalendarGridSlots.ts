@@ -7,6 +7,7 @@ import { useEventFilterStore } from '@/stores/eventFilter';
 import { useEventsStore } from '@/stores/events';
 import { type CalendarDayCell } from '@/utils/calendarGrid';
 import { parseEventDate } from '@/utils/eventDate';
+import { isMajorCalendarEventType } from '@/utils/eventMajor';
 import { getRaidSubType, getRaidSubTypePriority } from '@/utils/eventSubtype';
 import { type PogoEvent, getEventTypeInfo } from '@/utils/eventTypes';
 
@@ -139,46 +140,81 @@ export function useCalendarGridSlots(getCalendarDays: () => CalendarDayCell[]) {
         });
     }
 
+    // Sort by event type priority (from eventTypes.ts), then grouped vs individual, then by start date
+    function compareEventsForLayout(a: PogoEvent, b: PogoEvent) {
+        // 1. Sort by event type priority (higher priority = higher in layout)
+        const aPriority = getEventTypeInfo(a.eventType).priority;
+        const bPriority = getEventTypeInfo(b.eventType).priority;
+        if (aPriority !== bPriority) {
+            return bPriority - aPriority; // Higher priority first
+        }
+
+        // 2. Within same priority, grouped events come before individual events
+        const aIsGrouped = a._isGrouped;
+        const bIsGrouped = b._isGrouped;
+        if (aIsGrouped !== bIsGrouped) {
+            return aIsGrouped ? -1 : 1;
+        }
+
+        // 3. For raid-battles, sort by sub-type priority (regular > mega > shadow)
+        if (a.eventType === 'raid-battles' && b.eventType === 'raid-battles') {
+            const aSubPriority = getRaidSubTypePriority(a);
+            const bSubPriority = getRaidSubTypePriority(b);
+            if (aSubPriority !== bSubPriority) {
+                return bSubPriority - aSubPriority; // Higher sub-priority first
+            }
+        }
+
+        // 4. Then sort by start date (earlier events first)
+        const aStart = eventsStore.eventMetadata[a.eventID]?.startDate ?? parseEventDate(a.start, calendarSettings.manualTimeOffsetHours);
+        const bStart = eventsStore.eventMetadata[b.eventID]?.startDate ?? parseEventDate(b.start, calendarSettings.manualTimeOffsetHours);
+        if (!aStart.isSame(bStart)) {
+            return aStart.isBefore(bStart) ? -1 : 1;
+        }
+
+        return 0;
+    }
+
+    // Events running through every day of the viewed month, before filtering. When pinned, they show once
+    // above the grid; in the grid they only keep a bar in the neighbor-month week they start or end in.
+    const unfilteredAllMonthEvents = computed(() => {
+        if (!calendarSettings.pinAllMonthEvents) return [];
+
+        const monthDays = getCalendarDays().filter(day => day.isCurrentMonth);
+        const monthStart = monthDays[0]?.dayInstance.startOf('day');
+        const monthEnd = monthDays[monthDays.length - 1]?.dayInstance.startOf('day');
+        if (!monthStart || !monthEnd) return [];
+
+        return eventsStore.processedEvents
+            .filter(event => {
+                if (isMajorCalendarEventType(event.eventType)) return false;
+
+                const metadata = eventsStore.eventMetadata[event.eventID];
+                const eventStart = (metadata?.barStartDate ?? parseEventDate(event.start, calendarSettings.manualTimeOffsetHours)).startOf('day');
+                const eventEnd = (metadata?.endDate ?? parseEventDate(event.end, calendarSettings.manualTimeOffsetHours)).startOf('day');
+
+                // Strictly outside the month on both ends, so no start, end, or partial day within it is lost
+                return eventStart.isBefore(monthStart) && eventEnd.isAfter(monthEnd);
+            })
+            .sort(compareEventsForLayout);
+    });
+
+    const allMonthEvents = computed(() => unfilteredAllMonthEvents.value.filter(event => eventFilter.isEventVisible(event.eventType, event.eventID)));
+
+    const hiddenAllMonthEventCount = computed(() => unfilteredAllMonthEvents.value.length - allMonthEvents.value.length);
+
     // Assign slots to multi-day events
     const eventSlots = computed((): EventSlot[] => {
         const events = multiDayEventsForCalendar.value;
         if (events.length === 0) return [];
 
+        // Pinned events pack last, so in the few weeks they still draw in, their stubs sit below the regular bars
+        const pinnedEventIDs = new Set(allMonthEvents.value.map(event => event.eventID));
+
         // Events are already processed (grouping already applied)
-        // Sort by event type priority (from eventTypes.ts), then grouped vs individual, then by start date
-        const sortedEvents = [...events].sort((a, b) => {
-            // 1. Sort by event type priority (higher priority = higher in layout)
-            const aPriority = getEventTypeInfo(a.eventType).priority;
-            const bPriority = getEventTypeInfo(b.eventType).priority;
-            if (aPriority !== bPriority) {
-                return bPriority - aPriority; // Higher priority first
-            }
-
-            // 2. Within same priority, grouped events come before individual events
-            const aIsGrouped = a._isGrouped;
-            const bIsGrouped = b._isGrouped;
-            if (aIsGrouped !== bIsGrouped) {
-                return aIsGrouped ? -1 : 1;
-            }
-
-            // 3. For raid-battles, sort by sub-type priority (regular > mega > shadow)
-            if (a.eventType === 'raid-battles' && b.eventType === 'raid-battles') {
-                const aSubPriority = getRaidSubTypePriority(a);
-                const bSubPriority = getRaidSubTypePriority(b);
-                if (aSubPriority !== bSubPriority) {
-                    return bSubPriority - aSubPriority; // Higher sub-priority first
-                }
-            }
-
-            // 4. Then sort by start date (earlier events first)
-            const aStart = eventsStore.eventMetadata[a.eventID]?.startDate ?? parseEventDate(a.start, calendarSettings.manualTimeOffsetHours);
-            const bStart = eventsStore.eventMetadata[b.eventID]?.startDate ?? parseEventDate(b.start, calendarSettings.manualTimeOffsetHours);
-            if (!aStart.isSame(bStart)) {
-                return aStart.isBefore(bStart) ? -1 : 1;
-            }
-
-            return 0;
-        });
+        const sortedEvents = [...events].sort(
+            (a, b) => Number(pinnedEventIDs.has(a.eventID)) - Number(pinnedEventIDs.has(b.eventID)) || compareEventsForLayout(a, b),
+        );
 
         const slots: EventSlot[] = [];
 
@@ -213,6 +249,7 @@ export function useCalendarGridSlots(getCalendarDays: () => CalendarDayCell[]) {
 
                     return isStartDay || (isFirstDayOfWeek && eventIsOngoing);
                 },
+                isPinned: pinnedEventIDs.has(event.eventID),
             };
             slots.push(newSlot);
         }
@@ -220,5 +257,5 @@ export function useCalendarGridSlots(getCalendarDays: () => CalendarDayCell[]) {
         return slots;
     });
 
-    return { eventSlots };
+    return { eventSlots, allMonthEvents, unfilteredAllMonthEvents, hiddenAllMonthEventCount };
 }

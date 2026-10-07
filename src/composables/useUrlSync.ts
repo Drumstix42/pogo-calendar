@@ -182,6 +182,29 @@ export const useUrlSync = () => {
     }
 
     // ============================================
+    // Event List Drawer State (all-month or timeline category, unfiltered)
+    // ============================================
+    const eventListKey = computed(() => {
+        const listKey = route.query.eventList;
+        return typeof listKey === 'string' ? listKey : undefined;
+    });
+
+    function openEventList(listKey: string) {
+        router.push({
+            query: {
+                ...route.query,
+                eventList: listKey,
+            },
+        });
+    }
+
+    function closeEventList() {
+        const currentQuery = { ...route.query };
+        delete currentQuery.eventList;
+        return router.replace({ query: currentQuery });
+    }
+
+    // ============================================
     // Add to Calendar Modal State
     // ============================================
     const addToCalendarEventId = computed(() => {
@@ -294,6 +317,11 @@ export const useUrlSync = () => {
         selectedEventDay,
         selectEvent,
         clearEvent,
+
+        // Event list drawer
+        eventListKey,
+        openEventList,
+        closeEventList,
 
         // Add to Calendar modal
         addToCalendarEventId,

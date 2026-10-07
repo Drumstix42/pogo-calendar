@@ -2,7 +2,8 @@ import { nextTick, ref } from 'vue';
 
 import { scrollCardIntoView } from '@/utils/timelineScroll';
 
-export function useTimelineActiveEvent() {
+// getRoot scopes the card lookup, for lists that can share event IDs with the timeline (e.g. a drawer)
+export function useTimelineActiveEvent(getRoot?: () => HTMLElement | null | undefined) {
     const activeEventId = ref<string | null>(null);
 
     function setActiveEvent(eventId: string) {
@@ -14,7 +15,7 @@ export function useTimelineActiveEvent() {
             // Wait for DOM update and animation
             setTimeout(() => {
                 nextTick(() => {
-                    const eventCard = document.querySelector(`[data-timeline-event-id="${eventId}"]`);
+                    const eventCard = (getRoot?.() ?? document).querySelector(`[data-timeline-event-id="${eventId}"]`);
                     if (eventCard instanceof HTMLElement) {
                         scrollCardIntoView(eventCard);
                     }

@@ -4,10 +4,11 @@
         class="multi-day-event-bar calendar-event"
         :class="[
             barClass,
-            pastWeekClasses,
+            weekBarClasses,
             {
                 'event-id-highlighted': eventHighlight.hoveredEventID === event.eventID,
                 'event-past': metadata?.isPastEvent,
+                'inline-chip': !position,
             },
         ]"
         :data-event-type="event.eventType"
@@ -16,9 +17,9 @@
             '--event-bg-color': metadata?.color,
             backgroundColor: metadata?.color,
             fontSize: `${calendarSettings.eventBarFontSize}px`,
-            left: position.left,
-            width: position.width,
-            position: 'absolute',
+            left: position?.left,
+            width: position?.width,
+            position: position ? 'absolute' : 'relative',
             pointerEvents: 'auto',
             zIndex: 20 + slotTop,
         }"
@@ -53,6 +54,9 @@
                 />
 
                 <span class="event-name">{{ getEventDisplayName(event) }}</span>
+                <span v-if="dateRange" class="event-date-range"
+                    ><span class="date-range-start">{{ dateRange.start }} -</span> {{ dateRange.end }}</span
+                >
                 <span v-if="shouldShowBadge(event)" class="calendar-event-badge">{{ getEventCount(event) }}</span>
             </div>
 
@@ -69,7 +73,7 @@ import { type Dayjs } from 'dayjs';
 import { computed, onMounted, ref } from 'vue';
 
 import { useCalendarDayEventInteraction } from '@/composables/useCalendarDayEventInteraction';
-import { type PastWeekBarDisplay } from '@/composables/useCalendarDayLayout';
+import { type WeekBarDisplay } from '@/composables/useCalendarDayLayout';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { useEventHighlightStore } from '@/stores/eventHighlight';
 import { useEventsStore } from '@/stores/events';
@@ -85,10 +89,13 @@ interface Props {
     event: PogoEvent;
     dayInstance: Dayjs;
     barClass: string;
-    position: { left: string; width: string };
+    /** Omit to size the bar to its content, as an inline chip. */
+    position?: { left: string; width: string };
     slotTop: number;
     slotIndex: number | undefined;
-    pastWeekDisplay?: PastWeekBarDisplay | null;
+    weekBarDisplay?: WeekBarDisplay | null;
+    /** Shown after the name, for bars that don't show their own start and end (e.g. pinned all-month events). */
+    dateRange?: { start: string; end: string };
 }
 
 // An adjacent start stub this close to its bar's end is all but the full bar, so it shows as one
@@ -116,9 +123,9 @@ const iconHeight = computed(() => calendarSettings.eventBarHeight - 2);
 
 const barRef = ref<HTMLElement>();
 const innerRef = ref<HTMLElement>();
-const isStartStub = computed(() => props.pastWeekDisplay === 'start-stub' || props.pastWeekDisplay === 'start-stub-adjacent');
+const isStartStub = computed(() => props.weekBarDisplay === 'start-stub' || props.weekBarDisplay === 'start-stub-adjacent');
 // Only a start stub right before the current week can drop its tear, so only it gets measured
-const canFlowIntoNextWeek = computed(() => props.pastWeekDisplay === 'start-stub-adjacent');
+const canFlowIntoNextWeek = computed(() => props.weekBarDisplay === 'start-stub-adjacent');
 const stubFillsBar = ref(false);
 
 useResizeObserver(() => (canFlowIntoNextWeek.value ? [barRef.value, innerRef.value] : null), measureStub);
@@ -130,14 +137,14 @@ function measureStub() {
 
 const isRevealed = computed(() => eventHighlight.hoveredEventID === props.event.eventID || eventHighlight.hoveredEventType === props.event.eventType);
 
-const pastWeekClasses = computed(() => {
-    if (!props.pastWeekDisplay) return '';
+const weekBarClasses = computed(() => {
+    if (!props.weekBarDisplay) return '';
 
-    const revealed = { 'past-week-revealed': isRevealed.value };
-    if (props.pastWeekDisplay === 'hidden') return ['past-week-hidden', revealed];
+    const revealed = { 'week-bar-revealed': isRevealed.value };
+    if (props.weekBarDisplay === 'hidden') return ['week-bar-hidden', revealed];
 
     return [
-        'past-week-stub',
+        'week-bar-stub',
         isStartStub.value ? 'tear-right' : 'tear-left',
         { 'stub-torn': !(canFlowIntoNextWeek.value && stubFillsBar.value) },
         revealed,
@@ -226,7 +233,7 @@ onMounted(() => {
     text-overflow: clip;
     white-space: nowrap;
     font-weight: 400;
-    line-height: 1.5;
+    line-height: 1.3em;
     min-width: min(28px, 100%);
     padding-right: 1px;
 
@@ -235,6 +242,20 @@ onMounted(() => {
 
     @media (min-width: 768px) {
         text-overflow: ellipsis;
+    }
+}
+
+.multi-day-event-bar .event-date-range {
+    flex-shrink: 0;
+    font-size: calc(1em - 1px); /* 1em = the bar's font size setting */
+    padding-right: 6px;
+    white-space: nowrap;
+    line-height: 1.5;
+
+    /* Dimmed like a past start in the detail views, so the end date stands out */
+    .date-range-start {
+        font-weight: 300;
+        opacity: 0.75;
     }
 }
 
@@ -321,14 +342,31 @@ onMounted(() => {
     border-radius: 6px;
 }
 
-/* Past-week display (see getPastWeekDisplay): hidden bars and stubs keep their full size, and are
-   restored while the event is hovered, or revealed by an event ID / filter type highlight. */
-.multi-day-event-bar.past-week-hidden:not(.past-week-revealed) {
+/* Inline chip: sized to its content instead of positioned across day cells */
+.multi-day-event-bar.inline-chip {
+    width: fit-content;
+    max-width: 100%;
+
+    .multi-day-event-bar--inner {
+        position: relative;
+        max-width: 100%;
+    }
+
+    /* Chips are mostly text-only and wider than a day cell, so an ellipsis fits at every size */
+    .event-name {
+        text-overflow: ellipsis;
+    }
+}
+
+/* Week bar display (see getWeekBarDisplay; condensed past weeks, pinned all-month stubs): hidden bars and
+   stubs keep their full size, and are restored while the event is hovered, or revealed by an event ID /
+   filter type highlight. */
+.multi-day-event-bar.week-bar-hidden:not(.week-bar-revealed) {
     visibility: hidden;
 }
 
 /* Stub sizing stays the same in every state, so measuring it (stubFillsBar) can't feed back on itself */
-.multi-day-event-bar.past-week-stub {
+.multi-day-event-bar.week-bar-stub {
     --stub-tear-depth: 7px;
 
     .multi-day-event-bar--inner {
@@ -354,7 +392,7 @@ onMounted(() => {
        outrank the global .calendar-event / highlight transitions in style.scss. */
     transition: none !important;
 
-    &:not(:hover):not(.past-week-revealed) {
+    &:not(:hover):not(.week-bar-revealed) {
         background-color: transparent !important;
         pointer-events: none !important;
 
@@ -364,14 +402,14 @@ onMounted(() => {
         }
     }
 
-    &.tear-right:not(:hover):not(.past-week-revealed) .multi-day-event-bar--inner {
+    &.tear-right:not(:hover):not(.week-bar-revealed) .multi-day-event-bar--inner {
         mask:
             url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 2' preserveAspectRatio='none'%3E%3Cpath d='M0 0L1 1L0 2Z'/%3E%3C/svg%3E")
                 right top / var(--stub-tear-depth) calc(100% / 3) repeat-y,
             linear-gradient(#000 0 0) left / calc(100% - var(--stub-tear-depth)) 100% no-repeat;
     }
 
-    &.tear-left:not(:hover):not(.past-week-revealed) .multi-day-event-bar--inner {
+    &.tear-left:not(:hover):not(.week-bar-revealed) .multi-day-event-bar--inner {
         mask:
             url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 2' preserveAspectRatio='none'%3E%3Cpath d='M1 0L0 1L1 2Z'/%3E%3C/svg%3E")
                 left top / var(--stub-tear-depth) calc(100% / 3) repeat-y,

@@ -5,7 +5,7 @@ import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { useEventFilterStore } from '@/stores/eventFilter';
 import { useEventsStore } from '@/stores/events';
 import { sortEventsByTimingAndPriority } from '@/utils/eventSort';
-import { type PogoEvent, TimelineCategory, type TimelineCategoryKey } from '@/utils/eventTypes';
+import { type EventMetadata, type PogoEvent, TimelineCategory, type TimelineCategoryKey } from '@/utils/eventTypes';
 
 export interface TimelineDateGroup {
     dateKey: string;
@@ -21,6 +21,42 @@ export const eventCategories = [
     { key: TimelineCategory.UPCOMING, title: 'Upcoming Events (Next 2 Weeks)' },
     { key: TimelineCategory.FUTURE, title: 'Future Events (Beyond 2 Weeks)' },
 ];
+
+// Upcoming and future events are listed under start-date headings; the rest are a flat list.
+export function isDateGroupedCategory(key: TimelineCategoryKey) {
+    return key === TimelineCategory.UPCOMING || key === TimelineCategory.FUTURE;
+}
+
+// Group events by start date, in date order
+export function buildDateGroups(events: PogoEvent[], eventMetadata: Record<string, EventMetadata>): TimelineDateGroup[] {
+    const dateGroups = new Map<string, PogoEvent[]>();
+
+    events.forEach(event => {
+        const metadata = eventMetadata[event.eventID];
+        if (!metadata) return;
+
+        const dateKey = metadata.startDate.format('YYYY-MM-DD');
+        if (!dateGroups.has(dateKey)) {
+            dateGroups.set(dateKey, []);
+        }
+        dateGroups.get(dateKey)!.push(event);
+    });
+
+    const sortedDates = Array.from(dateGroups.keys()).sort();
+    return sortedDates.map(dateKey => {
+        const firstEvent = dateGroups.get(dateKey)![0];
+        const metadata = eventMetadata[firstEvent.eventID];
+        const dayOfWeek = metadata.startDate.format('dddd').toUpperCase();
+        const dateStr = metadata.startDate.format('MMM D, YYYY');
+
+        return {
+            dateKey,
+            dayOfWeek,
+            dateStr,
+            events: dateGroups.get(dateKey)!,
+        };
+    });
+}
 
 // Build a record keyed by every timeline category, each seeded with a fresh value.
 function emptyCategoryRecord<T>(fill: () => T): Record<TimelineCategoryKey, T> {
@@ -68,6 +104,7 @@ export function useTimelineCategories() {
         const twoWeeksFromNow = now.add(2, 'weeks');
 
         const categories = emptyCategoryRecord<PogoEvent[]>(() => []);
+        const unfilteredCategories = emptyCategoryRecord<PogoEvent[]>(() => []);
         const totalCounts = emptyCategoryRecord<number>(() => 0);
         const hiddenCounts = emptyCategoryRecord<number>(() => 0);
 
@@ -101,6 +138,7 @@ export function useTimelineCategories() {
 
             // Always count total events
             totalCounts[categoryKey]++;
+            unfilteredCategories[categoryKey].push(event);
 
             // Add to visible events or hidden count based on filter setting
             const shouldFilter = calendarSettings.filtersApplyToTimeline;
@@ -116,10 +154,12 @@ export function useTimelineCategories() {
         // Apply sorting to each category
         (Object.keys(categories) as TimelineCategoryKey[]).forEach(key => {
             categories[key] = sortEventsByTimingAndPriority(categories[key], eventsStore.eventMetadata);
+            unfilteredCategories[key] = sortEventsByTimingAndPriority(unfilteredCategories[key], eventsStore.eventMetadata);
         });
 
         return {
             categorizedEvents: categories,
+            unfilteredCategorizedEvents: unfilteredCategories,
             totalEventsCounts: totalCounts,
             hiddenEventsCounts: hiddenCounts,
         };
@@ -127,6 +167,8 @@ export function useTimelineCategories() {
 
     // Extract individual computed properties for template convenience
     const categorizedEvents = computed(() => eventData.value.categorizedEvents);
+    // Every event per category, including those the filters hide (for the event list drawer)
+    const unfilteredCategorizedEvents = computed(() => eventData.value.unfilteredCategorizedEvents);
     const totalEventsCounts = computed(() => eventData.value.totalEventsCounts);
     const hiddenEventsCounts = computed(() => eventData.value.hiddenEventsCounts);
 
@@ -139,35 +181,7 @@ export function useTimelineCategories() {
         const grouped: Partial<Record<TimelineCategoryKey, TimelineDateGroup[]>> = {};
 
         ([TimelineCategory.UPCOMING, TimelineCategory.FUTURE] as const).forEach(categoryKey => {
-            const events = categorizedEvents.value[categoryKey] || [];
-            const dateGroups = new Map<string, PogoEvent[]>();
-
-            events.forEach(event => {
-                const metadata = eventsStore.eventMetadata[event.eventID];
-                if (!metadata) return;
-
-                const dateKey = metadata.startDate.format('YYYY-MM-DD');
-                if (!dateGroups.has(dateKey)) {
-                    dateGroups.set(dateKey, []);
-                }
-                dateGroups.get(dateKey)!.push(event);
-            });
-
-            // Convert map to sorted array
-            const sortedDates = Array.from(dateGroups.keys()).sort();
-            grouped[categoryKey] = sortedDates.map(dateKey => {
-                const firstEvent = dateGroups.get(dateKey)![0];
-                const metadata = eventsStore.eventMetadata[firstEvent.eventID];
-                const dayOfWeek = metadata.startDate.format('dddd').toUpperCase();
-                const dateStr = metadata.startDate.format('MMM D, YYYY');
-
-                return {
-                    dateKey,
-                    dayOfWeek,
-                    dateStr,
-                    events: dateGroups.get(dateKey)!,
-                };
-            });
+            grouped[categoryKey] = buildDateGroups(categorizedEvents.value[categoryKey] || [], eventsStore.eventMetadata);
         });
 
         return grouped;
@@ -176,6 +190,7 @@ export function useTimelineCategories() {
     return {
         eventCategories,
         categorizedEvents,
+        unfilteredCategorizedEvents,
         totalEventsCounts,
         hiddenEventsCounts,
         groupedByDate,

@@ -29,6 +29,9 @@ export const useCalendarSettingsStore = defineStore('calendarSettings', () => {
     // Condense past event bars setting - whether multi-day bars in past weeks collapse to stubs (or hide between them)
     const condensePastEventBars = useLocalStorage<boolean>(STORAGE_KEYS.CONDENSE_PAST_EVENT_BARS, true);
 
+    // Pin all-month events setting - whether events spanning the whole visible grid show once above it instead of as a bar in every week
+    const pinAllMonthEvents = useLocalStorage<boolean>(STORAGE_KEYS.PIN_ALL_MONTH_EVENTS, false);
+
     // Animated images setting - whether to use animated images in detailed views
     const useAnimatedImages = useLocalStorage<boolean>(STORAGE_KEYS.USE_ANIMATED_IMAGES, true);
 
@@ -151,6 +154,10 @@ export const useCalendarSettingsStore = defineStore('calendarSettings', () => {
         condensePastEventBars.value = enabled;
     };
 
+    const setPinAllMonthEvents = (enabled: boolean) => {
+        pinAllMonthEvents.value = enabled;
+    };
+
     const setShowSeasonDailyBonuses = (enabled: boolean) => {
         showSeasonDailyBonuses.value = enabled;
     };
@@ -215,6 +222,7 @@ export const useCalendarSettingsStore = defineStore('calendarSettings', () => {
         allDayNames,
         groupSimilarEvents,
         condensePastEventBars,
+        pinAllMonthEvents,
         useAnimatedImages,
         useMultiDayEventSprites,
         useSingleDayEventSprites,
@@ -238,6 +246,7 @@ export const useCalendarSettingsStore = defineStore('calendarSettings', () => {
         setFirstDayOfWeek,
         setGroupSimilarEvents,
         setCondensePastEventBars,
+        setPinAllMonthEvents,
         setUseAnimatedImages,
         setUseMultiDayEventSprites,
         setUseSingleDayEventSprites,

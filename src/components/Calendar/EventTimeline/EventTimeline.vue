@@ -14,13 +14,9 @@
             </button>
         </div>
 
-        <div v-if="!hasAnyEvents" class="no-events">
-            <p>No upcoming events found</p>
-        </div>
+        <TimelineNoEvents v-if="!hasAnyEvents" message="No upcoming events found" />
 
-        <div v-else-if="isSearching && !hasMatches" class="no-events">
-            <p>No events match your search</p>
-        </div>
+        <TimelineNoEvents v-else-if="isSearching && !hasMatches" message="No events match your search" />
 
         <TransitionGroup v-else name="fade" tag="div" class="timeline-events">
             <!-- Loop through categories in order -->
@@ -48,6 +44,7 @@ import { useTimelineCategories } from '@/composables/useTimelineCategories';
 import { useTimelineSearch } from '@/composables/useTimelineSearch';
 
 import TimelineCategorySection from './TimelineCategorySection.vue';
+import TimelineNoEvents from './TimelineNoEvents.vue';
 
 interface Props {
     isSidebarMode?: boolean;
@@ -160,17 +157,6 @@ const { searchQuery, isSearching, filteredCategorizedEvents, filteredGroupedByDa
 .timeline-search-clear:hover {
     color: var(--bs-body-color);
     background-color: color-mix(in srgb, var(--bs-body-color) 16%, transparent);
-}
-
-.no-events {
-    text-align: center;
-    padding: 2rem;
-    color: var(--bs-secondary-color);
-}
-
-.no-events p {
-    margin: 0;
-    font-style: italic;
 }
 
 .timeline-events {

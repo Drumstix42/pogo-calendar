@@ -1,6 +1,14 @@
 <template>
     <div class="calendar-grid">
         <div class="calendar-grid-container">
+            <!-- Pinned all-month events (opt-in), above the sticky day headers -->
+            <CalendarAllMonthEvents
+                v-if="cellAllMonthEvents.length > 0"
+                :events="cellAllMonthEvents"
+                :hidden-count="cellHiddenAllMonthEventCount"
+                :reference-day="allMonthReferenceDay"
+            />
+
             <!-- Day Headers -->
             <div class="calendar-day-headers">
                 <div v-for="day in dayHeaders" :key="day" class="calendar-day-header">
@@ -37,6 +45,7 @@ import { provideSpriteLoading } from '@/composables/useSpriteLoading';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { buildCalendarDays } from '@/utils/calendarGrid';
 
+import CalendarAllMonthEvents from './CalendarAllMonthEvents.vue';
 import CalendarDay from './CalendarDay/CalendarDay.vue';
 
 interface Props {
@@ -67,9 +76,16 @@ const calendarDays = computed(() =>
     }),
 );
 
-const { eventSlots } = useCalendarGridSlots(() => calendarDays.value);
+const { eventSlots, allMonthEvents, hiddenAllMonthEventCount } = useCalendarGridSlots(() => calendarDays.value);
 // Slot packing is lazy — placeholders never read it.
 const cellEventSlots = computed(() => (props.placeholder ? [] : eventSlots.value));
+const cellAllMonthEvents = computed(() => (props.placeholder ? [] : allMonthEvents.value));
+const cellHiddenAllMonthEventCount = computed(() => (props.placeholder ? 0 : hiddenAllMonthEventCount.value));
+
+const allMonthReferenceDay = computed(() => {
+    const days = calendarDays.value;
+    return (days.find(day => day.isToday) ?? days.find(day => day.isCurrentMonth) ?? days[0]).dayInstance;
+});
 </script>
 
 <style scoped>
