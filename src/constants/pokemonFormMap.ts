@@ -1592,7 +1592,10 @@ export const POKEMON_FORM_MAP: PokemonFormMap = {
     '975': null,
     '976': null,
     '977': null,
-    '978': null,
+    '978': {
+        default: 'fCURLY',
+        forms: ['fCURLY', 'fDROOPY', 'fSTRETCHY'],
+    },
     '979': null,
     '980': null,
     '981': null,
