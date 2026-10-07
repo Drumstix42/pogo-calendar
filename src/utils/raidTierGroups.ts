@@ -15,15 +15,20 @@ interface TierGroupInput {
     bosses: TierGroupBoss[];
 }
 
+// Labels ranked above every "Tier N", in order. Gigantamax is effectively the top Max Battle tier.
+const TOP_TIER_LABELS = ['gigantamax', 'primal', 'super mega'];
+
 /**
- * Orders raid tier labels: "Super Mega" first, then "Tier N" descending, then alphabetical.
+ * Orders raid tier labels: {@link TOP_TIER_LABELS} first, then "Tier N" descending, then alphabetical.
  */
 export function sortTierLabel(a: string, b: string): number {
-    const normalizedA = a.trim().toLowerCase();
-    const normalizedB = b.trim().toLowerCase();
-
-    if (normalizedA === 'super mega' && normalizedB !== 'super mega') return -1;
-    if (normalizedB === 'super mega' && normalizedA !== 'super mega') return 1;
+    const topRankA = TOP_TIER_LABELS.indexOf(a.trim().toLowerCase());
+    const topRankB = TOP_TIER_LABELS.indexOf(b.trim().toLowerCase());
+    if (topRankA !== -1 || topRankB !== -1) {
+        if (topRankA === -1) return 1;
+        if (topRankB === -1) return -1;
+        return topRankA - topRankB;
+    }
 
     const tierA = a.match(/^Tier (\d+)$/i);
     const tierB = b.match(/^Tier (\d+)$/i);
