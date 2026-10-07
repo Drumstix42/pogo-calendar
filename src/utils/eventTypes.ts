@@ -146,6 +146,8 @@ export interface PogoEvent {
         isRaidHourSubEvent?: boolean;
         isSpotlightSubEvent?: boolean;
         parentEventId?: string;
+        // Event-wide bosses a major event's per-day projection features after that day's own bosses.
+        headlineEventWideBosses?: PokemonBoss[];
         [key: string]: any;
     };
 

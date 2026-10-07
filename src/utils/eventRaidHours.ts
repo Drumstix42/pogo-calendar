@@ -258,3 +258,26 @@ export function getEventWideRaidBosses(event: PogoEvent): PokemonBoss[] {
 
     return dedupeBosses(bosses.filter(boss => !scheduledNames.has(boss.name.trim().toLowerCase())));
 }
+
+// Raid tiers prominent enough to feature in a major event's day cell when they run all event.
+const HEADLINE_RAID_TYPES = new Set([
+    'gigantamax',
+    'max battle',
+    'primal',
+    'super mega',
+    'tier 5',
+    'five-star raids',
+    'five-star shadow raids',
+    'mega',
+]);
+
+/**
+ * Headline-tier {@link getEventWideRaidBosses} to feature in each day's cell next to that day's own
+ * bosses (e.g. Wild Area's lone event-long Gigantamax debut beside its daily Max Battles).
+ * All-or-nothing: if they wouldn't all fit within `maxBosses` alongside the day's bosses, none are
+ * added, so a long event-wide list never crowds out what's specific to the day.
+ */
+export function getHeadlineEventWideRaidBosses(event: PogoEvent, dayBossCount: number, maxBosses: number): PokemonBoss[] {
+    const headlineBosses = getEventWideRaidBosses(event).filter(boss => HEADLINE_RAID_TYPES.has((boss.raidType ?? '').trim().toLowerCase()));
+    return dayBossCount + headlineBosses.length <= maxBosses ? headlineBosses : [];
+}

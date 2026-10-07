@@ -23,7 +23,7 @@ import {
 import { getRaidSubType } from './eventSubtype';
 import { type PogoEvent } from './eventTypes';
 import { getGigantamaxSpriteUrl, getPokemonId, hasSplitMegaXYForms } from './pokemonMapper.ts';
-import { getHighestTierBosses } from './raidTierGroups';
+import { buildTierGroupsFromBosses, getHighestTierBosses } from './raidTierGroups';
 import { getSuperMegaShieldCount } from './superMegaShields';
 
 // Each resolver maps one event-type branch to its Pokemon images, returning `null` to signal
@@ -49,11 +49,10 @@ const RAID_DAY_TITLE_EXCEPTIONS = new Set(['fashion raid day']);
 // highest-priority raid tier present (e.g. Super Mega alone, not mixed with Mega/Tier 5) - detailed
 // views group and show every tier separately via `buildTierGroupsFromBosses`, untouched by this.
 export function resolveBossImages(event: EventWithExtraData, options?: PokemonImageOptions): PokemonImageData[] | null {
-    if (!event.extraData.raidbattles?.bosses?.length) {
-        return null;
-    }
     const topTierBosses = getHighestTierBosses(getRaidBossesWithTierFallback(event, options));
-    const images = getPokemonImagesFromBossList(topTierBosses, options);
+    // A major event's day cell lists event-wide headliners after the day's own bosses, not merged by tier.
+    const headlineBosses = buildTierGroupsFromBosses(event.extraData.headlineEventWideBosses)?.flatMap(group => group.bosses) ?? [];
+    const images = getPokemonImagesFromBossList([...topTierBosses, ...headlineBosses], options);
     return images.length > 0 ? images : null;
 }
 

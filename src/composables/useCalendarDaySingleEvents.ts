@@ -7,9 +7,12 @@ import { useEventsStore } from '@/stores/events';
 import { parseEventDate } from '@/utils/eventDate';
 import { getEventsForDate } from '@/utils/eventGrouping';
 import { isMajorCalendarEventType } from '@/utils/eventMajor';
-import { getRaidScheduleSectionsForDate } from '@/utils/eventRaidHours';
+import { getHeadlineEventWideRaidBosses, getRaidScheduleSectionsForDate } from '@/utils/eventRaidHours';
 import { sortEventsByPriority } from '@/utils/eventSort';
 import { type PogoEvent } from '@/utils/eventTypes';
+
+// Matches PokemonEventImages' sprite cap, so event-wide headliners only join a day that can show them all.
+const MAX_DAY_CELL_BOSSES = 3;
 
 // A major multi-day event projected onto a single day so it renders in its own daily lane.
 export type DailyMajorDisplayEvent = PogoEvent & {
@@ -93,6 +96,7 @@ export function useCalendarDaySingleEvents(getDayInstance: () => Dayjs) {
                             ...(event.extraData?.raidbattles ?? {}),
                             bosses: dedupedDayBosses,
                         },
+                        headlineEventWideBosses: getHeadlineEventWideRaidBosses(event, dedupedDayBosses.length, MAX_DAY_CELL_BOSSES),
                     };
                 }
 
