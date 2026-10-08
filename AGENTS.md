@@ -262,8 +262,9 @@ Multi-tier fallback, chained at runtime in `PokemonImage.vue`. Tier 1 or 2 is th
 
 `getSprite256FallbackUrl()` (tier 3) and `getSpriteFallbackUrl()` (tier 4) derive their URL from the
 tier-2 PokeMiners URL via `swapUrlBase()` — same filename, different folder/host (`null` when the
-primary isn't a tier-2 URL). PokeMiners form suffixes use `f` prefix + uppercase (`fMEGA`, `fBURN`);
-alias `crownedsword`/`crownedshield` → `CROWNED`. Static sprite name: normalize (Unicode-aware —
+primary isn't a tier-2 URL). PokeMiners form suffixes use `f` prefix + uppercase (`fMEGA`, `fBURN`), matched to our slugs
+ignoring separators (`-family-of-four` → `fFAMILY_OF_FOUR`). `POKEMON_FORM_MAP` is hand-maintained;
+when a Pokémon has no base `pm{id}.icon.png`, its `default` must name an existing form file. Static sprite name: normalize (Unicode-aware —
 handles accented characters and gender symbols) → strip non-alphanumeric → append suffix.
 
 Gigantamax sprites are a **separate path**: `getGigantamaxSpriteUrl(name, formSlug?)` builds a URL
