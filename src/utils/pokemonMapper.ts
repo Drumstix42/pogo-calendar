@@ -159,22 +159,15 @@ export function isValidStaticSprite(spriteName: string): boolean {
     return VALID_STATIC_SPRITES.has(spriteName.toLowerCase());
 }
 
-// Some of our slugs don't match PokeMiners' form names 1:1 (e.g. "crownedsword" → "CROWNED", or
-// "megax"/"megay" - our Mega X/Y suffix has no separator, PokeMiners' does: "fMEGA_X"/"fMEGA_Y").
-const POKEMINERS_FORM_ALIASES: Record<string, string> = {
-    crownedsword: 'CROWNED',
-    crownedshield: 'CROWNED',
-    megax: 'MEGA_X',
-    megay: 'MEGA_Y',
-};
+function normalizeFormName(form: string): string {
+    return form.toUpperCase().replace(/[^A-Z0-9]/g, '');
+}
 
-// Does this Pokemon have a PokeMiners form matching the given suffix? Forms are stored with an 'f'
-// prefix (e.g. "fBURN"), so this checks both with and without it.
-function pokeMinersHasForm(pokemon: PokemonFormData, formSuffix: string): boolean {
-    const cleanedSuffix = formSuffix.startsWith('-') ? formSuffix.substring(1) : formSuffix;
-    const normalizedForm = POKEMINERS_FORM_ALIASES[cleanedSuffix.toLowerCase()] ?? cleanedSuffix.toUpperCase();
-
-    return pokemon.forms.some(f => f.substring(1) === normalizedForm || f.toUpperCase() === normalizedForm);
+// The PokeMiners form (e.g. "fFAMILY_OF_FOUR") matching one of our suffixes, if any. Separators are
+// ignored, since our slugs ("-family-of-four", "-megax", "-crownedsword") don't keep PokeMiners' underscores.
+function findPokeMinersForm(pokemon: PokemonFormData, formSuffix: string): string | undefined {
+    const normalizedSuffix = normalizeFormName(formSuffix);
+    return pokemon.forms.find(form => normalizeFormName(form.substring(1)) === normalizedSuffix);
 }
 
 // Get PokeMiners asset URL for a Pokemon using the form mapping
@@ -191,15 +184,10 @@ function getPokeMinersSpriteUrl(pokemonId: number, formSuffix?: string, shiny = 
         // Base form only
         suffix = '';
     } else if (formSuffix) {
-        if (pokeMinersHasForm(pokemon, formSuffix)) {
-            // PokeMiners filenames require the 'f' prefix: "pm649.fBURN.icon.png"
-            const cleanedSuffix = formSuffix.startsWith('-') ? formSuffix.substring(1) : formSuffix;
-            const normalizedForm = POKEMINERS_FORM_ALIASES[cleanedSuffix.toLowerCase()] ?? cleanedSuffix.toUpperCase();
-            suffix = `.${cleanedSuffix.startsWith('f') ? cleanedSuffix : 'f' + normalizedForm}`;
-        } else {
-            // Form not found in PokeMiners, use default (e.g., Genesect defaults to "fNORMAL")
-            suffix = pokemon.default ? `.${pokemon.default}` : '';
-        }
+        const matchedForm = findPokeMinersForm(pokemon, formSuffix);
+        // Form not found in PokeMiners, use default (e.g., Genesect defaults to "fNORMAL")
+        const form = matchedForm ?? pokemon.default;
+        suffix = form ? `.${form}` : '';
     } else {
         // No form specified, use default
         suffix = pokemon.default ? `.${pokemon.default}` : '';
@@ -224,7 +212,7 @@ export function hasExactSpriteForm(pokemonName: string, suffix?: string): boolea
     if (isValidStaticSprite(urlName) || isValidAnimatedSprite(urlName)) return true;
 
     const pokemon = POKEMON_FORM_MAP[pokemonId.toString()];
-    return pokemon != null && pokeMinersHasForm(pokemon, suffix);
+    return pokemon != null && findPokeMinersForm(pokemon, suffix) !== undefined;
 }
 
 const POKEMINERS_URL_PREFIX = 'https://raw.githubusercontent.com/PokeMiners/pogo_assets/master/Images/Pokemon/Addressable%20Assets/';
