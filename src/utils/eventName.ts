@@ -46,6 +46,11 @@ export function formatEventName(text: string) {
     return removePokemonGoPrefix(decodeHtmlEntities(text));
 }
 
+/** Removes standalone years (e.g. "GO Wild Area 2026: Global" → "GO Wild Area: Global") */
+export function removeEventYear(text: string): string {
+    return text.replace(/\s*\b20\d{2}\b/g, '').trim();
+}
+
 /**
  * Determines the best display name for a group of events.
  * If event names are similar (one is substring of another or significant overlap),

@@ -1,7 +1,7 @@
 import { type DailyMajorDisplayEvent } from '@/composables/useCalendarDaySingleEvents';
 import { useEventsStore } from '@/stores/events';
 import { getEventDisplayName } from '@/utils/eventDisplay';
-import { formatEventName } from '@/utils/eventName';
+import { formatEventName, removeEventYear } from '@/utils/eventName';
 import { type PogoEvent } from '@/utils/eventTypes';
 
 // Per-event rendering helpers for single-day calendar entries. Resolves the per-day projections
@@ -22,8 +22,9 @@ export function useDailyEventDisplay() {
     }
 
     function getEventDisplayNameForSingleDay(event: PogoEvent): string {
+        // The calendar already shows the year, and it only lengthens these long major-event titles.
         if (isMajorDailyDisplayEvent(event)) {
-            return formatEventName(event.name);
+            return removeEventYear(formatEventName(event.name));
         }
 
         return getEventDisplayName(event);
