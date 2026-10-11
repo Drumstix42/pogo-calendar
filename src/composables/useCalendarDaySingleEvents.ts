@@ -80,7 +80,7 @@ export function useCalendarDaySingleEvents(getDayInstance: () => Dayjs) {
                 // Only day-scope bosses when a raidSchedule exists to scope them by - without one,
                 // leave extraData untouched so the event's own raidbattles.bosses still renders as-is.
                 let nextExtraData = event.extraData;
-                if (event.extraData?.raidSchedule) {
+                if (event.extraData?.raidSchedule?.length) {
                     const scheduleSections = getRaidScheduleSectionsForDate(event, targetDay);
                     // Union all-day and time-boxed sections - a single-day event's rotation (e.g. a
                     // raid makeup day) is split across time-boxed sections with no all-day section at
