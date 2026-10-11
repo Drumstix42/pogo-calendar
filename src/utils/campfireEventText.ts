@@ -16,6 +16,38 @@ export function resolveCampfireEventPokemonNames(event: PogoEvent): string[] {
     return [...new Set(getEventPokemonImages(event).map(image => image.name))].filter(name => !NON_POKEMON_PLACEHOLDER_NAMES.has(name));
 }
 
+const RAID_EVENT_TYPES = new Set(['raid-battles', 'raid-day', 'raid-hour', 'raid-weekend']);
+// Max Battle catches have a fixed level but are never weather boosted.
+const MAX_BATTLE_EVENT_TYPES = new Set(['max-battles', 'max-mondays']);
+
+// Raid bosses in the feed data (tier-tagged) mark raid content inside other types too - Raid Hour
+// sub-events, raid-heavy `event`s, GO Fest/Tour days.
+function hasRaidContent(event: PogoEvent): boolean {
+    return (
+        RAID_EVENT_TYPES.has(event.eventType) || event.extraData?.isRaidHourSubEvent === true || Boolean(event.extraData?.raidbattles?.bosses?.length)
+    );
+}
+
+// Community Day's and Spotlight Hour's wild encounters have no fixed catch level, so Hundo CP never applies.
+const NO_CP_EVENT_TYPES = new Set(['community-day', 'pokemon-spotlight-hour']);
+
+/** Whether the CP options apply at all - the modal hides them otherwise. */
+export function isCampfireCpApplicable(event: PogoEvent): boolean {
+    return !NO_CP_EVENT_TYPES.has(event.eventType);
+}
+
+/**
+ * Starting values for the non-persisted CP toggles. Hundo CP (Lv 20/25) is a raid/Max Battle catch
+ * stat, so it starts off elsewhere - users can still turn it on.
+ */
+export function getCampfireCpDefaults(event: PogoEvent) {
+    if (!isCampfireCpApplicable(event)) return { includeCP: false, includeWeatherBoostedCP: false };
+    // Type first: it's the explicit signal, while boss data only infers raid content.
+    if (MAX_BATTLE_EVENT_TYPES.has(event.eventType)) return { includeCP: true, includeWeatherBoostedCP: false };
+    if (hasRaidContent(event)) return { includeCP: true, includeWeatherBoostedCP: true };
+    return { includeCP: false, includeWeatherBoostedCP: false };
+}
+
 export interface CampfireBonusGroup {
     title: string | null;
     items: string[];
@@ -70,6 +102,7 @@ export function buildCampfirePokemonEntry(
 }
 
 export interface CampfireOutputOptions {
+    includeSummaryText: boolean;
     includePokemonDetails: boolean;
     includeWeakness: boolean;
     includeCP: boolean;
@@ -153,5 +186,6 @@ export function formatCampfireEventText(title: string, body: string, entries: Ca
         options.includePokemonDetails && entries.length > 0
             ? `--\n${entries.map(entry => formatCampfirePokemonEntry(entry, options)).join('\n\n')}`
             : '';
-    return [title.trim(), body.trim(), bonusBlock, entryBlock].filter(Boolean).join('\n\n');
+    const summary = options.includeSummaryText ? body.trim() : '';
+    return [title.trim(), summary, bonusBlock, entryBlock].filter(Boolean).join('\n\n');
 }

@@ -61,6 +61,16 @@
 
     <div class="field-group">
         <label class="form-label d-block mb-2">Output Options</label>
+        <div class="form-check">
+            <input id="campfireIncludeSummaryText" v-model="campfireTemplateStore.includeSummaryText" class="form-check-input" type="checkbox" />
+            <label class="form-check-label" for="campfireIncludeSummaryText">Show Static Summary Text</label>
+        </div>
+        <div v-if="eventBonusGroups.length > 0" class="form-check">
+            <input id="campfireIncludeEventBonus" v-model="campfireTemplateStore.includeEventBonus" class="form-check-input" type="checkbox" />
+            <label class="form-check-label" for="campfireIncludeEventBonus">Show Event Bonuses</label>
+            <small v-if="imageBonusText" class="text-muted d-block">Shows "{{ imageBonusText }}" in the output text, and in the image footer.</small>
+            <small v-else class="text-muted d-block">Shows the event's bonuses in the output text (not on the image).</small>
+        </div>
         <template v-if="showCpOptions">
             <div class="form-check">
                 <input id="campfireIncludeCP" v-model="campfireTemplateStore.includeCP" class="form-check-input" type="checkbox" />
@@ -75,15 +85,9 @@
                     :disabled="!campfireTemplateStore.includeCP"
                 />
                 <label class="form-check-label" for="campfireIncludeWeatherBoostedCP">Weather Boosted CP</label>
-                <small class="text-muted d-block">Not relevant for Max Battles.</small>
+                <small class="text-muted d-block">Applies to raid catches (not Max Battles).</small>
             </div>
         </template>
-        <div v-if="eventBonusGroups.length > 0" class="form-check">
-            <input id="campfireIncludeEventBonus" v-model="campfireTemplateStore.includeEventBonus" class="form-check-input" type="checkbox" />
-            <label class="form-check-label" for="campfireIncludeEventBonus">Show Event Bonuses</label>
-            <small v-if="imageBonusText" class="text-muted d-block">Shows "{{ imageBonusText }}" in the Output text, and in the image footer.</small>
-            <small v-else class="text-muted d-block">Shows the event's bonuses in the output text (not on the image).</small>
-        </div>
         <div class="form-check">
             <input
                 id="campfireIncludePokemonDetails"
@@ -129,7 +133,9 @@ import {
     type CampfirePokemonEntry,
     buildCampfirePokemonEntry,
     formatCampfireEventText,
+    getCampfireCpDefaults,
     getCampfireEventBonusGroups,
+    isCampfireCpApplicable,
     resolveCampfireEventPokemonNames,
     resolveCampfireTemplate,
 } from '@/utils/campfireEventText';
@@ -173,9 +179,8 @@ function resetBodyTemplate() {
     bodyTemplate.value = campfireTemplateStore.bodyTemplate;
 }
 
-// Hundo/Weather Boosted CP don't apply to Community Day's or Spotlight Hour's wild encounter - hide
-// the CP options entirely rather than showing an always-inapplicable checkbox for the life of the modal.
-const showCpOptions = computed(() => props.event.eventType !== 'community-day' && props.event.eventType !== 'pokemon-spotlight-hour');
+// Hidden entirely rather than showing an always-inapplicable checkbox for the life of the modal.
+const showCpOptions = computed(() => isCampfireCpApplicable(props.event));
 
 // Re-seed the form from the event's resolved Pokemon and the saved templates each time the modal opens.
 watch(
@@ -189,9 +194,11 @@ watch(
         titleTemplate.value = campfireTemplateStore.titleTemplate;
         bodyTemplate.value = campfireTemplateStore.bodyTemplate;
 
-        // Not persisted (see the store) - re-derive a sensible default for this specific event's type.
-        campfireTemplateStore.includeCP = showCpOptions.value;
-        campfireTemplateStore.includeWeatherBoostedCP = props.event.eventType !== 'max-battles';
+        // Not persisted (see the store) - re-derive a sensible default for this specific event.
+        const cpDefaults = getCampfireCpDefaults(props.event);
+        campfireTemplateStore.includeCP = cpDefaults.includeCP;
+        campfireTemplateStore.includeWeatherBoostedCP = cpDefaults.includeWeatherBoostedCP;
+        campfireTemplateStore.includeSummaryText = true;
         campfireTemplateStore.includeEventBonus = true;
     },
     { immediate: true },
@@ -224,6 +231,7 @@ const pokemonEntries = computed(() => {
 });
 
 const outputOptions = computed(() => ({
+    includeSummaryText: campfireTemplateStore.includeSummaryText,
     includePokemonDetails: campfireTemplateStore.includePokemonDetails,
     includeWeakness: campfireTemplateStore.includeWeakness,
     includeCP: campfireTemplateStore.includeCP,

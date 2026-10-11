@@ -20,9 +20,10 @@ export const useCampfireTemplateStore = defineStore('campfireTemplate', () => {
     const includeWeakness = useLocalStorage<boolean>(STORAGE_KEYS.CAMPFIRE_INCLUDE_WEAKNESS, true);
     const includeMaxCP = useLocalStorage<boolean>(STORAGE_KEYS.CAMPFIRE_INCLUDE_MAX_CP, true);
 
-    // CP/bonus toggles - NOT persisted. Their sensible default depends on the current event's type
-    // (e.g. Weather Boosted CP defaults off for Max Battles), so the modal re-derives these each time
-    // it opens rather than carrying a stale value over from whatever event was open last.
+    // Per-event output toggles - NOT persisted. Their sensible default depends on the current event
+    // (e.g. CP only for raids/Max Battles), or they're a one-off opt-out, so the modal re-derives these
+    // each time it opens rather than carrying a stale value over from whatever event was open last.
+    const includeSummaryText = ref(true);
     const includeCP = ref(true);
     const includeWeatherBoostedCP = ref(true);
     const includeEventBonus = ref(true);
@@ -40,6 +41,7 @@ export const useCampfireTemplateStore = defineStore('campfireTemplate', () => {
         bodyTemplate,
         includePokemonDetails,
         includeWeakness,
+        includeSummaryText,
         includeCP,
         includeWeatherBoostedCP,
         includeMaxCP,
