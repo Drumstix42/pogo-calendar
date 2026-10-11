@@ -199,7 +199,7 @@ Events that start and end in the same week, and all current/future weeks, render
 
 ### Pinned all-month events (`src/composables/useCalendarGridSlots.ts`)
 
-Opt-in via `calendarSettings.pinAllMonthEvents` (off by default). Events whose bar starts before the viewed
+Controlled by `calendarSettings.pinAllMonthEvents` (on by default). Events whose bar starts before the viewed
 month's 1st and ends after its last day (`allMonthEvents`) render once above the sticky day headers
 (`CalendarAllMonthEvents.vue`) as wrapping inline chips with a date range (a `MultiDayEventBar` with no
 `position`). In the grid they're flagged `isPinned` on their slot (packed last) and only draw in a

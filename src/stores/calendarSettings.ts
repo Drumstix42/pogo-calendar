@@ -30,7 +30,7 @@ export const useCalendarSettingsStore = defineStore('calendarSettings', () => {
     const condensePastEventBars = useLocalStorage<boolean>(STORAGE_KEYS.CONDENSE_PAST_EVENT_BARS, true);
 
     // Pin all-month events setting - whether events spanning the whole visible grid show once above it instead of as a bar in every week
-    const pinAllMonthEvents = useLocalStorage<boolean>(STORAGE_KEYS.PIN_ALL_MONTH_EVENTS, false);
+    const pinAllMonthEvents = useLocalStorage<boolean>(STORAGE_KEYS.PIN_ALL_MONTH_EVENTS, true);
 
     // Animated images setting - whether to use animated images in detailed views
     const useAnimatedImages = useLocalStorage<boolean>(STORAGE_KEYS.USE_ANIMATED_IMAGES, true);
