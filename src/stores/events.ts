@@ -26,6 +26,7 @@ interface EventWithTypeInfo extends PogoEvent {
 }
 
 //const SCRAPED_EVENTS_URL = 'https://raw.githubusercontent.com/bigfoott/ScrapedDuck/data/events.min.json';
+//const SCRAPED_EVENTS_URL = '/planning/events14.json';
 const SCRAPED_EVENTS_URL = 'https://raw.githubusercontent.com/Drumstix42/ScrapedDuck/refs/heads/data/events.min.json';
 
 export const useEventsStore = defineStore('eventsStore', () => {
