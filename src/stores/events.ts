@@ -204,7 +204,7 @@ export const useEventsStore = defineStore('eventsStore', () => {
             lastFetched.value = dayjs();
             error.value = null;
 
-            console.log(`Loaded ${fetchedEvents.length} events from ScrapedDuck`);
+            console.log(`Loaded ${fetchedEvents.length} events from JSON response`);
             if (raidHourEvents.length > 0) {
                 console.log(`Parsed ${raidHourEvents.length} Raid Hour pseudo sub-events`);
             }

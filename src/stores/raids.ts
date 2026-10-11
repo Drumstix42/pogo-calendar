@@ -46,7 +46,7 @@ export const useRaidsStore = defineStore('raidsStore', () => {
             lastFetched.value = dayjs();
             error.value = null;
 
-            console.log(`Loaded ${raids.value.length} raid boss(es) from ScrapedDuck`);
+            console.log(`Loaded ${raids.value.length} raid boss(es) from JSON response`);
         } catch (fetchError) {
             console.error('Error fetching raids:', fetchError);
             error.value = fetchError instanceof Error ? fetchError.message : 'Unknown error occurred';

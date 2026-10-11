@@ -83,7 +83,7 @@ export const useSeasonsStore = defineStore('seasonsStore', () => {
             lastFetched.value = dayjs();
             error.value = null;
 
-            console.log(`Loaded ${seasons.value.length} season(s) from ScrapedDuck`);
+            console.log(`Loaded ${seasons.value.length} season(s) from JSON response`);
         } catch (fetchError) {
             console.error('Error fetching seasons:', fetchError);
             error.value = fetchError instanceof Error ? fetchError.message : 'Unknown error occurred';

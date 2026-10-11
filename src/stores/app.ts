@@ -28,16 +28,25 @@ export const useAppStore = defineStore('app', () => {
             if (currentVersion.value === null) {
                 // first load - store the version
                 currentVersion.value = data.timestamp;
-                console.log('[AppStore] Version loaded:', data.timestampFormatted);
+                const localFormatted = new Date(data.timestamp).toLocaleString('en-US', {
+                    month: '2-digit',
+                    day: '2-digit',
+                    year: 'numeric',
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    timeZoneName: 'short',
+                });
+                console.log('[PogoCalendar] Build Version loaded:', data.timestampFormatted, `(local: ${localFormatted})`);
 
                 // dev mode: force show update message for testing
                 if (import.meta.env.DEV && DEV_FORCE_UPDATE_MESSAGE) {
-                    console.log('[AppStore] Dev mode - forcing update message');
+                    console.log('[PogoCalendar] Dev mode - forcing update message');
                     showUpdateMessage();
                 }
             } else if (data.timestamp > currentVersion.value) {
                 // newer version detected
-                console.log('[AppStore] New version detected!');
+                console.log('[PogoCalendar] New version detected!');
                 isOutdated.value = true;
                 showUpdateMessage();
             }
