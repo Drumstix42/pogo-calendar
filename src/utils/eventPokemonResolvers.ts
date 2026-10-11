@@ -1,10 +1,12 @@
 import { formatEventName } from './eventName.ts';
 import {
     extractPokemonNameFromRaidBattle,
+    extractPokemonNamesFromHatchDay,
     extractPokemonNamesFromMaxMonday,
     extractPokemonNamesFromRaidHour,
     extractPokemonNamesFromSpotlightHour,
     hasCostumeDescription,
+    isHatchDayEvent,
     parseDynamaxMaxBattleName,
     parseEventPokemonNames,
     parseGigantamaxFormSlug,
@@ -39,6 +41,7 @@ export function getEventSpriteEffect(event: PogoEvent): SpriteEffect | undefined
     if (getRaidSubType(event) === 'shadow-raids') return SPRITE_EFFECTS.SHADOW;
     if (event.eventType === 'max-mondays') return SPRITE_EFFECTS.DYNAMAX;
     if (event.eventType === 'max-battles' && parseDynamaxMaxBattleName(formatEventName(event.name))) return SPRITE_EFFECTS.DYNAMAX;
+    if (isHatchDayEvent(event)) return SPRITE_EFFECTS.HATCH;
     return undefined;
 }
 
@@ -259,6 +262,13 @@ export function resolveCommunityDayImages(event: EventWithExtraData, options?: P
     }
 
     const images = getSpriteImagesFromNames(pokemonNames, options);
+    return images.length > 0 ? images : null;
+}
+
+// Hatch Days carry no Pokemon data, so the title is the only source. Unrecognized names are dropped
+// rather than shown as missing sprites; with none left, the egg placeholder stands in.
+export function resolveHatchDayImages(event: EventWithExtraData, options?: PokemonImageOptions): PokemonImageData[] | null {
+    const images = getSpriteImagesFromNames(extractPokemonNamesFromHatchDay(event.name).filter(isKnownPokemonName), options);
     return images.length > 0 ? images : null;
 }
 

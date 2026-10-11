@@ -12,6 +12,7 @@ export const SPRITE_EFFECTS = {
     DYNAMAX: 'dynamax',
     GIGANTAMAX: 'gigantamax',
     SHADOW: 'shadow',
+    HATCH: 'hatch',
 } as const;
 
 export type SpriteEffect = (typeof SPRITE_EFFECTS)[keyof typeof SPRITE_EFFECTS];

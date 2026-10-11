@@ -99,6 +99,21 @@ export function extractPokemonNamesFromSpotlightHour(eventName: string): string[
     return parseEventPokemonNames(match[1].trim());
 }
 
+// Pattern: "[Replay: ]<Pokemon Name(s)> Hatch Day" - a bare "Hatch Day" (no featured Pokemon) still counts.
+const HATCH_DAY_TITLE = /^(?:Replay:\s*)?(?:(.+?)\s+)?Hatch\s+Day$/i;
+
+export function isHatchDayEvent(event: PogoEvent): boolean {
+    // Cheap raw-name check first: this runs for nearly every event (via getEventSpriteEffect), and
+    // formatEventName decodes entities with several regexes.
+    return /hatch\s+day$/i.test(event.name) && HATCH_DAY_TITLE.test(formatEventName(event.name));
+}
+
+// Candidate names only: a title can name a theme instead of Pokemon (e.g. "Fire and Ice Hatch Day").
+export function extractPokemonNamesFromHatchDay(eventName: string): string[] {
+    const match = formatEventName(eventName).match(HATCH_DAY_TITLE);
+    return match?.[1] ? parseEventPokemonNames(match[1].trim()) : [];
+}
+
 // Uses getRaidSubType to determine the format, then applies appropriate regex patterns
 export function extractPokemonNameFromRaidBattle(event: PogoEvent): string | null {
     const subType = getRaidSubType(event);

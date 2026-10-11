@@ -1,20 +1,15 @@
 <template>
     <div class="pokemon-item">
         <VTooltip placement="top" :delay="{ show: 50, hide: 0 }" distance="8" :disabled="!showTooltip">
-            <div
-                class="pokemon-container"
-                :class="{
-                    'has-dynamax-overlay': resolvedEffect === SPRITE_EFFECTS.DYNAMAX,
-                    'has-shadow-effect': resolvedEffect === SPRITE_EFFECTS.SHADOW,
-                    'has-gigantamax-effect': resolvedEffect === SPRITE_EFFECTS.GIGANTAMAX,
-                    'placeholder-container': isPlaceholder || !currentImageSrc,
-                }"
-            >
+            <div class="pokemon-container" :class="containerClass">
                 <div v-if="resolvedEffect === SPRITE_EFFECTS.DYNAMAX" class="dynamax-overlay" :class="{ animated: useAnimated }">
                     <img src="/images/overlay/dynamax-clouds.png" alt="Dynamax effect" class="dynamax-clouds" />
                 </div>
                 <div v-if="resolvedEffect === SPRITE_EFFECTS.SHADOW" class="shadow-overlay" :class="{ animated: useAnimated }">
                     <img src="/images/overlay/shadow-aura.png" alt="Shadow effect" class="shadow-aura" />
+                </div>
+                <div v-if="resolvedEffect === SPRITE_EFFECTS.HATCH && !isPlaceholder" class="hatch-overlay">
+                    <img src="/images/overlay/egg.svg" alt="Egg" class="hatch-egg" :class="{ animated: useAnimated }" />
                 </div>
 
                 <div v-if="shieldCount" class="shield-badge-anchor">
@@ -25,17 +20,20 @@
                 </div>
 
                 <template v-if="isPlaceholder">
-                    <CircleHelpIcon class="placeholder-icon" :size="height" />
+                    <span v-if="isHatchPlaceholder" class="hatch-placeholder" :style="sizeStyle">
+                        <img src="/images/overlay/egg.svg" alt="Egg" class="hatch-egg" :class="{ animated: useAnimated }" />
+                    </span>
+                    <CircleHelpIcon v-else class="placeholder-icon" :size="height" />
                 </template>
                 <template v-else>
                     <!-- Sprite download held off (see useSpriteLoading) -->
-                    <span v-if="!spritesEnabled" class="pokemon-icon deferred-sprite" :style="{ height: `${height}px`, width: `${height}px` }"></span>
+                    <span v-if="!spritesEnabled" class="pokemon-icon deferred-sprite" :style="sizeStyle"></span>
                     <img
                         v-else-if="currentImageSrc && !hasError"
                         :src="currentImageSrc"
                         :alt="pokemonData?.name"
                         class="pokemon-icon"
-                        :style="{ height: `${height}px`, width: `${height}px` }"
+                        :style="sizeStyle"
                         @error="onImageError"
                     />
                     <BadgeQuestionMark v-else class="placeholder-icon" :size="height" />
@@ -44,7 +42,8 @@
 
             <template #popper>
                 <div class="tooltip-text white-space-nowrap text-center">
-                    <template v-if="isPlaceholder">Unknown pokemon</template>
+                    <template v-if="isHatchPlaceholder">Hatch Day</template>
+                    <template v-else-if="isPlaceholder">Unknown pokemon</template>
                     <template v-else> {{ pokemonData?.name }}{{ !currentImageSrc || hasError ? ' (missing sprite)' : '' }} </template>
                     <template v-if="shieldCount"
                         ><br /><span class="fw-bold">{{ shieldCount }} shields to break</span></template
@@ -112,6 +111,11 @@ const errorLevel = ref(0);
 // Per-sprite effect wins; fall back to the event-level prop.
 const resolvedEffect = computed(() => props.pokemonData?.effect ?? props.effect);
 
+// No Pokemon could be read from the Hatch Day title, so the egg itself is the image.
+const isHatchPlaceholder = computed(() => props.isPlaceholder && resolvedEffect.value === SPRITE_EFFECTS.HATCH);
+
+const sizeStyle = computed(() => ({ height: `${props.height}px`, width: `${props.height}px` }));
+
 const shieldCount = computed(() => props.pokemonData?.shieldCount);
 
 const altFolderUrl = computed(() => {
@@ -124,27 +128,10 @@ const hubFallbackUrl = computed(() => {
     return url ? getSpriteFallbackUrl(url) : null;
 });
 
+// The @error fallback chain, in order; deduped so a failed URL isn't retried.
 const imageSources = computed(() => {
-    const sources: string[] = [];
-    const primary = props.pokemonData?.imageUrl;
-    const altFolder = altFolderUrl.value;
-    const hub = hubFallbackUrl.value;
-    const jsonFallback = props.pokemonData?.fallbackImageUrl;
-
-    if (primary) {
-        sources.push(primary);
-    }
-    if (altFolder && !sources.includes(altFolder)) {
-        sources.push(altFolder);
-    }
-    if (hub && !sources.includes(hub)) {
-        sources.push(hub);
-    }
-    if (jsonFallback && !sources.includes(jsonFallback)) {
-        sources.push(jsonFallback);
-    }
-
-    return sources;
+    const candidates = [props.pokemonData?.imageUrl, altFolderUrl.value, hubFallbackUrl.value, props.pokemonData?.fallbackImageUrl];
+    return [...new Set(candidates.filter((url): url is string => Boolean(url)))];
 });
 
 const currentImageSrc = computed(() => {
@@ -154,6 +141,20 @@ const currentImageSrc = computed(() => {
 const hasError = computed(() => {
     return errorLevel.value >= imageSources.value.length;
 });
+
+// Exhaustive over SpriteEffect, so a new effect fails type-check until it gets a class.
+const EFFECT_CLASSES: Record<SpriteEffect, string> = {
+    [SPRITE_EFFECTS.DYNAMAX]: 'has-dynamax-overlay',
+    [SPRITE_EFFECTS.SHADOW]: 'has-shadow-effect',
+    [SPRITE_EFFECTS.GIGANTAMAX]: 'has-gigantamax-effect',
+    [SPRITE_EFFECTS.HATCH]: 'has-hatch-effect',
+};
+
+// At most one effect class; the placeholder class can stack with it (e.g. an unannounced Shadow Raid boss).
+const containerClass = computed(() => [
+    resolvedEffect.value && EFFECT_CLASSES[resolvedEffect.value],
+    { 'placeholder-container': !isHatchPlaceholder.value && (props.isPlaceholder || !currentImageSrc.value) },
+]);
 
 watch(
     () => imageSources.value.join('|'),
@@ -262,6 +263,76 @@ function onImageError() {
         opacity: 0.8;
         transform: scale(1.25) translate(1px, 0.5px) rotate(-1deg);
     }
+}
+
+/* Egg sits behind the sprite, nudged right of center; fully centered, wide sprites read as wrapped around it */
+.hatch-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-end;
+    transform: translateX(16%);
+    pointer-events: none;
+}
+
+.hatch-overlay .hatch-egg {
+    height: 90%;
+    opacity: 0.9;
+}
+
+.hatch-placeholder {
+    position: relative;
+    z-index: 2;
+    display: inline-flex;
+    align-items: flex-end;
+    justify-content: center;
+
+    .hatch-egg {
+        height: 90%;
+        filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.25));
+    }
+}
+
+.hatch-egg {
+    width: auto;
+    transform-origin: 50% 95%;
+}
+
+.hatch-egg.animated {
+    will-change: transform;
+    animation: eggWobble 3.2s ease-in-out infinite;
+}
+
+/* Mostly still, with a short in-game style wobble (~1.2s) */
+@keyframes eggWobble {
+    0%,
+    62%,
+    100% {
+        transform: rotate(0deg);
+    }
+    68% {
+        transform: rotate(-7deg);
+    }
+    76% {
+        transform: rotate(6deg);
+    }
+    84% {
+        transform: rotate(-4deg);
+    }
+    92% {
+        transform: rotate(2deg);
+    }
+}
+
+/* Shrunk toward the bottom-left so the egg behind gets room; the layout box stays full size */
+.has-hatch-effect .pokemon-icon {
+    scale: 0.82;
+    transform-origin: 0 100%;
+    /* Tight black shadow separates the sprite from the egg; the event-color glow ties it to the event */
+    filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.5))
+        drop-shadow(0 0 3px color-mix(in srgb, var(--hatch-glow-color, transparent) 50%, rgba(0, 0, 0, 0.6)));
 }
 
 .pokemon-icon {

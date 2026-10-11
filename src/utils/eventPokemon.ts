@@ -2,6 +2,7 @@ import {
     getEventSpriteEffect,
     resolveBossImages,
     resolveCommunityDayImages,
+    resolveHatchDayImages,
     resolveMaxBattleImages,
     resolveMaxMondayImages,
     resolvePokestopShowcaseImages,
@@ -10,6 +11,7 @@ import {
     resolveRaidHourImages,
     resolveSpotlightImages,
 } from './eventPokemonResolvers';
+import { SPRITE_EFFECTS } from './eventPokemonTypes';
 import type { EventWithExtraData, PokemonImageData, PokemonImageOptions, SpriteEffect } from './eventPokemonTypes';
 import { getPokemonImagesFromBossList, getRecurringRaidScheduleBosses } from './eventSprite';
 import { type EventTypeKey, type PogoEvent } from './eventTypes';
@@ -61,6 +63,11 @@ export function getEventPokemonImages(event: PogoEvent, options?: PokemonImageOp
     // primary resolver produced nothing.
     if (!result && eventWithExtraData.extraData.isSpotlightSubEvent) {
         result = resolveSpotlightImages(eventWithExtraData, options);
+    }
+
+    // Hatch Days are plain `event`s recognized by title, which the event-level effect already did.
+    if (!result && effect === SPRITE_EFFECTS.HATCH) {
+        result = resolveHatchDayImages(eventWithExtraData, options);
     }
 
     return result ? applyEventEffect(result, effect) : [];

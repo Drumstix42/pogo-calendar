@@ -7,6 +7,7 @@
             'force-wrap': wrap,
             'overflow-badge-right': overflowBadgeAlign === 'right',
         }"
+        :style="hatchGlowStyle"
     >
         <PokemonImage
             v-for="(pokemonData, index) in displayedImages"
@@ -30,7 +31,7 @@
             :use-animated="useAnimated"
             :show-tooltip="showTooltips"
             :event-type="event.eventType"
-            :effect="placeholderEffect"
+            :effect="eventEffect"
             is-placeholder
         />
     </div>
@@ -40,7 +41,8 @@
 import { breakpointsBootstrapV5, useBreakpoints } from '@vueuse/core';
 import { computed } from 'vue';
 
-import { type PokemonImageData, getEventPokemonImages, getEventSpriteEffect, getMultiDayPokemonImages } from '@/utils/eventPokemon';
+import { useEventTypeColorsStore } from '@/stores/eventTypeColors';
+import { type PokemonImageData, SPRITE_EFFECTS, getEventPokemonImages, getEventSpriteEffect, getMultiDayPokemonImages } from '@/utils/eventPokemon';
 import { type PogoEvent } from '@/utils/eventTypes';
 
 import PokemonImage from './PokemonImage.vue';
@@ -99,14 +101,22 @@ const PLACEHOLDER_EVENT_TYPES = [
     'pokestop-showcase',
 ];
 
+// Event-level effect: feeds the placeholder (which has no resolved sprite to carry one) and Hatch Day handling.
+const eventEffect = computed(() => getEventSpriteEffect(props.event));
+const isHatchDay = computed(() => eventEffect.value === SPRITE_EFFECTS.HATCH);
+
 const shouldShowPlaceholder = computed(() => {
     if (!props.showPlaceholder) return false;
 
-    return pokemonImages.value.length === 0 && PLACEHOLDER_EVENT_TYPES.includes(props.event.eventType);
+    // Hatch Days are plain `event`s; their placeholder is an egg rather than a "?".
+    return pokemonImages.value.length === 0 && (PLACEHOLDER_EVENT_TYPES.includes(props.event.eventType) || isHatchDay.value);
 });
 
-// The placeholder has no resolved sprite to carry an effect, so it reads the event-level effect.
-const placeholderEffect = computed(() => getEventSpriteEffect(props.event));
+// Set once here and inherited by every sprite, rather than each sprite looking up the color.
+const eventTypeColors = useEventTypeColorsStore();
+const hatchGlowStyle = computed(() =>
+    isHatchDay.value ? { '--hatch-glow-color': eventTypeColors.getEventTypeColor(props.event.eventType) } : undefined,
+);
 
 // True when tier exclusions are actively hiding raid bosses from the rendered set.
 const hasTierExclusionOverflow = computed(() => {
