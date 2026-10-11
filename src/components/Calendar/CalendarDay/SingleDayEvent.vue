@@ -470,6 +470,17 @@ onMounted(() => {
     }
 }
 
+/* Location-specific majors only matter to attendees, so they sit a step below the global event */
+/* Transparent rather than removed, so the box keeps the same size as a global one */
+.single-day-event.major-daily-display-event.event-watermark--location {
+    border-color: transparent;
+    background: color-mix(in srgb, var(--calendar-cell-bg) 78%, var(--major-event-color) 18%);
+
+    &:hover {
+        background: color-mix(in srgb, var(--calendar-hover-bg) 72%, var(--major-event-color) 24%);
+    }
+}
+
 @media (min-width: 576px) {
     .single-day-event.major-daily-display-event {
         min-height: 82px;
@@ -584,13 +595,23 @@ onMounted(() => {
     );
 }
 
-/* [data-bs-theme='dark'] .single-day-event.major-daily-display-event:hover {
+/* Dark mode hover darkens rather than lightens */
+[data-bs-theme='dark'] .single-day-event.major-daily-display-event:hover {
     background: linear-gradient(
         135deg,
-        color-mix(in srgb, var(--calendar-hover-bg) 60%, var(--major-event-color) 25%),
-        color-mix(in srgb, var(--calendar-cell-bg) 64%, var(--major-event-color) 33%)
+        color-mix(in srgb, color-mix(in srgb, var(--calendar-cell-bg) 74%, var(--major-event-color) 20%) 91%, black),
+        color-mix(in srgb, color-mix(in srgb, var(--calendar-cell-bg) 70%, var(--major-event-color) 28%) 91%, black)
     );
-} */
+}
+
+[data-bs-theme='dark'] .single-day-event.major-daily-display-event.event-watermark--location {
+    border-color: transparent;
+    background: color-mix(in srgb, var(--calendar-cell-bg) 80%, var(--major-event-color) 16%);
+
+    &:hover {
+        background: color-mix(in srgb, color-mix(in srgb, var(--calendar-cell-bg) 80%, var(--major-event-color) 16%) 91%, black);
+    }
+}
 
 [data-bs-theme='dark'] .single-day-event.event-watermark {
     --event-watermark-color: color-mix(in srgb, var(--bs-body-color) 70%, transparent);
