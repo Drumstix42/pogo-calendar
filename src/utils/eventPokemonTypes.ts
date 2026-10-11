@@ -13,6 +13,10 @@ export const SPRITE_EFFECTS = {
     GIGANTAMAX: 'gigantamax',
     SHADOW: 'shadow',
     HATCH: 'hatch',
+    MEGA: 'mega',
+    PRIMAL: 'primal',
+    // Marked by the shield badge (with the shield count when known) rather than an underlay
+    SUPER_MEGA: 'super-mega',
 } as const;
 
 export type SpriteEffect = (typeof SPRITE_EFFECTS)[keyof typeof SPRITE_EFFECTS];

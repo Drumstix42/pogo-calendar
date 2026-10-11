@@ -89,7 +89,7 @@ export function getPokemonImagesFromBosses(event: PogoEvent, options?: PokemonIm
     return getPokemonImagesFromBossList(getRaidBossesWithTierFallback(event, options), options);
 }
 
-// Boss names carry Dynamax/Shadow as a name prefix (e.g. "Dynamax Dialga" in a Wild Area raid
+// Boss names carry Dynamax/Shadow/Mega/Primal as a name prefix (e.g. "Dynamax Dialga" in a Wild Area raid
 // schedule), so each sprite gets its own overlay regardless of the event's type. Gigantamax isn't
 // covered - its art lives on a separate CDN (see `getBadgeSprite`).
 export function splitSpriteEffectPrefix(pokemonName: string): { spriteName: string; effect?: SpriteEffect } {
@@ -103,16 +103,34 @@ export function splitSpriteEffectPrefix(pokemonName: string): { spriteName: stri
         return { spriteName: pokemonName, effect: SPRITE_EFFECTS.SHADOW };
     }
 
+    // The Mega/Primal prefix stays: it's what resolves the `-mega`/`-primal` sprite.
+    if (/^Mega\s+/i.test(pokemonName)) {
+        return { spriteName: pokemonName, effect: SPRITE_EFFECTS.MEGA };
+    }
+
+    if (/^Primal\s+/i.test(pokemonName)) {
+        return { spriteName: pokemonName, effect: SPRITE_EFFECTS.PRIMAL };
+    }
+
     return { spriteName: pokemonName };
+}
+
+// A name-prefix effect wins over the event's, except in a Super Mega event: its "Mega X" names are Super
+// Megas, marked by the shield rather than the Mega symbol.
+export function combineSpriteEffects(nameEffect: SpriteEffect | undefined, eventEffect: SpriteEffect | undefined) {
+    if (eventEffect === SPRITE_EFFECTS.SUPER_MEGA && nameEffect === SPRITE_EFFECTS.MEGA) return eventEffect;
+    return nameEffect ?? eventEffect;
 }
 
 export function getPokemonImagesFromBossList(bosses: PokemonBoss[], options?: PokemonImageOptions): PokemonImageData[] {
     const images: PokemonImageData[] = [];
 
     for (const boss of bosses) {
-        const { spriteName, effect } = splitSpriteEffectPrefix(boss.name);
+        const { spriteName, effect: nameEffect } = splitSpriteEffectPrefix(boss.name);
         const parsedData = parsePokemonNameAndSuffix(spriteName);
-        const shieldCount = boss.raidType === 'Super Mega' ? getSuperMegaShieldCount(boss.name) : undefined;
+        const isSuperMega = boss.raidType === 'Super Mega';
+        const shieldCount = isSuperMega ? getSuperMegaShieldCount(boss.name) : undefined;
+        const effect = isSuperMega ? SPRITE_EFFECTS.SUPER_MEGA : nameEffect;
 
         if (parsedData) {
             // Only trust a generated sprite when it genuinely matches the boss's exact form - some
@@ -169,7 +187,7 @@ export function getBadgeSprite(pokemonName: string, fallbackEffect?: SpriteEffec
     }
 
     const { spriteName, effect } = splitSpriteEffectPrefix(pokemonName);
-    return { urls: getBadgeSpriteUrls(spriteName), effect: effect ?? fallbackEffect };
+    return { urls: getBadgeSpriteUrls(spriteName), effect: combineSpriteEffects(effect, fallbackEffect) };
 }
 
 // Parse a list of Pokemon names and resolve a sprite image for each (skipping unparseable names).

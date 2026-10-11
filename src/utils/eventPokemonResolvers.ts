@@ -38,7 +38,13 @@ import { getSuperMegaShieldCount } from './superMegaShields';
 // deliberately absent: it's asset-dependent per Pokemon, so `resolveMaxBattleImages` stamps it
 // per-sprite instead (a named Pokemon with no Gigantamax asset gets a plain sprite, no overlay).
 export function getEventSpriteEffect(event: PogoEvent): SpriteEffect | undefined {
-    if (getRaidSubType(event) === 'shadow-raids') return SPRITE_EFFECTS.SHADOW;
+    const raidSubType = getRaidSubType(event);
+    if (raidSubType === 'shadow-raids') return SPRITE_EFFECTS.SHADOW;
+    // Mega/Primal raids only feature those forms, so this also gives an unannounced boss's placeholder its
+    // marker (the shield for Super Mega, the symbol otherwise).
+    if (raidSubType === 'super-mega-raids') return SPRITE_EFFECTS.SUPER_MEGA;
+    if (raidSubType === 'mega-raids') return SPRITE_EFFECTS.MEGA;
+    if (raidSubType === 'primal-raids') return SPRITE_EFFECTS.PRIMAL;
     if (event.eventType === 'max-mondays') return SPRITE_EFFECTS.DYNAMAX;
     if (event.eventType === 'max-battles' && parseDynamaxMaxBattleName(formatEventName(event.name))) return SPRITE_EFFECTS.DYNAMAX;
     if (isHatchDayEvent(event)) return SPRITE_EFFECTS.HATCH;
@@ -79,7 +85,11 @@ export function resolveRaidBattleImages(event: EventWithExtraData, options?: Pok
 
         if (images.length > 0) {
             if (raidSubType === 'super-mega-raids') {
-                return images.map(image => ({ ...image, shieldCount: getSuperMegaShieldCount(image.name) }));
+                return images.map(image => ({
+                    ...image,
+                    shieldCount: getSuperMegaShieldCount(image.name),
+                    effect: SPRITE_EFFECTS.SUPER_MEGA,
+                }));
             }
             return images;
         }
@@ -148,10 +158,12 @@ export function resolveRaidDayImages(event: EventWithExtraData, options?: Pokemo
             const spriteUrl = getSpriteUrl(parsedData.pokemonName, suffix, options);
             // Reflect the actual Pokemon form in the display name
             const displayName = isMegaModifier ? `Mega ${pokemonNameString}` : pokemonNameString;
-            const shieldCount = isMegaModifier && raidModifier.includes('super mega') ? getSuperMegaShieldCount(displayName) : undefined;
+            const isSuperMega = isMegaModifier && raidModifier.includes('super mega');
+            const shieldCount = isSuperMega ? getSuperMegaShieldCount(displayName) : undefined;
+            const effect = isSuperMega ? SPRITE_EFFECTS.SUPER_MEGA : undefined;
 
             // Always return, even if spriteUrl is null
-            return [{ name: displayName, imageUrl: spriteUrl, shieldCount }];
+            return [{ name: displayName, imageUrl: spriteUrl, shieldCount, effect }];
         }
     }
 

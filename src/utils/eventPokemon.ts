@@ -13,7 +13,7 @@ import {
 } from './eventPokemonResolvers';
 import { SPRITE_EFFECTS } from './eventPokemonTypes';
 import type { EventWithExtraData, PokemonImageData, PokemonImageOptions, SpriteEffect } from './eventPokemonTypes';
-import { getPokemonImagesFromBossList, getRecurringRaidScheduleBosses } from './eventSprite';
+import { combineSpriteEffects, getPokemonImagesFromBossList, getRecurringRaidScheduleBosses, splitSpriteEffectPrefix } from './eventSprite';
 import { type EventTypeKey, type PogoEvent } from './eventTypes';
 
 // Re-exported for backward-compatible import paths (canonical homes: eventPokemonNames.ts /
@@ -23,10 +23,14 @@ export { getEventSpriteEffect } from './eventPokemonResolvers';
 export { SPRITE_EFFECTS } from './eventPokemonTypes';
 export type { PokemonImageData, PokemonImageOptions, SpriteEffect } from './eventPokemonTypes';
 
-// Fill in the event-level effect on any image a resolver didn't already stamp per-sprite.
-function applyEventEffect(images: PokemonImageData[], effect: SpriteEffect | undefined): PokemonImageData[] {
-    if (!effect) return images;
-    return images.map(image => (image.effect ? image : { ...image, effect }));
+// Fill in an effect on any image a resolver didn't already stamp: its name prefix (title-parsed names
+// like "Mega Gengar" skip the boss-list path that reads it) combined with the event-level effect.
+function applySpriteEffects(images: PokemonImageData[], effect: SpriteEffect | undefined): PokemonImageData[] {
+    return images.map(image => {
+        if (image.effect) return image;
+        const resolved = combineSpriteEffects(splitSpriteEffectPrefix(image.name).effect, effect);
+        return resolved ? { ...image, effect: resolved } : image;
+    });
 }
 
 type ImageResolver = (event: EventWithExtraData, options?: PokemonImageOptions) => PokemonImageData[] | null;
@@ -70,7 +74,7 @@ export function getEventPokemonImages(event: PogoEvent, options?: PokemonImageOp
         result = resolveHatchDayImages(eventWithExtraData, options);
     }
 
-    return result ? applyEventEffect(result, effect) : [];
+    return result ? applySpriteEffects(result, effect) : [];
 }
 
 export function hasEventPokemonImage(event: PogoEvent, options?: PokemonImageOptions): boolean {
@@ -89,7 +93,7 @@ export function getMultiDayPokemonImages(event: PogoEvent, options?: PokemonImag
             return [];
         }
         const images = getPokemonImagesFromBossList(recurringBosses, options);
-        return applyEventEffect(images, getEventSpriteEffect(event));
+        return applySpriteEffects(images, getEventSpriteEffect(event));
     }
 
     return getEventPokemonImages(event, options);

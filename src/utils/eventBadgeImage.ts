@@ -3,6 +3,7 @@ import type { SpriteEffect } from './eventPokemonTypes';
 import { getBadgeSprite } from './eventSprite';
 import { type EggDistance, getEggImageUrl } from './hatchEgg';
 import { loadFirstAvailableImage } from './loadImage';
+import { getEffectSymbol } from './megaPrimalSymbols';
 
 const CANVAS_SIZE = 512;
 const CORNER_RADIUS = 56;
@@ -30,11 +31,20 @@ const EFFECT_GLOW: Partial<Record<SpriteEffect, { color: string; blur: number }>
     // Separates the sprite from the egg behind it; the badge background is already the event color.
     hatch: { color: 'rgba(0, 0, 0, 0.55)', blur: 6 },
 };
-// Hatch mirrors the calendar sprite: the egg sits behind, bottom-aligned and nudged right of the
-// sprite box, with the sprite shrunk toward its bottom-left so the egg shows.
-const HATCH_EGG_HEIGHT = 0.9;
-const HATCH_EGG_OFFSET_X = 0.16;
+// Mirrors the calendar sprite: this art sits behind, bottom-aligned with its right edge nudged past the
+// sprite box (sizes are fractions of the box), and the sprite shrinks toward its bottom-left so it shows.
+const ANCHORED_OVERLAYS: Partial<Record<SpriteEffect, { height: number; offsetX: number; opacity: number }>> = {
+    hatch: { height: 0.9, offsetX: 0.16, opacity: 1 },
+};
 const HATCH_SPRITE_SCALE = 0.82;
+// Mirrors the calendar's corner marker (where the Super Mega shield sits): drawn in front of the sprite at
+// its box's top-right, nudged slightly up and out. Sizes/offsets are fractions of the sprite box.
+const CORNER_BADGES: Partial<Record<SpriteEffect, { size: number; opacity: number }>> = {
+    mega: { size: 0.38, opacity: 0.9 },
+    primal: { size: 0.38, opacity: 0.9 },
+};
+const CORNER_BADGE_OFFSET_X = 0.1;
+const CORNER_BADGE_OFFSET_Y = 0.04;
 
 const POKEBALL_PATTERN_ANGLE_DEG = 42;
 const POKEBALL_PATTERN_SPACING = 113;
@@ -267,7 +277,7 @@ function drawBottomLines(ctx: CanvasRenderingContext2D, lines: string[], bandHei
 
 function getOverlayUrl(effect: SpriteEffect | undefined, eggDistance?: EggDistance) {
     if (effect === SPRITE_EFFECTS.HATCH) return getEggImageUrl(eggDistance);
-    return effect && OVERLAY_ASSET_URLS[effect];
+    return getEffectSymbol(effect)?.src ?? (effect && OVERLAY_ASSET_URLS[effect]);
 }
 
 async function resolveBadgePokemon(name: string, fallbackEffect?: SpriteEffect, eggDistance?: EggDistance): Promise<ResolvedBadgePokemon | null> {
@@ -338,14 +348,19 @@ function drawPokemonOverlays(ctx: CanvasRenderingContext2D, layout: PokemonSlotL
             drawHeight,
             overlayBaseSize,
         } = slot;
-        if (!overlayImage || !effect) return;
+        // Corner badges draw in front of the sprite, in their own pass.
+        if (!overlayImage || !effect || CORNER_BADGES[effect]) return;
 
-        if (effect === SPRITE_EFFECTS.HATCH) {
+        const anchored = ANCHORED_OVERLAYS[effect];
+        if (anchored) {
             const box = getSpriteBox(slot);
-            const eggHeight = box.size * HATCH_EGG_HEIGHT;
-            const eggWidth = eggHeight * (overlayImage.width / overlayImage.height);
-            const eggRight = box.left + box.size * (1 + HATCH_EGG_OFFSET_X);
-            ctx.drawImage(overlayImage, eggRight - eggWidth, box.bottom - eggHeight, eggWidth, eggHeight);
+            const artHeight = box.size * anchored.height;
+            const artWidth = artHeight * (overlayImage.width / overlayImage.height);
+            const artRight = box.left + box.size * (1 + anchored.offsetX);
+            ctx.save();
+            ctx.globalAlpha = anchored.opacity;
+            ctx.drawImage(overlayImage, artRight - artWidth, box.bottom - artHeight, artWidth, artHeight);
+            ctx.restore();
             return;
         }
 
@@ -392,9 +407,31 @@ function drawPokemonIcons(ctx: CanvasRenderingContext2D, layout: PokemonSlotLayo
     });
 }
 
+function drawPokemonCornerBadges(ctx: CanvasRenderingContext2D, layout: PokemonSlotLayout[]) {
+    layout.forEach(slot => {
+        const { overlayImage, effect } = slot.pokemon;
+        const badge = effect && CORNER_BADGES[effect];
+        if (!overlayImage || !badge) return;
+
+        const box = getSpriteBox(slot);
+        const badgeHeight = box.size * badge.size;
+        const badgeWidth = badgeHeight * (overlayImage.width / overlayImage.height);
+        const badgeRight = box.left + box.size * (1 + CORNER_BADGE_OFFSET_X);
+        const badgeTop = box.bottom - box.size * (1 + CORNER_BADGE_OFFSET_Y);
+
+        ctx.save();
+        ctx.globalAlpha = badge.opacity;
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+        ctx.shadowBlur = 3;
+        ctx.shadowOffsetY = 2;
+        ctx.drawImage(overlayImage, badgeRight - badgeWidth, badgeTop, badgeWidth, badgeHeight);
+        ctx.restore();
+    });
+}
+
 /**
  * Renders a Campfire-style square event badge as a PNG blob. Layer order: background -> Pokeball
- * pattern -> title band + text -> overlay art -> Pokemon icon(s) -> bottom band + text.
+ * pattern -> title band + text -> overlay art -> Pokemon icon(s) -> corner badges -> bottom band + text.
  */
 export async function generateEventBadge(spec: EventBadgeSpec): Promise<Blob | null> {
     const canvas = document.createElement('canvas');
@@ -441,6 +478,7 @@ export async function generateEventBadge(spec: EventBadgeSpec): Promise<Blob | n
 
     drawPokemonOverlays(ctx, pokemonLayout);
     drawPokemonIcons(ctx, pokemonLayout);
+    drawPokemonCornerBadges(ctx, pokemonLayout);
 
     if (spec.bottomLines.length > 0) {
         drawBand(ctx, CANVAS_SIZE - bottomBandHeight, bottomBandHeight, BOTTOM_BAND_COLOR);

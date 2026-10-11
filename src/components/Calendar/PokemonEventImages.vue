@@ -21,6 +21,7 @@
             :is-raid-hour-sub-event="event.extraData?.isRaidHourSubEvent === true"
             :is-spotlight-sub-event="event.extraData?.isSpotlightSubEvent === true"
             :egg-distance="eggDistance"
+            :hide-symbol-effect="multiDay"
         />
 
         <!-- Overflow counter badge -->

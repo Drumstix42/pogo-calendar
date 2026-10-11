@@ -1,5 +1,6 @@
 import { parsePokemonNameAndSuffix } from './eventPokemonNames';
 import { type PokemonImageData, SPRITE_EFFECTS } from './eventPokemonTypes';
+import { splitSpriteEffectPrefix } from './eventSprite';
 import { getPokemonAnimatedUrl, getPokemonSpriteUrl, hasExactSpriteForm } from './pokemonMapper';
 import { type RaidTierGroupWithImages } from './raidTierGroups';
 
@@ -43,8 +44,9 @@ const RAID_TIER_LABELS: Record<string, string> = Object.fromEntries(KNOWN_RAID_T
 
 export const RAID_TIER_ICONS: Record<string, string> = Object.fromEntries(KNOWN_RAID_TIERS.map(entry => [entry.tier, entry.icon]));
 
+// Same name-prefix rule that gives the boss its Shadow overlay, so the row split and sprite always agree.
 export function isShadowRaidBoss(name: string): boolean {
-    return name.startsWith('Shadow ');
+    return splitSpriteEffectPrefix(name).effect === SPRITE_EFFECTS.SHADOW;
 }
 
 export function getRaidTierLabel(tier: string): string {
@@ -75,7 +77,7 @@ function buildBossImageData(boss: CurrentRaidBoss, useAnimated: boolean): Pokemo
         name: boss.name,
         imageUrl: generatedUrl ?? boss.image ?? null,
         fallbackImageUrl: boss.image || null,
-        effect: isShadowRaidBoss(boss.name) ? SPRITE_EFFECTS.SHADOW : undefined,
+        effect: splitSpriteEffectPrefix(boss.name).effect,
     };
 }
 

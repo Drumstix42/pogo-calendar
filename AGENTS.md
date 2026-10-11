@@ -272,15 +272,21 @@ against a standalone CDN (HybridShivam) gated by `GIGANTAMAX_POKEMON_IDS`. It do
 tiered fallback above (the `@error` chain only derives from tier-2 URLs), so an unknown filename 404s
 to the placeholder.
 
-Sprite overlays (`SPRITE_EFFECTS`: Dynamax clouds, Shadow aura, Gigantamax, Hatch egg) come from two
-places: an **event-level** effect (`getEventSpriteEffect()` — Max Mondays, Dynamax Max Battle titles,
-Shadow Raids, Hatch Days), and a **per-sprite** effect that wins over it. Hatch Days are plain `event`s
+Sprite overlays (`SPRITE_EFFECTS`: Dynamax clouds, Shadow aura, Gigantamax, Hatch egg, Mega/Primal
+symbols, Super Mega shield) come from two places: an **event-level** effect (`getEventSpriteEffect()` — Max Mondays, Dynamax
+Max Battle titles, Shadow/Mega/Super Mega/Primal Raids, Hatch Days), and a **per-sprite** effect that wins over it
+(`combineSpriteEffects()`: a Super Mega event overrides a `Mega X` name, so Super Megas get the shield, never
+the Mega symbol; boss lists stamp it from `raidType`). Hatch Days are plain `event`s
 recognized by title (`isHatchDayEvent()`); names that aren't known Pokémon are dropped, and with none
 left the placeholder renders as a bare egg. Overlay layers live in `PokemonImage/SpriteEffectOverlay.vue`;
 egg art is generated per egg distance in `src/utils/hatchEgg.ts` (`getHatchDayEggDistance()` is the seam
-for feed data — currently always 2 km), shared by the sprite and the Campfire badge. Boss lists derive the per-sprite effect from
-the boss name prefix via `splitSpriteEffectPrefix()` (`Dynamax X`, `Shadow X`), so prefixed bosses
-inside any event type (e.g. Dynamax Dialga in a Wild Area schedule) get their overlay.
+for feed data — currently always 2 km), shared by the sprite and the Campfire badge; the Mega/Primal
+symbols are generated the same way in `src/utils/megaPrimalSymbols.ts` and render as a top-right corner badge
+like the Super Mega shield, in `PokemonImage.vue` (skipped in multi-day bars via
+`hideSymbolEffect`, where sprites are too small to read them). The per-sprite effect comes from the
+name prefix via `splitSpriteEffectPrefix()` (`Dynamax X`, `Shadow X`, `Mega X`, `Primal X`) — in boss
+lists, and in the dispatcher for title-parsed names — so prefixed Pokémon inside any event type (e.g.
+Dynamax Dialga in a Wild Area schedule, a Mega in an `event`'s raids) get their overlay.
 
 Sprite downloads can be held off: on touch devices `CalendarMonthPager.vue` keeps the neighbor
 months mounted for swiping, and they render sprites as same-size empty boxes until a swipe heads

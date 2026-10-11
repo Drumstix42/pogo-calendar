@@ -9,10 +9,16 @@
                     :egg-distance="eggDistance"
                 />
 
-                <div v-if="shieldCount" class="shield-badge-anchor">
-                    <div class="shield-badge">
+                <!-- Corner marker: the Super Mega shield, or the Mega/Primal symbol (never both) -->
+                <div v-if="showShield" class="corner-badge-anchor">
+                    <div class="corner-badge">
                         <img src="/images/icons/super-mega-shield.png" alt="Super Mega Raid shield" class="shield-icon" />
-                        <span class="shield-count">{{ shieldCount }}</span>
+                        <span v-if="shieldCount" class="shield-count">{{ shieldCount }}</span>
+                    </div>
+                </div>
+                <div v-else-if="cornerSymbol" class="corner-badge-anchor">
+                    <div class="corner-badge">
+                        <img :src="cornerSymbol.src" :alt="cornerSymbol.alt" class="symbol-icon" />
                     </div>
                 </div>
 
@@ -69,6 +75,7 @@ import { useSpriteLoading } from '@/composables/useSpriteLoading';
 import { SPRITE_EFFECTS } from '@/utils/eventPokemon';
 import type { PokemonImageData, SpriteEffect } from '@/utils/eventPokemon';
 import { type EggDistance } from '@/utils/hatchEgg';
+import { getEffectSymbol } from '@/utils/megaPrimalSymbols';
 import { getSprite256FallbackUrl, getSpriteFallbackUrl } from '@/utils/pokemonMapper';
 
 import HatchEgg from './HatchEgg.vue';
@@ -92,6 +99,8 @@ interface Props {
     effect?: SpriteEffect;
     /** Which egg to draw for the Hatch effect (defaults to 2 km). */
     eggDistance?: EggDistance;
+    /** Skips the Mega/Primal symbol, for sprites too small to read it (multi-day bars). */
+    hideSymbolEffect?: boolean;
     isPlaceholder?: boolean;
 }
 
@@ -105,6 +114,7 @@ const props = withDefaults(defineProps<Props>(), {
     isSpotlightSubEvent: false,
     effect: undefined,
     eggDistance: undefined,
+    hideSymbolEffect: false,
     isPlaceholder: false,
 });
 
@@ -112,7 +122,10 @@ const spritesEnabled = useSpriteLoading();
 const errorLevel = ref(0);
 
 // Per-sprite effect wins; fall back to the event-level prop.
-const resolvedEffect = computed(() => props.pokemonData?.effect ?? props.effect);
+const resolvedEffect = computed(() => {
+    const effect = props.pokemonData?.effect ?? props.effect;
+    return props.hideSymbolEffect && getEffectSymbol(effect) ? undefined : effect;
+});
 
 // No Pokemon could be read from the Hatch Day title, so the egg itself is the image.
 const isHatchPlaceholder = computed(() => props.isPlaceholder && resolvedEffect.value === SPRITE_EFFECTS.HATCH);
@@ -120,6 +133,10 @@ const isHatchPlaceholder = computed(() => props.isPlaceholder && resolvedEffect.
 const sizeStyle = computed(() => ({ height: `${props.height}px`, width: `${props.height}px` }));
 
 const shieldCount = computed(() => props.pokemonData?.shieldCount);
+// Super Megas always get the shield; the count shows only when we know it.
+const showShield = computed(() => Boolean(shieldCount.value) || resolvedEffect.value === SPRITE_EFFECTS.SUPER_MEGA);
+
+const cornerSymbol = computed(() => getEffectSymbol(resolvedEffect.value));
 
 const altFolderUrl = computed(() => {
     const url = props.pokemonData?.imageUrl;
@@ -145,12 +162,16 @@ const hasError = computed(() => {
     return errorLevel.value >= imageSources.value.length;
 });
 
-// Exhaustive over SpriteEffect, so a new effect fails type-check until it gets a class.
+// Exhaustive over SpriteEffect, so a new effect fails type-check until it gets a class. Some are unstyled
+// hooks (e.g. Mega/Primal/Super Mega, whose markers are corner badges rather than sprite styling).
 const EFFECT_CLASSES: Record<SpriteEffect, string> = {
     [SPRITE_EFFECTS.DYNAMAX]: 'has-dynamax-overlay',
     [SPRITE_EFFECTS.SHADOW]: 'has-shadow-effect',
     [SPRITE_EFFECTS.GIGANTAMAX]: 'has-gigantamax-effect',
     [SPRITE_EFFECTS.HATCH]: 'has-hatch-effect',
+    [SPRITE_EFFECTS.MEGA]: 'has-mega-effect',
+    [SPRITE_EFFECTS.PRIMAL]: 'has-primal-effect',
+    [SPRITE_EFFECTS.SUPER_MEGA]: 'has-super-mega-effect',
 };
 
 // At most one effect class; the placeholder class can stack with it (e.g. an unannounced Shadow Raid boss).
@@ -252,7 +273,7 @@ function onImageError() {
     opacity: 0.6;
 }
 
-.shield-badge-anchor {
+.corner-badge-anchor {
     position: absolute;
     top: -2px;
     right: -5px;
@@ -260,19 +281,24 @@ function onImageError() {
     display: inline-block;
 }
 
-.shield-badge {
+.corner-badge {
     position: relative;
     width: 20px;
     height: 20px;
     filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.3));
 }
 
-.shield-icon {
+.shield-icon,
+.symbol-icon {
     width: 100%;
     height: 100%;
     object-fit: contain;
     display: block;
     opacity: 0.8;
+}
+
+.symbol-icon {
+    opacity: 0.9;
 }
 
 .shield-count {

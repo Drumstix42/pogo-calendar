@@ -1,5 +1,6 @@
 import type { PokemonImageData } from './eventPokemon';
 import { parsePokemonNameAndSuffix } from './eventPokemonNames';
+import { SPRITE_EFFECTS } from './eventPokemonTypes';
 import { splitSpriteEffectPrefix } from './eventSprite';
 import type { PokemonBoss } from './eventTypes';
 import { getPokemonAnimatedUrl, getPokemonSpriteUrl, hasExactSpriteForm } from './pokemonMapper';
@@ -130,7 +131,7 @@ export function buildRaidTierGroupsWithImages(groups: TierGroupInput[] | undefin
                     imageUrl,
                     fallbackImageUrl: boss.image || null,
                     shieldCount: isSuperMega ? getSuperMegaShieldCount(boss.name) : undefined,
-                    effect,
+                    effect: isSuperMega ? SPRITE_EFFECTS.SUPER_MEGA : effect,
                 } satisfies PokemonImageData;
             }),
         };
