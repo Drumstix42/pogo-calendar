@@ -160,7 +160,12 @@ onMounted(() => {
 });
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+/* Tear depth in px. A Sass variable (not only a CSS var) because the tooth SVGs are generated from it,
+   and var() can't be substituted inside url(). */
+$stub-tear-depth: 7;
+$stub-tear-tile: $stub-tear-depth + 1;
+
 .multi-day-event-bar {
     display: flex;
     align-items: center;
@@ -367,7 +372,7 @@ onMounted(() => {
 
 /* Stub sizing stays the same in every state, so measuring it (stubFillsBar) can't feed back on itself */
 .multi-day-event-bar.week-bar-stub {
-    --stub-tear-depth: 7px;
+    --stub-tear-depth: #{$stub-tear-depth}px;
 
     .multi-day-event-bar--inner {
         width: fit-content;
@@ -402,17 +407,19 @@ onMounted(() => {
         }
     }
 
+    /* Mask layers snap separately, leaving a hairline seam at fractional zoom, so each tooth tile carries
+       its own 1px solid base that the solid layer overlaps. */
     &.tear-right:not(:hover):not(.week-bar-revealed) .multi-day-event-bar--inner {
         mask:
-            url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 2' preserveAspectRatio='none'%3E%3Cpath d='M0 0L1 1L0 2Z'/%3E%3C/svg%3E")
-                right top / var(--stub-tear-depth) calc(100% / 3) repeat-y,
+            url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 #{$stub-tear-tile} 2' preserveAspectRatio='none'%3E%3Cpath d='M0 0H1L#{$stub-tear-tile} 1L1 2H0Z'/%3E%3C/svg%3E")
+                right top / calc(var(--stub-tear-depth) + 1px) calc(100% / 3) repeat-y,
             linear-gradient(#000 0 0) left / calc(100% - var(--stub-tear-depth)) 100% no-repeat;
     }
 
     &.tear-left:not(:hover):not(.week-bar-revealed) .multi-day-event-bar--inner {
         mask:
-            url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 2' preserveAspectRatio='none'%3E%3Cpath d='M1 0L0 1L1 2Z'/%3E%3C/svg%3E")
-                left top / var(--stub-tear-depth) calc(100% / 3) repeat-y,
+            url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 #{$stub-tear-tile} 2' preserveAspectRatio='none'%3E%3Cpath d='M#{$stub-tear-tile} 0H#{$stub-tear-depth}L0 1L#{$stub-tear-depth} 2H#{$stub-tear-tile}Z'/%3E%3C/svg%3E")
+                left top / calc(var(--stub-tear-depth) + 1px) calc(100% / 3) repeat-y,
             linear-gradient(#000 0 0) right / calc(100% - var(--stub-tear-depth)) 100% no-repeat;
     }
 }
