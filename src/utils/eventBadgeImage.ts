@@ -30,6 +30,9 @@ const EFFECT_GLOW: Partial<Record<SpriteEffect, { color: string; blur: number }>
     gigantamax: { color: 'rgba(200, 0, 0, 0.35)', blur: 4.4 },
     // Separates the sprite from the egg behind it; the badge background is already the event color.
     hatch: { color: 'rgba(0, 0, 0, 0.55)', blur: 6 },
+    // Very subtle - just separates the sprite where it overlaps the corner symbol behind it.
+    mega: { color: 'rgba(0, 0, 0, 0.3)', blur: 3 },
+    primal: { color: 'rgba(0, 0, 0, 0.3)', blur: 3 },
 };
 // Mirrors the calendar sprite: this art sits behind, bottom-aligned with its right edge nudged past the
 // sprite box (sizes are fractions of the box), and the sprite shrinks toward its bottom-left so it shows.
@@ -37,8 +40,8 @@ const ANCHORED_OVERLAYS: Partial<Record<SpriteEffect, { height: number; offsetX:
     hatch: { height: 0.9, offsetX: 0.16, opacity: 1 },
 };
 const HATCH_SPRITE_SCALE = 0.82;
-// Mirrors the calendar's corner marker (where the Super Mega shield sits): drawn in front of the sprite at
-// its box's top-right, nudged slightly up and out. Sizes/offsets are fractions of the sprite box.
+// Mirrors the calendar's corner marker (where the Super Mega shield sits): drawn behind the sprite, like the
+// egg, at its box's top-right, nudged slightly up and out. Sizes/offsets are fractions of the sprite box.
 const CORNER_BADGES: Partial<Record<SpriteEffect, { size: number; opacity: number }>> = {
     mega: { size: 0.38, opacity: 0.9 },
     primal: { size: 0.38, opacity: 0.9 },
@@ -348,7 +351,7 @@ function drawPokemonOverlays(ctx: CanvasRenderingContext2D, layout: PokemonSlotL
             drawHeight,
             overlayBaseSize,
         } = slot;
-        // Corner badges draw in front of the sprite, in their own pass.
+        // Corner badges are positioned off the sprite box's corner, in their own pass.
         if (!overlayImage || !effect || CORNER_BADGES[effect]) return;
 
         const anchored = ANCHORED_OVERLAYS[effect];
@@ -431,7 +434,7 @@ function drawPokemonCornerBadges(ctx: CanvasRenderingContext2D, layout: PokemonS
 
 /**
  * Renders a Campfire-style square event badge as a PNG blob. Layer order: background -> Pokeball
- * pattern -> title band + text -> overlay art -> Pokemon icon(s) -> corner badges -> bottom band + text.
+ * pattern -> title band + text -> overlay art -> corner badges -> Pokemon icon(s) -> bottom band + text.
  */
 export async function generateEventBadge(spec: EventBadgeSpec): Promise<Blob | null> {
     const canvas = document.createElement('canvas');
@@ -477,8 +480,8 @@ export async function generateEventBadge(spec: EventBadgeSpec): Promise<Blob | n
     }
 
     drawPokemonOverlays(ctx, pokemonLayout);
-    drawPokemonIcons(ctx, pokemonLayout);
     drawPokemonCornerBadges(ctx, pokemonLayout);
+    drawPokemonIcons(ctx, pokemonLayout);
 
     if (spec.bottomLines.length > 0) {
         drawBand(ctx, CANVAS_SIZE - bottomBandHeight, bottomBandHeight, BOTTOM_BAND_COLOR);

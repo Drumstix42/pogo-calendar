@@ -281,8 +281,8 @@ recognized by title (`isHatchDayEvent()`); names that aren't known Pokémon are 
 left the placeholder renders as a bare egg. Overlay layers live in `PokemonImage/SpriteEffectOverlay.vue`;
 egg art is generated per egg distance in `src/utils/hatchEgg.ts` (`getHatchDayEggDistance()` is the seam
 for feed data — currently always 2 km), shared by the sprite and the Campfire badge; the Mega/Primal
-symbols are generated the same way in `src/utils/megaPrimalSymbols.ts` and render as a top-right corner badge
-like the Super Mega shield, in `PokemonImage.vue` (skipped in multi-day bars via
+symbols are generated the same way in `src/utils/megaPrimalSymbols.ts` and render as a top-right corner badge behind the sprite
+(the Super Mega shield shares the spot but sits in front, like the in-game UI), in `PokemonImage.vue` (skipped in multi-day bars via
 `hideSymbolEffect`, where sprites are too small to read them). The per-sprite effect comes from the
 name prefix via `splitSpriteEffectPrefix()` (`Dynamax X`, `Shadow X`, `Mega X`, `Primal X`) — in boss
 lists, and in the dispatcher for title-parsed names — so prefixed Pokémon inside any event type (e.g.

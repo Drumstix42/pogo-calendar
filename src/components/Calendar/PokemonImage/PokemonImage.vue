@@ -9,14 +9,14 @@
                     :egg-distance="eggDistance"
                 />
 
-                <!-- Corner marker: the Super Mega shield, or the Mega/Primal symbol (never both) -->
+                <!-- Corner marker: the Super Mega shield (in front, like the in-game UI) or the Mega/Primal symbol (behind the sprite) -->
                 <div v-if="showShield" class="corner-badge-anchor">
                     <div class="corner-badge">
                         <img src="/images/icons/super-mega-shield.png" alt="Super Mega Raid shield" class="shield-icon" />
                         <span v-if="shieldCount" class="shield-count">{{ shieldCount }}</span>
                     </div>
                 </div>
-                <div v-else-if="cornerSymbol" class="corner-badge-anchor">
+                <div v-else-if="cornerSymbol" class="corner-badge-anchor behind-sprite">
                     <div class="corner-badge">
                         <img :src="cornerSymbol.src" :alt="cornerSymbol.alt" class="symbol-icon" />
                     </div>
@@ -163,7 +163,7 @@ const hasError = computed(() => {
 });
 
 // Exhaustive over SpriteEffect, so a new effect fails type-check until it gets a class. Some are unstyled
-// hooks (e.g. Mega/Primal/Super Mega, whose markers are corner badges rather than sprite styling).
+// hooks (e.g. Super Mega, whose shield is a corner badge rather than sprite styling).
 const EFFECT_CLASSES: Record<SpriteEffect, string> = {
     [SPRITE_EFFECTS.DYNAMAX]: 'has-dynamax-overlay',
     [SPRITE_EFFECTS.SHADOW]: 'has-shadow-effect',
@@ -244,6 +244,12 @@ function onImageError() {
         drop-shadow(0 0 3px color-mix(in srgb, var(--hatch-glow-color, transparent) 50%, rgba(0, 0, 0, 0.6)));
 }
 
+/* Very subtle, just enough to separate the sprite where it overlaps the corner symbol behind it */
+.has-mega-effect .pokemon-icon,
+.has-primal-effect .pokemon-icon {
+    filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.3));
+}
+
 .pokemon-icon {
     object-fit: contain;
     border-radius: 2px;
@@ -279,6 +285,11 @@ function onImageError() {
     right: -5px;
     z-index: 3;
     display: inline-block;
+
+    /* Under the sprite (z-index 2), like the Hatch egg */
+    &.behind-sprite {
+        z-index: 1;
+    }
 }
 
 .corner-badge {
