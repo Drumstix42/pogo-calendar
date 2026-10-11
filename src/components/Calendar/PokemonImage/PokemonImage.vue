@@ -2,15 +2,12 @@
     <div class="pokemon-item">
         <VTooltip placement="top" :delay="{ show: 50, hide: 0 }" distance="8" :disabled="!showTooltip">
             <div class="pokemon-container" :class="containerClass">
-                <div v-if="resolvedEffect === SPRITE_EFFECTS.DYNAMAX" class="dynamax-overlay" :class="{ animated: useAnimated }">
-                    <img src="/images/overlay/dynamax-clouds.png" alt="Dynamax effect" class="dynamax-clouds" />
-                </div>
-                <div v-if="resolvedEffect === SPRITE_EFFECTS.SHADOW" class="shadow-overlay" :class="{ animated: useAnimated }">
-                    <img src="/images/overlay/shadow-aura.png" alt="Shadow effect" class="shadow-aura" />
-                </div>
-                <div v-if="resolvedEffect === SPRITE_EFFECTS.HATCH && !isPlaceholder" class="hatch-overlay">
-                    <img src="/images/overlay/egg.svg" alt="Egg" class="hatch-egg" :class="{ animated: useAnimated }" />
-                </div>
+                <SpriteEffectOverlay
+                    v-if="resolvedEffect && !isHatchPlaceholder"
+                    :effect="resolvedEffect"
+                    :animated="useAnimated"
+                    :egg-distance="eggDistance"
+                />
 
                 <div v-if="shieldCount" class="shield-badge-anchor">
                     <div class="shield-badge">
@@ -21,7 +18,7 @@
 
                 <template v-if="isPlaceholder">
                     <span v-if="isHatchPlaceholder" class="hatch-placeholder" :style="sizeStyle">
-                        <img src="/images/overlay/egg.svg" alt="Egg" class="hatch-egg" :class="{ animated: useAnimated }" />
+                        <HatchEgg :distance="eggDistance" :animated="useAnimated" />
                     </span>
                     <CircleHelpIcon v-else class="placeholder-icon" :size="height" />
                 </template>
@@ -71,9 +68,12 @@ import { computed, ref, watch } from 'vue';
 import { useSpriteLoading } from '@/composables/useSpriteLoading';
 import { SPRITE_EFFECTS } from '@/utils/eventPokemon';
 import type { PokemonImageData, SpriteEffect } from '@/utils/eventPokemon';
+import { type EggDistance } from '@/utils/hatchEgg';
 import { getSprite256FallbackUrl, getSpriteFallbackUrl } from '@/utils/pokemonMapper';
 
+import HatchEgg from './HatchEgg.vue';
 import PokemonCPBadge from './PokemonCPBadge.vue';
+import SpriteEffectOverlay from './SpriteEffectOverlay.vue';
 
 interface Props {
     pokemonData?: PokemonImageData;
@@ -90,6 +90,8 @@ interface Props {
      * groups, placeholder).
      */
     effect?: SpriteEffect;
+    /** Which egg to draw for the Hatch effect (defaults to 2 km). */
+    eggDistance?: EggDistance;
     isPlaceholder?: boolean;
 }
 
@@ -102,6 +104,7 @@ const props = withDefaults(defineProps<Props>(), {
     isRaidHourSubEvent: false,
     isSpotlightSubEvent: false,
     effect: undefined,
+    eggDistance: undefined,
     isPlaceholder: false,
 });
 
@@ -198,90 +201,6 @@ function onImageError() {
     filter: drop-shadow(0 0 3px rgba(68, 57, 117, 0.75));
 }
 
-.dynamax-overlay,
-.shadow-overlay {
-    position: absolute;
-    top: -1px;
-    left: 0;
-    right: 0;
-    z-index: 0;
-    scale: 1.1;
-    opacity: 0.8;
-}
-
-.dynamax-clouds,
-.shadow-aura {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-}
-
-.dynamax-overlay.animated .dynamax-clouds {
-    will-change: transform, opacity;
-    animation: dynamaxClouds 6s ease-in-out infinite;
-}
-
-.shadow-aura {
-    transform: scale(1.3);
-    will-change: transform, opacity;
-}
-
-.shadow-overlay.animated .shadow-aura {
-    animation: shadowAura 8s ease-in-out infinite;
-}
-
-@keyframes dynamaxClouds {
-    0% {
-        transform: translateY(-2px);
-    }
-    50% {
-        transform: translateY(1px);
-    }
-    100% {
-        transform: translateY(-2px);
-    }
-}
-
-@keyframes shadowAura {
-    0% {
-        opacity: 0.8;
-        transform: scale(1.25) translate(1px, 0.5px) rotate(-1deg);
-    }
-    25% {
-        opacity: 0.9;
-        transform: scale(1.38) translate(0px, -0.5px) rotate(0.5deg);
-    }
-    50% {
-        opacity: 0.95;
-        transform: scale(1.3) translate(-1px, 0.5px) rotate(1deg);
-    }
-    75% {
-        opacity: 0.9;
-        transform: scale(1.38) translate(0px, -0.5px) rotate(0.5deg);
-    }
-    100% {
-        opacity: 0.8;
-        transform: scale(1.25) translate(1px, 0.5px) rotate(-1deg);
-    }
-}
-
-/* Egg sits behind the sprite, nudged right of center; fully centered, wide sprites read as wrapped around it */
-.hatch-overlay {
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    display: flex;
-    align-items: flex-end;
-    justify-content: flex-end;
-    transform: translateX(16%);
-    pointer-events: none;
-}
-
-.hatch-overlay .hatch-egg {
-    height: 90%;
-    opacity: 0.9;
-}
-
 .hatch-placeholder {
     position: relative;
     z-index: 2;
@@ -292,37 +211,6 @@ function onImageError() {
     .hatch-egg {
         height: 90%;
         filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.25));
-    }
-}
-
-.hatch-egg {
-    width: auto;
-    transform-origin: 50% 95%;
-}
-
-.hatch-egg.animated {
-    will-change: transform;
-    animation: eggWobble 3.2s ease-in-out infinite;
-}
-
-/* Mostly still, with a short in-game style wobble (~1.2s) */
-@keyframes eggWobble {
-    0%,
-    62%,
-    100% {
-        transform: rotate(0deg);
-    }
-    68% {
-        transform: rotate(-7deg);
-    }
-    76% {
-        transform: rotate(6deg);
-    }
-    84% {
-        transform: rotate(-4deg);
-    }
-    92% {
-        transform: rotate(2deg);
     }
 }
 

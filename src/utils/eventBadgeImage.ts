@@ -1,5 +1,7 @@
+import { SPRITE_EFFECTS } from './eventPokemonTypes';
 import type { SpriteEffect } from './eventPokemonTypes';
 import { getBadgeSprite } from './eventSprite';
+import { type EggDistance, getEggImageUrl } from './hatchEgg';
 import { loadFirstAvailableImage } from './loadImage';
 
 const CANVAS_SIZE = 512;
@@ -25,7 +27,14 @@ const OVERLAY_RAISE = 0.2;
 const EFFECT_GLOW: Partial<Record<SpriteEffect, { color: string; blur: number }>> = {
     shadow: { color: 'rgba(68, 57, 117, 0.75)', blur: 3 },
     gigantamax: { color: 'rgba(200, 0, 0, 0.35)', blur: 4.4 },
+    // Separates the sprite from the egg behind it; the badge background is already the event color.
+    hatch: { color: 'rgba(0, 0, 0, 0.55)', blur: 6 },
 };
+// Hatch mirrors the calendar sprite: the egg sits behind, bottom-aligned and nudged right of the
+// sprite box, with the sprite shrunk toward its bottom-left so the egg shows.
+const HATCH_EGG_HEIGHT = 0.9;
+const HATCH_EGG_OFFSET_X = 0.16;
+const HATCH_SPRITE_SCALE = 0.82;
 
 const POKEBALL_PATTERN_ANGLE_DEG = 42;
 const POKEBALL_PATTERN_SPACING = 113;
@@ -70,6 +79,8 @@ export interface EventBadgeSpec {
     bottomLines: string[];
     /** Event-level effect (e.g. from a Max Monday or Shadow Raid) applied when a name has no prefix of its own */
     defaultPokemonEffect?: SpriteEffect;
+    /** Which egg the Hatch effect draws */
+    eggDistance?: EggDistance;
     /** User size multiplier for the sprites (and their overlays). Defaults to 1. */
     spriteScale?: number;
 }
@@ -254,12 +265,17 @@ function drawBottomLines(ctx: CanvasRenderingContext2D, lines: string[], bandHei
     });
 }
 
-async function resolveBadgePokemon(name: string, fallbackEffect?: SpriteEffect): Promise<ResolvedBadgePokemon | null> {
+function getOverlayUrl(effect: SpriteEffect | undefined, eggDistance?: EggDistance) {
+    if (effect === SPRITE_EFFECTS.HATCH) return getEggImageUrl(eggDistance);
+    return effect && OVERLAY_ASSET_URLS[effect];
+}
+
+async function resolveBadgePokemon(name: string, fallbackEffect?: SpriteEffect, eggDistance?: EggDistance): Promise<ResolvedBadgePokemon | null> {
     const { urls, effect } = getBadgeSprite(name, fallbackEffect);
     const image = await loadFirstAvailableImage(urls);
     if (!image) return null;
 
-    const overlayUrl = effect && OVERLAY_ASSET_URLS[effect];
+    const overlayUrl = getOverlayUrl(effect, eggDistance);
     const overlayImage = overlayUrl ? await loadFirstAvailableImage([overlayUrl]) : null;
 
     return { image, overlayImage, effect };
@@ -306,9 +322,32 @@ function layOutPokemon(pokemon: ResolvedBadgePokemon[], areaTop: number, areaHei
     });
 }
 
+// The square the sprite is fit into (centered on it), matching the calendar's square sprite box.
+function getSpriteBox({ x, y, drawWidth, drawHeight, overlayBaseSize }: PokemonSlotLayout) {
+    const size = overlayBaseSize;
+    return { left: x + drawWidth / 2 - size / 2, bottom: y + drawHeight / 2 + size / 2, size };
+}
+
 function drawPokemonOverlays(ctx: CanvasRenderingContext2D, layout: PokemonSlotLayout[]) {
-    layout.forEach(({ pokemon: { overlayImage, effect }, x, y, drawWidth, drawHeight, overlayBaseSize }) => {
+    layout.forEach(slot => {
+        const {
+            pokemon: { overlayImage, effect },
+            x,
+            y,
+            drawWidth,
+            drawHeight,
+            overlayBaseSize,
+        } = slot;
         if (!overlayImage || !effect) return;
+
+        if (effect === SPRITE_EFFECTS.HATCH) {
+            const box = getSpriteBox(slot);
+            const eggHeight = box.size * HATCH_EGG_HEIGHT;
+            const eggWidth = eggHeight * (overlayImage.width / overlayImage.height);
+            const eggRight = box.left + box.size * (1 + HATCH_EGG_OFFSET_X);
+            ctx.drawImage(overlayImage, eggRight - eggWidth, box.bottom - eggHeight, eggWidth, eggHeight);
+            return;
+        }
 
         // Sized off the overlay's own aspect ratio, not stretched to the Pokemon's bounding box -
         // stretching distorts non-square overlay art.
@@ -322,15 +361,31 @@ function drawPokemonOverlays(ctx: CanvasRenderingContext2D, layout: PokemonSlotL
     });
 }
 
+// Hatch sprites shrink toward the sprite box's bottom-left corner; others draw as laid out.
+function getIconRect(slot: PokemonSlotLayout) {
+    const { x, y, drawWidth, drawHeight } = slot;
+    if (slot.pokemon.effect !== SPRITE_EFFECTS.HATCH) return { x, y, width: drawWidth, height: drawHeight };
+
+    const box = getSpriteBox(slot);
+    return {
+        x: box.left + (x - box.left) * HATCH_SPRITE_SCALE,
+        y: box.bottom - (box.bottom - y) * HATCH_SPRITE_SCALE,
+        width: drawWidth * HATCH_SPRITE_SCALE,
+        height: drawHeight * HATCH_SPRITE_SCALE,
+    };
+}
+
 function drawPokemonIcons(ctx: CanvasRenderingContext2D, layout: PokemonSlotLayout[]) {
-    layout.forEach(({ pokemon: { image, effect }, x, y, drawWidth, drawHeight }) => {
+    layout.forEach(slot => {
+        const { image, effect } = slot.pokemon;
         const glow = effect && EFFECT_GLOW[effect];
         if (glow) {
             ctx.save();
             ctx.shadowColor = glow.color;
             ctx.shadowBlur = glow.blur;
         }
-        ctx.drawImage(image, x, y, drawWidth, drawHeight);
+        const rect = getIconRect(slot);
+        ctx.drawImage(image, rect.x, rect.y, rect.width, rect.height);
         if (glow) {
             ctx.restore();
         }
@@ -366,8 +421,14 @@ export async function generateEventBadge(spec: EventBadgeSpec): Promise<Blob | n
     const topBandHeight = getTopBandHeight(titleLines.length);
     const bottomBandHeight = getBottomBandHeight(spec.bottomLines.length);
 
-    const resolvedPokemon = await Promise.all(spec.pokemonNames.map(name => resolveBadgePokemon(name, spec.defaultPokemonEffect)));
+    const resolvedPokemon = await Promise.all(spec.pokemonNames.map(name => resolveBadgePokemon(name, spec.defaultPokemonEffect, spec.eggDistance)));
     const loadedPokemon = resolvedPokemon.filter((pokemon): pokemon is ResolvedBadgePokemon => pokemon !== null);
+
+    // A Hatch Day with no Pokemon still shows its egg, like the calendar placeholder.
+    if (loadedPokemon.length === 0 && spec.defaultPokemonEffect === SPRITE_EFFECTS.HATCH) {
+        const egg = await loadFirstAvailableImage([getEggImageUrl(spec.eggDistance)]);
+        if (egg) loadedPokemon.push({ image: egg, overlayImage: null });
+    }
 
     const areaTop = topBandHeight - POKEMON_BAND_OVERLAP;
     const areaHeight = CANVAS_SIZE - bottomBandHeight + POKEMON_BAND_OVERLAP - areaTop;

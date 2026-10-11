@@ -77,8 +77,9 @@ import { useEventsStore } from '@/stores/events';
 import { usePokemonDataStore } from '@/stores/pokemonData';
 import { resolveCampfireEventPokemonNames } from '@/utils/campfireEventText';
 import { CP_DIVIDER, TITLE_MAX_LINES, generateEventBadge } from '@/utils/eventBadgeImage';
-import { getEventSpriteEffect } from '@/utils/eventPokemon';
+import { SPRITE_EFFECTS, getEventSpriteEffect } from '@/utils/eventPokemon';
 import { type PogoEvent, getEventTypeInfo } from '@/utils/eventTypes';
+import { getHatchDayEggDistance } from '@/utils/hatchEgg';
 import { calculateRaidCP } from '@/utils/pokemonCP';
 import { getSpotlightBonusText } from '@/utils/spotlightBonus';
 
@@ -190,6 +191,7 @@ const imageBottomLines = computed(() => {
 
 // Max Monday/Shadow Raids classify the effect at the event level - resolvers strip the name prefix.
 const badgeDefaultEffect = computed(() => getEventSpriteEffect(props.event));
+const badgeEggDistance = computed(() => (badgeDefaultEffect.value === SPRITE_EFFECTS.HATCH ? getHatchDayEggDistance(props.event) : undefined));
 
 const badgeImageUrl = ref<string | null>(null);
 const isGeneratingBadge = ref(false);
@@ -219,6 +221,7 @@ async function regenerateBadge() {
             pokemonNames: imagePokemonNames.value,
             bottomLines: imageBottomLines.value,
             defaultPokemonEffect: badgeDefaultEffect.value,
+            eggDistance: badgeEggDistance.value,
             spriteScale: spriteScalePercent.value / 100,
         });
 

@@ -22,7 +22,7 @@ import { type SpriteEffect } from '@/utils/eventPokemon';
 import { type EventTypeKey } from '@/utils/eventTypes';
 import { type RaidTierGroupWithImages } from '@/utils/raidTierGroups';
 
-import PokemonImage from '@/components/Calendar/PokemonImage.vue';
+import PokemonImage from '@/components/Calendar/PokemonImage/PokemonImage.vue';
 
 interface Props {
     groups: RaidTierGroupWithImages[] | null | undefined;

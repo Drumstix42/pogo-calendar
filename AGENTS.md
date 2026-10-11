@@ -276,7 +276,9 @@ Sprite overlays (`SPRITE_EFFECTS`: Dynamax clouds, Shadow aura, Gigantamax, Hatc
 places: an **event-level** effect (`getEventSpriteEffect()` — Max Mondays, Dynamax Max Battle titles,
 Shadow Raids, Hatch Days), and a **per-sprite** effect that wins over it. Hatch Days are plain `event`s
 recognized by title (`isHatchDayEvent()`); names that aren't known Pokémon are dropped, and with none
-left the placeholder renders as a bare egg. Boss lists derive the per-sprite effect from
+left the placeholder renders as a bare egg. Overlay layers live in `PokemonImage/SpriteEffectOverlay.vue`;
+egg art is generated per egg distance in `src/utils/hatchEgg.ts` (`getHatchDayEggDistance()` is the seam
+for feed data — currently always 2 km), shared by the sprite and the Campfire badge. Boss lists derive the per-sprite effect from
 the boss name prefix via `splitSpriteEffectPrefix()` (`Dynamax X`, `Shadow X`), so prefixed bosses
 inside any event type (e.g. Dynamax Dialga in a Wild Area schedule) get their overlay.
 

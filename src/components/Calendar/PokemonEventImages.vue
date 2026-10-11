@@ -20,6 +20,7 @@
             :event-type="event.eventType"
             :is-raid-hour-sub-event="event.extraData?.isRaidHourSubEvent === true"
             :is-spotlight-sub-event="event.extraData?.isSpotlightSubEvent === true"
+            :egg-distance="eggDistance"
         />
 
         <!-- Overflow counter badge -->
@@ -32,6 +33,7 @@
             :show-tooltip="showTooltips"
             :event-type="event.eventType"
             :effect="eventEffect"
+            :egg-distance="eggDistance"
             is-placeholder
         />
     </div>
@@ -44,8 +46,9 @@ import { computed } from 'vue';
 import { useEventTypeColorsStore } from '@/stores/eventTypeColors';
 import { type PokemonImageData, SPRITE_EFFECTS, getEventPokemonImages, getEventSpriteEffect, getMultiDayPokemonImages } from '@/utils/eventPokemon';
 import { type PogoEvent } from '@/utils/eventTypes';
+import { getHatchDayEggDistance } from '@/utils/hatchEgg';
 
-import PokemonImage from './PokemonImage.vue';
+import PokemonImage from '@/components/Calendar/PokemonImage/PokemonImage.vue';
 
 interface Props {
     event: PogoEvent;
@@ -104,6 +107,7 @@ const PLACEHOLDER_EVENT_TYPES = [
 // Event-level effect: feeds the placeholder (which has no resolved sprite to carry one) and Hatch Day handling.
 const eventEffect = computed(() => getEventSpriteEffect(props.event));
 const isHatchDay = computed(() => eventEffect.value === SPRITE_EFFECTS.HATCH);
+const eggDistance = computed(() => (isHatchDay.value ? getHatchDayEggDistance(props.event) : undefined));
 
 const shouldShowPlaceholder = computed(() => {
     if (!props.showPlaceholder) return false;

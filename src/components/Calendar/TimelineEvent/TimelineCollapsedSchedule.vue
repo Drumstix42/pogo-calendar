@@ -24,7 +24,7 @@ import { type SpriteEffect } from '@/utils/eventPokemon';
 import { type EventTypeKey } from '@/utils/eventTypes';
 import { type CollapsedScheduleDayGroup } from '@/utils/timelineSchedule';
 
-import PokemonImage from '@/components/Calendar/PokemonImage.vue';
+import PokemonImage from '@/components/Calendar/PokemonImage/PokemonImage.vue';
 
 interface Props {
     dayGroups: CollapsedScheduleDayGroup[] | undefined;
