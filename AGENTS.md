@@ -154,7 +154,9 @@ at `notes`). `getEventBonusGroups()` is the single source for the detail views (
 the Campfire Output text, with two exceptions:
 
 - **Spotlight Hour** builds its group from `spotlight.bonus` so it keeps our local bonus-type icon (the
-  feed item has no image). The calendar-cell icons (`SpotlightBonusIcons`) read `eventMetadata`, not this.
+  feed item has no image). The calendar-cell icons (`EventBonusIcons`) read `eventMetadata`: Spotlight
+  Hours show their bonus-type icons, other single-day events with any bonus (`hasEventBonuses()`) a
+  generic marker.
 - **Season** is skipped — `SeasonBonuses.vue` renders the same items (plus Daily Discoveries) from
   `extraData.season`.
 

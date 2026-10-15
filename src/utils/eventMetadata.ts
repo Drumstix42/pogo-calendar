@@ -1,5 +1,6 @@
 import type { Dayjs } from 'dayjs';
 
+import { hasEventBonuses } from './eventBonuses';
 import { formatEventTime, parseEventDate } from './eventDate';
 import { formatEventName } from './eventName';
 import { type EventMetadata, type PogoEvent, getEventTypeInfo } from './eventTypes';
@@ -43,6 +44,7 @@ export function buildEventMetadata(event: PogoEvent, { now, manualOffsetHours, c
         isFutureEvent: startDate.isAfter(now),
         spotlightBonus,
         spotlightBonusIconUrl: spotlightBonus ? getSpotlightBonusTypeIcon(spotlightBonus.bonusType) : null,
+        hasBonuses: hasEventBonuses(event),
         raidBossTierGroups: buildTierGroupsFromBosses(event.extraData?.raidbattles?.bosses),
     };
 }

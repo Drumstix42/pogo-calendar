@@ -1,25 +1,32 @@
 <template>
-    <div class="spotlight-bonus-icons">
-        <EvolveIcon v-if="category === 'evolve'" :size="13" class="evolve-icon" />
-        <TransferIcon v-else-if="category === 'transfer'" :size="13" />
-        <img v-if="iconUrl" :src="iconUrl" class="bonus-type-icon" />
+    <div class="event-bonus-icons">
+        <!-- Spotlight Hour's bonus is known, so it gets specific icons; anything else a generic marker -->
+        <template v-if="spotlightBonus">
+            <EvolveIcon v-if="spotlightBonus.category === 'evolve'" :size="13" class="evolve-icon" />
+            <TransferIcon v-else-if="spotlightBonus.category === 'transfer'" :size="13" />
+            <img v-if="spotlightIconUrl" :src="spotlightIconUrl" class="bonus-type-icon" />
+        </template>
+        <BonusIcon v-else />
     </div>
 </template>
 
 <script setup lang="ts">
+import { type SpotlightBonusInfo } from '@/utils/spotlightBonus';
+
+import BonusIcon from '@/components/Icons/BonusIcon.vue';
 import EvolveIcon from '@/components/Icons/EvolveIcon.vue';
 import TransferIcon from '@/components/Icons/TransferIcon.vue';
 
 interface Props {
-    category: string | undefined;
-    iconUrl: string | null | undefined;
+    spotlightBonus?: SpotlightBonusInfo | null;
+    spotlightIconUrl?: string | null;
 }
 
 defineProps<Props>();
 </script>
 
 <style scoped>
-.spotlight-bonus-icons {
+.event-bonus-icons {
     z-index: 10;
     pointer-events: none;
     position: absolute;
@@ -33,6 +40,7 @@ defineProps<Props>();
     padding: 0 1px;
     background-color: color-mix(in srgb, var(--calendar-cell-bg) 90%, transparent);
     border-radius: 8px;
+    opacity: 0.85;
     filter: grayscale(20%);
 
     @media (min-width: 576px) {
@@ -53,17 +61,17 @@ defineProps<Props>();
     }
 }
 
-.calendar-day.today .spotlight-bonus-icons {
+.calendar-day.today .event-bonus-icons {
     background-color: color-mix(in srgb, var(--calendar-today-bg) 90%, transparent);
 }
 
-.spotlight-bonus-icons > svg {
+.event-bonus-icons > svg {
     flex-shrink: 0;
     background-color: color-mix(in srgb, var(--calendar-cell-bg) 50%, transparent);
     border-radius: 50%;
 }
 
-.spotlight-bonus-icons .bonus-type-icon {
+.event-bonus-icons .bonus-type-icon {
     width: 13px;
     height: 13px;
     flex-shrink: 0;
@@ -76,7 +84,6 @@ defineProps<Props>();
 .evolve-icon {
     color: #aa403a;
 }
-
 [data-bs-theme='dark'] .evolve-icon {
     color: #ee726e;
 }

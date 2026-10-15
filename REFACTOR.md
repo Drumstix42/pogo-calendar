@@ -237,7 +237,7 @@ seams below are **initial hypotheses from the first survey** — verify against 
       own card surface, not a separable seam. _Follow-up option:_ lift the major-timeline card CSS to
       an SCSS partial if it grows.
     - **Spotlight bonus icons (deferred):** the `.spotlight-bonus-icons` block here duplicates the
-      _logic_ of [SpotlightBonusIcons.vue](src/components/Calendar/CalendarDay/SpotlightBonusIcons.vue)
+      _logic_ of [EventBonusIcons.vue](src/components/Calendar/CalendarDay/EventBonusIcons.vue)
       but with different styling (15px inline row vs. 13px absolutely-positioned in calendar cells).
       Left as-is to avoid disturbing the just-settled CalendarDay component; a shared icon-only
       component (size prop, consumer-owned positioning) is a possible follow-up.

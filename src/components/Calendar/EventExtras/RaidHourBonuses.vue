@@ -1,6 +1,9 @@
 <template>
     <div v-if="bonuses" class="raid-hour-bonuses">
-        <strong>Bonus:</strong>
+        <div class="bonus-header">
+            <BonusIcon :size="12" />
+            <strong>Bonus:</strong>
+        </div>
         <div v-for="bonus in bonuses" :key="bonus" class="bonus-content">
             <span>{{ bonus }}</span>
         </div>
@@ -12,6 +15,8 @@ import { computed } from 'vue';
 
 import { useEventTypeColorsStore } from '@/stores/eventTypeColors';
 import { type PogoEvent } from '@/utils/eventTypes';
+
+import BonusIcon from '@/components/Icons/BonusIcon.vue';
 
 interface Props {
     event: PogoEvent;
@@ -42,6 +47,12 @@ const bonuses = computed(() => {
     border: 1px solid color-mix(in srgb, var(--bs-body-color) 12%, transparent);
     border-left: 3px solid color-mix(in srgb, v-bind(eventColor) 70%, transparent);
     border-radius: 0.25rem;
+}
+
+.bonus-header {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
 }
 
 .bonus-content {

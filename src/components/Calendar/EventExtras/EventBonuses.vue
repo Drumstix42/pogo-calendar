@@ -1,6 +1,7 @@
 <template>
     <div v-if="groups.length" class="event-bonuses">
         <div class="bonus-header">
+            <BonusIcon :size="12" />
             <strong>{{ headerLabel }}:</strong>
         </div>
         <div
@@ -34,6 +35,8 @@ import { useEventTypeColorsStore } from '@/stores/eventTypeColors';
 import { getEventBonusGroups } from '@/utils/eventBonuses';
 import { type PogoEvent } from '@/utils/eventTypes';
 
+import BonusIcon from '@/components/Icons/BonusIcon.vue';
+
 interface Props {
     event: PogoEvent;
 }
@@ -66,6 +69,9 @@ const headerLabel = computed(() => {
 
 <style scoped>
 .bonus-header {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
     font-size: 12px;
     line-height: 1;
     color: color-mix(in srgb, var(--bs-body-color) 80%, transparent);

@@ -108,6 +108,8 @@ $input-bg: var(--surface-input) !default;
     --calendar-border-color: #dadce0;
     --calendar-day-border-overlay: color-mix(in srgb, var(--calendar-bg) 8%, transparent);
     --event-highlight-text-color: #f2f2f2;
+    // Pokémon GO's field research/claim orange - yellow would read as the Electric type next to the bolt
+    --bonus-indicator-color: #eaa14b;
 
     // Button icon ghost colors
     --btn-icon-ghost-color: #495057;
@@ -153,6 +155,7 @@ $input-bg: var(--surface-input) !default;
     --calendar-border-color: #495057;
     --calendar-day-border-overlay: color-mix(in srgb, var(--calendar-bg) 4%, transparent);
     --event-highlight-text-color: #e9ecef;
+    --bonus-indicator-color: #eaa14b;
 
     // Button icon ghost colors for dark theme
     --btn-icon-ghost-color: color-mix(in srgb, var(--bs-body-color) 70%, transparent);

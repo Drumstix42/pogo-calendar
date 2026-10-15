@@ -20,3 +20,9 @@ export function getEventBonusGroups(event: PogoEvent): EventBonusGroup[] {
 
     return (event.extraData?.bonuses ?? []).filter(group => group.items?.length);
 }
+
+/** Whether the event has any bonuses to show: its bonus groups, or a Raid Hour sub-event's day notes. */
+export function hasEventBonuses(event: PogoEvent): boolean {
+    const extra = event.extraData;
+    return getEventBonusGroups(event).length > 0 || Boolean(extra?.isRaidHourSubEvent && extra.raidHourBonuses?.length);
+}

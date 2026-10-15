@@ -16,7 +16,7 @@
                 {
                     'event-past': metadata?.isPastEvent,
                     'event-id-highlighted': eventHighlight.hoveredEventID === sourceEventId,
-                    'has-bonus-icons': calendarSettings.useSingleDayEventSprites && metadata?.spotlightBonus,
+                    'has-bonus-icons': calendarSettings.useSingleDayEventSprites && showBonusIcons,
                     'major-daily-display-event': isMajorDaily,
                 },
                 watermarkClass,
@@ -54,10 +54,10 @@
                         </div>
                     </div>
 
-                    <SpotlightBonusIcons
-                        v-if="!isMajorDaily && metadata?.spotlightBonus"
-                        :category="metadata?.spotlightBonus?.category"
-                        :icon-url="metadata?.spotlightBonusIconUrl"
+                    <EventBonusIcons
+                        v-if="showBonusIcons"
+                        :spotlight-bonus="metadata?.spotlightBonus"
+                        :spotlight-icon-url="metadata?.spotlightBonusIconUrl"
                     />
                 </div>
                 <TwitchIcon
@@ -98,7 +98,7 @@ import { getEventCount, shouldShowBadge } from '@/utils/eventDisplay';
 import { getEventWatermarkClass } from '@/utils/eventMajor';
 import { type PogoEvent } from '@/utils/eventTypes';
 
-import SpotlightBonusIcons from '@/components/Calendar/CalendarDay/SpotlightBonusIcons.vue';
+import EventBonusIcons from '@/components/Calendar/CalendarDay/EventBonusIcons.vue';
 import EventTooltip from '@/components/Calendar/EventTooltip/EventTooltip.vue';
 import PokemonEventImages from '@/components/Calendar/PokemonEventImages.vue';
 import TwitchIcon from '@/components/Icons/TwitchIcon.vue';
@@ -148,6 +148,7 @@ const detailsEvent = computed(() => getEventForDetails(props.event));
 // The source event, so major daily projections resolve global vs location like the original.
 const watermarkClass = computed(() => getEventWatermarkClass(detailsEvent.value));
 const showBadge = computed(() => shouldShowBadge(props.event));
+const showBonusIcons = computed(() => !isMajorDaily.value && Boolean(metadata.value?.spotlightBonus || metadata.value?.hasBonuses));
 const eventCount = computed(() => getEventCount(props.event));
 // Overnight events end past midnight, so the end time gets its own row
 const overnightEndTime = computed(() =>
@@ -203,7 +204,7 @@ onMounted(() => {
             opacity 0.3s ease;
     }
 
-    :deep(.spotlight-bonus-icons) {
+    :deep(.event-bonus-icons) {
         transition:
             filter 0.3s ease,
             opacity 0.3s ease;
@@ -219,7 +220,7 @@ onMounted(() => {
             }
         }
 
-        :deep(.spotlight-bonus-icons) {
+        :deep(.event-bonus-icons) {
             opacity: 0.6;
             filter: grayscale(100%);
         }
@@ -254,6 +255,14 @@ onMounted(() => {
         position: absolute;
         /* bottom: -1px;
         right: -2px; */
+    }
+}
+
+/* Below lg the bonus icons share the bottom-right corner with the sprite overflow counter, so they sit above it */
+@media (max-width: 991.98px) {
+    .single-day-event:has(.overflow-counter-badge) :deep(.event-bonus-icons) {
+        right: 2px;
+        bottom: 15px;
     }
 }
 

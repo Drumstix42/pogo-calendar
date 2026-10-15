@@ -190,6 +190,8 @@ export interface EventMetadata {
     // Spotlight bonus (for spotlight hour events)
     spotlightBonus?: SpotlightBonusInfo | null;
     spotlightBonusIconUrl?: string | null;
+    // Any bonus content (drives the generic bonus indicator on non-Spotlight events)
+    hasBonuses?: boolean;
 
     // Raid boss groupings by tier (for events with raidbattles data)
     raidBossTierGroups?: RaidBossTierGroup[];
