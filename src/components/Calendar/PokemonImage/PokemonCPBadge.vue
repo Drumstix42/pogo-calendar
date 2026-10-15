@@ -27,11 +27,14 @@ interface Props {
     eventType: string;
     isRaidHourSubEvent?: boolean;
     isSpotlightSubEvent?: boolean;
+    /** Dynamax/Gigantamax boss - Max Battle catches are never weather boosted, whatever the event type. */
+    isMaxBattle?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
     isRaidHourSubEvent: false,
     isSpotlightSubEvent: false,
+    isMaxBattle: false,
 });
 
 const pokemonDataStore = usePokemonDataStore();
@@ -52,7 +55,7 @@ const CP_SUPPORTED_EVENT_TYPES = [
 ];
 
 const shouldShowWeatherBoost = computed(() => {
-    if (props.isSpotlightSubEvent) return false;
+    if (props.isSpotlightSubEvent || props.isMaxBattle) return false;
     // Pseudo raid hour events from parent events also support weather boost
     if (props.isRaidHourSubEvent) return true;
     return WEATHER_BOOST_EVENT_TYPES.includes(props.eventType);

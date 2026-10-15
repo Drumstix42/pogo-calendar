@@ -62,6 +62,7 @@
                 :event-type="eventType"
                 :is-raid-hour-sub-event="isRaidHourSubEvent"
                 :is-spotlight-sub-event="isSpotlightSubEvent"
+                :is-max-battle="isMaxBattle"
             />
         </Transition>
     </div>
@@ -126,6 +127,8 @@ const resolvedEffect = computed(() => {
     const effect = props.pokemonData?.effect ?? props.effect;
     return props.hideSymbolEffect && getEffectSymbol(effect) ? undefined : effect;
 });
+
+const isMaxBattle = computed(() => resolvedEffect.value === SPRITE_EFFECTS.DYNAMAX || resolvedEffect.value === SPRITE_EFFECTS.GIGANTAMAX);
 
 // No Pokemon could be read from the Hatch Day title, so the egg itself is the image.
 const isHatchPlaceholder = computed(() => props.isPlaceholder && resolvedEffect.value === SPRITE_EFFECTS.HATCH);

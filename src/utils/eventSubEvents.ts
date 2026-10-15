@@ -3,7 +3,7 @@ import customParseFormat from 'dayjs/plugin/customParseFormat';
 import utc from 'dayjs/plugin/utc';
 
 import { parseRaidScheduleDate } from './eventRaidHours';
-import { type PogoEvent, type PokemonBoss, getEventTypes } from './eventTypes';
+import { type PogoEvent, type PokemonBoss, getEventTypes, isAllMaxBattleBosses } from './eventTypes';
 
 dayjs.extend(utc);
 dayjs.extend(customParseFormat);
@@ -44,25 +44,34 @@ function parseRaidHourTime(timeString: string): { startHour: number; endHour: nu
     return defaultTime;
 }
 
+const MAX_FORM_PREFIX = /^(Dynamax|Gigantamax)\s+/i;
+
 /**
  * Format Pokemon names grammatically
  * 1 Pokemon: "Lugia Raid Hour"
  * 2 Pokemon: "Lugia and Ho-Oh Raid Hour"
  * 3+ Pokemon: "Tapu Koko, Tapu Lele, and Tapu Bulu Raid Hour"
+ * Max Battles only: "Dynamax Latias and Latios Max Battle Hour"
  */
 function formatPokemonList(bosses: PokemonBoss[]): string {
-    if (bosses.length === 0) return 'Raid Hour';
-    if (bosses.length === 1) return `${bosses[0].name} Raid Hour`;
-    if (bosses.length === 2) return `${bosses[0].name} and ${bosses[1].name} Raid Hour`;
-    if (bosses.length > 6) return `${bosses.length} Bosses Raid Hour`;
+    const suffix = isAllMaxBattleBosses(bosses) ? 'Max Battle Hour' : 'Raid Hour';
 
-    // 3–6
-    const allButLast = bosses
-        .slice(0, -1)
-        .map(b => b.name)
-        .join(', ');
-    const last = bosses[bosses.length - 1].name;
-    return `${allButLast}, and ${last} Raid Hour`;
+    if (bosses.length === 0) return suffix;
+    if (bosses.length > 6) return `${bosses.length} Bosses ${suffix}`;
+
+    // A shared Dynamax/Gigantamax prefix is said once, matching LeekDuck's "Dynamax X and Y Max Battle Day" titles.
+    let names = bosses.map(b => b.name);
+    const sharedPrefix = names[0].match(MAX_FORM_PREFIX)?.[0];
+    if (sharedPrefix && names.every(name => name.startsWith(sharedPrefix))) {
+        names = names.map(name => name.slice(sharedPrefix.length));
+    }
+
+    let list: string;
+    if (names.length === 1) list = names[0];
+    else if (names.length === 2) list = `${names[0]} and ${names[1]}`;
+    else list = `${names.slice(0, -1).join(', ')}, and ${names[names.length - 1]}`;
+
+    return `${sharedPrefix ?? ''}${list} ${suffix}`;
 }
 
 function formatSpotlightEventName(pokemon: PokemonBoss): string {

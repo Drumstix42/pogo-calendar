@@ -4,7 +4,7 @@
  */
 import { getEventBonusGroups } from './eventBonuses';
 import { getEventPokemonImages } from './eventPokemon';
-import { type PogoEvent } from './eventTypes';
+import { type PogoEvent, isAllMaxBattleBosses } from './eventTypes';
 import { type CPResult, type PokemonData, calculateRaidCP, formatCP, formatCPDisplay } from './pokemonCP';
 import { type PokemonType, formatWeaknessText, getSuperEffectiveTypes } from './typeEffectiveness';
 
@@ -44,6 +44,8 @@ export function getCampfireCpDefaults(event: PogoEvent) {
     if (!isCampfireCpApplicable(event)) return { includeCP: false, includeWeatherBoostedCP: false };
     // Type first: it's the explicit signal, while boss data only infers raid content.
     if (MAX_BATTLE_EVENT_TYPES.has(event.eventType)) return { includeCP: true, includeWeatherBoostedCP: false };
+    // Boss data that's all Max Battles (e.g. a Max Battle Hour sub-event) has no raid catches to boost.
+    if (isAllMaxBattleBosses(event.extraData?.raidbattles?.bosses)) return { includeCP: true, includeWeatherBoostedCP: false };
     if (hasRaidContent(event)) return { includeCP: true, includeWeatherBoostedCP: true };
     return { includeCP: false, includeWeatherBoostedCP: false };
 }

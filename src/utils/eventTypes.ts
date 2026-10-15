@@ -503,3 +503,11 @@ export function hasEventType(event: Pick<PogoEvent, 'eventType' | 'eventTypes'>,
 export function getDefaultEventTypeColor(eventType: EventTypeKey): string {
     return EVENT_TYPES[eventType]?.color || EVENT_TAG_TYPES[eventType]?.color || '#757575';
 }
+
+const MAX_BATTLE_RAID_TYPES = new Set(['Max Battle', 'Gigantamax']);
+
+// Whether every boss in a non-empty list is a Max Battle (Dynamax/Gigantamax) rather than a raid.
+export function isAllMaxBattleBosses(bosses: PokemonBoss[] | undefined): boolean {
+    if (!bosses?.length) return false;
+    return bosses.every(boss => MAX_BATTLE_RAID_TYPES.has(boss.raidType ?? ''));
+}
