@@ -40,7 +40,11 @@
             @apply-hide="handleMenuHide(event.eventID)"
         >
             <div ref="innerRef" class="multi-day-event-bar--inner">
-                <TwitchIcon v-if="event.eventType === 'twitch-drops'" :size="iconHeight" class="twitch-drops-icon" />
+                <TwitchIcon
+                    v-if="calendarSettings.useMultiDayEventSprites && event.eventType === 'twitch-drops'"
+                    :size="iconHeight"
+                    class="twitch-drops-icon"
+                />
 
                 <!-- Show Pokemon images for grouped or individual events -->
                 <PokemonEventImages

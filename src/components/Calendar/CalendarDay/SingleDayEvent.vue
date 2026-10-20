@@ -60,20 +60,22 @@
                         :spotlight-icon-url="metadata?.spotlightBonusIconUrl"
                     />
                 </div>
-                <TwitchIcon
-                    v-if="event.eventType === 'twitch-drops'"
-                    :size="twitchIconHeight"
-                    class="twitch-drops-icon"
-                    :style="{ color: metadata?.color }"
-                />
-                <PokemonEventImages
-                    v-else-if="calendarSettings.useSingleDayEventSprites"
-                    :event="event"
-                    :height="singleDayPokemonHeight"
-                    :show-placeholder="true"
-                    :show-overflow-counter="true"
-                    :exclude-tiers="['Tier 1', 'Tier 3']"
-                />
+                <template v-if="calendarSettings.useSingleDayEventSprites">
+                    <TwitchIcon
+                        v-if="event.eventType === 'twitch-drops'"
+                        :size="twitchIconHeight"
+                        class="twitch-drops-icon"
+                        :style="{ color: metadata?.color }"
+                    />
+                    <PokemonEventImages
+                        v-else
+                        :event="event"
+                        :height="singleDayPokemonHeight"
+                        :show-placeholder="true"
+                        :show-overflow-counter="true"
+                        :exclude-tiers="['Tier 1', 'Tier 3']"
+                    />
+                </template>
             </div>
         </div>
 
