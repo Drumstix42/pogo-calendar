@@ -534,7 +534,7 @@ onMounted(() => {
 
 .single-day-event.event-watermark::after {
     right: -12px;
-    bottom: 0px;
+    top: 4px;
     width: 38px;
     height: 38px;
 }
@@ -564,8 +564,8 @@ onMounted(() => {
     }
 
     .single-day-event.event-watermark::after {
-        right: -10px;
-        bottom: -1px;
+        right: -14px;
+        top: 4px;
         width: 42px;
         height: 42px;
     }
@@ -578,7 +578,7 @@ onMounted(() => {
 
     .single-day-event.event-watermark::after {
         right: -8px;
-        bottom: -2px;
+        top: 4px;
         width: 50px;
         height: 50px;
     }
@@ -591,7 +591,7 @@ onMounted(() => {
 
     .single-day-event.event-watermark::after {
         right: -6px;
-        bottom: -2px;
+        top: 4px;
         width: 58px;
         height: 58px;
     }
