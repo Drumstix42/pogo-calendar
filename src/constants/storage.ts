@@ -28,6 +28,7 @@ export const STORAGE_KEYS = {
     // v2: the default flipped to on, and the old key holds the previously auto-saved `false` for everyone.
     PIN_ALL_MONTH_EVENTS: createStorageKey('pin-all-month-events-v2'),
     SHOW_CURRENT_RAID_BOSSES: createStorageKey('show-current-raid-bosses'),
+    SHOW_PAST_EVENTS: createStorageKey('show-past-events'),
     SHOW_SEASON_DAILY_BONUSES: createStorageKey('show-season-daily-bonuses'),
     THEME_MODE: createStorageKey('theme-mode'),
     TIMELINE_SIDEBAR_COLLAPSED: createStorageKey('timeline-sidebar-collapsed'),

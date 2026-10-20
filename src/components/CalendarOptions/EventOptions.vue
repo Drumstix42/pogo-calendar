@@ -37,19 +37,35 @@
 
         <div class="form-check form-switch mt-3">
             <input
-                id="condensePastEventBars"
+                id="showPastEvents"
                 class="form-check-input"
                 type="checkbox"
                 role="switch"
-                :checked="calendarSettings.condensePastEventBars"
-                @change="handleCondensePastEventBarsToggle"
+                :checked="calendarSettings.showPastEvents"
+                @change="handleShowPastEventsToggle"
             />
-            <label for="condensePastEventBars" class="form-check-label">Condense past event bars</label>
+            <label for="showPastEvents" class="form-check-label">Show past events</label>
         </div>
-        <small class="text-muted mt-1 d-block"
-            >When enabled, multi-day bars in past weeks shrink to a short labeled stub where the event starts or ends, and are hidden in between.
-            Hover an event to see its full bars.</small
-        >
+        <small class="text-muted mt-1 d-block">When disabled, weeks before the current one show no events.</small>
+
+        <div class="nested-option">
+            <div class="form-check form-switch mt-2">
+                <input
+                    id="condensePastEventBars"
+                    class="form-check-input"
+                    type="checkbox"
+                    role="switch"
+                    :checked="calendarSettings.condensePastEventBars"
+                    :disabled="!calendarSettings.showPastEvents"
+                    @change="handleCondensePastEventBarsToggle"
+                />
+                <label for="condensePastEventBars" class="form-check-label">Condense past event bars</label>
+            </div>
+            <small class="text-muted mt-1 d-block"
+                >When enabled, multi-day bars in past weeks shrink to a short labeled stub where the event starts or ends, and are hidden in between.
+                Hover an event to see its full bars.</small
+            >
+        </div>
 
         <div class="form-check form-switch mt-3">
             <input
@@ -143,6 +159,11 @@ const handleToggleChange = (event: Event) => {
     calendarSettings.setGroupSimilarEvents(target.checked);
 };
 
+const handleShowPastEventsToggle = (event: Event) => {
+    const target = event.target as HTMLInputElement;
+    calendarSettings.setShowPastEvents(target.checked);
+};
+
 const handleCondensePastEventBarsToggle = (event: Event) => {
     const target = event.target as HTMLInputElement;
     calendarSettings.setCondensePastEventBars(target.checked);
@@ -175,6 +196,10 @@ const handleFontSizeChange = (event: Event) => {
     font-size: 0.875rem;
     font-weight: 600;
     margin-left: 0.25rem;
+}
+
+.nested-option {
+    margin-left: 1.5rem;
 }
 
 .event-bar-size-container {

@@ -35,7 +35,7 @@
         </div>
 
         <!-- Multi-day events (day-spanning bars) -->
-        <div v-if="!placeholder && weekCompactSlots.size > 0" class="multi-day-events" :style="{ height: `${multiDayEventsHeight}px` }">
+        <div v-if="showEvents && weekCompactSlots.size > 0" class="multi-day-events" :style="{ height: `${multiDayEventsHeight}px` }">
             <TransitionGroup name="fade" tag="div">
                 <div
                     v-for="event in multiDayEvents"
@@ -64,7 +64,7 @@
         </div>
 
         <!-- Single-day events (vertically stacked event blocks with timestamps) -->
-        <div v-if="!placeholder">
+        <div v-if="showEvents">
             <TransitionGroup name="fade" tag="div" class="single-day-events">
                 <SingleDayEvent
                     v-for="event in singleDayEvents"
@@ -84,6 +84,7 @@ import { computed } from 'vue';
 
 import { type EventSlot, useCalendarDayLayout } from '@/composables/useCalendarDayLayout';
 import { useCalendarDaySingleEvents } from '@/composables/useCalendarDaySingleEvents';
+import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { useEventsStore } from '@/stores/events';
 import { isPokemonGoBirthday } from '@/utils/specialDates';
 
@@ -107,6 +108,7 @@ interface Props {
 
 const props = defineProps<Props>();
 const eventsStore = useEventsStore();
+const calendarSettings = useCalendarSettingsStore();
 
 const showSkeleton = computed(() => eventsStore.loading || props.placeholder);
 
@@ -115,6 +117,7 @@ const isBirthday = computed(() => isPokemonGoBirthday(props.dayInstance));
 // Multi-day bar layout (slot packing + positioning across week boundaries)
 const {
     multiDayEventBarHeight,
+    isPastWeek,
     weekCompactSlots,
     multiDayEvents,
     multiDayEventsHeight,
@@ -130,6 +133,8 @@ const {
 
 // Single-day events + per-day projections of major multi-day events
 const { singleDayEvents } = useCalendarDaySingleEvents(() => props.dayInstance);
+
+const showEvents = computed(() => !props.placeholder && (calendarSettings.showPastEvents || !isPastWeek.value));
 </script>
 
 <style scoped>

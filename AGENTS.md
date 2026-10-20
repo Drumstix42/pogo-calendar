@@ -198,6 +198,8 @@ Events that start and end in the same week, and all current/future weeks, render
   its label nearly fills the bar (`STUB_FILL_THRESHOLD_PX`), so it flows into the current week. Only
   those stubs attach the resize observer that measures this.
 - No stub when the event started before the visible grid; its past weeks are just hidden.
+- With `calendarSettings.showPastEvents` off, fully past weeks render no events at all (bars, single-day
+  boxes, major daily boxes) and drop their rows (`CalendarDay.vue` `showEvents`); condensing is moot then.
 
 ### Pinned all-month events (`src/composables/useCalendarGridSlots.ts`)
 
@@ -299,21 +301,21 @@ when a calendar sprite looks "missing".
 
 ## Stores (`src/stores/`)
 
-| Store (file)       | Responsibility                                                                                                         |
-| ------------------ | ---------------------------------------------------------------------------------------------------------------------- |
-| `events`           | Fetches the events feed, generates sub-events, applies grouping, caches per-event `eventMetadata`                      |
-| `eventFilter`      | Persists disabled (primary) type keys + hidden event IDs                                                               |
-| `eventTypeColors`  | Persists per-type color overrides; defaults via `getDefaultEventTypeColor()`                                           |
-| `calendarSettings` | Persisted display prefs: week start, grouping, past-bar condensing, all-month pinning, sprites, font size, time offset |
-| `raids`            | Current raid bosses feed                                                                                               |
-| `seasons`          | Season feed (daily discoveries, season bonuses); keeps neighbors so boundary weeks resolve                             |
-| `pokemonData`      | Lazily loaded Pokémon stats for CP calculations (`mgrann03/pokemon-resources`)                                         |
-| `campfireTemplate` | Persisted Campfire event text template                                                                                 |
-| `eventHighlight`   | Hovered/focused event + hovered filter type, for cross-component highlighting                                          |
-| `theme`            | Light/dark/system theme, persisted                                                                                     |
-| `toasts`           | Ephemeral toast queue                                                                                                  |
-| `userMessages`     | Dismissible banners with version-keyed persistence                                                                     |
-| `app`              | Checks `/version.json` to detect a newer deployed build (update prompt)                                                |
+| Store (file)       | Responsibility                                                                                                                |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
+| `events`           | Fetches the events feed, generates sub-events, applies grouping, caches per-event `eventMetadata`                             |
+| `eventFilter`      | Persists disabled (primary) type keys + hidden event IDs                                                                      |
+| `eventTypeColors`  | Persists per-type color overrides; defaults via `getDefaultEventTypeColor()`                                                  |
+| `calendarSettings` | Persisted display prefs: week start, grouping, past events/bar condensing, all-month pinning, sprites, font size, time offset |
+| `raids`            | Current raid bosses feed                                                                                                      |
+| `seasons`          | Season feed (daily discoveries, season bonuses); keeps neighbors so boundary weeks resolve                                    |
+| `pokemonData`      | Lazily loaded Pokémon stats for CP calculations (`mgrann03/pokemon-resources`)                                                |
+| `campfireTemplate` | Persisted Campfire event text template                                                                                        |
+| `eventHighlight`   | Hovered/focused event + hovered filter type, for cross-component highlighting                                                 |
+| `theme`            | Light/dark/system theme, persisted                                                                                            |
+| `toasts`           | Ephemeral toast queue                                                                                                         |
+| `userMessages`     | Dismissible banners with version-keyed persistence                                                                            |
+| `app`              | Checks `/version.json` to detect a newer deployed build (update prompt)                                                       |
 
 ## URL state (`src/composables/useUrlSync.ts`)
 

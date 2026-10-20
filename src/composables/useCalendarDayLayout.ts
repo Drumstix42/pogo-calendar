@@ -49,6 +49,8 @@ export function useCalendarDayLayout(getDayInstance: () => Dayjs, getEventSlots:
         return { weekStart, weekEnd };
     }
 
+    const isPastWeek = computed(() => getWeekBoundaries(getDayInstance()).weekEnd.isBefore(displayToday.value, 'day'));
+
     // A pinned all-month event only keeps a bar (and a row) in the neighbor-month week it starts or ends in
     function isPinnedAwayFromWeek(slot: EventSlot, weekStart: Dayjs, weekEnd: Dayjs) {
         if (!slot.isPinned) return false;
@@ -82,7 +84,7 @@ export function useCalendarDayLayout(getDayInstance: () => Dayjs, getEventSlots:
         }
 
         if (!calendarSettings.condensePastEventBars) return null;
-        if (!weekEnd.isBefore(displayToday.value, 'day')) return null;
+        if (!isPastWeek.value) return null;
 
         if (startsThisWeek && endsThisWeek) return null;
         if (startsThisWeek) {
@@ -309,6 +311,7 @@ export function useCalendarDayLayout(getDayInstance: () => Dayjs, getEventSlots:
     return {
         multiDayEventBarHeight,
         multiDayEventIconHeight,
+        isPastWeek,
         weekCompactSlots,
         multiDayEvents,
         multiDayEventsHeight,
