@@ -99,6 +99,9 @@ Feeds come from the [Drumstix42 fork of ScrapedDuck](https://github.com/Drumstix
 - Events without `start`/`end` (e.g. unannounced Spotlight Hours) are dropped at fetch.
 - `boss`/`spawn` lists in `extraData` can be empty for past or newly announced events — all handlers
   must degrade gracefully to title-based parsing.
+- Raid bosses (events and `raids.min.json`) carry `raidType` (battle category: Raid, Shadow, Max
+  Battle, Gigantamax, Mega, Super Mega, Primal) and a numeric star `tier` (null when unnamed). Group
+  labels like "Tier 3 Shadow" are built from both (`getRaidTierLabel()` in `src/utils/raidTierGroups.ts`).
 - **Fetch event data only when an issue needs it** — from the live feed (URL above), or the user's
   local JSON when they supply one (swap `curl -s <url>` for `cat <file>`). Ideally filter the data first, by event ID when one is provided:
 
@@ -154,9 +157,10 @@ at `notes`). `getEventBonusGroups()` is the single source for the detail views (
 the Campfire Output text, with two exceptions:
 
 - **Spotlight Hour** builds its group from `spotlight.bonus` so it keeps our local bonus-type icon (the
-  feed item has no image). The calendar-cell icons (`EventBonusIcons`) read `eventMetadata`: Spotlight
-  Hours show their bonus-type icons, other single-day events with any bonus (`hasEventBonuses()`) a
-  generic marker.
+  feed item has no image). The calendar-cell icons (`EventBonusIcons`) and timeline cards read
+  `eventMetadata`: Spotlight Hours show their bonus-type icons, other events with any bonus
+  (`hasEventBonuses()`) a generic marker (`BonusIcon`). Calendar cells only show them on single-day
+  events; timeline cards show them on any event.
 - **Season** is skipped — `SeasonBonuses.vue` renders the same items (plus Daily Discoveries) from
   `extraData.season`.
 
