@@ -55,6 +55,7 @@
                     :height="iconHeight"
                     :exclude-tiers="[1, 2, 3, 4]"
                     multi-day
+                    capped
                 />
 
                 <span class="event-name">{{ getEventDisplayName(event) }}</span>

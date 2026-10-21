@@ -62,6 +62,8 @@ interface Props {
     overflowBadgeAlign?: 'left' | 'right';
     excludeTiers?: number[];
     wrap?: boolean;
+    // Compact views show at most MAX_DISPLAYED_IMAGES, with a counter badge for the rest.
+    capped?: boolean;
     // Narrows to bosses representative of the whole span (e.g. only ones recurring across every day
     // of a raid schedule) instead of a single day's full boss list - for multi-day event bars.
     multiDay?: boolean;
@@ -77,6 +79,7 @@ const props = withDefaults(defineProps<Props>(), {
     overflowBadgeAlign: 'left',
     excludeTiers: undefined,
     wrap: false,
+    capped: false,
     multiDay: false,
 });
 
@@ -90,7 +93,7 @@ const breakpoints = useBreakpoints(breakpointsBootstrapV5);
 const MAX_DISPLAYED_IMAGES = 3;
 
 const displayedImages = computed((): PokemonImageData[] => {
-    return pokemonImages.value.slice(0, MAX_DISPLAYED_IMAGES);
+    return props.capped ? pokemonImages.value.slice(0, MAX_DISPLAYED_IMAGES) : pokemonImages.value;
 });
 
 // Event types where a missing sprite warrants a placeholder (a Pokemon is expected).
@@ -132,7 +135,7 @@ const hasTierExclusionOverflow = computed(() => {
 });
 
 // True when there are more Pokemon than the display cap can show.
-const hasCapOverflow = computed(() => pokemonImages.value.length > MAX_DISPLAYED_IMAGES);
+const hasCapOverflow = computed(() => pokemonImages.value.length > displayedImages.value.length);
 
 const showOverflowBadge = computed(() => {
     // Always show when the display cap or tier exclusions are actively hiding Pokemon.

@@ -80,6 +80,7 @@
                         :show-c-p="props.isActive"
                         :overflow-badge-align="'right'"
                         :exclude-tiers="props.isActive ? [] : [1, 2, 3, 4]"
+                        :capped="true"
                     />
 
                     <TimelineCollapsedSchedule

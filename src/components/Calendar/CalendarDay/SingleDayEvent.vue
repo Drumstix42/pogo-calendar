@@ -74,6 +74,7 @@
                         :show-placeholder="true"
                         :show-overflow-counter="true"
                         :exclude-tiers="[1, 2, 3, 4]"
+                        :capped="true"
                     />
                 </template>
             </div>
