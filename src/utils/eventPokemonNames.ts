@@ -7,14 +7,21 @@ import { type PogoEvent } from './eventTypes';
 //           "Pokemon A, Pokemon B, and Pokemon C" → ["Pokemon A", "Pokemon B", "Pokemon C"]
 //           "Genesect (Burn Drive), Genesect (Chill Drive)" → ["Genesect (Burn Drive)", "Genesect (Chill Drive)"]
 export function parseEventPokemonNames(pokemonString: string): string[] {
-    // Handle special case: Pokemon with forms in parentheses separated by &
-    // Example: "Deoxys (Attack & Speed Forme)" should become ["Deoxys (Attack Forme)", "Deoxys (Speed Forme)"]
-    const pokemonFormParenthesesMatch = pokemonString.match(/^(.+?)\s+\((.+?)\s+&\s+(.+?)\s+forme?\)$/i);
-    if (pokemonFormParenthesesMatch) {
-        const baseName = pokemonFormParenthesesMatch[1].trim();
-        const form1 = pokemonFormParenthesesMatch[2].trim();
-        const form2 = pokemonFormParenthesesMatch[3].trim();
-        return [`${baseName} (${form1} Forme)`, `${baseName} (${form2} Forme)`];
+    // Handle special case: one Pokemon with a list of forms in parentheses - checked before the comma split,
+    // which would otherwise break the list apart.
+    // Examples: "Deoxys (Attack & Speed Forme)" → ["Deoxys (Attack Forme)", "Deoxys (Speed Forme)"]
+    //           "Deoxys (Normal, Defense, Attack, and Speed Formes)" → ["Deoxys (Normal Forme)", ..., "Deoxys (Speed Forme)"]
+    const pokemonFormListMatch = pokemonString.match(/^([^(),]+?)\s+\(([^()]+?)(?:\s+(forme|form)s?)?\)$/i);
+    if (pokemonFormListMatch) {
+        const baseName = pokemonFormListMatch[1].trim();
+        const formWord = pokemonFormListMatch[3];
+        const forms = pokemonFormListMatch[2]
+            .split(/\s*,\s*(?:and\s+)?|\s+(?:and|&)\s+/i)
+            .map(form => form.trim())
+            .filter(form => form.length > 0);
+        if (forms.length > 1) {
+            return forms.map(form => (formWord ? `${baseName} (${form} ${formWord})` : `${baseName} (${form})`));
+        }
     }
 
     const pokemonNames: string[] = [];
