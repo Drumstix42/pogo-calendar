@@ -40,19 +40,25 @@
                 <span class="event-name" :class="{ 'text-truncate': !props.isActive }">
                     {{ formatEventName(event.name) }}
                 </span>
-                <!-- Spotlight bonus icons -->
-                <div v-if="eventsStore.eventMetadata[event.eventID]?.spotlightBonus" class="spotlight-bonus-icons">
-                    <EvolveIcon
-                        v-if="eventsStore.eventMetadata[event.eventID]?.spotlightBonus?.category === 'evolve'"
-                        :size="15"
-                        class="evolve-icon"
-                    />
-                    <TransferIcon v-else-if="eventsStore.eventMetadata[event.eventID]?.spotlightBonus?.category === 'transfer'" :size="15" />
-                    <img
-                        v-if="eventsStore.eventMetadata[event.eventID]?.spotlightBonusIconUrl"
-                        :src="eventsStore.eventMetadata[event.eventID]!.spotlightBonusIconUrl!"
-                        class="bonus-type-icon"
-                    />
+                <!-- Bonus icons: Spotlight Hour gets specific icons, anything else a generic marker -->
+                <div
+                    v-if="eventsStore.eventMetadata[event.eventID]?.spotlightBonus || eventsStore.eventMetadata[event.eventID]?.hasBonuses"
+                    class="event-bonus-icons"
+                >
+                    <template v-if="eventsStore.eventMetadata[event.eventID]?.spotlightBonus">
+                        <EvolveIcon
+                            v-if="eventsStore.eventMetadata[event.eventID]?.spotlightBonus?.category === 'evolve'"
+                            :size="15"
+                            class="evolve-icon"
+                        />
+                        <TransferIcon v-else-if="eventsStore.eventMetadata[event.eventID]?.spotlightBonus?.category === 'transfer'" :size="15" />
+                        <img
+                            v-if="eventsStore.eventMetadata[event.eventID]?.spotlightBonusIconUrl"
+                            :src="eventsStore.eventMetadata[event.eventID]!.spotlightBonusIconUrl!"
+                            class="bonus-type-icon"
+                        />
+                    </template>
+                    <BonusIcon v-else :size="14" />
                 </div>
             </div>
 
@@ -131,6 +137,7 @@ import PokemonEventImages from '@/components/Calendar/PokemonEventImages.vue';
 import TimelineCollapsedSchedule from '@/components/Calendar/TimelineEvent/TimelineCollapsedSchedule.vue';
 import TimelineEventHeader from '@/components/Calendar/TimelineEvent/TimelineEventHeader.vue';
 import TimelineRaidSchedule from '@/components/Calendar/TimelineEvent/TimelineRaidSchedule.vue';
+import BonusIcon from '@/components/Icons/BonusIcon.vue';
 import EvolveIcon from '@/components/Icons/EvolveIcon.vue';
 import TransferIcon from '@/components/Icons/TransferIcon.vue';
 
@@ -368,7 +375,7 @@ const {
     }
 }
 
-.spotlight-bonus-icons {
+.event-bonus-icons {
     display: inline-flex;
     align-items: center;
     gap: 3px;
@@ -385,11 +392,11 @@ const {
     color: #ee726e;
 }
 
-.spotlight-bonus-icons > svg {
+.event-bonus-icons > svg {
     flex-shrink: 0;
 }
 
-.spotlight-bonus-icons .bonus-type-icon {
+.event-bonus-icons .bonus-type-icon {
     width: 15px;
     height: 15px;
     flex-shrink: 0;
