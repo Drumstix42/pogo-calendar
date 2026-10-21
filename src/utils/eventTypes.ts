@@ -15,7 +15,10 @@ export interface PokemonBoss {
     name: string;
     image: string;
     canBeShiny: boolean;
-    raidType?: string;
+    // Battle category: Raid, Shadow, Max Battle, Gigantamax, Mega, Super Mega or Primal.
+    raidType?: string | null;
+    // Star tier; null when the source doesn't name one.
+    tier?: number | null;
 }
 
 export interface RaidBattlesData {

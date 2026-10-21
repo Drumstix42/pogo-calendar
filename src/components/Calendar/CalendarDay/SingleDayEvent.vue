@@ -73,7 +73,7 @@
                         :height="singleDayPokemonHeight"
                         :show-placeholder="true"
                         :show-overflow-counter="true"
-                        :exclude-tiers="['Tier 1', 'Tier 3']"
+                        :exclude-tiers="[1, 2, 3, 4]"
                     />
                 </template>
             </div>

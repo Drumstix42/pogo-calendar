@@ -16,32 +16,57 @@ interface TierGroupInput {
     bosses: TierGroupBoss[];
 }
 
+/**
+ * A boss's tier group label: its battle category combined with its star tier (e.g. "Tier 5",
+ * "Tier 3 Shadow", "Tier 5 Max Battle"). Categories that are a tier of their own (Gigantamax, Mega,
+ * Super Mega, Primal) or have no known tier are labeled by category alone.
+ */
+export function getRaidTierLabel(boss: PokemonBoss): string {
+    const { raidType, tier } = boss;
+    if (tier == null) return raidType || 'Other';
+    if (!raidType || raidType === 'Raid') return `Tier ${tier}`;
+    if (raidType === 'Shadow' || raidType === 'Max Battle') return `Tier ${tier} ${raidType}`;
+    return raidType;
+}
+
 // Labels ranked above every "Tier N", in order. Gigantamax is effectively the top Max Battle tier.
 const TOP_TIER_LABELS = ['gigantamax', 'primal', 'super mega'];
+// Within a star tier raids lead (regular, then Shadow), then Max Battles. Mega only appears in Tier 5.
+const TIER_CATEGORY_ORDER = ['', 'shadow', 'mega', 'max battle'];
+const MAX_STAR_TIER = 6;
+
+function getStarTierRank(tier: number, category: string) {
+    return TOP_TIER_LABELS.length + (MAX_STAR_TIER - tier) * TIER_CATEGORY_ORDER.length + TIER_CATEGORY_ORDER.indexOf(category);
+}
+
+function getTierLabelRank(label: string) {
+    const normalized = label.trim().toLowerCase();
+    const topRank = TOP_TIER_LABELS.indexOf(normalized);
+    if (topRank !== -1) return topRank;
+
+    // Mega sits just below the Tier 5 raids; a Max Battle of unknown tier ranks as Tier 5.
+    if (normalized === 'mega' || normalized === 'max battle') return getStarTierRank(5, normalized);
+
+    const tierMatch = normalized.match(/^tier (\d+)(?: (shadow|max battle))?$/);
+    if (tierMatch) return getStarTierRank(parseInt(tierMatch[1]), tierMatch[2] ?? '');
+
+    return Infinity;
+}
 
 /**
- * Orders raid tier labels: {@link TOP_TIER_LABELS} first, then "Tier N" descending, then alphabetical.
+ * Orders raid tier labels: {@link TOP_TIER_LABELS} first, then star tiers descending (each tier's
+ * raids, Shadow raids, then Max Battles), then alphabetical.
  */
 export function sortTierLabel(a: string, b: string): number {
-    const topRankA = TOP_TIER_LABELS.indexOf(a.trim().toLowerCase());
-    const topRankB = TOP_TIER_LABELS.indexOf(b.trim().toLowerCase());
-    if (topRankA !== -1 || topRankB !== -1) {
-        if (topRankA === -1) return 1;
-        if (topRankB === -1) return -1;
-        return topRankA - topRankB;
-    }
-
-    const tierA = a.match(/^Tier (\d+)$/i);
-    const tierB = b.match(/^Tier (\d+)$/i);
-    if (tierA && tierB) return parseInt(tierB[1]) - parseInt(tierA[1]);
-    if (tierA) return -1;
-    if (tierB) return 1;
+    const rankA = getTierLabelRank(a);
+    const rankB = getTierLabelRank(b);
+    if (rankA !== rankB) return rankA - rankB;
 
     return a.localeCompare(b);
 }
 
 /**
- * Narrows a boss list down to just the single highest-priority `raidType` group (by
+ * Narrows a boss list down to just the single highest-priority tier group (by
  * {@link sortTierLabel}) - for compact previews where mixing tiers (e.g. Super Mega alongside a
  * plain Mega) reads oddly. The full, unfiltered list still powers detailed views.
  *
@@ -54,7 +79,7 @@ export function getHighestTierBosses(bosses: PokemonBoss[]): PokemonBoss[] {
 
     const tierMap = new Map<string, PokemonBoss[]>();
     bosses.forEach(boss => {
-        const label = boss.raidType || 'Other';
+        const label = getRaidTierLabel(boss);
         if (!tierMap.has(label)) {
             tierMap.set(label, []);
         }
@@ -75,7 +100,7 @@ export function getHighestTierBosses(bosses: PokemonBoss[]): PokemonBoss[] {
 }
 
 /**
- * Groups bosses by their `raidType` (defaulting to "Other"), sorted via {@link sortTierLabel}.
+ * Groups bosses by {@link getRaidTierLabel}, sorted via {@link sortTierLabel}.
  */
 export function buildTierGroupsFromBosses(bosses: PokemonBoss[] | undefined) {
     if (!bosses || bosses.length === 0) {
@@ -84,7 +109,7 @@ export function buildTierGroupsFromBosses(bosses: PokemonBoss[] | undefined) {
 
     const tierMap = new Map<string, PokemonBoss[]>();
     bosses.forEach(boss => {
-        const label = boss.raidType || 'Other';
+        const label = getRaidTierLabel(boss);
         if (!tierMap.has(label)) {
             tierMap.set(label, []);
         }

@@ -1,5 +1,5 @@
 import { parsePokemonNameAndSuffix } from './eventPokemonNames';
-import { type PokemonImageData, SPRITE_EFFECTS } from './eventPokemonTypes';
+import { type PokemonImageData } from './eventPokemonTypes';
 import { splitSpriteEffectPrefix } from './eventSprite';
 import { getPokemonAnimatedUrl, getPokemonSpriteUrl, hasExactSpriteForm } from './pokemonMapper';
 import { type RaidTierGroupWithImages } from './raidTierGroups';
@@ -7,7 +7,10 @@ import { type RaidTierGroupWithImages } from './raidTierGroups';
 /** A single raid boss entry from the `raids.min.json` feed. */
 export interface CurrentRaidBoss {
     name: string;
-    tier: string;
+    // Raid, Shadow or Mega.
+    raidType: string | null;
+    // Star tier; null for Mega.
+    tier: number | null;
     image: string;
     canBeShiny: boolean;
 }
@@ -26,31 +29,30 @@ export interface CurrentRaidTierGroup {
 }
 
 /**
- * Single source of truth for known raid tiers: display order (array position), label, and egg icon
- * (collapsed summary bar). Anything not listed here is an unknown/future tier - still grouped and
- * rendered, just appended after these (sorted alphabetically) with its raw string as the label and no icon.
+ * Single source of truth for known raid tiers: display order (array position) and egg icon (collapsed
+ * summary bar). Anything not listed here is an unknown/future tier - still grouped and rendered, just
+ * appended after these (sorted alphabetically) with no icon.
  */
 const KNOWN_RAID_TIERS = [
-    { tier: '5-Star Raids', label: 'Tier 5', icon: '/images/icons/raid-egg-tier-5.png' },
-    { tier: 'Mega Raids', label: 'Mega', icon: '/images/icons/raid-egg-tier-mega.png' },
-    { tier: '3-Star Raids', label: 'Tier 3', icon: '/images/icons/raid-egg-tier-3.png' },
-    { tier: '1-Star Raids', label: 'Tier 1', icon: '/images/icons/raid-egg-tier-1.png' },
+    { tier: 'Tier 5', icon: '/images/icons/raid-egg-tier-5.png' },
+    { tier: 'Mega', icon: '/images/icons/raid-egg-tier-mega.png' },
+    { tier: 'Tier 3', icon: '/images/icons/raid-egg-tier-3.png' },
+    { tier: 'Tier 1', icon: '/images/icons/raid-egg-tier-1.png' },
 ] as const;
 
 export type KnownRaidTier = (typeof KNOWN_RAID_TIERS)[number]['tier'];
 
 const RAID_TIER_ORDER: readonly string[] = KNOWN_RAID_TIERS.map(entry => entry.tier);
-const RAID_TIER_LABELS: Record<string, string> = Object.fromEntries(KNOWN_RAID_TIERS.map(entry => [entry.tier, entry.label]));
 
 export const RAID_TIER_ICONS: Record<string, string> = Object.fromEntries(KNOWN_RAID_TIERS.map(entry => [entry.tier, entry.icon]));
 
-// Same name-prefix rule that gives the boss its Shadow overlay, so the row split and sprite always agree.
-export function isShadowRaidBoss(name: string): boolean {
-    return splitSpriteEffectPrefix(name).effect === SPRITE_EFFECTS.SHADOW;
+export function isShadowRaidBoss(boss: CurrentRaidBoss): boolean {
+    return boss.raidType === 'Shadow';
 }
 
-export function getRaidTierLabel(tier: string): string {
-    return RAID_TIER_LABELS[tier] ?? tier;
+// Shadow bosses share their star tier's group (as their own row), so the group is keyed by tier alone.
+function getRaidTierKey(boss: CurrentRaidBoss): string {
+    return boss.tier != null ? `Tier ${boss.tier}` : boss.raidType || 'Other';
 }
 
 function sortRaidTier(a: string, b: string): number {
@@ -85,22 +87,23 @@ function buildBossImageData(boss: CurrentRaidBoss, useAnimated: boolean): Pokemo
 export function groupCurrentRaidBosses(bosses: CurrentRaidBoss[], useAnimated: boolean): CurrentRaidTierGroup[] {
     const tierMap = new Map<string, CurrentRaidBoss[]>();
     bosses.forEach(boss => {
-        if (!tierMap.has(boss.tier)) {
-            tierMap.set(boss.tier, []);
+        const tier = getRaidTierKey(boss);
+        if (!tierMap.has(tier)) {
+            tierMap.set(tier, []);
         }
-        tierMap.get(boss.tier)!.push(boss);
+        tierMap.get(tier)!.push(boss);
     });
 
     return Array.from(tierMap.entries())
         .sort(([a], [b]) => sortRaidTier(a, b))
         .map(([tier, tierBosses]) => {
-            const nonShadowBosses = tierBosses.filter(boss => !isShadowRaidBoss(boss.name));
-            const shadowBosses = tierBosses.filter(boss => isShadowRaidBoss(boss.name));
+            const nonShadowBosses = tierBosses.filter(boss => !isShadowRaidBoss(boss));
+            const shadowBosses = tierBosses.filter(boss => isShadowRaidBoss(boss));
 
             const groups: RaidTierGroupWithImages[] = [];
             if (nonShadowBosses.length) {
                 groups.push({
-                    label: getRaidTierLabel(tier),
+                    label: tier,
                     showLabel: false,
                     images: nonShadowBosses.map(boss => buildBossImageData(boss, useAnimated)),
                 });
@@ -111,7 +114,7 @@ export function groupCurrentRaidBosses(bosses: CurrentRaidBoss[], useAnimated: b
 
             return {
                 tier,
-                label: getRaidTierLabel(tier),
+                label: tier,
                 groups,
             };
         });
@@ -121,10 +124,11 @@ export function groupCurrentRaidBosses(bosses: CurrentRaidBoss[], useAnimated: b
 export function summarizeCurrentRaidBosses(bosses: CurrentRaidBoss[]): RaidTierSummary[] {
     const tierMap = new Map<string, number>();
     bosses.forEach(boss => {
-        tierMap.set(boss.tier, (tierMap.get(boss.tier) ?? 0) + 1);
+        const tier = getRaidTierKey(boss);
+        tierMap.set(tier, (tierMap.get(tier) ?? 0) + 1);
     });
 
     return Array.from(tierMap.entries())
         .sort(([a], [b]) => sortRaidTier(a, b))
-        .map(([tier, count]) => ({ tier, label: getRaidTierLabel(tier), count }));
+        .map(([tier, count]) => ({ tier, label: tier, count }));
 }

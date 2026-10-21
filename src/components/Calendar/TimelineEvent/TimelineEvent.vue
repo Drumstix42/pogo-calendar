@@ -73,7 +73,7 @@
                         :show-tooltips="true"
                         :show-c-p="props.isActive"
                         :overflow-badge-align="'right'"
-                        :exclude-tiers="props.isActive ? [] : ['Tier 1', 'Tier 3']"
+                        :exclude-tiers="props.isActive ? [] : [1, 2, 3, 4]"
                     />
 
                     <TimelineCollapsedSchedule

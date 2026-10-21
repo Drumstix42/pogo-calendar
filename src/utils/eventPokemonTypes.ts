@@ -3,7 +3,8 @@ import { type PogoEvent } from './eventTypes';
 export interface PokemonImageOptions {
     useAnimated?: boolean;
     isMega?: boolean;
-    excludeTiers?: string[];
+    // Star tiers to hide, relaxed from the end until a boss remains (see `getRaidBossesWithTierFallback`).
+    excludeTiers?: number[];
 }
 
 // Visual overlay applied to a resolved sprite. Owned by the resolver/dispatcher layer so the

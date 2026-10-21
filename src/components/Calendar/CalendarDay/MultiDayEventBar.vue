@@ -53,7 +53,7 @@
                     "
                     :event="event"
                     :height="iconHeight"
-                    :exclude-tiers="['Tier 1', 'Tier 3']"
+                    :exclude-tiers="[1, 2, 3, 4]"
                     multi-day
                 />
 

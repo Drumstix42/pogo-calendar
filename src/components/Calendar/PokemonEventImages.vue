@@ -60,7 +60,7 @@ interface Props {
     showCP?: boolean;
     showOverflowCounter?: boolean;
     overflowBadgeAlign?: 'left' | 'right';
-    excludeTiers?: string[];
+    excludeTiers?: number[];
     wrap?: boolean;
     // Narrows to bosses representative of the whole span (e.g. only ones recurring across every day
     // of a raid schedule) instead of a single day's full boss list - for multi-day event bars.

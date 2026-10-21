@@ -13,6 +13,7 @@ import {
 } from './eventPokemonResolvers';
 import { SPRITE_EFFECTS } from './eventPokemonTypes';
 import type { EventWithExtraData, PokemonImageData, PokemonImageOptions, SpriteEffect } from './eventPokemonTypes';
+import { getEventWideRaidBosses, isHeadlineRaidBoss } from './eventRaidHours';
 import { combineSpriteEffects, getPokemonImagesFromBossList, getRecurringRaidScheduleBosses, splitSpriteEffectPrefix } from './eventSprite';
 import { type EventTypeKey, type PogoEvent } from './eventTypes';
 
@@ -85,14 +86,15 @@ export function getMultiDayPokemonImages(event: PogoEvent, options?: PokemonImag
     const raidSchedule = event.extraData?.raidSchedule;
 
     // A per-day raid schedule means the full boss list is day-specific and not representative of
-    // the whole bar - narrow to bosses that recur on every day instead (e.g. a legendary running
-    // alongside a daily-rotating Mega). No day-schedule at all just uses the regular resolution.
+    // the whole bar - narrow to bosses that recur on every day (e.g. a legendary running alongside a
+    // daily-rotating Mega) plus headline bosses listed outside the schedule, which run all event.
+    // No day-schedule at all just uses the regular resolution.
     if (raidSchedule && raidSchedule.length > 0) {
-        const recurringBosses = getRecurringRaidScheduleBosses(raidSchedule);
-        if (recurringBosses.length === 0) {
+        const allEventBosses = [...getRecurringRaidScheduleBosses(raidSchedule), ...getEventWideRaidBosses(event).filter(isHeadlineRaidBoss)];
+        if (allEventBosses.length === 0) {
             return [];
         }
-        const images = getPokemonImagesFromBossList(recurringBosses, options);
+        const images = getPokemonImagesFromBossList(allEventBosses, options);
         return applySpriteEffects(images, getEventSpriteEffect(event));
     }
 

@@ -242,6 +242,8 @@ export const EVENT_WIDE_RAIDS_LABEL = 'Throughout Event';
  * Bosses in the event's overall list that no schedule day mentions - e.g. Wild Area's event-long
  * Three-Star Raids next to its day-split Max Battles. `raidSchedule` only holds day-split sections,
  * so detailed per-day views append these or they'd vanish entirely.
+ * Raid hours don't scope a boss to their day: they feature a boss that's in rotation anyway (e.g.
+ * Into the Wild's all-week Zacian/Zamazenta, each with one Raid Hour).
  */
 export function getEventWideRaidBosses(event: PogoEvent): PokemonBoss[] {
     const raidSchedule = event.extraData?.raidSchedule;
@@ -250,26 +252,25 @@ export function getEventWideRaidBosses(event: PogoEvent): PokemonBoss[] {
         return [];
     }
 
-    const scheduledBosses = raidSchedule.flatMap(schedule => [
-        ...(schedule.bosses ?? []),
-        ...(schedule.raidHours ?? []).flatMap(raidHour => raidHour.bosses ?? []),
-    ]);
+    const scheduledBosses = raidSchedule.flatMap(schedule => schedule.bosses ?? []);
     const scheduledNames = new Set(scheduledBosses.map(boss => boss.name.trim().toLowerCase()));
 
     return dedupeBosses(bosses.filter(boss => !scheduledNames.has(boss.name.trim().toLowerCase())));
 }
 
-// Raid tiers prominent enough to feature in a major event's day cell when they run all event.
-const HEADLINE_RAID_TYPES = new Set([
-    'gigantamax',
-    'max battle',
-    'primal',
-    'super mega',
-    'tier 5',
-    'five-star raids',
-    'five-star shadow raids',
-    'mega',
-]);
+// Raid tiers prominent enough to feature next to day-specific bosses (a major event's day cell, a
+// multi-day bar) when they run all event.
+const HEADLINE_RAID_TYPES = new Set(['Gigantamax', 'Primal', 'Super Mega', 'Mega']);
+// Headline only at Tier 5.
+const HEADLINE_TIER_RAID_TYPES = new Set(['Raid', 'Shadow', 'Max Battle']);
+
+export function isHeadlineRaidBoss(boss: PokemonBoss) {
+    const raidType = boss.raidType ?? '';
+    if (HEADLINE_RAID_TYPES.has(raidType)) return true;
+    // A Max Battle of unknown tier ranks as Tier 5.
+    if (raidType === 'Max Battle' && boss.tier == null) return true;
+    return HEADLINE_TIER_RAID_TYPES.has(raidType) && boss.tier === 5;
+}
 
 /**
  * Headline-tier {@link getEventWideRaidBosses} to feature in each day's cell next to that day's own
@@ -278,6 +279,6 @@ const HEADLINE_RAID_TYPES = new Set([
  * added, so a long event-wide list never crowds out what's specific to the day.
  */
 export function getHeadlineEventWideRaidBosses(event: PogoEvent, dayBossCount: number, maxBosses: number): PokemonBoss[] {
-    const headlineBosses = getEventWideRaidBosses(event).filter(boss => HEADLINE_RAID_TYPES.has((boss.raidType ?? '').trim().toLowerCase()));
+    const headlineBosses = getEventWideRaidBosses(event).filter(isHeadlineRaidBoss);
     return dayBossCount + headlineBosses.length <= maxBosses ? headlineBosses : [];
 }

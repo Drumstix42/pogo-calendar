@@ -60,7 +60,7 @@ export function getRaidBossesWithTierFallback(event: PogoEvent, options?: Pokemo
 
     for (let i = options.excludeTiers.length; i >= 0; i--) {
         const activeExclusions = options.excludeTiers.slice(0, i);
-        const filtered = activeExclusions.length > 0 ? allBosses.filter(b => !b.raidType || !activeExclusions.includes(b.raidType)) : allBosses;
+        const filtered = activeExclusions.length > 0 ? allBosses.filter(b => b.tier == null || !activeExclusions.includes(b.tier)) : allBosses;
         if (filtered.length > 0) {
             return filtered;
         }
