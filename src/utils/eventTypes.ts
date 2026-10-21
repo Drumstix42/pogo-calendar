@@ -151,6 +151,8 @@ export interface PogoEvent {
         parentEventId?: string;
         // Event-wide bosses a major event's per-day projection features after that day's own bosses.
         headlineEventWideBosses?: PokemonBoss[];
+        // All event-wide bosses on a major event's per-day projection, so its boss count covers the whole day.
+        eventWideBossCount?: number;
         [key: string]: any;
     };
 

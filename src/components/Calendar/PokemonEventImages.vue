@@ -126,11 +126,15 @@ const hatchGlowStyle = computed(() =>
     isHatchDay.value ? { '--hatch-glow-color': eventTypeColors.getEventTypeColor(props.event.eventType) } : undefined,
 );
 
+// A major event's day cell only carries that day's scheduled bosses; event-wide ones run that day too.
+const totalRaidBosses = computed(() => (props.event.extraData?.raidbattles?.bosses?.length ?? 0) + (props.event.extraData?.eventWideBossCount ?? 0));
+
 // True when tier exclusions are actively hiding raid bosses from the rendered set.
 const hasTierExclusionOverflow = computed(() => {
-    const totalRaidBosses = props.event.extraData?.raidbattles?.bosses?.length ?? 0;
     return (
-        totalRaidBosses > pokemonImages.value.length && Boolean(props.excludeTiers && props.excludeTiers.length > 0) && pokemonImages.value.length > 0
+        totalRaidBosses.value > pokemonImages.value.length &&
+        Boolean(props.excludeTiers && props.excludeTiers.length > 0) &&
+        pokemonImages.value.length > 0
     );
 });
 
@@ -154,7 +158,7 @@ const showOverflowBadge = computed(() => {
 const overflowBadgeCount = computed(() => {
     // For tier-based overflow, show total available bosses so hidden count is implied.
     if (hasTierExclusionOverflow.value) {
-        return props.event.extraData?.raidbattles?.bosses?.length ?? 0;
+        return totalRaidBosses.value;
     }
 
     // For cap overflow, show the total resolved Pokemon count so the hidden count is implied.

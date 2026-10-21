@@ -7,7 +7,7 @@ import { useEventsStore } from '@/stores/events';
 import { parseEventDate } from '@/utils/eventDate';
 import { getEventsForDate } from '@/utils/eventGrouping';
 import { isMajorCalendarEventType } from '@/utils/eventMajor';
-import { getHeadlineEventWideRaidBosses, getRaidScheduleSectionsForDate } from '@/utils/eventRaidHours';
+import { getEventWideRaidBosses, getHeadlineEventWideRaidBosses, getRaidScheduleSectionsForDate } from '@/utils/eventRaidHours';
 import { sortEventsByPriority } from '@/utils/eventSort';
 import { type PogoEvent } from '@/utils/eventTypes';
 
@@ -97,6 +97,7 @@ export function useCalendarDaySingleEvents(getDayInstance: () => Dayjs) {
                             bosses: dedupedDayBosses,
                         },
                         headlineEventWideBosses: getHeadlineEventWideRaidBosses(event, dedupedDayBosses.length, MAX_DAY_CELL_BOSSES),
+                        eventWideBossCount: getEventWideRaidBosses(event).length,
                     };
                 }
 
