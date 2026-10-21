@@ -7,8 +7,8 @@
             </button>
         </div>
 
-        <CampfireEventImageSection :event="event" :show="show" />
-        <CampfireEventDetailsSection :event="event" :show="show" />
+        <CampfireEventImageSection :event="campfireEvent" :show="show" />
+        <CampfireEventDetailsSection :event="campfireEvent" :show="show" />
 
         <div class="d-flex gap-2 mt-3 pt-3 border-top">
             <button type="button" class="btn btn-secondary flex-grow-1" @click="closeModal">Close</button>
@@ -21,6 +21,7 @@ import { Copy } from '@lucide/vue';
 import { computed } from 'vue';
 
 import { useToastsStore } from '@/stores/toasts';
+import { getCampfireEventForDay } from '@/utils/campfireEventText';
 import { formatEventName } from '@/utils/eventName';
 import { type PogoEvent } from '@/utils/eventTypes';
 
@@ -31,6 +32,8 @@ import CampfireEventImageSection from '@/components/Calendar/CampfireEventImageS
 interface Props {
     show: boolean;
     event: PogoEvent;
+    /** `YYYY-MM-DD` the helper was opened for; scopes the event's raid bosses to that day. */
+    day?: string;
 }
 
 interface Emits {
@@ -43,6 +46,7 @@ const emit = defineEmits<Emits>();
 const toastsStore = useToastsStore();
 
 const eventName = computed(() => formatEventName(props.event.name));
+const campfireEvent = computed(() => getCampfireEventForDay(props.event, props.day));
 
 async function copyEventName() {
     try {

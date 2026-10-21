@@ -328,6 +328,7 @@ any new panel or modal.
 - `event` (+ optional `eventDay`) — selected event (detail panel / tooltip deep link).
 - `eventList` — event list drawer: `all-month` (for the viewed month) or a timeline category key.
 - Modals: `addToCalendar`, `campfire`, `hideEvent` (event ID); `editColor` (event type key).
+  `campfireDay` (`YYYY-MM-DD`) scopes the Campfire helper's raid bosses to one day of a major event.
 
 ---
 

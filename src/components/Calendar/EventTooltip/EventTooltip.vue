@@ -1,6 +1,6 @@
 <template>
     <div class="event-tooltip" :class="{ 'is-scrollable': scrollable }">
-        <EventTooltipHeader :event="event" />
+        <EventTooltipHeader :event="event" :campfire-day="campfireDay" />
 
         <div class="event-tooltip-body">
             <!-- Show individual events if grouped -->
@@ -149,12 +149,13 @@
 
 <script setup lang="ts">
 import { ExternalLink } from '@lucide/vue';
-import { type Dayjs } from 'dayjs';
+import dayjs, { type Dayjs } from 'dayjs';
+import { computed } from 'vue';
 
 import { useEventTooltip } from '@/composables/useEventTooltip';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { getGroupedEvents } from '@/utils/eventGrouping';
-import { getEventWatermarkClass } from '@/utils/eventMajor';
+import { getEventWatermarkClass, isMajorCalendarEventType } from '@/utils/eventMajor';
 import { formatEventName } from '@/utils/eventName';
 import { getEventSpriteEffect } from '@/utils/eventPokemon';
 import { type PogoEvent } from '@/utils/eventTypes';
@@ -196,6 +197,13 @@ const {
     scheduleTargetDayName,
     highlightDayOfWeek,
 } = useEventTooltip(props);
+
+// A major event's day cell scopes the Campfire helper to that day's raid bosses, matching the cell.
+const campfireDay = computed(() =>
+    props.isSingleDay && props.targetDate && isMajorCalendarEventType(props.event.eventType)
+        ? dayjs(props.targetDate).format('YYYY-MM-DD')
+        : undefined,
+);
 </script>
 
 <style scoped>

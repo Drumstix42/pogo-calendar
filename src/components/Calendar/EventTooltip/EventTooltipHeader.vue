@@ -52,6 +52,8 @@ import EventToggleButton from '../EventToggleButton.vue';
 
 interface Props {
     event: PogoEvent;
+    /** `YYYY-MM-DD` to scope the Campfire helper's raid bosses to. */
+    campfireDay?: string;
 }
 
 const props = defineProps<Props>();
@@ -70,7 +72,7 @@ function openColorModal() {
 }
 
 function openCampfireModal() {
-    campfireEventModal.openModal(props.event);
+    campfireEventModal.openModal(props.event, props.campfireDay);
 }
 
 function openHideModal() {

@@ -4,6 +4,7 @@
  */
 import { getEventBonusGroups } from './eventBonuses';
 import { getEventPokemonImages } from './eventPokemon';
+import { getEventWideRaidBosses, getRaidScheduleBossesForDate } from './eventRaidHours';
 import { type PogoEvent, isAllMaxBattleBosses } from './eventTypes';
 import { type CPResult, type PokemonData, calculateRaidCP, formatCP, formatCPDisplay } from './pokemonCP';
 import { type PokemonType, formatWeaknessText, getSuperEffectiveTypes } from './typeEffectiveness';
@@ -13,7 +14,29 @@ const NON_POKEMON_PLACEHOLDER_NAMES = new Set(['Spotlight Pokemon', 'Max Battle'
 
 // Distinct, real Pokemon names for an event - seeds both the text and image sections' Pokemon lists.
 export function resolveCampfireEventPokemonNames(event: PogoEvent): string[] {
-    return [...new Set(getEventPokemonImages(event).map(image => image.name))].filter(name => !NON_POKEMON_PLACEHOLDER_NAMES.has(name));
+    return [...new Set(getEventPokemonImages(event, { allTiers: true }).map(image => image.name))].filter(
+        name => !NON_POKEMON_PLACEHOLDER_NAMES.has(name),
+    );
+}
+
+/**
+ * The event as seen from one day (`YYYY-MM-DD`) of its raid schedule, e.g. a major event opened from
+ * its day cell: that day's bosses plus those running all event replace the whole event's list. Days
+ * the schedule doesn't cover keep the full list, as the tooltip does.
+ */
+export function getCampfireEventForDay(event: PogoEvent, day: string | undefined): PogoEvent {
+    if (!day || !event.extraData?.raidSchedule?.length) return event;
+
+    const dayBosses = getRaidScheduleBossesForDate(event, day);
+    if (dayBosses.length === 0) return event;
+
+    return {
+        ...event,
+        extraData: {
+            ...event.extraData,
+            raidbattles: { ...event.extraData.raidbattles, bosses: [...dayBosses, ...getEventWideRaidBosses(event)] },
+        },
+    };
 }
 
 const RAID_EVENT_TYPES = new Set(['raid-battles', 'raid-day', 'raid-hour', 'raid-weekend']);

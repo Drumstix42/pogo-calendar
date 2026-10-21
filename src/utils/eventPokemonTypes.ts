@@ -5,6 +5,8 @@ export interface PokemonImageOptions {
     isMega?: boolean;
     // Star tiers to hide, relaxed from the end until a boss remains (see `getRaidBossesWithTierFallback`).
     excludeTiers?: number[];
+    // Every raid tier in tier order, skipping compact previews' top-tier narrowing (`getHighestTierBosses`).
+    allTiers?: boolean;
 }
 
 // Visual overlay applied to a resolved sprite. Owned by the resolver/dispatcher layer so the

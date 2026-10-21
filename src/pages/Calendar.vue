@@ -88,6 +88,7 @@
         v-if="campfireEventModal.currentEvent.value"
         :show="campfireEventModal.showModal.value"
         :event="campfireEventModal.currentEvent.value"
+        :day="campfireEventModal.currentDay.value"
         @close="campfireEventModal.closeModal"
     />
 </template>
@@ -149,6 +150,7 @@ const {
     openAddToCalendar,
     closeAddToCalendar,
     campfireEventId,
+    campfireDay,
     openCampfire,
     closeCampfire,
     hideEventId,
@@ -243,7 +245,7 @@ watch(
     campfireEventFromUrl,
     event => {
         if (event) {
-            campfireEventModal.openModal(event);
+            campfireEventModal.openModal(event, campfireDay.value);
         } else if (!campfireEventId.value && campfireEventModal.showModal.value) {
             campfireEventModal.closeModal();
         }
@@ -255,7 +257,7 @@ watch(
     () => campfireEventModal.showModal.value,
     isOpen => {
         if (isOpen && campfireEventModal.currentEvent.value && !campfireEventId.value) {
-            openCampfire(campfireEventModal.currentEvent.value.eventID);
+            openCampfire(campfireEventModal.currentEvent.value.eventID, campfireEventModal.currentDay.value);
         } else if (!isOpen && campfireEventId.value) {
             closeCampfire();
         }

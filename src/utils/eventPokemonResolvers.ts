@@ -58,7 +58,10 @@ const RAID_DAY_TITLE_EXCEPTIONS = new Set(['fashion raid day']);
 // highest-priority raid tier present (e.g. Super Mega alone, not mixed with Mega/Tier 5) - detailed
 // views group and show every tier separately via `buildTierGroupsFromBosses`, untouched by this.
 export function resolveBossImages(event: EventWithExtraData, options?: PokemonImageOptions): PokemonImageData[] | null {
-    const topTierBosses = getHighestTierBosses(getRaidBossesWithTierFallback(event, options));
+    const bosses = getRaidBossesWithTierFallback(event, options);
+    const topTierBosses = options?.allTiers
+        ? (buildTierGroupsFromBosses(bosses)?.flatMap(group => group.bosses) ?? [])
+        : getHighestTierBosses(bosses);
     // A major event's day cell lists event-wide headliners after the day's own bosses, not merged by tier.
     const headlineBosses = buildTierGroupsFromBosses(event.extraData.headlineEventWideBosses)?.flatMap(group => group.bosses) ?? [];
     const images = getPokemonImagesFromBossList([...topTierBosses, ...headlineBosses], options);

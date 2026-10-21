@@ -235,18 +235,32 @@ export const useUrlSync = () => {
         return typeof eventId === 'string' ? eventId : undefined;
     });
 
-    function openCampfire(eventId: string) {
+    const campfireDay = computed(() => {
+        const day = route.query.campfireDay;
+        return typeof day === 'string' ? day : undefined;
+    });
+
+    function openCampfire(eventId: string, day?: string) {
+        const nextQuery: Record<string, any> = {
+            ...route.query,
+            campfire: eventId,
+        };
+
+        if (day) {
+            nextQuery.campfireDay = day;
+        } else {
+            delete nextQuery.campfireDay;
+        }
+
         router.push({
-            query: {
-                ...route.query,
-                campfire: eventId,
-            },
+            query: nextQuery,
         });
     }
 
     function closeCampfire() {
         const currentQuery = { ...route.query };
         delete currentQuery.campfire;
+        delete currentQuery.campfireDay;
         router.replace({ query: currentQuery });
     }
 
@@ -330,6 +344,7 @@ export const useUrlSync = () => {
 
         // Campfire event modal
         campfireEventId,
+        campfireDay,
         openCampfire,
         closeCampfire,
 
