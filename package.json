@@ -4,6 +4,9 @@
     "version": "0.1.0",
     "type": "module",
     "description": "A web-based calendar for Pokemon GO events",
+    "engines": {
+        "node": ">=24.22.1"
+    },
     "scripts": {
         "dev": "vite --host",
         "build": "vite build",
@@ -16,30 +19,30 @@
     },
     "dependencies": {
         "@jaames/iro": "5.5.2",
-        "@lucide/vue": "1.49.0",
+        "@lucide/vue": "1.61.0",
         "@vue/devtools-api": "8.2.1",
         "@vueuse/core": "15.0.0",
         "@vueuse/router": "15.0.0",
         "bootstrap": "5.3.8",
         "dayjs": "1.11.23",
         "floating-vue": "5.4.0",
-        "pinia": "4.0.3",
-        "vue": "3.5.43",
-        "vue-router": "5.3.1"
+        "pinia": "4.1.0",
+        "vue": "3.5.44",
+        "vue-router": "5.4.0"
     },
     "devDependencies": {
         "@trivago/prettier-plugin-sort-imports": "6.0.2",
-        "@types/node": "26.6.3",
+        "@types/node": "24.19.2",
         "@typescript-eslint/eslint-plugin": "8.71.0",
         "@typescript-eslint/parser": "8.71.0",
         "@vitejs/plugin-vue": "6.0.9",
         "eslint": "10.11.0",
         "eslint-plugin-vue": "10.11.1",
-        "prettier": "3.9.9",
-        "sass": "1.105.1",
+        "prettier": "3.9.10",
+        "sass": "1.106.1",
         "typescript": "6.0.3",
-        "vite": "8.3.1",
+        "vite": "8.3.5",
         "vue-eslint-parser": "10.4.1",
-        "vue-tsc": "3.3.11"
+        "vue-tsc": "3.3.13"
     }
 }
