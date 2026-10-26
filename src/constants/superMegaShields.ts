@@ -1,7 +1,7 @@
 // Shield counts for Super Mega Raid bosses, keyed by Pokemon name without the "Mega" prefix (every
 // entry here is a Mega Evolution by definition). Only Mega-Evolved Pokemon can break these shields
 // (one per Trainer), unlike standard raid shields. Counts confirmed via Pokemon GO Hub raid guides;
-// bosses not listed here simply render without a shield badge until confirmed and added.
+// bosses not listed here still get the shield badge, just without a count, until confirmed and added.
 export const SUPER_MEGA_SHIELD_COUNTS: Record<string, number> = {
     dragonite: 10,
     falinks: 8,

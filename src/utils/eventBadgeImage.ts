@@ -4,6 +4,7 @@ import { getBadgeSprite } from './eventSprite';
 import { type EggDistance, getEggImageUrl } from './hatchEgg';
 import { loadFirstAvailableImage } from './loadImage';
 import { getEffectSymbol } from './megaPrimalSymbols';
+import { getSuperMegaShieldCount } from './superMegaShields';
 
 const CANVAS_SIZE = 512;
 const CORNER_RADIUS = 56;
@@ -40,14 +41,20 @@ const ANCHORED_OVERLAYS: Partial<Record<SpriteEffect, { height: number; offsetX:
     hatch: { height: 0.9, offsetX: 0.16, opacity: 1 },
 };
 const HATCH_SPRITE_SCALE = 0.82;
-// Mirrors the calendar's corner marker (where the Super Mega shield sits): drawn behind the sprite, like the
-// egg, at its box's top-right, nudged slightly up and out. Sizes/offsets are fractions of the sprite box.
-const CORNER_BADGES: Partial<Record<SpriteEffect, { size: number; opacity: number }>> = {
+// Mirrors the calendar's corner marker: at the sprite box's top-right, nudged slightly up and out. Mega/Primal
+// symbols sit behind the sprite (like the egg); the Super Mega shield sits in front, like the in-game UI.
+// Sizes/offsets are fractions of the sprite box.
+const CORNER_BADGES: Partial<Record<SpriteEffect, { size: number; opacity: number; inFront?: boolean }>> = {
     mega: { size: 0.38, opacity: 0.9 },
     primal: { size: 0.38, opacity: 0.9 },
+    'super-mega': { size: 0.38, opacity: 0.8, inFront: true },
 };
 const CORNER_BADGE_OFFSET_X = 0.1;
 const CORNER_BADGE_OFFSET_Y = 0.04;
+const CORNER_BADGE_TITLE_GAP = 6;
+const SUPER_MEGA_SHIELD_URL = '/images/icons/super-mega-shield.png';
+// Fraction of the badge's height, matching the calendar's count text on its shield.
+const SHIELD_COUNT_FONT_SCALE = 0.5;
 
 const POKEBALL_PATTERN_ANGLE_DEG = 42;
 const POKEBALL_PATTERN_SPACING = 113;
@@ -56,6 +63,7 @@ const POKEBALL_PATTERN_LINE_WIDTH = 5.6;
 const POKEBALL_PATTERN_COLOR = 'rgba(255, 255, 255, 0.07)';
 
 const TITLE_FONT_SIZE = 68;
+const TITLE_MIN_FONT_SIZE = 40;
 const TITLE_TOP = 18;
 const TITLE_LINE_HEIGHT = 61;
 export const TITLE_MAX_LINES = 2;
@@ -102,6 +110,7 @@ interface ResolvedBadgePokemon {
     image: HTMLImageElement;
     overlayImage: HTMLImageElement | null;
     effect?: SpriteEffect;
+    shieldCount?: number;
 }
 
 function wrapText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] {
@@ -133,18 +142,47 @@ function fitFontSize(ctx: CanvasRenderingContext2D, text: string, maxWidth: numb
     return size;
 }
 
-// Respects a user-typed line break as a forced split, auto-wrapping within each resulting segment
-// if it's still too wide, rather than only ever wrapping on whitespace.
-function getTitleLines(ctx: CanvasRenderingContext2D, title: string): string[] {
-    ctx.font = `900 ${TITLE_FONT_SIZE}px ${FONT_FAMILY}`;
-    const maxWidth = CANVAS_SIZE - TITLE_SIDE_PADDING * 2;
-    const lines = title.split('\n').flatMap(paragraph => wrapText(ctx, paragraph, maxWidth));
-    return lines.slice(0, TITLE_MAX_LINES);
+interface TitleLayout {
+    lines: string[];
+    fontSize: number;
+    lineHeight: number;
 }
 
-function getTopBandHeight(lineCount: number): number {
-    if (lineCount === 0) return 0;
-    return TITLE_TOP + Math.max(lineCount - 1, 0) * TITLE_LINE_HEIGHT + TITLE_FONT_SIZE + TOP_BAND_PADDING_BOTTOM;
+const TITLE_MAX_WIDTH = CANVAS_SIZE - TITLE_SIDE_PADDING * 2;
+
+// Respects a user-typed line break as a forced split, auto-wrapping within each resulting segment
+// if it's still too wide, rather than only ever wrapping on whitespace.
+function wrapTitle(ctx: CanvasRenderingContext2D, title: string, fontSize: number): string[] {
+    ctx.font = `900 ${fontSize}px ${FONT_FAMILY}`;
+    return title.split('\n').flatMap(paragraph => wrapText(ctx, paragraph, TITLE_MAX_WIDTH));
+}
+
+// Measured with whatever font `wrapTitle` last set. A lone word too wide for a line still gets one.
+function titleFits(ctx: CanvasRenderingContext2D, lines: string[]) {
+    return lines.length <= TITLE_MAX_LINES && lines.every(line => ctx.measureText(line).width <= TITLE_MAX_WIDTH);
+}
+
+// Shrinks the font until the title fits (like the bottom text); extra lines are only dropped once it
+// bottoms out at the minimum size.
+function getTitleLayout(ctx: CanvasRenderingContext2D, title: string): TitleLayout {
+    let fontSize = TITLE_FONT_SIZE;
+    let lines = wrapTitle(ctx, title, fontSize);
+
+    while (fontSize > TITLE_MIN_FONT_SIZE && !titleFits(ctx, lines)) {
+        fontSize = Math.max(fontSize - 4, TITLE_MIN_FONT_SIZE);
+        lines = wrapTitle(ctx, title, fontSize);
+    }
+
+    return {
+        lines: lines.slice(0, TITLE_MAX_LINES),
+        fontSize,
+        lineHeight: Math.round((fontSize * TITLE_LINE_HEIGHT) / TITLE_FONT_SIZE),
+    };
+}
+
+function getTopBandHeight({ lines, fontSize, lineHeight }: TitleLayout): number {
+    if (lines.length === 0) return 0;
+    return TITLE_TOP + (lines.length - 1) * lineHeight + fontSize + TOP_BAND_PADDING_BOTTOM;
 }
 
 function getBottomBandHeight(lineCount: number): number {
@@ -236,15 +274,15 @@ function drawOutlinedTextSegments(ctx: CanvasRenderingContext2D, segments: { tex
     ctx.textAlign = 'center';
 }
 
-function drawTitle(ctx: CanvasRenderingContext2D, lines: string[]) {
-    ctx.font = `900 ${TITLE_FONT_SIZE}px ${FONT_FAMILY}`;
+function drawTitle(ctx: CanvasRenderingContext2D, { lines, fontSize, lineHeight }: TitleLayout) {
+    ctx.font = `900 ${fontSize}px ${FONT_FAMILY}`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillStyle = '#ffffff';
 
     // No outline (unlike the bottom band) - the title band's own backdrop gives it enough contrast.
     lines.forEach((line, index) => {
-        ctx.fillText(line, CANVAS_SIZE / 2, TITLE_TOP + index * TITLE_LINE_HEIGHT + TITLE_FONT_SIZE / 2);
+        ctx.fillText(line, CANVAS_SIZE / 2, TITLE_TOP + index * lineHeight + fontSize / 2);
     });
 }
 
@@ -280,6 +318,7 @@ function drawBottomLines(ctx: CanvasRenderingContext2D, lines: string[], bandHei
 
 function getOverlayUrl(effect: SpriteEffect | undefined, eggDistance?: EggDistance) {
     if (effect === SPRITE_EFFECTS.HATCH) return getEggImageUrl(eggDistance);
+    if (effect === SPRITE_EFFECTS.SUPER_MEGA) return SUPER_MEGA_SHIELD_URL;
     return getEffectSymbol(effect)?.src ?? (effect && OVERLAY_ASSET_URLS[effect]);
 }
 
@@ -290,8 +329,9 @@ async function resolveBadgePokemon(name: string, fallbackEffect?: SpriteEffect, 
 
     const overlayUrl = getOverlayUrl(effect, eggDistance);
     const overlayImage = overlayUrl ? await loadFirstAvailableImage([overlayUrl]) : null;
+    const shieldCount = effect === SPRITE_EFFECTS.SUPER_MEGA ? getSuperMegaShieldCount(name) : undefined;
 
-    return { image, overlayImage, effect };
+    return { image, overlayImage, effect, shieldCount };
 }
 
 interface PokemonSlotLayout {
@@ -410,17 +450,32 @@ function drawPokemonIcons(ctx: CanvasRenderingContext2D, layout: PokemonSlotLayo
     });
 }
 
-function drawPokemonCornerBadges(ctx: CanvasRenderingContext2D, layout: PokemonSlotLayout[]) {
+function drawShieldCount(ctx: CanvasRenderingContext2D, count: number, centerX: number, centerY: number, badgeHeight: number) {
+    ctx.save();
+    ctx.font = `900 ${Math.round(badgeHeight * SHIELD_COUNT_FONT_SCALE)}px ${FONT_FAMILY}`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
+    ctx.shadowBlur = 4;
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(String(count), centerX, centerY);
+    ctx.restore();
+}
+
+// Drawn in two passes around the Pokemon icons: `inFront` badges (the Super Mega shield) in the second.
+// Those are kept below the title band - the sprite box reaches into it, and a badge in front would cover the text.
+function drawPokemonCornerBadges(ctx: CanvasRenderingContext2D, layout: PokemonSlotLayout[], inFront: boolean, topBandHeight: number) {
     layout.forEach(slot => {
-        const { overlayImage, effect } = slot.pokemon;
+        const { overlayImage, effect, shieldCount } = slot.pokemon;
         const badge = effect && CORNER_BADGES[effect];
-        if (!overlayImage || !badge) return;
+        if (!overlayImage || !badge || Boolean(badge.inFront) !== inFront) return;
 
         const box = getSpriteBox(slot);
         const badgeHeight = box.size * badge.size;
         const badgeWidth = badgeHeight * (overlayImage.width / overlayImage.height);
         const badgeRight = box.left + box.size * (1 + CORNER_BADGE_OFFSET_X);
-        const badgeTop = box.bottom - box.size * (1 + CORNER_BADGE_OFFSET_Y);
+        const cornerTop = box.bottom - box.size * (1 + CORNER_BADGE_OFFSET_Y);
+        const badgeTop = inFront ? Math.max(cornerTop, topBandHeight + CORNER_BADGE_TITLE_GAP) : cornerTop;
 
         ctx.save();
         ctx.globalAlpha = badge.opacity;
@@ -429,12 +484,17 @@ function drawPokemonCornerBadges(ctx: CanvasRenderingContext2D, layout: PokemonS
         ctx.shadowOffsetY = 2;
         ctx.drawImage(overlayImage, badgeRight - badgeWidth, badgeTop, badgeWidth, badgeHeight);
         ctx.restore();
+
+        if (shieldCount) {
+            drawShieldCount(ctx, shieldCount, badgeRight - badgeWidth / 2, badgeTop + badgeHeight / 2, badgeHeight);
+        }
     });
 }
 
 /**
  * Renders a Campfire-style square event badge as a PNG blob. Layer order: background -> Pokeball
- * pattern -> title band + text -> overlay art -> corner badges -> Pokemon icon(s) -> bottom band + text.
+ * pattern -> title band + text -> overlay art -> corner badges -> Pokemon icon(s) -> Super Mega shield
+ * -> bottom band + text.
  */
 export async function generateEventBadge(spec: EventBadgeSpec): Promise<Blob | null> {
     const canvas = document.createElement('canvas');
@@ -457,8 +517,8 @@ export async function generateEventBadge(spec: EventBadgeSpec): Promise<Blob | n
     ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
     drawPokeballPattern(ctx);
 
-    const titleLines = getTitleLines(ctx, spec.title);
-    const topBandHeight = getTopBandHeight(titleLines.length);
+    const titleLayout = getTitleLayout(ctx, spec.title);
+    const topBandHeight = getTopBandHeight(titleLayout);
     const bottomBandHeight = getBottomBandHeight(spec.bottomLines.length);
 
     const resolvedPokemon = await Promise.all(spec.pokemonNames.map(name => resolveBadgePokemon(name, spec.defaultPokemonEffect, spec.eggDistance)));
@@ -474,14 +534,15 @@ export async function generateEventBadge(spec: EventBadgeSpec): Promise<Blob | n
     const areaHeight = CANVAS_SIZE - bottomBandHeight + POKEMON_BAND_OVERLAP - areaTop;
     const pokemonLayout = layOutPokemon(loadedPokemon, areaTop, areaHeight, spec.spriteScale ?? 1);
 
-    if (titleLines.length > 0) {
+    if (titleLayout.lines.length > 0) {
         drawTopBandCollar(ctx, topBandHeight, TOP_BAND_COLOR);
-        drawTitle(ctx, titleLines);
+        drawTitle(ctx, titleLayout);
     }
 
     drawPokemonOverlays(ctx, pokemonLayout);
-    drawPokemonCornerBadges(ctx, pokemonLayout);
+    drawPokemonCornerBadges(ctx, pokemonLayout, false, topBandHeight);
     drawPokemonIcons(ctx, pokemonLayout);
+    drawPokemonCornerBadges(ctx, pokemonLayout, true, topBandHeight);
 
     if (spec.bottomLines.length > 0) {
         drawBand(ctx, CANVAS_SIZE - bottomBandHeight, bottomBandHeight, BOTTOM_BAND_COLOR);
