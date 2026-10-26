@@ -56,7 +56,7 @@ function versionPlugin() {
                 timestampFormatted: humanReadable,
             };
 
-            const versionPath = resolve(__dirname, 'public', 'version.json');
+            const versionPath = resolve(import.meta.dirname, 'public', 'version.json');
             writeFileSync(versionPath, JSON.stringify(versionData, null, 2));
 
             console.log(`Generated version.json: ${humanReadable}`);
