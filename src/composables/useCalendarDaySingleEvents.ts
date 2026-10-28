@@ -8,7 +8,7 @@ import { parseEventDate } from '@/utils/eventDate';
 import { getEventsForDate } from '@/utils/eventGrouping';
 import { isMajorCalendarEventType } from '@/utils/eventMajor';
 import { getEventWideRaidBosses, getHeadlineEventWideRaidBosses, getRaidScheduleSectionsForDate } from '@/utils/eventRaidHours';
-import { sortEventsByPriority } from '@/utils/eventSort';
+import { sortEventsByStartAndPriority } from '@/utils/eventSort';
 import { type PogoEvent } from '@/utils/eventTypes';
 
 // Matches PokemonEventImages' sprite cap, so event-wide headliners only join a day that can show them all.
@@ -54,7 +54,7 @@ export function useCalendarDaySingleEvents(getDayInstance: () => Dayjs) {
         });
 
         return {
-            singleDayEvents: sortEventsByPriority(singleDay),
+            singleDayEvents: sortEventsByStartAndPriority(singleDay, eventsStore.eventMetadata),
             enabledEvents,
         };
     });

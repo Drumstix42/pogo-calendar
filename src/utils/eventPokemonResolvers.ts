@@ -8,6 +8,7 @@ import {
     hasCostumeDescription,
     isHatchDayEvent,
     parseDynamaxMaxBattleName,
+    parseEternamaxMaxBattleName,
     parseEventPokemonNames,
     parseGigantamaxFormSlug,
     parseGigantamaxMaxBattleName,
@@ -306,7 +307,7 @@ function resolveGigantamaxImage(pokemonName: string, options?: PokemonImageOptio
     return { name: pokemonName, imageUrl: spriteUrl };
 }
 
-// Max battles - Gigantamax/Dynamax title patterns, then the main event image.
+// Max battles - Gigantamax/Dynamax/Eternamax title patterns, then the main event image.
 export function resolveMaxBattleImages(event: EventWithExtraData, options?: PokemonImageOptions): PokemonImageData[] | null {
     const eventName = formatEventName(event.name);
 
@@ -323,6 +324,15 @@ export function resolveMaxBattleImages(event: EventWithExtraData, options?: Poke
     const dynamaxName = parseDynamaxMaxBattleName(eventName);
     if (dynamaxName) {
         const images = getSpriteImagesFromNames(parseEventPokemonNames(dynamaxName), options);
+        if (images.length > 0) {
+            return images;
+        }
+    }
+
+    // Eternamax pattern: "Eternamax Eternatus Returns" - the prefixed name carries its sprite form and overlay.
+    const eternamaxName = parseEternamaxMaxBattleName(eventName);
+    if (eternamaxName) {
+        const images = getSpriteImagesFromNames([eternamaxName], options);
         if (images.length > 0) {
             return images;
         }

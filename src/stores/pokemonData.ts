@@ -104,7 +104,7 @@ export const usePokemonDataStore = defineStore('pokemonData', () => {
     }
 
     // Strips battle-only prefixes that can't be caught/encountered as such - the Pokemon obtained
-    // (or fought, for Dynamax/Gigantamax/Shadow which don't change typing) is the base species.
+    // (or fought, for Dynamax/Gigantamax/Eternamax/Shadow which don't change typing) is the base species.
     // Example: "Mega Mewtwo X" -> "Mewtwo".
     function stripBattleFormPrefix(pokemonName: string): string {
         let searchName = pokemonName;
@@ -121,6 +121,9 @@ export const usePokemonDataStore = defineStore('pokemonData', () => {
             searchName = searchName.substring(7); // Remove "Primal "
         } else if (searchName.startsWith('Shadow ')) {
             searchName = searchName.substring(7); // Remove "Shadow "
+        } else if (searchName.startsWith('Eternamax ')) {
+            // Not the data's "Eternatus Eternamax" record - that's the boss's battle stats, not the catch's.
+            searchName = searchName.substring(10); // Remove "Eternamax "
         }
 
         // Mega variants with a trailing X/Y should map to the base species for CP lookup.

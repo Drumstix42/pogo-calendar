@@ -94,6 +94,11 @@ export function parseDynamaxMaxBattleName(eventName: string): string | null {
     return match ? match[1].trim() : null;
 }
 
+export function parseEternamaxMaxBattleName(eventName: string): string | null {
+    // Pattern: "Eternamax Eternatus <anything>" (e.g. "Eternamax Eternatus Returns")
+    return /^Eternamax\s+Eternatus\b/i.test(eventName) ? 'Eternamax Eternatus' : null;
+}
+
 export function extractPokemonNamesFromSpotlightHour(eventName: string): string[] {
     const decodedEventName = formatEventName(eventName);
 
@@ -233,6 +238,13 @@ export function parsePokemonNameAndSuffix(pokemonNameString: string): { pokemonN
     if (primalMatch) {
         const baseName = primalMatch[1].trim();
         return { pokemonName: baseName, suffix: '-primal' };
+    }
+
+    // Handle Eternamax (Eternatus' battle-only form)
+    const eternamaxMatch = pokemonNameString.match(/^Eternamax\s+(.+)$/i);
+    if (eternamaxMatch) {
+        const baseName = eternamaxMatch[1].trim();
+        return { pokemonName: baseName, suffix: '-eternamax' };
     }
 
     // Handle Shadow Pokemon

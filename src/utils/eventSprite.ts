@@ -89,7 +89,7 @@ export function getPokemonImagesFromBosses(event: PogoEvent, options?: PokemonIm
     return getPokemonImagesFromBossList(getRaidBossesWithTierFallback(event, options), options);
 }
 
-// Boss names carry Dynamax/Shadow/Mega/Primal as a name prefix (e.g. "Dynamax Dialga" in a Wild Area raid
+// Boss names carry Dynamax/Shadow/Mega/Primal/Eternamax as a name prefix (e.g. "Dynamax Dialga" in a Wild Area raid
 // schedule), so each sprite gets its own overlay regardless of the event's type. Gigantamax isn't
 // covered - its art lives on a separate CDN (see `getBadgeSprite`).
 export function splitSpriteEffectPrefix(pokemonName: string): { spriteName: string; effect?: SpriteEffect } {
@@ -110,6 +110,11 @@ export function splitSpriteEffectPrefix(pokemonName: string): { spriteName: stri
 
     if (/^Primal\s+/i.test(pokemonName)) {
         return { spriteName: pokemonName, effect: SPRITE_EFFECTS.PRIMAL };
+    }
+
+    // Eternamax battles play out like Gigantamax ones, but the form has its own regular sprite.
+    if (/^Eternamax\s+/i.test(pokemonName)) {
+        return { spriteName: pokemonName, effect: SPRITE_EFFECTS.GIGANTAMAX };
     }
 
     return { spriteName: pokemonName };

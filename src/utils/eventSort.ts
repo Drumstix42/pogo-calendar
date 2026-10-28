@@ -9,6 +9,21 @@ export const sortEventsByPriority = (events: PogoEvent[]): PogoEvent[] => {
     });
 };
 
+// Sort events by start time, with priority only breaking ties (e.g. single-day events in a calendar cell)
+export const sortEventsByStartAndPriority = (events: PogoEvent[], eventMetadata: Record<string, EventMetadata>): PogoEvent[] => {
+    return [...events].sort((a, b) => {
+        const aMetadata = eventMetadata[a.eventID];
+        const bMetadata = eventMetadata[b.eventID];
+
+        if (aMetadata && bMetadata) {
+            const startTimeDiff = aMetadata.startDate.diff(bMetadata.startDate);
+            if (startTimeDiff !== 0) return startTimeDiff;
+        }
+
+        return getEventTypeInfo(b.eventType).priority - getEventTypeInfo(a.eventType).priority;
+    });
+};
+
 // Sort events by timing and priority for timeline display
 export const sortEventsByTimingAndPriority = (events: PogoEvent[], eventMetadata: Record<string, EventMetadata>): PogoEvent[] => {
     return [...events].sort((a, b) => {
