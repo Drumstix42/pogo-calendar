@@ -182,6 +182,10 @@ const goToCurrentMonth = () => {
     color: rgba(91, 192, 222, 0.7);
 }
 
+[data-bs-theme='light'] .calendar-reset-icon {
+    color: #1b97cc;
+}
+
 /* Vue Transition for timeline toggle */
 .timeline-toggle-enter-active,
 .timeline-toggle-leave-active {

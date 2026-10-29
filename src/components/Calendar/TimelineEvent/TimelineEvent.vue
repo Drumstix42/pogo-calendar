@@ -187,10 +187,15 @@ const {
 
 <style lang="scss" scoped>
 .timeline-event-card {
+    /* Stronger in light mode: the same tint that reads well on a dark card looks washed out on white */
+    --card-tint: 8%;
+    --card-tint-active: 13%;
+    --card-border-mix: 60%;
+    --card-border-mix-active: 82%;
     position: relative;
-    border: 1px solid color-mix(in srgb, var(--event-color) 42%, var(--bs-border-color));
+    border: 1px solid color-mix(in srgb, var(--event-color) var(--card-border-mix), var(--bs-border-color));
     border-radius: 8px;
-    background-color: color-mix(in srgb, var(--event-color) 5%, var(--calendar-cell-bg));
+    background-color: color-mix(in srgb, var(--event-color) var(--card-tint), var(--calendar-cell-bg));
     transition:
         transform 0.15s ease,
         box-shadow 0.15s ease,
@@ -200,8 +205,8 @@ const {
 
     @media (pointer: fine) {
         &:hover {
-            background-color: color-mix(in srgb, var(--event-color) 10%, var(--calendar-cell-bg));
-            border-color: color-mix(in srgb, var(--event-color) 65%, var(--bs-border-color));
+            background-color: color-mix(in srgb, var(--event-color) var(--card-tint-active), var(--calendar-cell-bg));
+            border-color: color-mix(in srgb, var(--event-color) var(--card-border-mix-active), var(--bs-border-color));
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 
             // .expand-toggle lives in the child TimelineEventHeader; reach it via :deep
@@ -215,8 +220,8 @@ const {
         transform-origin: top center;
         transform: scale3d(1.015, 1, 1);
 
-        background-color: color-mix(in srgb, var(--event-color) 10%, var(--calendar-cell-bg));
-        border-color: color-mix(in srgb, var(--event-color) 65%, var(--bs-border-color));
+        background-color: color-mix(in srgb, var(--event-color) var(--card-tint-active), var(--calendar-cell-bg));
+        border-color: color-mix(in srgb, var(--event-color) var(--card-border-mix-active), var(--bs-border-color));
         box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
     }
 }
@@ -263,6 +268,13 @@ const {
 
 .timeline-event-card.major-timeline-event.event-watermark {
     --event-watermark-color: color-mix(in srgb, var(--event-color) 62%, var(--bs-body-color) 38%);
+}
+
+[data-bs-theme='dark'] .timeline-event-card {
+    --card-tint: 5%;
+    --card-tint-active: 10%;
+    --card-border-mix: 42%;
+    --card-border-mix-active: 65%;
 }
 
 [data-bs-theme='dark'] .timeline-event-card.major-timeline-event {

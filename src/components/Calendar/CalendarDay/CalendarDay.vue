@@ -146,7 +146,7 @@ const showEvents = computed(() => !props.placeholder && (calendarSettings.showPa
     position: relative;
     transition: min-height 0.3s ease;
     border-radius: 7px;
-    box-shadow: 0px 0px 0px 1px var(--calendar-bg) inset;
+    box-shadow: 0px 0px 0px 1px var(--calendar-grid-line) inset;
 
     &.loading {
         min-height: 70px;

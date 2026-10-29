@@ -313,8 +313,8 @@ onMounted(() => {
 
 .single-day-event .event-name {
     font-size: 0.7rem;
-    font-weight: 400;
-    color: #333;
+    font-weight: 500;
+    color: #1f2328;
     min-height: 15px;
     line-height: 15px;
     overflow: hidden;
@@ -326,6 +326,7 @@ onMounted(() => {
 }
 
 [data-bs-theme='dark'] .single-day-event .event-name {
+    font-weight: 400;
     color: #e9ecef;
     text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
 }
@@ -339,7 +340,7 @@ onMounted(() => {
     row-gap: 3px;
     font-size: 0.7rem;
     font-weight: 600;
-    color: #444;
+    color: #3d434a;
     line-height: 0.8rem;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -448,10 +449,11 @@ onMounted(() => {
     min-height: 82px;
     border-radius: 5px;
     border: 2px solid color-mix(in srgb, var(--calendar-cell-bg) 22%, var(--major-event-color) 78%);
+    /* Light tints keep the type color's chroma: mixing these dark colors with white comes out gray, not pastel */
     background: linear-gradient(
         135deg,
-        color-mix(in srgb, var(--calendar-cell-bg) 70%, var(--major-event-color) 20%),
-        color-mix(in srgb, var(--calendar-cell-bg) 66%, var(--major-event-color) 28%)
+        oklch(from var(--major-event-color) 0.89 calc(c * 0.3) h),
+        oklch(from var(--major-event-color) 0.85 calc(c * 0.4) h)
     );
 
     .event-content {
@@ -476,8 +478,8 @@ onMounted(() => {
     &:hover {
         background: linear-gradient(
             135deg,
-            color-mix(in srgb, var(--calendar-hover-bg) 60%, var(--major-event-color) 25%),
-            color-mix(in srgb, var(--calendar-cell-bg) 64%, var(--major-event-color) 33%)
+            oklch(from var(--major-event-color) 0.87 calc(c * 0.37) h),
+            oklch(from var(--major-event-color) 0.82 calc(c * 0.47) h)
         );
     }
 }
@@ -486,10 +488,10 @@ onMounted(() => {
 /* Transparent rather than removed, so the box keeps the same size as a global one */
 .single-day-event.major-daily-display-event.event-watermark--location {
     border-color: transparent;
-    background: color-mix(in srgb, var(--calendar-cell-bg) 78%, var(--major-event-color) 18%);
+    background: oklch(from var(--major-event-color) 0.9 calc(c * 0.27) h);
 
     &:hover {
-        background: color-mix(in srgb, var(--calendar-hover-bg) 72%, var(--major-event-color) 24%);
+        background: oklch(from var(--major-event-color) 0.87 calc(c * 0.35) h);
     }
 }
 

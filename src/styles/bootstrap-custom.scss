@@ -85,7 +85,7 @@ $input-bg: var(--surface-input) !default;
 :root,
 [data-bs-theme='light'] {
     --bs-body-bg: #ffffff;
-    --bs-body-bg-rgb: 240, 241, 242;
+    --bs-body-bg-rgb: 255, 255, 255;
     --bs-tertiary-bg: #f1f3f4;
     --bs-tertiary-bg-rgb: 241, 243, 244;
     --bs-secondary-bg: #e9ecef;
@@ -97,12 +97,14 @@ $input-bg: var(--surface-input) !default;
     --bs-success: #137333;
     --bs-success-rgb: 19, 115, 51;
 
-    --page-bg: #f6f8fa;
+    --page-bg: #f4f6f8;
 
-    --calendar-bg: #eaeaea;
+    --calendar-bg: #e8ebef;
+    // Darker than --calendar-bg in light mode: white cells need a visible edge to read as a grid
+    --calendar-grid-line: #d3d9e0;
     --calendar-cell-bg: #fefefe;
     --calendar-today-bg: #e0f2ff;
-    --calendar-other-month-bg: #f1f2f3;
+    --calendar-other-month-bg: #eef1f4;
     --calendar-other-month-color: #5f6368;
     --calendar-hover-bg: rgba(60, 64, 67, 0.04);
     --calendar-border-color: #dadce0;
@@ -147,6 +149,7 @@ $input-bg: var(--surface-input) !default;
     --page-bg: #1a1919;
 
     --calendar-bg: #222327;
+    --calendar-grid-line: var(--calendar-bg);
     --calendar-cell-bg: #323339;
     --calendar-today-bg: rgba(103, 157, 230, 0.2);
     --calendar-other-month-bg: #2b2d34;

@@ -282,6 +282,10 @@ function onImageError() {
     opacity: 0.6;
 }
 
+[data-bs-theme='light'] .placeholder-container {
+    opacity: 1;
+}
+
 .corner-badge-anchor {
     position: absolute;
     top: -2px;
@@ -334,5 +338,9 @@ function onImageError() {
     color: #a7adbd;
     position: relative;
     z-index: 2;
+}
+
+[data-bs-theme='light'] .placeholder-icon {
+    color: #8a919c;
 }
 </style>
