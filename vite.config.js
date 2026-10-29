@@ -85,6 +85,8 @@ export default defineConfig({
         include: ['vue', 'vue-router', '@lucide/vue', 'pinia'],
     },
     css: {
+        // Lets browser devtools trace styles back to their .vue/.scss file instead of an anonymous <style>
+        devSourcemap: true,
         preprocessorOptions: {
             scss: {
                 silenceDeprecations: ['color-functions', 'global-builtin', 'import', 'if-function'],
