@@ -54,7 +54,7 @@ function getEventSearchTerms(event: PogoEvent): string[] {
         }
 
         if (extraData.maxbattles) {
-            terms.push(...namesOf(extraData.maxbattles.featured));
+            terms.push(extraData.maxbattles.description);
         }
 
         extraData.bonuses?.forEach(group => terms.push(...bonusTexts(group.items)));

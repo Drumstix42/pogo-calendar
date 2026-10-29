@@ -90,6 +90,9 @@
                 </div>
             </div>
 
+            <!-- A compact text note, so it goes above the bonuses rather than after the boss lists -->
+            <EventTooltipMaxBattlesNote :event="event" />
+
             <div class="event-extras-wrapper">
                 <EventExtras :event="event" :highlight-day-of-week="highlightDayOfWeek" />
             </div>
@@ -166,6 +169,7 @@ import EventTypeTags from '../EventTypeTags.vue';
 import PokemonEventImages from '../PokemonEventImages.vue';
 import RaidTierGroupImages from '../RaidTierGroupImages.vue';
 import EventTooltipHeader from './EventTooltipHeader.vue';
+import EventTooltipMaxBattlesNote from './EventTooltipMaxBattlesNote.vue';
 import EventTooltipScheduleSections from './EventTooltipScheduleSections.vue';
 
 interface Props {

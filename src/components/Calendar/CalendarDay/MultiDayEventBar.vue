@@ -58,6 +58,15 @@
                     capped
                 />
 
+                <!-- An open-ended Max Battle pool has no sprites to show, so its emblem stands in -->
+                <img
+                    v-else-if="calendarSettings.useMultiDayEventSprites && metadata?.hasOpenMaxBattlePool"
+                    src="/images/icons/max-battle-dynamax.png"
+                    alt="Dynamax Max Battles"
+                    class="max-battles-emblem"
+                    :style="{ height: `${iconHeight}px`, width: `${iconHeight}px` }"
+                />
+
                 <span class="event-name">{{ getEventDisplayName(event) }}</span>
                 <span v-if="dateRange" class="event-date-range"
                     ><span class="date-range-start">{{ dateRange.start }} -</span> {{ dateRange.end }}</span
@@ -233,8 +242,15 @@ $stub-tear-tile: $stub-tear-depth + 1;
     flex-wrap: nowrap;
 }
 
-.multi-day-event-bar--inner .twitch-drops-icon {
+.multi-day-event-bar--inner .twitch-drops-icon,
+.multi-day-event-bar--inner .max-battles-emblem {
     flex-shrink: 0;
+}
+
+.multi-day-event-bar--inner .max-battles-emblem {
+    box-sizing: border-box;
+    padding: 1px;
+    object-fit: contain;
 }
 
 .multi-day-event-bar .event-name {

@@ -307,7 +307,7 @@ function resolveGigantamaxImage(pokemonName: string, options?: PokemonImageOptio
     return { name: pokemonName, imageUrl: spriteUrl };
 }
 
-// Max battles - Gigantamax/Dynamax/Eternamax title patterns, then the main event image.
+// Max battles - Gigantamax/Dynamax title patterns, feed bosses, the Eternamax title, then the main event image.
 export function resolveMaxBattleImages(event: EventWithExtraData, options?: PokemonImageOptions): PokemonImageData[] | null {
     const eventName = formatEventName(event.name);
 
@@ -327,6 +327,12 @@ export function resolveMaxBattleImages(event: EventWithExtraData, options?: Poke
         if (images.length > 0) {
             return images;
         }
+    }
+
+    // Feed bosses come after the title patterns above: boss lists don't resolve Gigantamax CDN art.
+    const bossImages = getPokemonImagesFromBosses(event, options);
+    if (bossImages.length > 0) {
+        return bossImages;
     }
 
     // Eternamax pattern: "Eternamax Eternatus Returns" - the prefixed name carries its sprite form and overlay.

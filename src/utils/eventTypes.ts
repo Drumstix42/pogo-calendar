@@ -43,8 +43,9 @@ export interface CommunityDayData {
     bonusDisclaimers?: string[];
 }
 
+/** The event page's "Max Battles" feature text (e.g. "All Dynamax Pokémon ... may appear in Max Battles"). */
 export interface MaxBattlesData {
-    featured: PokemonBoss | PokemonBoss[];
+    description: string;
 }
 
 export interface BonusItem {
@@ -197,6 +198,8 @@ export interface EventMetadata {
     spotlightBonusIconUrl?: string | null;
     // Any bonus content (drives the generic bonus indicator on non-Spotlight events)
     hasBonuses?: boolean;
+    // Max Battles with no named Pokemon (drives the Dynamax emblem in place of bar sprites)
+    hasOpenMaxBattlePool?: boolean;
 
     // Raid boss groupings by tier (for events with raidbattles data)
     raidBossTierGroups?: RaidBossTierGroup[];
@@ -513,8 +516,25 @@ export function getDefaultEventTypeColor(eventType: EventTypeKey): string {
 
 const MAX_BATTLE_RAID_TYPES = new Set(['Max Battle', 'Gigantamax']);
 
-// Whether every boss in a non-empty list is a Max Battle (Dynamax/Gigantamax) rather than a raid.
+// Whether a boss is a Max Battle (Dynamax/Gigantamax) rather than a raid.
+export function isMaxBattleBoss(boss: PokemonBoss): boolean {
+    return MAX_BATTLE_RAID_TYPES.has(boss.raidType ?? '');
+}
+
+// Whether every boss in a non-empty list is a Max Battle.
 export function isAllMaxBattleBosses(bosses: PokemonBoss[] | undefined): boolean {
     if (!bosses?.length) return false;
-    return bosses.every(boss => MAX_BATTLE_RAID_TYPES.has(boss.raidType ?? ''));
+    return bosses.every(isMaxBattleBoss);
+}
+
+// An open (non-specific) Max Battle pool: the page has a Max Battles section but names none of its Pokemon
+// (e.g. "All Dynamax Pokémon ... may appear"). Named ones arrive as Max Battle-typed bosses, so any such boss
+// means a listed lineup instead (e.g. "The following Dynamax Pokémon will appear...").
+export function hasOpenMaxBattlePool(event: PogoEvent): boolean {
+    const extraData = event.extraData;
+    if (!extraData?.maxbattles) return false;
+
+    const scheduleBosses = (extraData.raidSchedule ?? []).flatMap(day => [...day.bosses, ...day.raidHours.flatMap(hour => hour.bosses)]);
+    const bosses = [...(extraData.raidbattles?.bosses ?? []), ...scheduleBosses];
+    return !bosses.some(isMaxBattleBoss);
 }

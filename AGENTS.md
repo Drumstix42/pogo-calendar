@@ -102,6 +102,13 @@ Feeds come from the [Drumstix42 fork of ScrapedDuck](https://github.com/Drumstix
 - Raid bosses (events and `raids.min.json`) carry `raidType` (battle category: Raid, Shadow, Max
   Battle, Gigantamax, Mega, Super Mega, Primal) and a numeric star `tier` (null when unnamed). Group
   labels like "Tier 3 Shadow" are built from both (`getRaidTierLabel()` in `src/utils/raidTierGroups.ts`).
+  Eternamax Eternatus is a `Gigantamax` boss; its "Eternamax" name prefix picks the sprite form and the
+  Gigantamax overlay, and CP uses base Eternatus (the `pokemonData` "Eternatus Eternamax" stats are the boss's).
+- `extraData.maxbattles.description` is the page's "Max Battles" feature text. When the event has no Max
+  Battle bosses, it's an open-ended pool (e.g. "All Dynamax Pokémon … may appear"), shown in the tooltip /
+  detail panel as a Dynamax emblem + note above the bonuses, and as the emblem in a multi-day bar's sprite
+  slot when it has no sprites (`hasOpenMaxBattlePool()`). `spawnsDescription` is the Wild
+  Encounters equivalent (no consumer yet).
 - **Fetch event data only when an issue needs it** — from the live feed (URL above), or the user's
   local JSON when they supply one (swap `curl -s <url>` for `cat <file>`). Ideally filter the data first, by event ID when one is provided:
 
@@ -126,10 +133,12 @@ Feeds come from the [Drumstix42 fork of ScrapedDuck](https://github.com/Drumstix
   on secondary tags — a deliberate decision: LeekDuck tags the same event format inconsistently
   (Rocket "Taken Over" events are sometimes primary `team-go-rocket`, sometimes `event` +
   `team-go-rocket`), so tag-based filtering would confuse users.
-- `EVENT_TYPES` entries (`name`, `color`, `priority` — lower = higher on calendar, `category`) each
+- `EVENT_TYPES` entries (`name`, `color`, `priority` — higher = higher on calendar, `category`) each
   become a filter. `EVENT_TAG_TYPES` holds `name` + `color` for tag-only slugs (never primary), which
   stay out of the filters but remain color-customizable via their chips. Unknown slugs fall back to a
   title-cased name and gray (`getEventTypeInfo()` / `getDefaultEventTypeColor()`).
+- Multi-day bars stack by `priority`; single-day events in a day cell order by start time, with
+  `priority` only breaking ties (`sortEventsByStartAndPriority()`).
 - **Adding a type:** an `EVENT_TYPES` entry (or `EVENT_TAG_TYPES` if it's only ever secondary); add
   it to `$event-types` in `src/styles/style.scss` (filter hover highlighting); handle it in
   `getEventPokemonImages()` if it needs Pokémon images.
