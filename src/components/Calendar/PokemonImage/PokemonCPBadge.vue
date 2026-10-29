@@ -6,19 +6,22 @@
                     {{ tooltipText }}
                 </div>
             </template>
-            <span v-if="formattedCP.boosted">
-                {{ formattedCP.normal }} <span class="cp-divider">{{ CP_DIVIDER }}</span> {{ formattedCP.boosted }}
+            <span class="cp-pill">
+                <span class="cp-segment">{{ formattedCP.normal }}</span>
+                <span v-if="formattedCP.boosted" class="cp-segment">
+                    <CloudSun class="cp-boost-icon" :stroke-width="2.4" aria-hidden="true" />
+                    {{ formattedCP.boosted }}
+                </span>
             </span>
-            <span v-else>{{ formattedCP.normal }}</span>
         </VTooltip>
     </div>
 </template>
 
 <script setup lang="ts">
+import { CloudSun } from '@lucide/vue';
 import { computed } from 'vue';
 
 import { usePokemonDataStore } from '@/stores/pokemonData';
-import { CP_DIVIDER } from '@/utils/eventBadgeImage';
 import { MAJOR_CALENDAR_EVENT_TYPES } from '@/utils/eventMajor';
 import { calculateRaidCP, formatCP } from '@/utils/pokemonCP';
 
@@ -78,7 +81,6 @@ const cpData = computed(() => {
     return calculateRaidCP(pokemon.stats);
 });
 
-// Split rather than one formatted string so the divider can be styled on its own.
 const formattedCP = computed(() => {
     if (!cpData.value) return { normal: '', boosted: null };
     return {
@@ -101,32 +103,51 @@ const tooltipText = computed(() => {
 <style scoped>
 .pokemon-cp-badge {
     display: inline-block;
-    padding: 2px 3px;
-    font-size: 0.675rem;
-    font-weight: 400;
-    line-height: 1.05;
-    border-radius: 2px;
-    text-align: center;
-    white-space: nowrap;
     margin-bottom: 5px;
 }
 
-/* Mixed against the badge's own text color, so it dims in both themes. */
-.cp-divider {
-    color: color-mix(in srgb, currentColor 60%, transparent);
+.cp-pill {
+    display: inline-flex;
+    align-items: stretch;
+    overflow: hidden;
+    font-size: 0.75rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    white-space: nowrap;
+    border: 1px solid var(--cp-pill-border);
+    border-radius: 4px;
 }
 
-/* Dark mode - light text on dark background */
+.cp-segment {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 3px 6px;
+    background-color: var(--cp-segment-bg);
+}
+
+.cp-segment + .cp-segment {
+    border-left: 1px solid var(--cp-pill-border);
+}
+
+/* Mixed against the badge's own text color, so it dims in both themes. */
+.cp-boost-icon {
+    flex: none;
+    width: 1em;
+    height: 1em;
+    color: color-mix(in srgb, currentColor 55%, transparent);
+}
+
 [data-bs-theme='dark'] .pokemon-cp-badge {
     color: #ffffff;
-    background-color: rgba(255, 255, 255, 0.25);
-    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.4);
+    --cp-pill-border: rgba(255, 255, 255, 0.16);
+    --cp-segment-bg: rgba(255, 255, 255, 0.14);
 }
 
-/* Light mode - dark text on light background */
 [data-bs-theme='light'] .pokemon-cp-badge {
     color: #000000;
-    background-color: rgba(0, 0, 0, 0.15);
-    text-shadow: 0 0.5px 1px rgba(255, 255, 255, 0.5);
+    --cp-pill-border: rgba(0, 0, 0, 0.2);
+    --cp-segment-bg: rgba(0, 0, 0, 0.08);
 }
 </style>
