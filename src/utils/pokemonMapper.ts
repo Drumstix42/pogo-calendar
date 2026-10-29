@@ -96,6 +96,17 @@ function parsePokemonNameWithOptionalForm(name: string): { pokemonName: string; 
         return { pokemonName: baseName, pokemonId: basePokemonId, suffix: '-primal' };
     }
 
+    const eternamaxMatch = name.match(/^Eternamax\s+(.+)$/i);
+    if (eternamaxMatch) {
+        const baseName = eternamaxMatch[1].trim();
+        const basePokemonId = getPokemonId(baseName);
+        if (!basePokemonId) {
+            return { pokemonName: name, pokemonId: null };
+        }
+
+        return { pokemonName: baseName, pokemonId: basePokemonId, suffix: '-eternamax' };
+    }
+
     const shadowMatch = name.match(/^Shadow\s+(.+)$/i);
     if (shadowMatch) {
         const baseName = shadowMatch[1].trim();
