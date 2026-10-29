@@ -99,9 +99,7 @@ $input-bg: var(--surface-input) !default;
 
     --page-bg: #f4f6f8;
 
-    --calendar-bg: #e8ebef;
-    // Darker than --calendar-bg in light mode: white cells need a visible edge to read as a grid
-    --calendar-grid-line: #d3d9e0;
+    --calendar-bg: #e0e4e9;
     --calendar-cell-bg: #fefefe;
     --calendar-today-bg: #e0f2ff;
     --calendar-other-month-bg: #eef1f4;
@@ -149,7 +147,6 @@ $input-bg: var(--surface-input) !default;
     --page-bg: #1a1919;
 
     --calendar-bg: #222327;
-    --calendar-grid-line: var(--calendar-bg);
     --calendar-cell-bg: #323339;
     --calendar-today-bg: rgba(103, 157, 230, 0.2);
     --calendar-other-month-bg: #2b2d34;
