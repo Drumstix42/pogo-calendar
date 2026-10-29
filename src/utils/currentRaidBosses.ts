@@ -29,22 +29,10 @@ export interface CurrentRaidTierGroup {
 }
 
 /**
- * Single source of truth for known raid tiers: display order (array position) and egg icon (collapsed
- * summary bar). Anything not listed here is an unknown/future tier - still grouped and rendered, just
- * appended after these (sorted alphabetically) with no icon.
+ * Display order of known raid tiers. Anything not listed here is an unknown/future tier - still grouped
+ * and rendered, just appended after these (sorted alphabetically). Icons come from `getRaidTierIcon()`.
  */
-const KNOWN_RAID_TIERS = [
-    { tier: 'Tier 5', icon: '/images/icons/raid-egg-tier-5.png' },
-    { tier: 'Mega', icon: '/images/icons/raid-egg-tier-mega.png' },
-    { tier: 'Tier 3', icon: '/images/icons/raid-egg-tier-3.png' },
-    { tier: 'Tier 1', icon: '/images/icons/raid-egg-tier-1.png' },
-] as const;
-
-export type KnownRaidTier = (typeof KNOWN_RAID_TIERS)[number]['tier'];
-
-const RAID_TIER_ORDER: readonly string[] = KNOWN_RAID_TIERS.map(entry => entry.tier);
-
-export const RAID_TIER_ICONS: Record<string, string> = Object.fromEntries(KNOWN_RAID_TIERS.map(entry => [entry.tier, entry.icon]));
+const RAID_TIER_ORDER: readonly string[] = ['Tier 5', 'Mega', 'Tier 3', 'Tier 1'];
 
 export function isShadowRaidBoss(boss: CurrentRaidBoss): boolean {
     return boss.raidType === 'Shadow';

@@ -29,6 +29,7 @@ const note = computed(() => (hasOpenMaxBattlePool(props.event) ? props.event.ext
     display: flex;
     align-items: center;
     gap: 0.6rem;
+    padding-left: 0.5rem;
 }
 
 .max-battles-emblem {

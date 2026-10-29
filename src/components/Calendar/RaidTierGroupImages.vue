@@ -1,6 +1,6 @@
 <template>
     <div v-for="group in groups" :key="group.label" class="tier-group">
-        <div v-if="group.showLabel" class="tier-label">{{ group.label }}</div>
+        <RaidTierHeader v-if="group.showLabel" :label="group.label" />
         <div class="tier-images">
             <PokemonImage
                 v-for="boss in group.images"
@@ -23,6 +23,7 @@ import { type EventTypeKey } from '@/utils/eventTypes';
 import { type RaidTierGroupWithImages } from '@/utils/raidTierGroups';
 
 import PokemonImage from '@/components/Calendar/PokemonImage/PokemonImage.vue';
+import RaidTierHeader from '@/components/Calendar/RaidTierHeader.vue';
 
 interface Props {
     groups: RaidTierGroupWithImages[] | null | undefined;
@@ -37,10 +38,12 @@ defineProps<Props>();
 
 <style scoped>
 /* `.tier-group` / `.tier-label` styling is owned by each consumer (values differ) and reaches in
-   via :deep(); only the identical `.tier-images` rule lives here. */
+   via :deep(); only the identical `.tier-images` rule lives here. Sprites indent under a flush tier
+   title. */
 .tier-images {
     display: flex;
     flex-wrap: wrap;
     gap: 4px;
+    padding-left: 0.75rem;
 }
 </style>

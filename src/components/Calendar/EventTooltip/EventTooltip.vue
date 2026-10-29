@@ -317,9 +317,8 @@ const campfireDay = computed(() =>
 :deep(.tier-group) {
     display: flex;
     flex-direction: column;
-    gap: 0.35rem;
-    margin-bottom: 0.75rem;
-    padding-left: 0.5rem;
+    gap: 0.6rem;
+    margin-bottom: 1rem;
 }
 
 :deep(.tier-label) {

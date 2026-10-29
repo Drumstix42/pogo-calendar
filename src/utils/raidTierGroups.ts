@@ -29,6 +29,41 @@ export function getRaidTierLabel(boss: PokemonBoss): string {
     return raidType;
 }
 
+// Tiers 2 and 4 share the in-game egg of the tier below them.
+const RAID_EGG_ICONS: Record<number, string> = {
+    1: '/images/icons/raid-egg-tier-1.png',
+    2: '/images/icons/raid-egg-tier-1.png',
+    3: '/images/icons/raid-egg-tier-3.png',
+    4: '/images/icons/raid-egg-tier-3.png',
+    5: '/images/icons/raid-egg-tier-5.png',
+};
+
+const DYNAMAX_ICON = '/images/icons/max-battle-dynamax.png';
+
+const CATEGORY_ICONS: Record<string, string> = {
+    mega: '/images/icons/raid-egg-tier-mega.png',
+    'super mega': '/images/icons/super-mega-shield.png',
+    primal: '/images/icons/raid-egg-tier-primal.png',
+    gigantamax: '/images/icons/max-battle-gigantamax.png',
+    'max battle': DYNAMAX_ICON,
+};
+
+/**
+ * Icon for a tier group label: the star tier's raid egg (Shadow raids included), the category's own
+ * icon (Mega, Super Mega, Primal, Gigantamax), or the Dynamax emblem for Max Battles of any tier.
+ * Null for unknown labels.
+ */
+export function getRaidTierIcon(label: string): string | null {
+    const normalized = label.trim().toLowerCase();
+    if (CATEGORY_ICONS[normalized]) return CATEGORY_ICONS[normalized];
+
+    const tierMatch = normalized.match(/^tier (\d+)(?: (shadow|max battle))?$/);
+    if (!tierMatch) return null;
+    if (tierMatch[2] === 'max battle') return DYNAMAX_ICON;
+
+    return RAID_EGG_ICONS[parseInt(tierMatch[1])] ?? null;
+}
+
 // Labels ranked above every "Tier N", in order. Gigantamax is effectively the top Max Battle tier.
 const TOP_TIER_LABELS = ['gigantamax', 'primal', 'super mega'];
 // Within a star tier raids lead (regular, then Shadow), then Max Battles. Mega only appears in Tier 5.

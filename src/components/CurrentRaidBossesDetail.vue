@@ -2,19 +2,10 @@
     <div class="raid-bosses-detail">
         <div class="raid-bosses-tier-list">
             <div v-for="tierGroup in raidsStore.tierGroups" :key="tierGroup.tier" class="tier-detail-group">
-                <div class="tier-detail-header">
-                    <img
-                        v-if="RAID_TIER_ICONS[tierGroup.tier]"
-                        :src="RAID_TIER_ICONS[tierGroup.tier]"
-                        :alt="tierGroup.label"
-                        class="tier-detail-icon"
-                    />
-                    <Egg v-else :size="16" class="tier-detail-fallback-icon" />
-                    <span class="tier-detail-label">{{ tierGroup.label }}</span>
-                </div>
+                <RaidTierHeader :label="tierGroup.label" :icon-size="20" underline />
                 <RaidTierGroupImages
                     :groups="tierGroup.groups"
-                    :height="40"
+                    :height="50"
                     event-type="raid-battles"
                     :use-animated="calendarSettings.useAnimatedImages"
                 />
@@ -36,13 +27,13 @@
 </template>
 
 <script setup lang="ts">
-import { Egg, ExternalLink } from '@lucide/vue';
+import { ExternalLink } from '@lucide/vue';
 
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { useRaidsStore } from '@/stores/raids';
-import { RAID_TIER_ICONS } from '@/utils/currentRaidBosses';
 
 import RaidTierGroupImages from '@/components/Calendar/RaidTierGroupImages.vue';
+import RaidTierHeader from '@/components/Calendar/RaidTierHeader.vue';
 
 const calendarSettings = useCalendarSettingsStore();
 const raidsStore = useRaidsStore();
@@ -72,35 +63,15 @@ const raidsStore = useRaidsStore();
     display: flex;
     flex-direction: column;
     gap: 0.35rem;
-    margin-top: 0.6rem;
+    margin-top: 1rem;
 }
 
 .tier-detail-group:first-child {
     margin-top: 0;
 }
 
-.tier-detail-group:not(:first-child) {
-    padding-top: 0.6rem;
-    border-top: 1px solid color-mix(in srgb, var(--bs-body-color) 22%, transparent);
-}
-
-.tier-detail-header {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-}
-
-.tier-detail-icon {
-    width: 20px;
-    height: 20px;
-    object-fit: contain;
-}
-
-.tier-detail-fallback-icon {
-    color: var(--bs-body-color);
-}
-
-.tier-detail-label {
+/* `.tier-label` lives in the RaidTierHeader child, whose underline replaces dividers between groups. */
+:deep(.tier-label) {
     font-size: 0.82rem;
     font-weight: 700;
     letter-spacing: 0.02em;
@@ -109,14 +80,11 @@ const raidsStore = useRaidsStore();
 }
 
 /* `.tier-group` lives in the RaidTierGroupImages child - one per tier detail group (the normal-boss
-   row, and the shadow-boss row when present); reach in via :deep(). Indented (like
-   TimelineRaidSchedule/EventTooltip) so the sprite rows sit under the tier title rather than flush
-   with it. */
+   row, and the shadow-boss row when present); reach in via :deep(). */
 :deep(.tier-group) {
     display: flex;
     flex-direction: column;
     gap: 0.35rem;
     margin-top: 0.35rem;
-    padding-left: 0.5rem;
 }
 </style>

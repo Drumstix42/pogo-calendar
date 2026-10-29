@@ -129,7 +129,7 @@ function labelStyle(isAllDay: boolean) {
 }
 
 .schedule-section :deep(.tier-group) {
-    margin-bottom: 0.55rem;
+    margin-bottom: 0.6rem;
 }
 
 .schedule-section :deep(.tier-group:last-child) {

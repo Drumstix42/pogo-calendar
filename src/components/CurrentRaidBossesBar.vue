@@ -20,9 +20,9 @@
                 @keydown.enter="handleClick"
                 @keydown.space.prevent="handleClick"
             >
-                <div v-for="tier in raidsStore.tierSummary" :key="tier.tier" class="tier-chip">
+                <div v-for="tier in tierChips" :key="tier.tier" class="tier-chip">
                     <div class="tier-icon-wrapper">
-                        <img v-if="RAID_TIER_ICONS[tier.tier]" :src="RAID_TIER_ICONS[tier.tier]" :alt="tier.label" class="tier-egg-icon" />
+                        <img v-if="tier.icon" :src="tier.icon" :alt="tier.label" class="tier-egg-icon" />
                         <Egg v-else :size="18" class="tier-egg-fallback-icon" />
                         <span class="tier-count-badge">{{ tier.count }}</span>
                     </div>
@@ -64,7 +64,7 @@ import { useDeviceDetection } from '@/composables/useDeviceDetection';
 import { useUrlSync } from '@/composables/useUrlSync';
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
 import { useRaidsStore } from '@/stores/raids';
-import { RAID_TIER_ICONS } from '@/utils/currentRaidBosses';
+import { getRaidTierIcon } from '@/utils/raidTierGroups';
 
 import CurrentRaidBossesDetail from '@/components/CurrentRaidBossesDetail.vue';
 import CurrentRaidBossesDrawer from '@/components/CurrentRaidBossesDrawer.vue';
@@ -73,6 +73,8 @@ const calendarSettings = useCalendarSettingsStore();
 const raidsStore = useRaidsStore();
 const { isTouchDevice } = useDeviceDetection();
 const { raidsOpen, openRaids, closeRaids } = useUrlSync();
+
+const tierChips = computed(() => raidsStore.tierSummary.map(tier => ({ ...tier, icon: getRaidTierIcon(tier.tier) })));
 
 // Desktop popper's own shown state - synced to the `?raids=1` URL param via apply-show/apply-hide.
 const menuShown = ref(false);
