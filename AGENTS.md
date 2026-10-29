@@ -301,7 +301,8 @@ for feed data — currently always 2 km), shared by the sprite and the Campfire 
 symbols are generated the same way in `src/utils/megaPrimalSymbols.ts` and render as a top-right corner badge behind the sprite
 (the Super Mega shield shares the spot but sits in front, like the in-game UI), in `PokemonImage.vue` (skipped in multi-day bars via
 `hideSymbolEffect`, where sprites are too small to read them). The per-sprite effect comes from the
-name prefix via `splitSpriteEffectPrefix()` (`Dynamax X`, `Shadow X`, `Mega X`, `Primal X`) — in boss
+name prefix via `splitSpriteEffectPrefix()` (`Dynamax X`, `Gigantamax X`, `Eternamax X`, `Shadow X`, `Mega X`,
+`Primal X`) — in boss
 lists, and in the dispatcher for title-parsed names — so prefixed Pokémon inside any event type (e.g.
 Dynamax Dialga in a Wild Area schedule, a Mega in an `event`'s raids) get their overlay.
 

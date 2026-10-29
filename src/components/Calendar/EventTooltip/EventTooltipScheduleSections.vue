@@ -96,9 +96,9 @@ function labelStyle(isAllDay: boolean) {
     font-weight: 700;
     letter-spacing: 0.02em;
     text-transform: uppercase;
-    line-height: 1.2;
+    line-height: 0.8;
     padding: 0.12rem 0 0.34rem 0;
-    margin-bottom: 0.05rem;
+    margin-bottom: 0.25rem;
     color: color-mix(in srgb, var(--bs-body-color) 82%, transparent);
     border-bottom: 1px solid color-mix(in srgb, var(--bs-body-color) 22%, transparent);
     text-shadow: none;

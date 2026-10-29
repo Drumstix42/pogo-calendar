@@ -89,13 +89,18 @@ export function getPokemonImagesFromBosses(event: PogoEvent, options?: PokemonIm
     return getPokemonImagesFromBossList(getRaidBossesWithTierFallback(event, options), options);
 }
 
-// Boss names carry Dynamax/Shadow/Mega/Primal/Eternamax as a name prefix (e.g. "Dynamax Dialga" in a Wild Area raid
-// schedule), so each sprite gets its own overlay regardless of the event's type. Gigantamax isn't
-// covered - its art lives on a separate CDN (see `getBadgeSprite`).
+// Boss names carry Dynamax/Gigantamax/Shadow/Mega/Primal/Eternamax as a name prefix (e.g. "Dynamax Dialga"
+// in a Wild Area raid schedule), so each sprite gets its own overlay regardless of the event's type.
 export function splitSpriteEffectPrefix(pokemonName: string): { spriteName: string; effect?: SpriteEffect } {
     const dynamaxMatch = pokemonName.match(/^Dynamax\s+(.+)$/i);
     if (dynamaxMatch) {
         return { spriteName: dynamaxMatch[1].trim(), effect: SPRITE_EFFECTS.DYNAMAX };
+    }
+
+    // The prefix stays so the name doesn't resolve to the plain sprite - boss lists keep the boss's own
+    // Gigantamax art (`getBadgeSprite` resolves the Gmax CDN art itself before reaching here).
+    if (/^Gigantamax\s+/i.test(pokemonName)) {
+        return { spriteName: pokemonName, effect: SPRITE_EFFECTS.GIGANTAMAX };
     }
 
     if (/^Shadow\s+/i.test(pokemonName)) {
