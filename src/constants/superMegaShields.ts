@@ -3,6 +3,7 @@
 // (one per Trainer), unlike standard raid shields. Counts confirmed via Pokemon GO Hub raid guides;
 // bosses not listed here still get the shield badge, just without a count, until confirmed and added.
 export const SUPER_MEGA_SHIELD_COUNTS: Record<string, number> = {
+    chandelure: 7,
     dragonite: 10,
     falinks: 8,
     malamar: 8,
