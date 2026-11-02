@@ -3,7 +3,14 @@ import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
 
 import { useCalendarSettingsStore } from '@/stores/calendarSettings';
-import { type CurrentRaidBoss, groupCurrentRaidBosses, summarizeCurrentRaidBosses } from '@/utils/currentRaidBosses';
+import {
+    type CurrentRaidBoss,
+    type RaidBossHundoCP,
+    getRaidBossHundoCP,
+    groupCurrentRaidBosses,
+    summarizeCurrentRaidBosses,
+} from '@/utils/currentRaidBosses';
+import { cleanPokemonName } from '@/utils/pokemonCP';
 
 const RAIDS_URL = 'https://raw.githubusercontent.com/Drumstix42/ScrapedDuck/refs/heads/data/raids.min.json';
 
@@ -25,6 +32,23 @@ export const useRaidsStore = defineStore('raidsStore', () => {
 
     const tierGroups = computed(() => groupCurrentRaidBosses(raids.value, calendarSettings.useAnimatedImages));
     const tierSummary = computed(() => summarizeCurrentRaidBosses(raids.value));
+
+    const hundoCPByName = computed(() => {
+        const map = new Map<string, RaidBossHundoCP>();
+        raids.value.forEach(boss => {
+            const cp = getRaidBossHundoCP(boss);
+            if (cp && boss.name) map.set(cleanPokemonName(boss.name), cp);
+        });
+        return map;
+    });
+
+    /**
+     * Hundo CP straight from the feed, matched by the boss's exact name. A fallback for names the
+     * Pokémon stats lookup can't resolve (e.g. costumes like "Pikachu wearing a hat and capelet").
+     */
+    function getFeedHundoCP(pokemonName: string): RaidBossHundoCP | null {
+        return hundoCPByName.value.get(cleanPokemonName(pokemonName)) ?? null;
+    }
 
     async function fetchRaids(force: boolean = false): Promise<void> {
         if (!force && hasFreshData.value) {
@@ -66,6 +90,7 @@ export const useRaidsStore = defineStore('raidsStore', () => {
         hasFreshData,
         tierGroups,
         tierSummary,
+        getFeedHundoCP,
 
         // Actions
         fetchRaids,

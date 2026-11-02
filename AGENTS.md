@@ -102,6 +102,8 @@ Feeds come from the [Drumstix42 fork of ScrapedDuck](https://github.com/Drumstix
 - Raid bosses (events and `raids.min.json`) carry `raidType` (battle category: Raid, Shadow, Max
   Battle, Gigantamax, Mega, Super Mega, Primal) and a numeric star `tier` (null when unnamed). Group
   labels like "Tier 3 Shadow" are built from both (`getRaidTierLabel()` in `src/utils/raidTierGroups.ts`).
+  `raids.min.json` bosses also carry `combatPower` (`normal`/`boosted` min–max); its hundo (`max`) values are
+  the CP fallback when the stats lookup can't resolve a name, e.g. costumes (`getFeedHundoCP()` in the `raids` store).
   Eternamax Eternatus is a `Gigantamax` boss; its "Eternamax" name prefix picks the sprite form and the
   Gigantamax overlay, and CP uses base Eternatus (the `pokemonData` "Eternatus Eternamax" stats are the boss's).
 - `extraData.maxbattles.description` is the page's "Max Battles" feature text. When the event has no Max

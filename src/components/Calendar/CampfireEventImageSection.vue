@@ -96,6 +96,7 @@ import { usePokemonRowList } from '@/composables/usePokemonRowList';
 import { useCampfireTemplateStore } from '@/stores/campfireTemplate';
 import { useEventsStore } from '@/stores/events';
 import { usePokemonDataStore } from '@/stores/pokemonData';
+import { useRaidsStore } from '@/stores/raids';
 import { resolveCampfireEventPokemonImageUrls, resolveCampfireEventPokemonNames } from '@/utils/campfireEventText';
 import { CP_DIVIDER, TITLE_MAX_LINES, generateEventBadge } from '@/utils/eventBadgeImage';
 import { SPRITE_EFFECTS, getEventSpriteEffect } from '@/utils/eventPokemon';
@@ -118,6 +119,7 @@ const props = defineProps<Props>();
 const campfireTemplateStore = useCampfireTemplateStore();
 const eventsStore = useEventsStore();
 const pokemonDataStore = usePokemonDataStore();
+const raidsStore = useRaidsStore();
 
 const MAX_IMAGE_POKEMON = 3;
 const MAX_IMAGE_CP_LINES = 2;
@@ -212,10 +214,10 @@ const imageBottomLines = computed(() => {
     return imagePokemonNames.value
         .map(name => {
             const pokemon = pokemonDataStore.searchCatchablePokemon(name);
-            if (!pokemon) return null;
+            const cp = pokemon ? calculateRaidCP(pokemon.stats) : raidsStore.getFeedHundoCP(name);
+            if (!cp) return null;
 
             // No thousands separators here - keeps the image text cleaner than the copyable text output.
-            const cp = calculateRaidCP(pokemon.stats);
             return campfireTemplateStore.includeWeatherBoostedCP ? `${cp.level20Max} ${CP_DIVIDER} ${cp.level25Max}` : `${cp.level20Max}`;
         })
         .filter((line): line is string => line !== null);

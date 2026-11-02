@@ -22,6 +22,7 @@ import { CloudSun } from '@lucide/vue';
 import { computed } from 'vue';
 
 import { usePokemonDataStore } from '@/stores/pokemonData';
+import { useRaidsStore } from '@/stores/raids';
 import { MAJOR_CALENDAR_EVENT_TYPES } from '@/utils/eventMajor';
 import { calculateRaidCP, formatCP } from '@/utils/pokemonCP';
 
@@ -41,6 +42,7 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const pokemonDataStore = usePokemonDataStore();
+const raidsStore = useRaidsStore();
 
 // Event types that support weather boosting (show two CP values)
 const WEATHER_BOOST_EVENT_TYPES = ['raid-battles', 'raid-day', 'raid-weekend', 'raid-hour', 'event', ...MAJOR_CALENDAR_EVENT_TYPES];
@@ -76,7 +78,7 @@ const cpData = computed(() => {
     if (!shouldShowCP.value || !props.pokemonName) return null;
 
     const pokemon = pokemonDataStore.searchCatchablePokemon(props.pokemonName);
-    if (!pokemon || !pokemon.stats) return null;
+    if (!pokemon || !pokemon.stats) return raidsStore.getFeedHundoCP(props.pokemonName);
 
     return calculateRaidCP(pokemon.stats);
 });

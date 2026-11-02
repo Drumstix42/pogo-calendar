@@ -1,6 +1,7 @@
 import { parsePokemonNameAndSuffix } from './eventPokemonNames';
 import { type PokemonImageData } from './eventPokemonTypes';
 import { splitSpriteEffectPrefix } from './eventSprite';
+import { type CPResult } from './pokemonCP';
 import { getPokemonAnimatedUrl, getPokemonSpriteUrl, hasExactSpriteForm } from './pokemonMapper';
 import { type RaidTierGroupWithImages } from './raidTierGroups';
 
@@ -13,7 +14,14 @@ export interface CurrentRaidBoss {
     tier: number | null;
     image: string;
     canBeShiny: boolean;
+    // Catch CP ranges (Lv 20 normal / Lv 25 weather boosted); `max` is the hundo.
+    combatPower?: {
+        normal?: { min: number; max: number } | null;
+        boosted?: { min: number; max: number } | null;
+    } | null;
 }
+
+export type RaidBossHundoCP = Pick<CPResult, 'level20Max' | 'level25Max'>;
 
 export interface RaidTierSummary {
     tier: string;
@@ -36,6 +44,19 @@ const RAID_TIER_ORDER: readonly string[] = ['Tier 5', 'Mega', 'Tier 3', 'Tier 1'
 
 export function isShadowRaidBoss(boss: CurrentRaidBoss): boolean {
     return boss.raidType === 'Shadow';
+}
+
+function isValidCP(value: unknown): value is number {
+    return typeof value === 'number' && Number.isFinite(value) && value >= 10;
+}
+
+/** The feed's hundo CP for a boss, or null unless both the normal and weather boosted values are usable. */
+export function getRaidBossHundoCP(boss: CurrentRaidBoss): RaidBossHundoCP | null {
+    const level20Max = boss.combatPower?.normal?.max;
+    const level25Max = boss.combatPower?.boosted?.max;
+    if (!isValidCP(level20Max) || !isValidCP(level25Max)) return null;
+
+    return { level20Max, level25Max };
 }
 
 // Shadow bosses share their star tier's group (as their own row), so the group is keyed by tier alone.
