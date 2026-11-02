@@ -19,6 +19,15 @@ export function resolveCampfireEventPokemonNames(event: PogoEvent): string[] {
     );
 }
 
+// The image each seeded name resolved to - for a costume it's the event's own art, which a name alone can't reach.
+export function resolveCampfireEventPokemonImageUrls(event: PogoEvent): Map<string, string> {
+    const imageUrls = new Map<string, string>();
+    for (const { name, imageUrl } of getEventPokemonImages(event, { allTiers: true })) {
+        if (imageUrl && !imageUrls.has(name)) imageUrls.set(name, imageUrl);
+    }
+    return imageUrls;
+}
+
 /**
  * The event as seen from one day (`YYYY-MM-DD`) of its raid schedule, e.g. a major event opened from
  * its day cell: that day's bosses plus those running all event replace the whole event's list. Days

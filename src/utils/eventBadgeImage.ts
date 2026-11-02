@@ -96,6 +96,8 @@ export interface EventBadgeSpec {
     backgroundColor: string;
     /** 1-3 Pokemon names, in display order */
     pokemonNames: string[];
+    /** The event's own image per Pokemon name (e.g. a costume), tried before the name's sprite */
+    eventImageUrls?: Map<string, string>;
     /** Pre-formatted lines shown near the bottom (CP text or a custom caption) - 0-2 entries */
     bottomLines: string[];
     /** Event-level effect (e.g. from a Max Monday or Shadow Raid) applied when a name has no prefix of its own */
@@ -104,6 +106,8 @@ export interface EventBadgeSpec {
     eggDistance?: EggDistance;
     /** User size multiplier for the sprites (and their overlays). Defaults to 1. */
     spriteScale?: number;
+    /** User nudge for the sprites (and their overlays), as a fraction of the sprite area's height - positive moves up. Defaults to 0. */
+    spriteOffset?: number;
 }
 
 interface ResolvedBadgePokemon {
@@ -322,8 +326,13 @@ function getOverlayUrl(effect: SpriteEffect | undefined, eggDistance?: EggDistan
     return getEffectSymbol(effect)?.src ?? (effect && OVERLAY_ASSET_URLS[effect]);
 }
 
-async function resolveBadgePokemon(name: string, fallbackEffect?: SpriteEffect, eggDistance?: EggDistance): Promise<ResolvedBadgePokemon | null> {
-    const { urls, effect } = getBadgeSprite(name, fallbackEffect);
+async function resolveBadgePokemon(
+    name: string,
+    fallbackEffect?: SpriteEffect,
+    eggDistance?: EggDistance,
+    eventImageUrl?: string,
+): Promise<ResolvedBadgePokemon | null> {
+    const { urls, effect } = getBadgeSprite(name, fallbackEffect, eventImageUrl);
     const image = await loadFirstAvailableImage(urls);
     if (!image) return null;
 
@@ -349,7 +358,13 @@ const POKEMON_FILL_SCALE = 0.93;
 
 // Position/size only - overlays and icons are drawn in separate passes so every overlay sits behind
 // every icon, even where a neighboring Pokemon's overlay overlaps it.
-function layOutPokemon(pokemon: ResolvedBadgePokemon[], areaTop: number, areaHeight: number, spriteScale: number): PokemonSlotLayout[] {
+function layOutPokemon(
+    pokemon: ResolvedBadgePokemon[],
+    areaTop: number,
+    areaHeight: number,
+    spriteScale: number,
+    spriteOffset: number,
+): PokemonSlotLayout[] {
     const areaWidth = CANVAS_SIZE - PADDING * 2;
     const slotWidth = areaWidth / pokemon.length;
     const fillScale = POKEMON_FILL_SCALE * spriteScale;
@@ -367,7 +382,7 @@ function layOutPokemon(pokemon: ResolvedBadgePokemon[], areaTop: number, areaHei
         return {
             pokemon: resolved,
             x: slotCenterX - drawWidth / 2,
-            y: areaTop + (areaHeight - drawHeight) / 2,
+            y: areaTop + (areaHeight - drawHeight) / 2 - spriteOffset * areaHeight,
             drawWidth,
             drawHeight,
             overlayBaseSize,
@@ -521,7 +536,9 @@ export async function generateEventBadge(spec: EventBadgeSpec): Promise<Blob | n
     const topBandHeight = getTopBandHeight(titleLayout);
     const bottomBandHeight = getBottomBandHeight(spec.bottomLines.length);
 
-    const resolvedPokemon = await Promise.all(spec.pokemonNames.map(name => resolveBadgePokemon(name, spec.defaultPokemonEffect, spec.eggDistance)));
+    const resolvedPokemon = await Promise.all(
+        spec.pokemonNames.map(name => resolveBadgePokemon(name, spec.defaultPokemonEffect, spec.eggDistance, spec.eventImageUrls?.get(name))),
+    );
     const loadedPokemon = resolvedPokemon.filter((pokemon): pokemon is ResolvedBadgePokemon => pokemon !== null);
 
     // A Hatch Day with no Pokemon still shows its egg, like the calendar placeholder.
@@ -532,7 +549,7 @@ export async function generateEventBadge(spec: EventBadgeSpec): Promise<Blob | n
 
     const areaTop = topBandHeight - POKEMON_BAND_OVERLAP;
     const areaHeight = CANVAS_SIZE - bottomBandHeight + POKEMON_BAND_OVERLAP - areaTop;
-    const pokemonLayout = layOutPokemon(loadedPokemon, areaTop, areaHeight, spec.spriteScale ?? 1);
+    const pokemonLayout = layOutPokemon(loadedPokemon, areaTop, areaHeight, spec.spriteScale ?? 1, spec.spriteOffset ?? 0);
 
     if (titleLayout.lines.length > 0) {
         drawTopBandCollar(ctx, topBandHeight, TOP_BAND_COLOR);

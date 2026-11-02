@@ -7,13 +7,20 @@
             <div class="section-panel mb-0">
                 <div class="d-flex justify-content-between align-items-center">
                     <label class="form-label mb-0">Title</label>
-                    <button type="button" class="btn btn-link btn-sm p-0" @click="resetImageTitle">Reset to default</button>
+                    <button type="button" class="btn btn-link btn-sm p-0" @click="resetImageForm">Reset all to default</button>
                 </div>
                 <textarea v-model="imageTitle" class="form-control mb-1" rows="2" placeholder="Event type"></textarea>
                 <small class="text-muted d-block mb-3">Press Enter for a manual line break (up to {{ TITLE_MAX_LINES }} lines).</small>
 
                 <label class="form-label d-block">Image Pokémon</label>
-                <PokemonNameRow v-for="row in imagePokemonRows" :key="row.id" v-model="row.name" class="mb-2" @remove="removeImageRow(row.id)" />
+                <PokemonNameRow
+                    v-for="row in imagePokemonRows"
+                    :key="row.id"
+                    v-model="row.name"
+                    :has-event-sprite="eventImageUrls.has(row.name.trim())"
+                    class="mb-2"
+                    @remove="removeImageRow(row.id)"
+                />
                 <button
                     type="button"
                     class="btn btn-secondary btn-sm"
@@ -25,8 +32,8 @@
                 </button>
                 <small class="text-muted d-block mt-1">Up to {{ MAX_IMAGE_POKEMON }} Pokémon per image.</small>
 
-                <label for="campfireSpriteScale" class="form-label small d-block mt-3">Sprite Scale Size: {{ spriteScalePercent }}%</label>
-                <div class="sprite-scale-range" :style="{ '--default-position': spriteScaleDefaultPosition }">
+                <label for="campfireSpriteScale" class="form-label small d-block mt-3 mb-0">Sprite scale: {{ spriteScalePercent }}%</label>
+                <div class="range-with-default" :style="{ '--default-position': spriteScaleDefaultPosition }">
                     <input
                         id="campfireSpriteScale"
                         v-model.number="spriteScalePercent"
@@ -36,7 +43,21 @@
                         :max="MAX_SPRITE_SCALE_PERCENT"
                         step="5"
                     />
-                    <span class="sprite-scale-default-tick" aria-hidden="true"></span>
+                    <span class="range-default-tick" aria-hidden="true"></span>
+                </div>
+
+                <label for="campfireSpriteOffset" class="form-label small d-block mt-2 mb-0">Vertical offset: {{ spriteOffsetLabel }}</label>
+                <div class="range-with-default" :style="{ '--default-position': 0.5 }">
+                    <input
+                        id="campfireSpriteOffset"
+                        v-model.number="spriteOffsetPercent"
+                        type="range"
+                        class="form-range"
+                        :min="-MAX_SPRITE_OFFSET_PERCENT"
+                        :max="MAX_SPRITE_OFFSET_PERCENT"
+                        step="5"
+                    />
+                    <span class="range-default-tick" aria-hidden="true"></span>
                 </div>
 
                 <label class="form-label d-block mt-3">Bottom Text</label>
@@ -75,7 +96,7 @@ import { usePokemonRowList } from '@/composables/usePokemonRowList';
 import { useCampfireTemplateStore } from '@/stores/campfireTemplate';
 import { useEventsStore } from '@/stores/events';
 import { usePokemonDataStore } from '@/stores/pokemonData';
-import { resolveCampfireEventPokemonNames } from '@/utils/campfireEventText';
+import { resolveCampfireEventPokemonImageUrls, resolveCampfireEventPokemonNames } from '@/utils/campfireEventText';
 import { CP_DIVIDER, TITLE_MAX_LINES, generateEventBadge } from '@/utils/eventBadgeImage';
 import { SPRITE_EFFECTS, getEventSpriteEffect } from '@/utils/eventPokemon';
 import { type PogoEvent, getEventTypeInfo } from '@/utils/eventTypes';
@@ -101,32 +122,42 @@ const pokemonDataStore = usePokemonDataStore();
 const MAX_IMAGE_POKEMON = 3;
 const MAX_IMAGE_CP_LINES = 2;
 const MIN_SPRITE_SCALE_PERCENT = 25;
-const MAX_SPRITE_SCALE_PERCENT = 125;
+const MAX_SPRITE_SCALE_PERCENT = 175;
 const DEFAULT_SPRITE_SCALE_PERCENT = 100;
 // 0-1 position of the default along the track, for the tick mark under the slider.
 const spriteScaleDefaultPosition = (DEFAULT_SPRITE_SCALE_PERCENT - MIN_SPRITE_SCALE_PERCENT) / (MAX_SPRITE_SCALE_PERCENT - MIN_SPRITE_SCALE_PERCENT);
+const MAX_SPRITE_OFFSET_PERCENT = 50;
 
 const { rows: imagePokemonRows, addRow: addImageRow, removeRow: removeImageRow, setNames: setImagePokemonNames } = usePokemonRowList();
 const imageTitle = ref('');
 const imageCustomBottomText = ref('');
 const spriteScalePercent = ref(DEFAULT_SPRITE_SCALE_PERCENT);
+// Positive moves the sprites up.
+const spriteOffsetPercent = ref(0);
+
+// A horizontal slider doesn't say which way is up, so the label does.
+const spriteOffsetLabel = computed(() => {
+    const offset = spriteOffsetPercent.value;
+    if (offset === 0) return '0%';
+    return `${Math.abs(offset)}% ${offset > 0 ? 'up' : 'down'}`;
+});
 
 const eventTypeName = computed(() => getEventTypeInfo(props.event.eventType).name);
 
-function resetImageTitle() {
+// Seeds every image field from the event's defaults (title, resolved Pokemon, cleared caption, slider defaults).
+function resetImageForm() {
+    setImagePokemonNames(resolveCampfireEventPokemonNames(props.event).slice(0, MAX_IMAGE_POKEMON));
     imageTitle.value = eventTypeName.value;
+    imageCustomBottomText.value = '';
+    spriteScalePercent.value = DEFAULT_SPRITE_SCALE_PERCENT;
+    spriteOffsetPercent.value = 0;
 }
 
-// Re-seed the form from the event's resolved Pokemon each time the modal opens.
+// Re-seed the form each time the modal opens.
 watch(
     () => props.show,
     isOpen => {
-        if (!isOpen) return;
-
-        setImagePokemonNames(resolveCampfireEventPokemonNames(props.event).slice(0, MAX_IMAGE_POKEMON));
-        imageTitle.value = eventTypeName.value;
-        imageCustomBottomText.value = '';
-        spriteScalePercent.value = DEFAULT_SPRITE_SCALE_PERCENT;
+        if (isOpen) resetImageForm();
     },
     { immediate: true },
 );
@@ -137,6 +168,7 @@ const imagePokemonNames = computed(() =>
         .filter(Boolean)
         .slice(0, MAX_IMAGE_POKEMON),
 );
+const eventImageUrls = computed(() => resolveCampfireEventPokemonImageUrls(props.event));
 const badgeBackgroundColor = computed(() => eventsStore.eventMetadata[props.event.eventID]?.color ?? '#333333');
 
 // Built from char codes, not a literal \u escape range - editor/tooling round-trips keep mangling
@@ -219,10 +251,12 @@ async function regenerateBadge() {
             title: imageTitle.value,
             backgroundColor: badgeBackgroundColor.value,
             pokemonNames: imagePokemonNames.value,
+            eventImageUrls: eventImageUrls.value,
             bottomLines: imageBottomLines.value,
             defaultPokemonEffect: badgeDefaultEffect.value,
             eggDistance: badgeEggDistance.value,
             spriteScale: spriteScalePercent.value / 100,
+            spriteOffset: spriteOffsetPercent.value / 100,
         });
 
         if (isUnmounted) return;
@@ -238,10 +272,10 @@ async function regenerateBadge() {
 }
 
 // Render once immediately so the preview isn't delayed on open; after that, throttle so dragging the
-// size slider or typing stays live without re-rendering the whole canvas on every tick/keystroke.
+// sliders or typing stays live without re-rendering the whole canvas on every tick/keystroke.
 // `trailing` guarantees a final render once input stops, so the preview always lands on the last value.
 regenerateBadge();
-watchThrottled([imageTitle, imagePokemonNames, imageBottomLines, badgeBackgroundColor, spriteScalePercent], regenerateBadge, {
+watchThrottled([imageTitle, imagePokemonNames, imageBottomLines, badgeBackgroundColor, spriteScalePercent, spriteOffsetPercent], regenerateBadge, {
     throttle: 100,
     trailing: true,
 });
@@ -281,13 +315,13 @@ onBeforeUnmount(() => {
     font-size: 0.85rem;
 }
 
-.sprite-scale-range {
+.range-with-default {
     position: relative;
 }
 
 /* Marks the default value under the track. The thumb's center only travels between half a thumb-width
    in from each end (Bootstrap's thumb is 1rem), so the tick is placed along that inset span. */
-.sprite-scale-default-tick {
+.range-default-tick {
     position: absolute;
     top: calc(100% - 0.5rem);
     left: calc(0.5rem + (100% - 1rem) * var(--default-position));

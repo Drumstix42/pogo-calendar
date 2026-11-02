@@ -245,6 +245,17 @@ export function getSpriteFallbackUrl(spriteUrl: string): string | null {
     return swapUrlBase(spriteUrl, POKEMINERS_URL_PREFIX, POKEMINERS_MIRROR_CDN);
 }
 
+const LEEKDUCK_ICON_PREFIX = 'https://cdn.leekduck.com/assets/img/pokemon_icons/';
+
+// LeekDuck's CDN sends no CORS headers, so a canvas can't draw its icons - PokeMiners hosts the same
+// filenames (e.g. costume `pm216.cHALLOWEEN_2025.icon.png`), sometimes only in its 256x256 folder.
+export function getCanvasSafeLeekDuckIconUrls(iconUrl: string): string[] {
+    return [
+        swapUrlBase(iconUrl, LEEKDUCK_ICON_PREFIX, POKEMINERS_URL_PREFIX),
+        swapUrlBase(iconUrl, LEEKDUCK_ICON_PREFIX, POKEMINERS_256_PREFIX),
+    ].filter((url): url is string => url !== null);
+}
+
 // Gigantamax sprites live on a standalone CDN (no PokeMiners/mgrann coverage), so they don't
 // participate in the tiered `@error` fallback above — an unknown filename resolves to a 404.
 const HYBRIDSHIVAM_GMAX_PREFIX = 'https://raw.githubusercontent.com/HybridShivam/Pokemon/master/assets/images/';

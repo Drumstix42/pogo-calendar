@@ -3,6 +3,7 @@ import { SPRITE_EFFECTS } from './eventPokemonTypes';
 import type { PokemonImageData, PokemonImageOptions, SpriteEffect } from './eventPokemonTypes';
 import { type PogoEvent, type PokemonBoss, type RaidScheduleEntry } from './eventTypes';
 import {
+    getCanvasSafeLeekDuckIconUrls,
     getGigantamaxSpriteUrl,
     getPokemonAnimatedUrl,
     getPokemonSpriteUrl,
@@ -186,7 +187,9 @@ export function getBadgeSpriteUrls(pokemonName: string): string[] {
 // Also detects a free-typed Gigantamax/Dynamax/Shadow prefix and reports which overlay effect (if
 // any) the badge should draw. `fallbackEffect` covers Max Monday/Shadow Raids, whose resolvers strip
 // that prefix and classify the effect at the event level instead - a name-based match always wins.
-export function getBadgeSprite(pokemonName: string, fallbackEffect?: SpriteEffect): BadgeSprite {
+// `eventImageUrl` is the image the event's resolver picked for this name; a LeekDuck icon there (e.g.
+// a costume) is tried first, since our own sprite chain can't show it.
+export function getBadgeSprite(pokemonName: string, fallbackEffect?: SpriteEffect, eventImageUrl?: string): BadgeSprite {
     const gigantamaxMatch = pokemonName.match(/^Gigantamax\s+(.+)$/i);
     if (gigantamaxMatch) {
         const { baseName, formSlug } = parseGigantamaxFormSlug(gigantamaxMatch[1].trim());
@@ -197,7 +200,8 @@ export function getBadgeSprite(pokemonName: string, fallbackEffect?: SpriteEffec
     }
 
     const { spriteName, effect } = splitSpriteEffectPrefix(pokemonName);
-    return { urls: getBadgeSpriteUrls(spriteName), effect: combineSpriteEffects(effect, fallbackEffect) };
+    const eventUrls = eventImageUrl ? getCanvasSafeLeekDuckIconUrls(eventImageUrl) : [];
+    return { urls: [...new Set([...eventUrls, ...getBadgeSpriteUrls(spriteName)])], effect: combineSpriteEffects(effect, fallbackEffect) };
 }
 
 // Parse a list of Pokemon names and resolve a sprite image for each (skipping unparseable names).

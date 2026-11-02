@@ -22,6 +22,8 @@ import { usePokemonDataStore } from '@/stores/pokemonData';
 
 interface Props {
     modelValue: string;
+    /** The name has the event's own sprite (e.g. a costume), so it isn't flagged when the stats lookup misses it. */
+    hasEventSprite?: boolean;
 }
 
 interface Emits {
@@ -34,7 +36,7 @@ defineEmits<Emits>();
 
 const pokemonDataStore = usePokemonDataStore();
 
-const isFound = computed(() => !!pokemonDataStore.searchCatchablePokemon(props.modelValue.trim()));
+const isFound = computed(() => props.hasEventSprite || !!pokemonDataStore.searchCatchablePokemon(props.modelValue.trim()));
 </script>
 
 <style scoped>
