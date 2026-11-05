@@ -136,57 +136,79 @@ function wrapText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number)
     return lines;
 }
 
-function fitFontSize(ctx: CanvasRenderingContext2D, text: string, maxWidth: number, startSize: number, minSize: number): number {
+function fitFontSize(ctx: CanvasRenderingContext2D, text: string, maxWidth: number, startSize: number, minSize: number, step = 5): number {
     let size = startSize;
     while (size > minSize) {
         ctx.font = `900 ${size}px ${FONT_FAMILY}`;
         if (ctx.measureText(text).width <= maxWidth) break;
-        size -= 5;
+        size -= step;
     }
     return size;
 }
 
-interface TitleLayout {
-    lines: string[];
+interface TitleLine {
+    text: string;
     fontSize: number;
-    lineHeight: number;
 }
 
 const TITLE_MAX_WIDTH = CANVAS_SIZE - TITLE_SIDE_PADDING * 2;
+// Steps evenly from TITLE_FONT_SIZE down to TITLE_MIN_FONT_SIZE.
+const TITLE_FONT_SIZE_STEP = 4;
 
-// Respects a user-typed line break as a forced split, auto-wrapping within each resulting segment
-// if it's still too wide, rather than only ever wrapping on whitespace.
-function wrapTitle(ctx: CanvasRenderingContext2D, title: string, fontSize: number): string[] {
+function setTitleFont(ctx: CanvasRenderingContext2D, fontSize: number) {
     ctx.font = `900 ${fontSize}px ${FONT_FAMILY}`;
-    return title.split('\n').flatMap(paragraph => wrapText(ctx, paragraph, TITLE_MAX_WIDTH));
 }
 
-// Measured with whatever font `wrapTitle` last set. A lone word too wide for a line still gets one.
-function titleFits(ctx: CanvasRenderingContext2D, lines: string[]) {
-    return lines.length <= TITLE_MAX_LINES && lines.every(line => ctx.measureText(line).width <= TITLE_MAX_WIDTH);
+function getTitleLineHeight(fontSize: number) {
+    return Math.round((fontSize * TITLE_LINE_HEIGHT) / TITLE_FONT_SIZE);
 }
 
-// Shrinks the font until the title fits (like the bottom text); extra lines are only dropped once it
-// bottoms out at the minimum size.
-function getTitleLayout(ctx: CanvasRenderingContext2D, title: string): TitleLayout {
-    let fontSize = TITLE_FONT_SIZE;
-    let lines = wrapTitle(ctx, title, fontSize);
-
-    while (fontSize > TITLE_MIN_FONT_SIZE && !titleFits(ctx, lines)) {
-        fontSize = Math.max(fontSize - 4, TITLE_MIN_FONT_SIZE);
-        lines = wrapTitle(ctx, title, fontSize);
-    }
-
-    return {
-        lines: lines.slice(0, TITLE_MAX_LINES),
-        fontSize,
-        lineHeight: Math.round((fontSize * TITLE_LINE_HEIGHT) / TITLE_FONT_SIZE),
-    };
+// Shrinks one line on its own (like the bottom text). Words that still don't fit at the minimum size are
+// dropped - a lone word too wide for a line still keeps it.
+function fitTitleLine(ctx: CanvasRenderingContext2D, text: string): TitleLine {
+    const fontSize = fitFontSize(ctx, text, TITLE_MAX_WIDTH, TITLE_FONT_SIZE, TITLE_MIN_FONT_SIZE, TITLE_FONT_SIZE_STEP);
+    setTitleFont(ctx, fontSize);
+    return { text: wrapText(ctx, text, TITLE_MAX_WIDTH)[0], fontSize };
 }
 
-function getTopBandHeight({ lines, fontSize, lineHeight }: TitleLayout): number {
+// A user-typed line break is a forced split. Each paragraph wraps at full size, but its last available
+// line (leaving one for each paragraph after it) takes all its remaining words and shrinks to fit, so
+// only the overflowing line gets smaller.
+function getTitleLines(ctx: CanvasRenderingContext2D, title: string): TitleLine[] {
+    const paragraphs = title.split('\n').filter(paragraph => paragraph.trim());
+    const lines: TitleLine[] = [];
+
+    paragraphs.forEach((paragraph, index) => {
+        if (lines.length >= TITLE_MAX_LINES) return;
+        const lineBudget = Math.max(1, TITLE_MAX_LINES - lines.length - (paragraphs.length - index - 1));
+
+        setTitleFont(ctx, TITLE_FONT_SIZE);
+        const wrapped = wrapText(ctx, paragraph, TITLE_MAX_WIDTH);
+        const lineTexts = [...wrapped.slice(0, lineBudget - 1), wrapped.slice(lineBudget - 1).join(' ')].filter(Boolean);
+        lines.push(...lineTexts.map(text => fitTitleLine(ctx, text)));
+    });
+
+    return lines;
+}
+
+// Vertical centers, spacing each pair of lines by the average of their line heights.
+function getTitleLineCenters(lines: TitleLine[]): number[] {
+    const centers: number[] = [];
+    lines.forEach((line, index) => {
+        if (index === 0) {
+            centers.push(TITLE_TOP + line.fontSize / 2);
+            return;
+        }
+        const previous = lines[index - 1];
+        centers.push(centers[index - 1] + (getTitleLineHeight(previous.fontSize) + getTitleLineHeight(line.fontSize)) / 2);
+    });
+    return centers;
+}
+
+function getTopBandHeight(lines: TitleLine[]): number {
     if (lines.length === 0) return 0;
-    return TITLE_TOP + (lines.length - 1) * lineHeight + fontSize + TOP_BAND_PADDING_BOTTOM;
+    const lastIndex = lines.length - 1;
+    return getTitleLineCenters(lines)[lastIndex] + lines[lastIndex].fontSize / 2 + TOP_BAND_PADDING_BOTTOM;
 }
 
 function getBottomBandHeight(lineCount: number): number {
@@ -278,15 +300,16 @@ function drawOutlinedTextSegments(ctx: CanvasRenderingContext2D, segments: { tex
     ctx.textAlign = 'center';
 }
 
-function drawTitle(ctx: CanvasRenderingContext2D, { lines, fontSize, lineHeight }: TitleLayout) {
-    ctx.font = `900 ${fontSize}px ${FONT_FAMILY}`;
+function drawTitle(ctx: CanvasRenderingContext2D, lines: TitleLine[]) {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillStyle = '#ffffff';
 
+    const centers = getTitleLineCenters(lines);
     // No outline (unlike the bottom band) - the title band's own backdrop gives it enough contrast.
     lines.forEach((line, index) => {
-        ctx.fillText(line, CANVAS_SIZE / 2, TITLE_TOP + index * lineHeight + fontSize / 2);
+        setTitleFont(ctx, line.fontSize);
+        ctx.fillText(line.text, CANVAS_SIZE / 2, centers[index]);
     });
 }
 
@@ -532,8 +555,8 @@ export async function generateEventBadge(spec: EventBadgeSpec): Promise<Blob | n
     ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
     drawPokeballPattern(ctx);
 
-    const titleLayout = getTitleLayout(ctx, spec.title);
-    const topBandHeight = getTopBandHeight(titleLayout);
+    const titleLines = getTitleLines(ctx, spec.title);
+    const topBandHeight = getTopBandHeight(titleLines);
     const bottomBandHeight = getBottomBandHeight(spec.bottomLines.length);
 
     const resolvedPokemon = await Promise.all(
@@ -551,9 +574,9 @@ export async function generateEventBadge(spec: EventBadgeSpec): Promise<Blob | n
     const areaHeight = CANVAS_SIZE - bottomBandHeight + POKEMON_BAND_OVERLAP - areaTop;
     const pokemonLayout = layOutPokemon(loadedPokemon, areaTop, areaHeight, spec.spriteScale ?? 1, spec.spriteOffset ?? 0);
 
-    if (titleLayout.lines.length > 0) {
+    if (titleLines.length > 0) {
         drawTopBandCollar(ctx, topBandHeight, TOP_BAND_COLOR);
-        drawTitle(ctx, titleLayout);
+        drawTitle(ctx, titleLines);
     }
 
     drawPokemonOverlays(ctx, pokemonLayout);
