@@ -97,7 +97,7 @@ import { useCampfireTemplateStore } from '@/stores/campfireTemplate';
 import { useEventsStore } from '@/stores/events';
 import { usePokemonDataStore } from '@/stores/pokemonData';
 import { useRaidsStore } from '@/stores/raids';
-import { resolveCampfireEventPokemonImageUrls, resolveCampfireEventPokemonNames } from '@/utils/campfireEventText';
+import { resolveCampfireEventPokemonImageUrls, resolveCampfireEventPokemonNames, shouldShowWeatherBoostedCP } from '@/utils/campfireEventText';
 import { CP_DIVIDER, TITLE_MAX_LINES, generateEventBadge } from '@/utils/eventBadgeImage';
 import { SPRITE_EFFECTS, getEventSpriteEffect } from '@/utils/eventPokemon';
 import { type PogoEvent, getEventTypeInfo } from '@/utils/eventTypes';
@@ -218,7 +218,9 @@ const imageBottomLines = computed(() => {
             if (!cp) return null;
 
             // No thousands separators here - keeps the image text cleaner than the copyable text output.
-            return campfireTemplateStore.includeWeatherBoostedCP ? `${cp.level20Max} ${CP_DIVIDER} ${cp.level25Max}` : `${cp.level20Max}`;
+            return shouldShowWeatherBoostedCP(name, campfireTemplateStore.includeWeatherBoostedCP)
+                ? `${cp.level20Max} ${CP_DIVIDER} ${cp.level25Max}`
+                : `${cp.level20Max}`;
         })
         .filter((line): line is string => line !== null);
 });

@@ -3,8 +3,9 @@
  * blocks). Ported from a companion Python tool (campfire-event-helper).
  */
 import { getEventBonusGroups } from './eventBonuses';
-import { getEventPokemonImages } from './eventPokemon';
+import { SPRITE_EFFECTS, getEventPokemonImages } from './eventPokemon';
 import { getEventWideRaidBosses, getRaidScheduleBossesForDate } from './eventRaidHours';
+import { splitSpriteEffectPrefix } from './eventSprite';
 import { type PogoEvent, isAllMaxBattleBosses } from './eventTypes';
 import { type CPResult, type PokemonData, calculateRaidCP, formatCP, formatCPDisplay } from './pokemonCP';
 import { type PokemonType, formatWeaknessText, getSuperEffectiveTypes } from './typeEffectiveness';
@@ -82,6 +83,14 @@ export function getCampfireCpDefaults(event: PogoEvent) {
     return { includeCP: false, includeWeatherBoostedCP: false };
 }
 
+// Per-Pokemon override of the Weather Boosted toggle: a Dynamax/Gigantamax boss in a mixed event (e.g. a
+// Wild Area's raid list) is still a Max Battle catch.
+export function shouldShowWeatherBoostedCP(pokemonName: string, includeWeatherBoostedCP: boolean): boolean {
+    if (!includeWeatherBoostedCP) return false;
+    const { effect } = splitSpriteEffectPrefix(pokemonName);
+    return effect !== SPRITE_EFFECTS.DYNAMAX && effect !== SPRITE_EFFECTS.GIGANTAMAX;
+}
+
 export interface CampfireBonusGroup {
     title: string | null;
     items: string[];
@@ -154,8 +163,9 @@ export function formatCampfirePokemonEntry(entry: CampfirePokemonEntry, options:
     }
 
     if (options.includeCP) {
-        const hundoCp = formatCPDisplay(entry.cp.level20Max, entry.cp.level25Max, options.includeWeatherBoostedCP);
-        lines.push(`Hundo CP: ${options.includeWeatherBoostedCP ? `${hundoCp} (WB)` : hundoCp}`);
+        const showWeatherBoost = shouldShowWeatherBoostedCP(entry.displayName, options.includeWeatherBoostedCP);
+        const hundoCp = formatCPDisplay(entry.cp.level20Max, entry.cp.level25Max, showWeatherBoost);
+        lines.push(`Hundo CP: ${showWeatherBoost ? `${hundoCp} (WB)` : hundoCp}`);
     }
 
     if (options.includeMaxCP) {
